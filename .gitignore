@@ -1,0 +1,11 @@
+# Rust and Cargo
+debug/
+target/
+**/*.rs.bk
+*.pdb
+
+# MacOS
+.DS_Store
+
+# IntelliJ IDEA
+.idea/
