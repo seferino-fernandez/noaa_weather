@@ -266,6 +266,10 @@ pub enum NwsForecastOfficeId {
     Ona,
     #[serde(rename = "ONP")]
     Onp,
+    #[serde(rename = "PQE")]
+    Pqe,
+    #[serde(rename = "PQW")]
+    Pqw,
 }
 
 impl std::fmt::Display for NwsForecastOfficeId {
@@ -402,6 +406,8 @@ impl std::fmt::Display for NwsForecastOfficeId {
             Self::Nh2 => write!(f, "NH2"),
             Self::Ona => write!(f, "ONA"),
             Self::Onp => write!(f, "ONP"),
+            Self::Pqe => write!(f, "PQE"),
+            Self::Pqw => write!(f, "PQW"),
         }
     }
 }

@@ -2,8 +2,22 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-/// MarineAreaCode : Marine area code as defined in NWS Directive 10-302: * AM: Western North Atlantic Ocean and along U.S. East Coast south of Currituck Beach Light NC following the coastline into Gulf of Mexico to Ocean Reef FL including the Caribbean * AN: Western North Atlantic Ocean and along U.S. East Coast from Canadian border south to Currituck Beach Light NC * GM: Gulf of Mexico and along the U.S. Gulf Coast from the Mexican border to Ocean Reef FL * LC: Lake St. Clair * LE: Lake Erie * LH: Lake Huron * LM: Lake Michigan * LO: Lake Ontario * LS: Lake Superior * PH: Central Pacific Ocean including Hawaiian waters * PK: North Pacific Ocean near Alaska and along Alaska coastline including the Bering Sea and the Gulf of Alaska * PM: Western Pacific Ocean including Mariana Island waters * PS: South Central Pacific Ocean including American Samoa waters * PZ: Eastern North Pacific Ocean and along U.S. West Coast from Canadian border to Mexican border * SL: St. Lawrence River above St. Regis
-/// Marine area code as defined in NWS Directive 10-302: * AM: Western North Atlantic Ocean and along U.S. East Coast south of Currituck Beach Light NC following the coastline into Gulf of Mexico to Ocean Reef FL including the Caribbean * AN: Western North Atlantic Ocean and along U.S. East Coast from Canadian border south to Currituck Beach Light NC * GM: Gulf of Mexico and along the U.S. Gulf Coast from the Mexican border to Ocean Reef FL * LC: Lake St. Clair * LE: Lake Erie * LH: Lake Huron * LM: Lake Michigan * LO: Lake Ontario * LS: Lake Superior * PH: Central Pacific Ocean including Hawaiian waters * PK: North Pacific Ocean near Alaska and along Alaska coastline including the Bering Sea and the Gulf of Alaska * PM: Western Pacific Ocean including Mariana Island waters * PS: South Central Pacific Ocean including American Samoa waters * PZ: Eastern North Pacific Ocean and along U.S. West Coast from Canadian border to Mexican border * SL: St. Lawrence River above St. Regis
+/// Marine area code as defined in NWS Directive 10-302:
+/// * AM: Western North Atlantic Ocean and along U.S. East Coast south of Currituck Beach Light NC following the coastline into Gulf of Mexico to Ocean Reef FL including the Caribbean
+/// * AN: Western North Atlantic Ocean and along U.S. East Coast from Canadian border south to Currituck Beach Light NC
+/// * GM: Gulf of Mexico and along the U.S. Gulf Coast from the Mexican border to Ocean Reef FL
+/// * LC: Lake St. Clair
+/// * LE: Lake Erie
+/// * LH: Lake Huron
+/// * LM: Lake Michigan
+/// * LO: Lake Ontario
+/// * LS: Lake Superior
+/// * PH: Central Pacific Ocean including Hawaiian waters
+/// * PK: North Pacific Ocean near Alaska and along Alaska coastline including the Bering Sea and the Gulf of Alaska
+/// * PM: Western Pacific Ocean including Mariana Island waters
+/// * PS: South Central Pacific Ocean including American Samoa waters
+/// * PZ: Eastern North Pacific Ocean and along U.S. West Coast from Canadian border to Mexican border
+/// * SL: St. Lawrence River above St. Regis
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum MarineAreaCode {
     #[serde(rename = "AM")]
@@ -61,10 +75,10 @@ impl std::fmt::Display for MarineAreaCode {
 }
 
 impl FromStr for MarineAreaCode {
-    type Err = anyhow::Error;
+    type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
+        match s.to_uppercase().as_str() {
             "AM" => Ok(MarineAreaCode::Am),
             "AN" => Ok(MarineAreaCode::An),
             "GM" => Ok(MarineAreaCode::Gm),
@@ -80,7 +94,7 @@ impl FromStr for MarineAreaCode {
             "PS" => Ok(MarineAreaCode::Ps),
             "PZ" => Ok(MarineAreaCode::Pz),
             "SL" => Ok(MarineAreaCode::Sl),
-            _ => Err(anyhow::anyhow!("Invalid marine area code: {}", s)),
+            _ => Err(format!("Invalid marine area code: {}", s)),
         }
     }
 }

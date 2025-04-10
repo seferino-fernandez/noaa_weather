@@ -10,12 +10,6 @@ pub enum RegionCode {
     MarineRegionCode(models::MarineRegionCode),
 }
 
-impl Default for RegionCode {
-    fn default() -> Self {
-        Self::LandRegionCode(Default::default())
-    }
-}
-
 impl Display for RegionCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

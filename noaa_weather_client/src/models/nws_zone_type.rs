@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
+/// The type of NWS zone.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum NwsZoneType {
     #[serde(rename = "land")]
@@ -35,8 +37,21 @@ impl std::fmt::Display for NwsZoneType {
     }
 }
 
-impl Default for NwsZoneType {
-    fn default() -> NwsZoneType {
-        Self::Land
+impl FromStr for NwsZoneType {
+    type Err = String;
+
+    /// Convert a string to a NwsZoneType.
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "land" => Ok(NwsZoneType::Land),
+            "marine" => Ok(NwsZoneType::Marine),
+            "forecast" => Ok(NwsZoneType::Forecast),
+            "public" => Ok(NwsZoneType::Public),
+            "coastal" => Ok(NwsZoneType::Coastal),
+            "offshore" => Ok(NwsZoneType::Offshore),
+            "fire" => Ok(NwsZoneType::Fire),
+            "county" => Ok(NwsZoneType::County),
+            _ => Err(format!("Invalid NWS zone type: {}", s)),
+        }
     }
 }

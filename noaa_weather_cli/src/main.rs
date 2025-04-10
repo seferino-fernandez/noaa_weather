@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::Write;
 
 mod commands;
-use commands::{Commands, alerts, offices, points, stations, weather};
+use commands::{Commands, alerts, offices, points, stations, weather, zones};
 
 #[derive(Parser, Debug)]
 #[command(
@@ -55,6 +55,7 @@ async fn main() -> Result<()> {
         Commands::Points { command } => points::handle_command(*command, &config).await?,
         Commands::Stations { command } => stations::handle_command(*command, &config).await?,
         Commands::Weather { command } => weather::handle_command(*command, &config).await?,
+        Commands::Zones { command } => zones::handle_command(*command, &config).await?,
     };
 
     let output = if cli.json {
