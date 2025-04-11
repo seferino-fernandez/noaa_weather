@@ -5,6 +5,7 @@ use std::fs::File;
 use std::io::Write;
 
 mod commands;
+mod utils;
 use commands::{Commands, alerts, offices, points, stations, weather, zones};
 
 #[derive(Parser, Debug)]

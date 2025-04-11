@@ -4,50 +4,11 @@ use anyhow::{Result, anyhow};
 use clap::Subcommand;
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::models::{
-    self, AlertCertainty, AlertSeverity, AlertUrgency, AreaCode, MarineAreaCode, MarineRegionCode,
-    StateTerritoryCode,
+    self, AlertCertainty, AlertSeverity, AlertUrgency, MarineRegionCode,
 };
 use serde_json::Value;
 
-// Generic helper to parse a Vec<String> into a Vec of T: FromStr
-fn parse_vec_from_str<T: FromStr + Send + Sync + 'static>(
-    items: Option<Vec<String>>,
-) -> Result<Option<Vec<T>>>
-where
-    // Require Display for error formatting, not the full Error trait
-    <T as FromStr>::Err: std::fmt::Display + Send + Sync + 'static,
-{
-    items
-        .map(|items| {
-            items
-                .into_iter()
-                // Explicitly format the Display error using anyhow!
-                .map(|item| {
-                    T::from_str(&item).map_err(|e| anyhow!("Invalid input '{}': {}", item, e))
-                })
-                .collect::<Result<Vec<T>>>()
-        })
-        .transpose()
-}
-
-// Parses AreaCode which can be StateTerritoryCode or MarineAreaCode
-fn parse_area_codes(area_codes: Option<Vec<String>>) -> Result<Option<Vec<AreaCode>>> {
-    area_codes
-        .map(|area_codes| {
-            area_codes
-                .into_iter()
-                .map(|area_code| {
-                    StateTerritoryCode::from_str(&area_code)
-                        .map(AreaCode::StateTerritoryCode)
-                        .or_else(|_| {
-                            MarineAreaCode::from_str(&area_code).map(AreaCode::MarineAreaCode)
-                        })
-                        .map_err(|_| anyhow!("Invalid area code: {}", area_code))
-                })
-                .collect::<Result<Vec<_>>>()
-        })
-        .transpose()
-}
+use crate::utils::parse::{parse_area_codes, parse_string_args_into_vec};
 
 #[derive(Subcommand, Debug)]
 pub enum AlertCommands {
@@ -226,10 +187,10 @@ pub async fn handle_command(command: AlertCommands, config: &Configuration) -> R
             limit,
         } => {
             let area_parsed = parse_area_codes(area)?;
-            let region_parsed = parse_vec_from_str::<MarineRegionCode>(region)?;
-            let urgency_parsed = parse_vec_from_str::<AlertUrgency>(urgency)?;
-            let severity_parsed = parse_vec_from_str::<AlertSeverity>(severity)?;
-            let certainty_parsed = parse_vec_from_str::<AlertCertainty>(certainty)?;
+            let region_parsed = parse_string_args_into_vec::<MarineRegionCode>(region)?;
+            let urgency_parsed = parse_string_args_into_vec::<AlertUrgency>(urgency)?;
+            let severity_parsed = parse_string_args_into_vec::<AlertSeverity>(severity)?;
+            let certainty_parsed = parse_string_args_into_vec::<AlertCertainty>(certainty)?;
 
             let result = noaa_weather_client::apis::alerts::alerts_active(
                 config,
@@ -299,10 +260,10 @@ pub async fn handle_command(command: AlertCommands, config: &Configuration) -> R
             cursor,
         } => {
             let area_parsed = parse_area_codes(area)?;
-            let region_parsed = parse_vec_from_str::<models::MarineRegionCode>(region)?;
-            let urgency_parsed = parse_vec_from_str::<models::AlertUrgency>(urgency)?;
-            let severity_parsed = parse_vec_from_str::<models::AlertSeverity>(severity)?;
-            let certainty_parsed = parse_vec_from_str::<models::AlertCertainty>(certainty)?;
+            let region_parsed = parse_string_args_into_vec::<models::MarineRegionCode>(region)?;
+            let urgency_parsed = parse_string_args_into_vec::<models::AlertUrgency>(urgency)?;
+            let severity_parsed = parse_string_args_into_vec::<models::AlertSeverity>(severity)?;
+            let certainty_parsed = parse_string_args_into_vec::<models::AlertCertainty>(certainty)?;
 
             let result = noaa_weather_client::apis::alerts::alerts_query(
                 config,

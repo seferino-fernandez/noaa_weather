@@ -1,70 +1,10 @@
-use std::str::FromStr;
-
 use anyhow::{Result, anyhow};
 use clap::{Args, Subcommand, value_parser};
 use noaa_weather_client::apis::configuration::Configuration;
-use noaa_weather_client::models::{
-    AreaCode, LandRegionCode, MarineAreaCode, MarineRegionCode, NwsZoneType, RegionCode,
-    StateTerritoryCode,
-};
+use noaa_weather_client::models::NwsZoneType;
 use serde_json::Value;
 
-// Helper function to parse a Vec<String> into a Vec of T: FromStr
-fn parse_vec_from_str<T: FromStr + Send + Sync + 'static>(
-    items: Option<Vec<String>>,
-) -> Result<Option<Vec<T>>>
-where
-    // Require Display for error formatting, not the full Error trait
-    <T as FromStr>::Err: std::fmt::Display + Send + Sync + 'static,
-{
-    items
-        .map(|strings| {
-            strings
-                .into_iter()
-                // Explicitly format the Display error using anyhow!
-                .map(|s| T::from_str(&s).map_err(|e| anyhow!("Invalid input '{}': {}", s, e)))
-                .collect::<Result<Vec<T>>>()
-        })
-        .transpose()
-}
-
-// Parses RegionCode which can be LandRegionCode or MarineRegionCode
-fn parse_region_codes(codes: Option<Vec<String>>) -> Result<Option<Vec<RegionCode>>> {
-    codes
-        .map(|strs| {
-            strs.into_iter()
-                .map(|c| {
-                    // Use FromStr for both LandRegionCode and MarineRegionCode
-                    LandRegionCode::from_str(&c)
-                        .map(RegionCode::LandRegionCode)
-                        .or_else(|_| {
-                            MarineRegionCode::from_str(&c).map(RegionCode::MarineRegionCode)
-                        })
-                        .map_err(|_| anyhow!("Invalid region code: {}", c))
-                })
-                .collect::<Result<Vec<_>>>()
-        })
-        .transpose()
-}
-
-// Parses AreaCode which can be StateTerritoryCode or MarineAreaCode
-fn parse_area_codes(codes: Option<Vec<String>>) -> Result<Option<Vec<AreaCode>>> {
-    codes
-        .map(|strs| {
-            strs.into_iter()
-                .map(|c| {
-                    // Use FromStr for both StateTerritoryCode and MarineAreaCode
-                    StateTerritoryCode::from_str(&c)
-                        .map(AreaCode::StateTerritoryCode)
-                        .or_else(|_| MarineAreaCode::from_str(&c).map(AreaCode::MarineAreaCode))
-                        .map_err(|_| anyhow!("Invalid area code: {}", c))
-                })
-                .collect::<Result<Vec<_>>>()
-        })
-        .transpose()
-}
-
-// --- CLI Command Definitions ---
+use crate::utils::parse::{parse_area_codes, parse_region_codes, parse_string_args_into_vec};
 
 #[derive(Args, Debug)]
 pub struct ZoneTypeAndIdArgs {
@@ -151,8 +91,6 @@ pub enum ZoneCommands {
     },
 }
 
-// --- Command Handling ---
-
 pub async fn handle_command(command: ZoneCommands, config: &Configuration) -> Result<Value> {
     match command {
         ZoneCommands::List {
@@ -165,11 +103,9 @@ pub async fn handle_command(command: ZoneCommands, config: &Configuration) -> Re
             limit,
             effective,
         } => {
-            // Use the parsing functions which now leverage FromStr where available
             let area_parsed = parse_area_codes(area)?;
             let region_parsed = parse_region_codes(region)?;
-            // Parse NwsZoneType using FromStr via the helper
-            let type_parsed = parse_vec_from_str::<NwsZoneType>(r#type)?;
+            let type_parsed = parse_string_args_into_vec::<NwsZoneType>(r#type)?;
 
             let result = match type_parsed {
                 None => {
@@ -179,7 +115,7 @@ pub async fn handle_command(command: ZoneCommands, config: &Configuration) -> Re
                         id,
                         area_parsed,
                         region_parsed,
-                        None, // No type filter
+                        None,
                         point.as_deref(),
                         include_geometry,
                         limit,
@@ -198,7 +134,7 @@ pub async fn handle_command(command: ZoneCommands, config: &Configuration) -> Re
                             id,
                             area_parsed,
                             region_parsed,
-                            None, // Type is path param, not query param
+                            None,
                             point.as_deref(),
                             include_geometry,
                             limit,
