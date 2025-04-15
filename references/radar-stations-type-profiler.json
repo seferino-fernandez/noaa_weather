@@ -1,0 +1,181 @@
+{
+    "@context": [
+        "https://geojson.org/geojson-ld/geojson-context.jsonld",
+        {
+            "@version": "1.1",
+            "nwsUnit": "https://api.weather.gov/ontology/unit/",
+            "wmoUnit": "https://codes.wmo.int/common/unit/"
+        }
+    ],
+    "features": [
+        {
+            "geometry": {
+                "coordinates": [
+                    -151.46,
+                    59.65
+                ],
+                "type": "Point"
+            },
+            "id": "https://api.weather.gov/radar/stations/HWPA2",
+            "properties": {
+                "@id": "https://api.weather.gov/radar/stations/HWPA2",
+                "@type": "wx:RadarStation",
+                "elevation": {
+                    "unitCode": "wmoUnit:m",
+                    "value": 7.6
+                },
+                "id": "HWPA2",
+                "latency": {
+                    "average": {
+                        "unitCode": "nwsUnit:s",
+                        "value": null
+                    },
+                    "current": {
+                        "unitCode": "nwsUnit:s",
+                        "value": null
+                    },
+                    "host": "ldm4",
+                    "levelTwoLastReceivedTime": "1970-01-01T00:00:00+00:00",
+                    "max": {
+                        "unitCode": "nwsUnit:s",
+                        "value": null
+                    },
+                    "maxLatencyTime": "1970-01-01T00:00:00+00:00",
+                    "reportingHost": "rdss"
+                },
+                "name": "Homer",
+                "rda": null,
+                "stationType": "Profiler",
+                "timeZone": "GMT"
+            },
+            "type": "Feature"
+        },
+        {
+            "geometry": {
+                "coordinates": [
+                    -97.45,
+                    35.2299999
+                ],
+                "type": "Point"
+            },
+            "id": "https://api.weather.gov/radar/stations/ROCO2",
+            "properties": {
+                "@id": "https://api.weather.gov/radar/stations/ROCO2",
+                "@type": "wx:RadarStation",
+                "elevation": {
+                    "unitCode": "wmoUnit:m",
+                    "value": 363.3
+                },
+                "id": "ROCO2",
+                "latency": {
+                    "average": {
+                        "unitCode": "nwsUnit:s",
+                        "value": null
+                    },
+                    "current": {
+                        "unitCode": "nwsUnit:s",
+                        "value": null
+                    },
+                    "host": "ldm4",
+                    "levelTwoLastReceivedTime": "1970-01-01T00:00:00+00:00",
+                    "max": {
+                        "unitCode": "nwsUnit:s",
+                        "value": null
+                    },
+                    "maxLatencyTime": "1970-01-01T00:00:00+00:00",
+                    "reportingHost": "rdss"
+                },
+                "name": "Norman",
+                "rda": null,
+                "stationType": "Profiler",
+                "timeZone": "GMT"
+            },
+            "type": "Feature"
+        },
+        {
+            "geometry": {
+                "coordinates": [
+                    -149.78,
+                    61.15
+                ],
+                "type": "Point"
+            },
+            "id": "https://api.weather.gov/radar/stations/AWPA2",
+            "properties": {
+                "@id": "https://api.weather.gov/radar/stations/AWPA2",
+                "@type": "wx:RadarStation",
+                "elevation": {
+                    "unitCode": "wmoUnit:m",
+                    "value": 97
+                },
+                "id": "AWPA2",
+                "latency": {
+                    "average": {
+                        "unitCode": "nwsUnit:s",
+                        "value": null
+                    },
+                    "current": {
+                        "unitCode": "nwsUnit:s",
+                        "value": null
+                    },
+                    "host": "ldm4",
+                    "levelTwoLastReceivedTime": "1970-01-01T00:00:00+00:00",
+                    "max": {
+                        "unitCode": "nwsUnit:s",
+                        "value": null
+                    },
+                    "maxLatencyTime": "1970-01-01T00:00:00+00:00",
+                    "reportingHost": "rdss"
+                },
+                "name": "Anchorage",
+                "rda": null,
+                "stationType": "Profiler",
+                "timeZone": "GMT"
+            },
+            "type": "Feature"
+        },
+        {
+            "geometry": {
+                "coordinates": [
+                    -150.4199999,
+                    62.31
+                ],
+                "type": "Point"
+            },
+            "id": "https://api.weather.gov/radar/stations/TLKA2",
+            "properties": {
+                "@id": "https://api.weather.gov/radar/stations/TLKA2",
+                "@type": "wx:RadarStation",
+                "elevation": {
+                    "unitCode": "wmoUnit:m",
+                    "value": 151
+                },
+                "id": "TLKA2",
+                "latency": {
+                    "average": {
+                        "unitCode": "nwsUnit:s",
+                        "value": null
+                    },
+                    "current": {
+                        "unitCode": "nwsUnit:s",
+                        "value": null
+                    },
+                    "host": "ldm4",
+                    "levelTwoLastReceivedTime": "1970-01-01T00:00:00+00:00",
+                    "max": {
+                        "unitCode": "nwsUnit:s",
+                        "value": null
+                    },
+                    "maxLatencyTime": "1970-01-01T00:00:00+00:00",
+                    "reportingHost": "rdss"
+                },
+                "name": "Talkeetna",
+                "rda": null,
+                "stationType": "Profiler",
+                "timeZone": "GMT"
+            },
+            "type": "Feature"
+        }
+    ],
+    "type": "FeatureCollection"
+}

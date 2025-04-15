@@ -1,6 +1,7 @@
 pub mod alerts;
 pub mod offices;
 pub mod points;
+pub mod radar;
 pub mod stations;
 pub mod weather;
 pub mod zones;
@@ -38,5 +39,10 @@ pub enum Commands {
     Zones {
         #[command(subcommand)]
         command: Box<zones::ZoneCommands>,
+    },
+    /// Access radar station and server information
+    Radar {
+        #[command(subcommand)]
+        command: Box<radar::RadarCommand>,
     },
 }

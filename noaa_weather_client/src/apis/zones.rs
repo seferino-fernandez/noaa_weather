@@ -79,7 +79,7 @@ pub async fn zone(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -88,7 +88,7 @@ pub async fn zone(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -139,7 +139,7 @@ pub async fn zone_forecast(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -148,7 +148,7 @@ pub async fn zone_forecast(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -289,7 +289,7 @@ pub async fn zone_list(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -298,7 +298,7 @@ pub async fn zone_list(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -440,7 +440,7 @@ pub async fn zone_list_type(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -449,7 +449,7 @@ pub async fn zone_list_type(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -511,7 +511,7 @@ pub async fn zone_obs(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -520,7 +520,7 @@ pub async fn zone_obs(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -578,7 +578,7 @@ pub async fn zone_stations(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -587,7 +587,7 @@ pub async fn zone_stations(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);

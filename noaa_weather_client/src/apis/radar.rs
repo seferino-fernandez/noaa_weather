@@ -73,6 +73,7 @@ pub async fn radar_profiler(
         configuration.base_path,
         stationId = crate::apis::urlencode(station_id)
     );
+    println!("uri_str: {}", uri_str);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
     if let Some(ref param_value) = time {
@@ -90,7 +91,7 @@ pub async fn radar_profiler(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -99,7 +100,7 @@ pub async fn radar_profiler(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -181,7 +182,7 @@ pub async fn radar_queue(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -190,7 +191,7 @@ pub async fn radar_queue(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -244,7 +245,7 @@ pub async fn radar_server(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -253,7 +254,7 @@ pub async fn radar_server(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -302,7 +303,7 @@ pub async fn radar_servers(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -311,7 +312,7 @@ pub async fn radar_servers(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -369,7 +370,7 @@ pub async fn radar_station(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -378,7 +379,7 @@ pub async fn radar_station(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -428,7 +429,7 @@ pub async fn radar_station_alarms(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -437,7 +438,7 @@ pub async fn radar_station_alarms(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -510,7 +511,7 @@ pub async fn radar_stations(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -519,7 +520,7 @@ pub async fn radar_stations(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);

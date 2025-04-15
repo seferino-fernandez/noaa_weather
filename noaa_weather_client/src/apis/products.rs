@@ -90,7 +90,7 @@ pub async fn location_products(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -99,7 +99,7 @@ pub async fn location_products(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -149,7 +149,7 @@ pub async fn product(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -158,7 +158,7 @@ pub async fn product(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -203,7 +203,7 @@ pub async fn product_locations(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -212,7 +212,7 @@ pub async fn product_locations(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -257,7 +257,7 @@ pub async fn product_types(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -266,7 +266,7 @@ pub async fn product_types(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -403,7 +403,7 @@ pub async fn products_query(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -412,7 +412,7 @@ pub async fn products_query(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -462,7 +462,7 @@ pub async fn products_type(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -471,7 +471,7 @@ pub async fn products_type(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -523,7 +523,7 @@ pub async fn products_type_location(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -532,7 +532,7 @@ pub async fn products_type_location(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -582,7 +582,7 @@ pub async fn products_type_locations(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -591,7 +591,7 @@ pub async fn products_type_locations(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);

@@ -42,7 +42,7 @@ pub async fn point(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -51,7 +51,7 @@ pub async fn point(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = ContentType::from(content_type);
@@ -101,7 +101,7 @@ pub async fn point_stations(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -110,7 +110,7 @@ pub async fn point_stations(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = ContentType::from(content_type);

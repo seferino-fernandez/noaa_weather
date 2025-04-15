@@ -93,7 +93,7 @@ pub async fn obs_station(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -102,7 +102,7 @@ pub async fn obs_station(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -195,7 +195,7 @@ pub async fn obs_stations(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -204,7 +204,7 @@ pub async fn obs_stations(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -258,7 +258,7 @@ pub async fn station_observation_latest(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -266,7 +266,7 @@ pub async fn station_observation_latest(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -327,7 +327,7 @@ pub async fn station_observation_list(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -336,7 +336,7 @@ pub async fn station_observation_list(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -388,7 +388,7 @@ pub async fn station_observation_time(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -397,7 +397,7 @@ pub async fn station_observation_time(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -451,7 +451,7 @@ pub async fn taf(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -460,7 +460,7 @@ pub async fn taf(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
@@ -510,7 +510,7 @@ pub async fn tafs(
             Some(ref prefix) => format!("{} {}", prefix, key),
             None => key,
         };
-        req_builder = req_builder.header("User-Agent", value);
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, value);
     };
 
     let req = req_builder.build()?;
@@ -519,7 +519,7 @@ pub async fn tafs(
     let status = resp.status();
     let content_type = resp
         .headers()
-        .get("content-type")
+        .get(reqwest::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
