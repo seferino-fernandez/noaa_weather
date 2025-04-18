@@ -1,7 +1,5 @@
-use super::{ContentType, Error, configuration, points};
+use super::{ContentType, Error, configuration};
 use crate::apis::ResponseContent;
-use crate::apis::points::PointError;
-use crate::models::city_coordinates::USCity;
 use crate::models::{self};
 use reqwest;
 use serde::de::Error as _;
@@ -546,60 +544,4 @@ pub async fn tafs(
             entity,
         }))
     }
-}
-
-/// Returns the current weather observation for a given US city
-///
-/// This function combines the point and station APIs to get current weather data
-/// for a predefined US city.
-pub async fn get_city_weather(
-    configuration: &configuration::Configuration,
-    city: USCity,
-) -> Result<models::ObservationGeoJson, Error<GetCityWeatherError>> {
-    // First get the point data to find the nearest station
-    let point_data = points::point(configuration, &city.coordinate_string())
-        .await
-        .map_err(|e| {
-            // Convert point error to GetCityWeatherError
-            match e {
-                Error::ResponseError(resp) => Error::ResponseError(ResponseContent {
-                    status: resp.status,
-                    content: resp.content,
-                    entity: resp.entity.and_then(|e| match e {
-                        PointError::DefaultResponse(problem) => {
-                            Some(GetCityWeatherError::PointError(problem))
-                        }
-                        _ => None,
-                    }),
-                }),
-                _ => Error::from(serde_json::Error::custom("Error getting point data")),
-            }
-        })?;
-
-    // Get the station ID directly from the point data
-    let station_id = point_data.properties.radar_station.ok_or_else(|| {
-        Error::from(serde_json::Error::custom(
-            "No radar station found for location",
-        ))
-    })?;
-
-    // Get the latest observation for the station
-    let observation = station_observation_latest(configuration, &station_id, None)
-        .await
-        .map_err(|e| match e {
-            Error::ResponseError(resp) => Error::ResponseError(ResponseContent {
-                status: resp.status,
-                content: resp.content,
-                entity: resp.entity.and_then(|e| match e {
-                    StationObservationLatestError::DefaultResponse(problem) => {
-                        Some(GetCityWeatherError::StationError(problem))
-                    }
-                    _ => None,
-                }),
-            }),
-            _ => Error::from(serde_json::Error::custom(
-                "Error getting station observation",
-            )),
-        })?;
-    Ok(observation)
 }

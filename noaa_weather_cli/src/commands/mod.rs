@@ -4,7 +4,6 @@ pub mod offices;
 pub mod points;
 pub mod radar;
 pub mod stations;
-pub mod weather;
 pub mod zones;
 
 use clap::Subcommand;
@@ -35,11 +34,6 @@ pub enum Commands {
     Stations {
         #[command(subcommand)]
         command: Box<stations::StationCommands>,
-    },
-    /// Get weather information
-    Weather {
-        #[command(subcommand)]
-        command: Box<weather::WeatherCommands>,
     },
     /// Get NWS zone information, forecasts, and observations
     Zones {

@@ -50,7 +50,6 @@ pub mod center_weather_advisory_collection_geo_json_all_of_features;
 pub use self::center_weather_advisory_collection_geo_json_all_of_features::CenterWeatherAdvisoryCollectionGeoJsonAllOfFeatures;
 pub mod center_weather_advisory_geo_json;
 pub use self::center_weather_advisory_geo_json::CenterWeatherAdvisoryGeoJson;
-pub mod city_coordinates;
 pub mod geo_json_feature;
 pub use self::geo_json_feature::GeoJsonFeature;
 pub mod geo_json_feature_collection;
