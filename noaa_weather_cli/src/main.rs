@@ -6,7 +6,7 @@ use std::io::Write;
 
 mod commands;
 mod utils;
-use commands::{Commands, alerts, offices, points, radar, stations, weather, zones};
+use commands::{Commands, alerts, gridpoints, offices, points, radar, stations, weather, zones};
 
 #[derive(Parser, Debug)]
 #[command(
@@ -52,6 +52,7 @@ async fn main() -> Result<()> {
 
     let result = match cli.command {
         Commands::Alerts { command } => alerts::handle_command(*command, &config).await?,
+        Commands::Gridpoints { command } => gridpoints::handle_command(*command, &config).await?,
         Commands::Offices { command } => offices::handle_command(*command, &config).await?,
         Commands::Points { command } => points::handle_command(*command, &config).await?,
         Commands::Radar { command } => radar::handle_command(*command, &config).await?,

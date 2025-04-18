@@ -1,3 +1,6 @@
+use std::fmt;
+use std::str::FromStr;
+
 use serde::{Deserialize, Serialize};
 
 /// NwsForecastOfficeId : Three-letter identifier for a NWS office.
@@ -272,8 +275,8 @@ pub enum NwsForecastOfficeId {
     Pqw,
 }
 
-impl std::fmt::Display for NwsForecastOfficeId {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl fmt::Display for NwsForecastOfficeId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Akq => write!(f, "AKQ"),
             Self::Aly => write!(f, "ALY"),
@@ -412,8 +415,240 @@ impl std::fmt::Display for NwsForecastOfficeId {
     }
 }
 
-impl Default for NwsForecastOfficeId {
-    fn default() -> NwsForecastOfficeId {
-        Self::Akq
+#[derive(Debug, PartialEq, Eq)]
+pub struct ParseNwsForecastOfficeIdError {
+    invalid_value: String,
+}
+
+impl fmt::Display for ParseNwsForecastOfficeIdError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Invalid NWS forecast office ID: {}", self.invalid_value)
+    }
+}
+
+impl std::error::Error for ParseNwsForecastOfficeIdError {}
+
+impl FromStr for NwsForecastOfficeId {
+    type Err = ParseNwsForecastOfficeIdError;
+
+    fn from_str(string: &str) -> Result<Self, Self::Err> {
+        let lower_string = string.to_lowercase();
+        match lower_string.as_str() {
+            "akq" => Ok(Self::Akq),
+            "aly" => Ok(Self::Aly),
+            "bgm" => Ok(Self::Bgm),
+            "box" => Ok(Self::Box),
+            "btv" => Ok(Self::Btv),
+            "buf" => Ok(Self::Buf),
+            "cae" => Ok(Self::Cae),
+            "car" => Ok(Self::Car),
+            "chs" => Ok(Self::Chs),
+            "cle" => Ok(Self::Cle),
+            "ctp" => Ok(Self::Ctp),
+            "gsp" => Ok(Self::Gsp),
+            "gyx" => Ok(Self::Gyx),
+            "ilm" => Ok(Self::Ilm),
+            "iln" => Ok(Self::Iln),
+            "lwx" => Ok(Self::Lwx),
+            "mhx" => Ok(Self::Mhx),
+            "okx" => Ok(Self::Okx),
+            "pbz" => Ok(Self::Pbz),
+            "phi" => Ok(Self::Phi),
+            "rah" => Ok(Self::Rah),
+            "rlx" => Ok(Self::Rlx),
+            "rnk" => Ok(Self::Rnk),
+            "abq" => Ok(Self::Abq),
+            "ama" => Ok(Self::Ama),
+            "bmx" => Ok(Self::Bmx),
+            "bro" => Ok(Self::Bro),
+            "crp" => Ok(Self::Crp),
+            "epz" => Ok(Self::Epz),
+            "ewx" => Ok(Self::Ewx),
+            "ffc" => Ok(Self::Ffc),
+            "fwd" => Ok(Self::Fwd),
+            "hgx" => Ok(Self::Hgx),
+            "hun" => Ok(Self::Hun),
+            "jan" => Ok(Self::Jan),
+            "jax" => Ok(Self::Jax),
+            "key" => Ok(Self::Key),
+            "lch" => Ok(Self::Lch),
+            "lix" => Ok(Self::Lix),
+            "lub" => Ok(Self::Lub),
+            "lzk" => Ok(Self::Lzk),
+            "maf" => Ok(Self::Maf),
+            "meg" => Ok(Self::Meg),
+            "mfl" => Ok(Self::Mfl),
+            "mlb" => Ok(Self::Mlb),
+            "mob" => Ok(Self::Mob),
+            "mrx" => Ok(Self::Mrx),
+            "ohx" => Ok(Self::Ohx),
+            "oun" => Ok(Self::Oun),
+            "shv" => Ok(Self::Shv),
+            "sjt" => Ok(Self::Sjt),
+            "sju" => Ok(Self::Sju),
+            "tae" => Ok(Self::Tae),
+            "tbw" => Ok(Self::Tbw),
+            "tsa" => Ok(Self::Tsa),
+            "abr" => Ok(Self::Abr),
+            "apx" => Ok(Self::Apx),
+            "arx" => Ok(Self::Arx),
+            "bis" => Ok(Self::Bis),
+            "bou" => Ok(Self::Bou),
+            "cys" => Ok(Self::Cys),
+            "ddc" => Ok(Self::Ddc),
+            "dlh" => Ok(Self::Dlh),
+            "dmx" => Ok(Self::Dmx),
+            "dtx" => Ok(Self::Dtx),
+            "dvn" => Ok(Self::Dvn),
+            "eax" => Ok(Self::Eax),
+            "fgf" => Ok(Self::Fgf),
+            "fsd" => Ok(Self::Fsd),
+            "gid" => Ok(Self::Gid),
+            "gjt" => Ok(Self::Gjt),
+            "gld" => Ok(Self::Gld),
+            "grb" => Ok(Self::Grb),
+            "grr" => Ok(Self::Grr),
+            "ict" => Ok(Self::Ict),
+            "ilx" => Ok(Self::Ilx),
+            "ind" => Ok(Self::Ind),
+            "iwx" => Ok(Self::Iwx),
+            "jkl" => Ok(Self::Jkl),
+            "lbf" => Ok(Self::Lbf),
+            "lmk" => Ok(Self::Lmk),
+            "lot" => Ok(Self::Lot),
+            "lsx" => Ok(Self::Lsx),
+            "mkx" => Ok(Self::Mkx),
+            "mpx" => Ok(Self::Mpx),
+            "mqt" => Ok(Self::Mqt),
+            "oax" => Ok(Self::Oax),
+            "pah" => Ok(Self::Pah),
+            "pub" => Ok(Self::Pub),
+            "riw" => Ok(Self::Riw),
+            "sgf" => Ok(Self::Sgf),
+            "top" => Ok(Self::Top),
+            "unr" => Ok(Self::Unr),
+            "boi" => Ok(Self::Boi),
+            "byz" => Ok(Self::Byz),
+            "eka" => Ok(Self::Eka),
+            "fgz" => Ok(Self::Fgz),
+            "ggw" => Ok(Self::Ggw),
+            "hnx" => Ok(Self::Hnx),
+            "lkn" => Ok(Self::Lkn),
+            "lox" => Ok(Self::Lox),
+            "mfr" => Ok(Self::Mfr),
+            "mso" => Ok(Self::Mso),
+            "mtr" => Ok(Self::Mtr),
+            "otx" => Ok(Self::Otx),
+            "pdt" => Ok(Self::Pdt),
+            "pih" => Ok(Self::Pih),
+            "pqr" => Ok(Self::Pqr),
+            "psr" => Ok(Self::Psr),
+            "rev" => Ok(Self::Rev),
+            "sew" => Ok(Self::Sew),
+            "sgx" => Ok(Self::Sgx),
+            "slc" => Ok(Self::Slc),
+            "sto" => Ok(Self::Sto),
+            "tfx" => Ok(Self::Tfx),
+            "twc" => Ok(Self::Twc),
+            "vef" => Ok(Self::Vef),
+            "aer" => Ok(Self::Aer),
+            "afc" => Ok(Self::Afc),
+            "afg" => Ok(Self::Afg),
+            "ajk" => Ok(Self::Ajk),
+            "alu" => Ok(Self::Alu),
+            "gum" => Ok(Self::Gum),
+            "hpa" => Ok(Self::Hpa),
+            "hfo" => Ok(Self::Hfo),
+            "ppg" => Ok(Self::Ppg),
+            "stu" => Ok(Self::Stu),
+            "nh1" => Ok(Self::Nh1),
+            "nh2" => Ok(Self::Nh2),
+            "ona" => Ok(Self::Ona),
+            "onp" => Ok(Self::Onp),
+            "pqe" => Ok(Self::Pqe),
+            "pqw" => Ok(Self::Pqw),
+            _ => Err(ParseNwsForecastOfficeIdError {
+                invalid_value: string.to_string(),
+            }),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_display() {
+        assert_eq!(NwsForecastOfficeId::Akq.to_string(), "AKQ");
+        assert_eq!(NwsForecastOfficeId::Pqw.to_string(), "PQW");
+        assert_eq!(NwsForecastOfficeId::Maf.to_string(), "MAF");
+        assert_eq!(NwsForecastOfficeId::Sew.to_string(), "SEW");
+    }
+
+    #[test]
+    fn test_from_str_ok() {
+        assert_eq!(
+            "AKQ".parse::<NwsForecastOfficeId>(),
+            Ok(NwsForecastOfficeId::Akq)
+        );
+        assert_eq!(
+            "akq".parse::<NwsForecastOfficeId>(),
+            Ok(NwsForecastOfficeId::Akq)
+        );
+        assert_eq!(
+            "PQW".parse::<NwsForecastOfficeId>(),
+            Ok(NwsForecastOfficeId::Pqw)
+        );
+        assert_eq!(
+            "pqw".parse::<NwsForecastOfficeId>(),
+            Ok(NwsForecastOfficeId::Pqw)
+        );
+        assert_eq!(
+            "MAF".parse::<NwsForecastOfficeId>(),
+            Ok(NwsForecastOfficeId::Maf)
+        );
+        assert_eq!(
+            "maf".parse::<NwsForecastOfficeId>(),
+            Ok(NwsForecastOfficeId::Maf)
+        );
+        assert_eq!(
+            "SEW".parse::<NwsForecastOfficeId>(),
+            Ok(NwsForecastOfficeId::Sew)
+        );
+        assert_eq!(
+            "sew".parse::<NwsForecastOfficeId>(),
+            Ok(NwsForecastOfficeId::Sew)
+        );
+        assert_eq!(
+            "SGF".parse::<NwsForecastOfficeId>(),
+            Ok(NwsForecastOfficeId::Sgf)
+        );
+        assert_eq!(
+            "sgf".parse::<NwsForecastOfficeId>(),
+            Ok(NwsForecastOfficeId::Sgf)
+        );
+    }
+
+    #[test]
+    fn test_from_str_err() {
+        assert_eq!(
+            "INVALID".parse::<NwsForecastOfficeId>(),
+            Err(ParseNwsForecastOfficeIdError {
+                invalid_value: "INVALID".to_string()
+            })
+        );
+        assert_eq!(
+            "ak".parse::<NwsForecastOfficeId>(),
+            Err(ParseNwsForecastOfficeIdError {
+                invalid_value: "ak".to_string()
+            })
+        );
+        assert_eq!(
+            "".parse::<NwsForecastOfficeId>(),
+            Err(ParseNwsForecastOfficeIdError {
+                invalid_value: "".to_string()
+            })
+        );
     }
 }

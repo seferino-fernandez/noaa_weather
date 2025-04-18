@@ -1,6 +1,11 @@
+use std::fmt::Display;
+use std::str::FromStr;
+
 use crate::models;
 use serde::{Deserialize, Serialize};
+use serde_with::{NoneAsEmptyString, serde_as};
 
+#[serde_as]
 /// GridpointForecastPeriod : An object containing forecast information for a specific time period (generally 12-hour or 1-hour).
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct GridpointForecastPeriod {
@@ -25,12 +30,7 @@ pub struct GridpointForecastPeriod {
     #[serde(rename = "temperatureUnit", skip_serializing_if = "Option::is_none")]
     pub temperature_unit: Option<TemperatureUnit>,
     /// If not null, indicates a non-diurnal temperature trend for the period (either rising temperature overnight, or falling temperature during the day)
-    #[serde(
-        rename = "temperatureTrend",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde_as(as = "Option<NoneAsEmptyString>")]
     pub temperature_trend: Option<Option<TemperatureTrend>>,
     #[serde(
         rename = "probabilityOfPrecipitation",
@@ -51,8 +51,8 @@ pub struct GridpointForecastPeriod {
     )]
     pub wind_gust: Option<Option<Box<models::GridpointForecastPeriodWindGust>>>,
     /// The prevailing direction of the wind for the period, using a 16-point compass.
-    #[serde(rename = "windDirection", skip_serializing_if = "Option::is_none")]
-    pub wind_direction: Option<WindDirection>,
+    #[serde_as(as = "Option<NoneAsEmptyString>")]
+    pub wind_direction: Option<Option<WindDirection>>,
     /// A link to an icon representing the forecast summary.
     #[serde(rename = "icon", skip_serializing_if = "Option::is_none")]
     pub icon: Option<String>,
@@ -111,6 +111,25 @@ pub enum TemperatureTrend {
     Falling,
 }
 
+impl Display for TemperatureTrend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl FromStr for TemperatureTrend {
+    type Err = String;
+
+    fn from_str(string: &str) -> Result<Self, Self::Err> {
+        let lower_string = string.to_lowercase();
+        match lower_string.as_str() {
+            "rising" => Ok(TemperatureTrend::Rising),
+            "falling" => Ok(TemperatureTrend::Falling),
+            _ => Err(format!("Invalid temperature trend: {}", string)),
+        }
+    }
+}
+
 impl Default for TemperatureTrend {
     fn default() -> TemperatureTrend {
         Self::Rising
@@ -156,5 +175,38 @@ pub enum WindDirection {
 impl Default for WindDirection {
     fn default() -> WindDirection {
         Self::N
+    }
+}
+
+impl Display for WindDirection {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl FromStr for WindDirection {
+    type Err = String;
+
+    fn from_str(string: &str) -> Result<Self, Self::Err> {
+        let lower_string = string.to_lowercase();
+        match lower_string.as_str() {
+            "n" => Ok(WindDirection::N),
+            "nne" => Ok(WindDirection::Nne),
+            "ne" => Ok(WindDirection::Ne),
+            "ene" => Ok(WindDirection::Ene),
+            "e" => Ok(WindDirection::E),
+            "ese" => Ok(WindDirection::Ese),
+            "se" => Ok(WindDirection::Se),
+            "sse" => Ok(WindDirection::Sse),
+            "s" => Ok(WindDirection::S),
+            "ssw" => Ok(WindDirection::Ssw),
+            "sw" => Ok(WindDirection::Sw),
+            "wsw" => Ok(WindDirection::Wsw),
+            "w" => Ok(WindDirection::W),
+            "wnw" => Ok(WindDirection::Wnw),
+            "nw" => Ok(WindDirection::Nw),
+            "nnw" => Ok(WindDirection::Nnw),
+            _ => Err(format!("Invalid wind direction: {}", string)),
+        }
     }
 }

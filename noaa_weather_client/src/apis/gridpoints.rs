@@ -40,14 +40,14 @@ pub enum GridpointStationsError {
 /// Returns raw numerical forecast data for a 2.5km grid area
 pub async fn gridpoint(
     configuration: &configuration::Configuration,
-    wfo: models::NwsForecastOfficeId,
+    office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
 ) -> Result<models::GridpointGeoJson, Error<GridpointError>> {
     let uri_str = format!(
-        "{}/gridpoints/{wfo}/{x},{y}",
+        "{}/gridpoints/{office_id}/{x},{y}",
         configuration.base_path,
-        wfo = wfo,
+        office_id = office_id,
         x = x,
         y = y
     );
@@ -103,16 +103,16 @@ pub async fn gridpoint(
 /// Returns a textual forecast for a 2.5km grid area
 pub async fn gridpoint_forecast(
     configuration: &configuration::Configuration,
-    wfo: models::NwsForecastOfficeId,
+    office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
     feature_flags: Option<Vec<String>>,
     units: Option<models::GridpointForecastUnits>,
 ) -> Result<models::GridpointForecastGeoJson, Error<GridpointForecastError>> {
     let uri_str = format!(
-        "{}/gridpoints/{wfo}/{x},{y}/forecast",
+        "{}/gridpoints/{office_id}/{x},{y}/forecast",
         configuration.base_path,
-        wfo = wfo,
+        office_id = office_id,
         x = x,
         y = y
     );
@@ -174,16 +174,16 @@ pub async fn gridpoint_forecast(
 /// Returns a textual hourly forecast for a 2.5km grid area
 pub async fn gridpoint_forecast_hourly(
     configuration: &configuration::Configuration,
-    wfo: models::NwsForecastOfficeId,
+    office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
     feature_flags: Option<Vec<String>>,
     units: Option<models::GridpointForecastUnits>,
 ) -> Result<models::GridpointForecastGeoJson, Error<GridpointForecastHourlyError>> {
     let uri_str = format!(
-        "{}/gridpoints/{wfo}/{x},{y}/forecast/hourly",
+        "{}/gridpoints/{office_id}/{x},{y}/forecast/hourly",
         configuration.base_path,
-        wfo = wfo,
+        office_id = office_id,
         x = x,
         y = y
     );
@@ -245,16 +245,16 @@ pub async fn gridpoint_forecast_hourly(
 /// Returns a list of observation stations usable for a given 2.5km grid area
 pub async fn gridpoint_stations(
     configuration: &configuration::Configuration,
-    wfo: models::NwsForecastOfficeId,
+    office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
     limit: Option<i32>,
     cursor: Option<&str>,
 ) -> Result<models::ObservationStationCollectionGeoJson, Error<GridpointStationsError>> {
     let uri_str = format!(
-        "{}/gridpoints/{wfo}/{x},{y}/stations",
+        "{}/gridpoints/{office_id}/{x},{y}/stations",
         configuration.base_path,
-        wfo = wfo,
+        office_id = office_id,
         x = x,
         y = y
     );

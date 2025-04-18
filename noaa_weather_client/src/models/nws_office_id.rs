@@ -8,9 +8,3 @@ pub enum NwsOfficeId {
     NwsRegionalHqid(models::NwsRegionalHqid),
     NwsNationalHqid(models::NwsNationalHqid),
 }
-
-impl Default for NwsOfficeId {
-    fn default() -> Self {
-        Self::NwsForecastOfficeId(Default::default())
-    }
-}

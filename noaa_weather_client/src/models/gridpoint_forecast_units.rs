@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use serde::{Deserialize, Serialize};
 
 /// GridpointForecastUnits : Denotes the units used in the textual portions of the forecast.
@@ -19,8 +21,14 @@ impl std::fmt::Display for GridpointForecastUnits {
     }
 }
 
-impl Default for GridpointForecastUnits {
-    fn default() -> GridpointForecastUnits {
-        Self::Us
+impl FromStr for GridpointForecastUnits {
+    type Err = String;
+
+    fn from_str(string: &str) -> Result<Self, Self::Err> {
+        match string.to_lowercase().as_str() {
+            "us" => Ok(Self::Us),
+            "si" => Ok(Self::Si),
+            _ => Err(format!("Invalid gridpoint forecast units: {}", string)),
+        }
     }
 }

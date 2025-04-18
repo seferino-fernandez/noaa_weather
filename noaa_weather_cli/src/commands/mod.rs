@@ -1,4 +1,5 @@
 pub mod alerts;
+pub mod gridpoints;
 pub mod offices;
 pub mod points;
 pub mod radar;
@@ -14,6 +15,11 @@ pub enum Commands {
     Alerts {
         #[command(subcommand)]
         command: Box<alerts::AlertCommands>,
+    },
+    /// Get gridpoint forecast data
+    Gridpoints {
+        #[command(subcommand)]
+        command: Box<gridpoints::GridpointCommands>,
     },
     /// Get NWS office information
     Offices {
