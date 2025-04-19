@@ -306,7 +306,7 @@ pub async fn sigmet(
 }
 
 /// Returns a list of SIGMET/AIRMETs
-pub async fn sigmet_query(
+pub async fn sigmets(
     configuration: &configuration::Configuration,
     start: Option<String>,
     end: Option<String>,

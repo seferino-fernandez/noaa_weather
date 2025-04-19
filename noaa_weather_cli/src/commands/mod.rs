@@ -1,4 +1,5 @@
 pub mod alerts;
+pub mod aviation;
 pub mod gridpoints;
 pub mod offices;
 pub mod points;
@@ -44,5 +45,10 @@ pub enum Commands {
     Radar {
         #[command(subcommand)]
         command: Box<radar::RadarCommand>,
+    },
+    /// Access aviation weather products (CWAs, SIGMETs)
+    Aviation {
+        #[command(subcommand)]
+        command: Box<aviation::AviationCommands>,
     },
 }
