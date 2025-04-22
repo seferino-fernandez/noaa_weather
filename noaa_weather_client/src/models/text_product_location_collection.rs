@@ -6,7 +6,7 @@ pub struct TextProductLocationCollection {
     #[serde(rename = "@context", skip_serializing_if = "Option::is_none")]
     pub at_context: Option<Box<models::JsonLdContext>>,
     #[serde(rename = "locations", skip_serializing_if = "Option::is_none")]
-    pub locations: Option<std::collections::HashMap<String, String>>,
+    pub locations: Option<std::collections::HashMap<String, Option<String>>>,
 }
 
 impl TextProductLocationCollection {

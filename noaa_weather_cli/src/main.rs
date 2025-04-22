@@ -6,7 +6,9 @@ use std::io::Write;
 
 mod commands;
 mod utils;
-use commands::{Commands, alerts, aviation, gridpoints, offices, points, radar, stations, zones};
+use commands::{
+    Commands, alerts, aviation, gridpoints, offices, points, products, radar, stations, zones,
+};
 
 #[derive(Parser, Debug)]
 #[command(
@@ -59,6 +61,7 @@ async fn main() -> Result<()> {
         Commands::Stations { command } => stations::handle_command(*command, &config).await?,
         Commands::Zones { command } => zones::handle_command(*command, &config).await?,
         Commands::Aviation { command } => aviation::handle_command(*command, &config).await?,
+        Commands::Products { command } => products::handle_command(*command, &config).await?,
     };
 
     let output = if cli.json {
