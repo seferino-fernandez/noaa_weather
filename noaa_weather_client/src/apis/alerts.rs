@@ -5,91 +5,186 @@ use reqwest;
 use serde::de::Error as _;
 use serde::{Deserialize, Serialize};
 
-/// struct for typed errors of method [`alerts_active`]
+/// Errors that can occur when calling the [`get_active_alerts`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum AlertsActiveError {
+pub enum ActiveAlertsError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`alerts_active_area`]
+/// Errors that can occur when calling the [`get_active_alerts_for_area`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum AlertsActiveAreaError {
+pub enum ActiveAlertsAreaError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`alerts_active_count`]
+/// Errors that can occur when calling the [`get_active_alerts_count`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum AlertsActiveCountError {
+pub enum ActiveAlertsCountError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`alerts_active_region`]
+/// Errors that can occur when calling the [`get_active_alerts_for_region`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum AlertsActiveRegionError {
+pub enum ActiveRegionError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`alerts_active_zone`]
+/// Errors that can occur when calling the [`get_active_alerts_for_zone`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum AlertsActiveZoneError {
+pub enum ActiveAlertsZoneError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`alerts_query`]
+/// Errors that can occur when calling the [`get_alerts`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum AlertsQueryError {
+pub enum GetAlertsError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`alerts_single`]
+/// Errors that can occur when calling the [`get_alert`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum AlertsSingleError {
+pub enum GetAlertError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`alerts_types`]
+/// Errors that can occur when calling the [`get_alert_types`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum AlertsTypesError {
+pub enum GetAlertTypesError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// Returns all currently active alerts
-pub async fn alerts_active(
+/// Parameters for the [`get_active_alerts`] function.
+///
+/// This struct encapsulates the optional query parameters for filtering active alerts.
+#[derive(Debug, Clone, Default)]
+pub struct ActiveAlertsParams<'a> {
+    /// Filter by alert status (actual, exercise, system, test, draft).
+    pub status: Option<Vec<String>>,
+    /// Filter by message type (alert, update, cancel).
+    pub message_type: Option<Vec<String>>,
+    /// Filter by event name (e.g., "Tornado Warning", "Flood Watch").
+    pub event: Option<Vec<String>>,
+    /// Filter by NWS public zone/county code or SAME code.
+    pub code: Option<Vec<String>>,
+    /// Filter by state/territory or marine area code.
+    pub area: Option<Vec<models::AreaCode>>,
+    /// Filter by point (latitude,longitude).
+    pub point: Option<&'a str>,
+    /// Filter by marine region code.
+    pub region: Option<Vec<models::MarineRegionCode>>,
+    /// Filter by region type (land or marine).
+    pub region_type: Option<&'a str>,
+    /// Filter by NWS public zone or county identifier.
+    pub zone: Option<Vec<String>>,
+    /// Filter by alert urgency.
+    pub urgency: Option<Vec<models::AlertUrgency>>,
+    /// Filter by alert severity.
+    pub severity: Option<Vec<models::AlertSeverity>>,
+    /// Filter by alert certainty.
+    pub certainty: Option<Vec<models::AlertCertainty>>,
+    /// Limit the number of results returned.
+    pub limit: Option<i32>,
+}
+
+/// Parameters for the [`get_alerts`] function.
+///
+/// This struct encapsulates the query parameters for retrieving alerts, including filtering options and pagination.
+#[derive(Debug, Clone, Default)]
+pub struct GetAlertsParams<'a> {
+    /// Filter by active status (true or false).
+    pub active: Option<bool>,
+    /// Start time for the query period (ISO 8601 format).
+    pub start: Option<String>,
+    /// End time for the query period (ISO 8601 format).
+    pub end: Option<String>,
+    /// Filter by alert status (actual, exercise, system, test, draft).
+    pub status: Option<Vec<String>>,
+    /// Filter by message type (alert, update, cancel).
+    pub message_type: Option<Vec<String>>,
+    /// Filter by event name.
+    pub event: Option<Vec<String>>,
+    /// Filter by NWS public zone/county code or SAME code.
+    pub code: Option<Vec<String>>,
+    /// Filter by state/territory or marine area code.
+    pub area: Option<Vec<models::AreaCode>>,
+    /// Filter by point (latitude,longitude).
+    pub point: Option<&'a str>,
+    /// Filter by marine region code.
+    pub region: Option<Vec<models::MarineRegionCode>>,
+    /// Filter by region type (land or marine).
+    pub region_type: Option<&'a str>,
+    /// Filter by NWS public zone or county identifier.
+    pub zone: Option<Vec<String>>,
+    /// Filter by alert urgency.
+    pub urgency: Option<Vec<models::AlertUrgency>>,
+    /// Filter by alert severity.
+    pub severity: Option<Vec<models::AlertSeverity>>,
+    /// Filter by alert certainty.
+    pub certainty: Option<Vec<models::AlertCertainty>>,
+    /// Limit the number of results returned.
+    pub limit: Option<i32>,
+    /// Cursor for pagination to retrieve the next set of results.
+    pub cursor: Option<&'a str>,
+}
+
+/// Returns all currently active alerts based on specified filter parameters.
+///
+/// Corresponds to the `/alerts/active` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `params`: A [`ActiveAlertsParams`] struct containing the query parameters.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::AlertCollectionGeoJson`] on success,
+/// detailing the collection of active alerts matching the criteria.
+///
+/// # Errors
+///
+/// Returns an [`Error<ActiveAlertsError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_active_alerts(
     configuration: &configuration::Configuration,
-    status: Option<Vec<String>>,
-    message_type: Option<Vec<String>>,
-    event: Option<Vec<String>>,
-    code: Option<Vec<String>>,
-    area: Option<Vec<models::AreaCode>>,
-    point: Option<&str>,
-    region: Option<Vec<models::MarineRegionCode>>,
-    region_type: Option<&str>,
-    zone: Option<Vec<String>>,
-    urgency: Option<Vec<models::AlertUrgency>>,
-    severity: Option<Vec<models::AlertSeverity>>,
-    certainty: Option<Vec<models::AlertCertainty>>,
-    limit: Option<i32>,
-) -> Result<models::AlertCollectionGeoJson, Error<AlertsActiveError>> {
+    params: ActiveAlertsParams<'_>,
+) -> Result<models::AlertCollectionGeoJson, Error<ActiveAlertsError>> {
     let uri_str = format!("{}/alerts/active", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = status {
+    if let Some(ref param_value) = params.status {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -108,7 +203,7 @@ pub async fn alerts_active(
             )]),
         };
     }
-    if let Some(ref param_value) = message_type {
+    if let Some(ref param_value) = params.message_type {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -127,7 +222,7 @@ pub async fn alerts_active(
             )]),
         };
     }
-    if let Some(ref param_value) = event {
+    if let Some(ref param_value) = params.event {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -146,7 +241,7 @@ pub async fn alerts_active(
             )]),
         };
     }
-    if let Some(ref param_value) = code {
+    if let Some(ref param_value) = params.code {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -165,7 +260,7 @@ pub async fn alerts_active(
             )]),
         };
     }
-    if let Some(ref param_value) = area {
+    if let Some(ref param_value) = params.area {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -184,10 +279,10 @@ pub async fn alerts_active(
             )]),
         };
     }
-    if let Some(ref param_value) = point {
+    if let Some(ref param_value) = params.point {
         req_builder = req_builder.query(&[("point", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = region {
+    if let Some(ref param_value) = params.region {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -206,10 +301,10 @@ pub async fn alerts_active(
             )]),
         };
     }
-    if let Some(ref param_value) = region_type {
+    if let Some(ref param_value) = params.region_type {
         req_builder = req_builder.query(&[("region_type", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = zone {
+    if let Some(ref param_value) = params.zone {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -228,7 +323,7 @@ pub async fn alerts_active(
             )]),
         };
     }
-    if let Some(ref param_value) = urgency {
+    if let Some(ref param_value) = params.urgency {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -247,7 +342,7 @@ pub async fn alerts_active(
             )]),
         };
     }
-    if let Some(ref param_value) = severity {
+    if let Some(ref param_value) = params.severity {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -266,7 +361,7 @@ pub async fn alerts_active(
             )]),
         };
     }
-    if let Some(ref param_value) = certainty {
+    if let Some(ref param_value) = params.certainty {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -285,7 +380,7 @@ pub async fn alerts_active(
             )]),
         };
     }
-    if let Some(ref param_value) = limit {
+    if let Some(ref param_value) = params.limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
     if let Some(ref user_agent) = configuration.user_agent {
@@ -324,7 +419,7 @@ pub async fn alerts_active(
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<AlertsActiveError> = serde_json::from_str(&content).ok();
+        let entity: Option<ActiveAlertsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -333,11 +428,28 @@ pub async fn alerts_active(
     }
 }
 
-/// Returns active alerts for the given area (state or marine area)
-pub async fn alerts_active_area(
+/// Returns active alerts for the given area (state or marine area).
+///
+/// Corresponds to the `/alerts/active/area/{area}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `area`: The state/territory abbreviation or marine area code (e.g., "AL", "GM", "CA").
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::AlertCollectionGeoJson`] on success,
+/// detailing the collection of active alerts for the specified area.
+///
+/// # Errors
+///
+/// Returns an [`Error<ActiveAlertsAreaError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_active_alerts_for_area(
     configuration: &configuration::Configuration,
     area: &str,
-) -> Result<models::AlertCollectionGeoJson, Error<AlertsActiveAreaError>> {
+) -> Result<models::AlertCollectionGeoJson, Error<ActiveAlertsAreaError>> {
     let uri_str = format!(
         "{}/alerts/active/area/{area}",
         configuration.base_path,
@@ -383,7 +495,7 @@ pub async fn alerts_active_area(
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<AlertsActiveAreaError> = serde_json::from_str(&content).ok();
+        let entity: Option<ActiveAlertsAreaError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -392,10 +504,26 @@ pub async fn alerts_active_area(
     }
 }
 
-/// Returns info on the number of active alerts
-pub async fn alerts_active_count(
+/// Returns info on the number of active alerts, optionally summarized by area, region, and zone.
+///
+/// Corresponds to the `/alerts/active/count` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::ActiveAlertsCountResponse`] on success,
+/// providing counts of active alerts.
+///
+/// # Errors
+///
+/// Returns an [`Error<ActiveAlertsCountError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_active_alerts_count(
     configuration: &configuration::Configuration,
-) -> Result<models::AlertsActiveCount200Response, Error<AlertsActiveCountError>> {
+) -> Result<models::ActiveAlertsCountResponse, Error<ActiveAlertsCountError>> {
     let uri_str = format!("{}/alerts/active/count", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
@@ -437,7 +565,7 @@ pub async fn alerts_active_count(
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<AlertsActiveCountError> = serde_json::from_str(&content).ok();
+        let entity: Option<ActiveAlertsCountError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -446,11 +574,28 @@ pub async fn alerts_active_count(
     }
 }
 
-/// Returns active alerts for the given marine region
-pub async fn alerts_active_region(
+/// Returns active alerts for the given marine region.
+///
+/// Corresponds to the `/alerts/active/region/{region}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `region`: The [`models::MarineRegionCode`] for the desired marine region.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::AlertCollectionGeoJson`] on success,
+/// detailing the collection of active alerts for the specified region.
+///
+/// # Errors
+///
+/// Returns an [`Error<ActiveRegionError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_active_alerts_for_region(
     configuration: &configuration::Configuration,
     region: models::MarineRegionCode,
-) -> Result<models::AlertCollectionGeoJson, Error<AlertsActiveRegionError>> {
+) -> Result<models::AlertCollectionGeoJson, Error<ActiveRegionError>> {
     let uri_str = format!(
         "{}/alerts/active/region/{region}",
         configuration.base_path,
@@ -496,7 +641,7 @@ pub async fn alerts_active_region(
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<AlertsActiveRegionError> = serde_json::from_str(&content).ok();
+        let entity: Option<ActiveRegionError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -505,11 +650,28 @@ pub async fn alerts_active_region(
     }
 }
 
-/// Returns active alerts for the given NWS public zone or county
-pub async fn alerts_active_zone(
+/// Returns active alerts for the given NWS public zone or county.
+///
+/// Corresponds to the `/alerts/active/zone/{zoneId}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `zone_id`: The NWS public zone or county identifier (e.g., "CAZ043", "CAC073").
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::AlertCollectionGeoJson`] on success,
+/// detailing the collection of active alerts for the specified zone.
+///
+/// # Errors
+///
+/// Returns an [`Error<ActiveAlertsZoneError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_active_alerts_for_zone(
     configuration: &configuration::Configuration,
     zone_id: &str,
-) -> Result<models::AlertCollectionGeoJson, Error<AlertsActiveZoneError>> {
+) -> Result<models::AlertCollectionGeoJson, Error<ActiveAlertsZoneError>> {
     let uri_str = format!(
         "{}/alerts/active/zone/{zoneId}",
         configuration.base_path,
@@ -555,7 +717,7 @@ pub async fn alerts_active_zone(
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<AlertsActiveZoneError> = serde_json::from_str(&content).ok();
+        let entity: Option<ActiveAlertsZoneError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -564,40 +726,42 @@ pub async fn alerts_active_zone(
     }
 }
 
-/// Returns all alerts
-pub async fn alerts_query(
+/// Returns all alerts matching the given parameters, including past alerts.
+///
+/// Corresponds to the `/alerts` endpoint.
+/// Supports pagination via the `cursor` field in [`GetAlertsParams`].
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `params`: A [`GetAlertsParams`] struct containing the query parameters.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::AlertCollectionGeoJson`] on success,
+/// detailing the collection of alerts matching the criteria.
+///
+/// # Errors
+///
+/// Returns an [`Error<GetAlertsError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_alerts(
     configuration: &configuration::Configuration,
-    active: Option<bool>,
-    start: Option<String>,
-    end: Option<String>,
-    status: Option<Vec<String>>,
-    message_type: Option<Vec<String>>,
-    event: Option<Vec<String>>,
-    code: Option<Vec<String>>,
-    area: Option<Vec<models::AreaCode>>,
-    point: Option<&str>,
-    region: Option<Vec<models::MarineRegionCode>>,
-    region_type: Option<&str>,
-    zone: Option<Vec<String>>,
-    urgency: Option<Vec<models::AlertUrgency>>,
-    severity: Option<Vec<models::AlertSeverity>>,
-    certainty: Option<Vec<models::AlertCertainty>>,
-    limit: Option<i32>,
-    cursor: Option<&str>,
-) -> Result<models::AlertCollectionGeoJson, Error<AlertsQueryError>> {
+    params: GetAlertsParams<'_>,
+) -> Result<models::AlertCollectionGeoJson, Error<GetAlertsError>> {
     let uri_str = format!("{}/alerts", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = active {
+    if let Some(ref param_value) = params.active {
         req_builder = req_builder.query(&[("active", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = start {
+    if let Some(ref param_value) = params.start {
         req_builder = req_builder.query(&[("start", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = end {
+    if let Some(ref param_value) = params.end {
         req_builder = req_builder.query(&[("end", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = status {
+    if let Some(ref param_value) = params.status {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -616,7 +780,7 @@ pub async fn alerts_query(
             )]),
         };
     }
-    if let Some(ref param_value) = message_type {
+    if let Some(ref param_value) = params.message_type {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -635,7 +799,7 @@ pub async fn alerts_query(
             )]),
         };
     }
-    if let Some(ref param_value) = event {
+    if let Some(ref param_value) = params.event {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -654,7 +818,7 @@ pub async fn alerts_query(
             )]),
         };
     }
-    if let Some(ref param_value) = code {
+    if let Some(ref param_value) = params.code {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -673,7 +837,7 @@ pub async fn alerts_query(
             )]),
         };
     }
-    if let Some(ref param_value) = area {
+    if let Some(ref param_value) = params.area {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -692,10 +856,10 @@ pub async fn alerts_query(
             )]),
         };
     }
-    if let Some(ref param_value) = point {
+    if let Some(ref param_value) = params.point {
         req_builder = req_builder.query(&[("point", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = region {
+    if let Some(ref param_value) = params.region {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -714,10 +878,10 @@ pub async fn alerts_query(
             )]),
         };
     }
-    if let Some(ref param_value) = region_type {
+    if let Some(ref param_value) = params.region_type {
         req_builder = req_builder.query(&[("region_type", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = zone {
+    if let Some(ref param_value) = params.zone {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -736,7 +900,7 @@ pub async fn alerts_query(
             )]),
         };
     }
-    if let Some(ref param_value) = urgency {
+    if let Some(ref param_value) = params.urgency {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -755,7 +919,7 @@ pub async fn alerts_query(
             )]),
         };
     }
-    if let Some(ref param_value) = severity {
+    if let Some(ref param_value) = params.severity {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -774,7 +938,7 @@ pub async fn alerts_query(
             )]),
         };
     }
-    if let Some(ref param_value) = certainty {
+    if let Some(ref param_value) = params.certainty {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -793,10 +957,10 @@ pub async fn alerts_query(
             )]),
         };
     }
-    if let Some(ref param_value) = limit {
+    if let Some(ref param_value) = params.limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = cursor {
+    if let Some(ref param_value) = params.cursor {
         req_builder = req_builder.query(&[("cursor", &param_value.to_string())]);
     }
     if let Some(ref user_agent) = configuration.user_agent {
@@ -837,7 +1001,7 @@ pub async fn alerts_query(
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<AlertsQueryError> = serde_json::from_str(&content).ok();
+        let entity: Option<GetAlertsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -846,11 +1010,28 @@ pub async fn alerts_query(
     }
 }
 
-/// Returns a specific alert
-pub async fn alerts_single(
+/// Returns an alert by the alert ID.
+///
+/// Corresponds to the `/alerts/{id}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `id`: The unique identifier of the alert.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::AlertGeoJson`] on success,
+/// detailing the specific alert.
+///
+/// # Errors
+///
+/// Returns an [`Error<GetAlertError>`] if the request fails, the alert ID is not found,
+/// or the response cannot be parsed.
+pub async fn get_alert(
     configuration: &configuration::Configuration,
     id: &str,
-) -> Result<models::AlertGeoJson, Error<AlertsSingleError>> {
+) -> Result<models::AlertGeoJson, Error<GetAlertError>> {
     let uri_str = format!(
         "{}/alerts/{id}",
         configuration.base_path,
@@ -896,7 +1077,7 @@ pub async fn alerts_single(
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<AlertsSingleError> = serde_json::from_str(&content).ok();
+        let entity: Option<GetAlertError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -905,10 +1086,26 @@ pub async fn alerts_single(
     }
 }
 
-/// Returns a list of alert types
-pub async fn alerts_types(
+/// Returns a list of alert types recognized by the NWS API.
+///
+/// Corresponds to the `/alerts/types` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::AlertTypesResponse`] on success,
+/// listing the valid event types.
+///
+/// # Errors
+///
+/// Returns an [`Error<GetAlertTypesError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_alert_types(
     configuration: &configuration::Configuration,
-) -> Result<models::AlertsTypes200Response, Error<AlertsTypesError>> {
+) -> Result<models::AlertTypesResponse, Error<GetAlertTypesError>> {
     let uri_str = format!("{}/alerts/types", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
@@ -950,7 +1147,7 @@ pub async fn alerts_types(
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<AlertsTypesError> = serde_json::from_str(&content).ok();
+        let entity: Option<GetAlertTypesError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,

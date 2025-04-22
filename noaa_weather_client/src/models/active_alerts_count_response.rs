@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct AlertsActiveCount200Response {
+pub struct ActiveAlertsCountResponse {
     /// The total number of active alerts
     #[serde(rename = "total", skip_serializing_if = "Option::is_none")]
     pub total: Option<i32>,
@@ -22,9 +22,9 @@ pub struct AlertsActiveCount200Response {
     pub zones: Option<std::collections::HashMap<String, i32>>,
 }
 
-impl AlertsActiveCount200Response {
-    pub fn new() -> AlertsActiveCount200Response {
-        AlertsActiveCount200Response {
+impl ActiveAlertsCountResponse {
+    pub fn new() -> ActiveAlertsCountResponse {
+        ActiveAlertsCountResponse {
             total: None,
             land: None,
             marine: None,

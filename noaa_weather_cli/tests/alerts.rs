@@ -66,7 +66,7 @@ fn test_alerts_command_region_failure_invalid_region() {
 fn test_alerts_command_get_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("alerts");
-    cmd.arg("get");
+    cmd.arg("alert");
     cmd.arg("urn:oid:2.49.0.1.840.0.eb79fad94f63c186cdfb1678251f96b5c628af14.001.1");
     cmd.assert().success();
 }
