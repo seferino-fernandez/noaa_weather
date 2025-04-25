@@ -5,49 +5,77 @@ use reqwest;
 use serde::de::Error as _;
 use serde::{Deserialize, Serialize};
 
-/// struct for typed errors of method [`gridpoint`]
+/// Errors that can occur when calling the [`get_gridpoint`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GridpointError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`gridpoint_forecast`]
+/// Errors that can occur when calling the [`get_gridpoint_forecast`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GridpointForecastError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`gridpoint_forecast_hourly`]
+/// Errors that can occur when calling the [`get_gridpoint_forecast_hourly`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GridpointForecastHourlyError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`gridpoint_stations`]
+/// Errors that can occur when calling the [`get_gridpoint_stations`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GridpointStationsError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// Returns raw numerical forecast data for a 2.5km grid area
-pub async fn gridpoint(
+/// Returns raw numerical forecast data for a 2.5km grid area.
+///
+/// Corresponds to the `/gridpoints/{forecast_office_id}/{x},{y}` endpoint.
+/// This endpoint provides detailed forecast data layers like temperature, humidity, wind, etc.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `forecast_office_id`: The ID of the NWS forecast office (e.g., TOP, LWX).
+/// * `x`: The grid X coordinate.
+/// * `y`: The grid Y coordinate.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::GridpointGeoJson`] on success, which includes the detailed
+/// forecast layers in its `properties` field.
+///
+/// # Errors
+///
+/// Returns an [`Error<GridpointError>`] if the request fails (e.g., invalid grid coordinates)
+/// or the response cannot be parsed.
+pub async fn get_gridpoint(
     configuration: &configuration::Configuration,
-    office_id: models::NwsForecastOfficeId,
+    forecast_office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
 ) -> Result<models::GridpointGeoJson, Error<GridpointError>> {
     let uri_str = format!(
-        "{}/gridpoints/{office_id}/{x},{y}",
+        "{}/gridpoints/{forecast_office_id}/{x},{y}",
         configuration.base_path,
-        office_id = office_id,
+        forecast_office_id = forecast_office_id,
         x = x,
         y = y
     );
@@ -72,7 +100,7 @@ pub async fn gridpoint(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -100,19 +128,41 @@ pub async fn gridpoint(
     }
 }
 
-/// Returns a textual forecast for a 2.5km grid area
-pub async fn gridpoint_forecast(
+/// Returns a textual forecast for a 2.5km grid area.
+///
+/// Corresponds to the `/gridpoints/{forecast_office_id}/{x},{y}/forecast` endpoint.
+/// This provides a human-readable, multi-day forecast summary.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `forecast_office_id`: The ID of the NWS forecast office.
+/// * `x`: The grid X coordinate.
+/// * `y`: The grid Y coordinate.
+/// * `feature_flags`: Optional list of feature flags to enable experimental API features.
+/// * `units`: Optional units for the forecast (us or si).
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::GridpointForecastGeoJson`] on success, which includes
+/// forecast periods with textual descriptions in its `properties` field.
+///
+/// # Errors
+///
+/// Returns an [`Error<GridpointForecastError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_gridpoint_forecast(
     configuration: &configuration::Configuration,
-    office_id: models::NwsForecastOfficeId,
+    forecast_office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
     feature_flags: Option<Vec<String>>,
     units: Option<models::GridpointForecastUnits>,
 ) -> Result<models::GridpointForecastGeoJson, Error<GridpointForecastError>> {
     let uri_str = format!(
-        "{}/gridpoints/{office_id}/{x},{y}/forecast",
+        "{}/gridpoints/{forecast_office_id}/{x},{y}/forecast",
         configuration.base_path,
-        office_id = office_id,
+        forecast_office_id = forecast_office_id,
         x = x,
         y = y
     );
@@ -143,7 +193,7 @@ pub async fn gridpoint_forecast(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -171,19 +221,41 @@ pub async fn gridpoint_forecast(
     }
 }
 
-/// Returns a textual hourly forecast for a 2.5km grid area
-pub async fn gridpoint_forecast_hourly(
+/// Returns a textual hourly forecast for a 2.5km grid area.
+///
+/// Corresponds to the `/gridpoints/{forecast_office_id}/{x},{y}/forecast/hourly` endpoint.
+/// This provides a human-readable, hour-by-hour forecast summary.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `forecast_office_id`: The ID of the NWS forecast office.
+/// * `x`: The grid X coordinate.
+/// * `y`: The grid Y coordinate.
+/// * `feature_flags`: Optional list of feature flags to enable experimental API features.
+/// * `units`: Optional units for the forecast (us or si).
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::GridpointForecastGeoJson`] on success, which includes
+/// hourly forecast periods with textual descriptions in its `properties` field.
+///
+/// # Errors
+///
+/// Returns an [`Error<GridpointForecastHourlyError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_gridpoint_forecast_hourly(
     configuration: &configuration::Configuration,
-    office_id: models::NwsForecastOfficeId,
+    forecast_office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
     feature_flags: Option<Vec<String>>,
     units: Option<models::GridpointForecastUnits>,
 ) -> Result<models::GridpointForecastGeoJson, Error<GridpointForecastHourlyError>> {
     let uri_str = format!(
-        "{}/gridpoints/{office_id}/{x},{y}/forecast/hourly",
+        "{}/gridpoints/{forecast_office_id}/{x},{y}/forecast/hourly",
         configuration.base_path,
-        office_id = office_id,
+        forecast_office_id = forecast_office_id,
         x = x,
         y = y
     );
@@ -214,7 +286,7 @@ pub async fn gridpoint_forecast_hourly(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -242,19 +314,41 @@ pub async fn gridpoint_forecast_hourly(
     }
 }
 
-/// Returns a list of observation stations usable for a given 2.5km grid area
-pub async fn gridpoint_stations(
+/// Returns a list of observation stations usable for a given 2.5km grid area.
+///
+/// Corresponds to the `/gridpoints/{forecast_office_id}/{x},{y}/stations` endpoint.
+/// This helps identify nearby stations for obtaining current observations.
+/// Supports pagination via `limit` and `cursor`.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `forecast_office_id`: The ID of the NWS forecast office.
+/// * `x`: The grid X coordinate.
+/// * `y`: The grid Y coordinate.
+/// * `limit`: Optional limit on the number of stations returned.
+/// * `cursor`: Optional pagination cursor for fetching subsequent results.
+///
+/// # Returns
+///
+/// A `Result` containing an [`models::ObservationStationCollectionGeoJson`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<GridpointStationsError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_gridpoint_stations(
     configuration: &configuration::Configuration,
-    office_id: models::NwsForecastOfficeId,
+    forecast_office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
     limit: Option<i32>,
     cursor: Option<&str>,
 ) -> Result<models::ObservationStationCollectionGeoJson, Error<GridpointStationsError>> {
     let uri_str = format!(
-        "{}/gridpoints/{office_id}/{x},{y}/stations",
+        "{}/gridpoints/{forecast_office_id}/{x},{y}/stations",
         configuration.base_path,
-        office_id = office_id,
+        forecast_office_id = forecast_office_id,
         x = x,
         y = y
     );
@@ -285,7 +379,7 @@ pub async fn gridpoint_stations(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 

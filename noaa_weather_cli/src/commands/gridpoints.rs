@@ -5,68 +5,90 @@ use noaa_weather_client::apis::gridpoints as gridpoints_api;
 use noaa_weather_client::models::{GridpointForecastUnits, NwsForecastOfficeId};
 use serde_json::Value;
 
-/// Common arguments for gridpoint-based commands.
+/// Common arguments for identifying a specific NWS gridpoint.
 #[derive(Args, Debug, Clone)]
 pub struct GridpointLocationArgs {
     /// NWS forecast office ID (e.g., TOP, LWX).
+    /// Use the `points` command to find the office for a location.
     #[arg(long, value_parser = value_parser!(NwsForecastOfficeId))]
-    office_id: NwsForecastOfficeId,
+    forecast_office_id: NwsForecastOfficeId,
 
     /// Grid X coordinate.
+    /// Use the `points` command to find grid coordinates.
     #[arg(short, long)]
     x: i32,
 
     /// Grid Y coordinate.
+    /// Use the `points` command to find grid coordinates.
     #[arg(short, long)]
     y: i32,
 }
 
-/// Arguments specific to forecast endpoints.
+/// Common arguments for forecast-related gridpoint endpoints.
 #[derive(Args, Debug, Clone)]
 pub struct ForecastArgs {
-    /// Feature flags to enable experimental API features.
+    /// Enable experimental API features by passing specific flags.
     #[arg(long)]
     feature_flags: Option<Vec<String>>,
 
-    /// Units for forecast data (us or si).
+    /// Specify units for forecast data (us for US customary, si for metric).
     #[arg(long, value_parser = value_parser!(GridpointForecastUnits))]
     units: Option<GridpointForecastUnits>,
 }
 
-/// Arguments specific to the stations endpoint.
+/// Arguments specific to the gridpoint stations endpoint.
 #[derive(Args, Debug, Clone)]
 pub struct StationsArgs {
-    /// Limit the number of stations returned.
+    /// Limit the number of observation stations returned by the API.
     #[arg(long)]
     limit: Option<i32>,
 
-    /// Pagination cursor for fetching subsequent results.
+    /// Pagination cursor for fetching subsequent pages of stations.
+    /// Use the `pagination.nextCursor` value from a previous response.
     #[arg(long)]
     cursor: Option<String>,
 }
 
+/// Access forecast data for specific NWS gridpoints.
+///
+/// Gridpoints represent a 2.5km square area used by the NWS for forecasts.
+/// Use the `points` command to find the correct gridpoint (office ID, X, Y)
+/// for a given latitude/longitude.
 #[derive(Subcommand, Debug)]
 pub enum GridpointCommands {
-    /// Get raw numerical forecast data for a gridpoint.
+    /// Get raw numerical forecast data layers for a gridpoint.
+    ///
+    /// Returns detailed data like temperature, humidity, wind speed, etc.,
+    /// for various time intervals.
+    /// Example: `noaa-weather gridpoints gridpoint --forecast-office-id TOP -x 31 -y 80`
     Gridpoint {
         #[clap(flatten)]
         location: GridpointLocationArgs,
     },
-    /// Get textual forecast for a gridpoint.
+    /// Get the multi-day textual forecast for a gridpoint.
+    ///
+    /// Returns a human-readable forecast summary broken down into periods (e.g., "Tonight", "Thursday").
+    /// Example: `noaa-weather gridpoints forecast --forecast-office-id TOP -x 31 -y 80 --units si`
     Forecast {
         #[clap(flatten)]
         location: GridpointLocationArgs,
         #[clap(flatten)]
         forecast_opts: ForecastArgs,
     },
-    /// Get textual hourly forecast for a gridpoint.
+    /// Get the hourly textual forecast for a gridpoint.
+    ///
+    /// Returns a human-readable forecast summary broken down by hour.
+    /// Example: `noaa-weather gridpoints hourly --forecast-office-id TOP -x 31 -y 80`
     Hourly {
         #[clap(flatten)]
         location: GridpointLocationArgs,
         #[clap(flatten)]
         forecast_opts: ForecastArgs,
     },
-    /// Get observation stations usable for a gridpoint.
+    /// List observation stations usable for retrieving observations for a gridpoint.
+    ///
+    /// Returns a list of nearby stations that can provide current weather conditions.
+    /// Example: `noaa-weather gridpoints stations --forecast-office-id TOP -x 31 -y 80 --limit 5`
     Stations {
         #[clap(flatten)]
         location: GridpointLocationArgs,
@@ -75,22 +97,40 @@ pub enum GridpointCommands {
     },
 }
 
+/// Handles the execution of gridpoint-related subcommands.
+///
+/// Dispatches the command to the appropriate API function based on the
+/// provided `GridpointCommands` variant and arguments.
+///
+/// # Arguments
+///
+/// * `command` - The specific gridpoint subcommand and its arguments to execute.
+/// * `config` - The application configuration containing API details.
+///
+/// # Returns
+///
+/// A `Result` containing the JSON `Value` of the API response on success,
+/// or an `anyhow::Error` if an error occurs during the API call or processing.
 pub async fn handle_command(command: GridpointCommands, config: &Configuration) -> Result<Value> {
     match command {
         GridpointCommands::Gridpoint { location } => {
-            let result =
-                gridpoints_api::gridpoint(config, location.office_id, location.x, location.y)
-                    .await
-                    .map_err(|e| anyhow!("getting raw gridpoint data: {}", e))?;
+            let result = gridpoints_api::get_gridpoint(
+                config,
+                location.forecast_office_id,
+                location.x,
+                location.y,
+            )
+            .await
+            .map_err(|e| anyhow!("getting raw gridpoint data: {}", e))?;
             Ok(serde_json::to_value(result)?)
         }
         GridpointCommands::Forecast {
             location,
             forecast_opts,
         } => {
-            let result = gridpoints_api::gridpoint_forecast(
+            let result = gridpoints_api::get_gridpoint_forecast(
                 config,
-                location.office_id,
+                location.forecast_office_id,
                 location.x,
                 location.y,
                 forecast_opts.feature_flags,
@@ -104,9 +144,9 @@ pub async fn handle_command(command: GridpointCommands, config: &Configuration) 
             location,
             forecast_opts,
         } => {
-            let result = gridpoints_api::gridpoint_forecast_hourly(
+            let result = gridpoints_api::get_gridpoint_forecast_hourly(
                 config,
-                location.office_id,
+                location.forecast_office_id,
                 location.x,
                 location.y,
                 forecast_opts.feature_flags,
@@ -120,9 +160,9 @@ pub async fn handle_command(command: GridpointCommands, config: &Configuration) 
             location,
             station_opts,
         } => {
-            let result = gridpoints_api::gridpoint_stations(
+            let result = gridpoints_api::get_gridpoint_stations(
                 config,
-                location.office_id,
+                location.forecast_office_id,
                 location.x,
                 location.y,
                 station_opts.limit,
