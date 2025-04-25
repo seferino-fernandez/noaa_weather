@@ -5,73 +5,105 @@ use reqwest;
 use serde::de::Error as _;
 use serde::{Deserialize, Serialize};
 
-/// struct for typed errors of method [`cwa`]
+/// Errors that can occur when calling the [`get_center_weather_advisories_by_date_and_sequence`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum CwaError {
+pub enum CenterWeatherAdvisoryError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`cwas`]
+/// Errors that can occur when calling the [`get_center_weather_advisories`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum CwasError {
+pub enum CenterWeatherAdvisoryCollectionError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`cwsu`]
+/// Errors that can occur when calling the [`get_center_weather_service_unit`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum CwsuError {
+pub enum CenterWeatherServiceUnitError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`sigmet`]
+/// Errors that can occur when calling the [`get_sigmet`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SigmetError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`sigmet_query`]
+/// Errors that can occur when calling the [`get_sigmets`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SigmetQueryError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`sigmets_by_atsu`]
+/// Errors that can occur when calling the [`get_sigmets_by_air_traffic_service_unit`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SigmetsByAtsuError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`sigmets_by_atsuby_date`]
+/// Errors that can occur when calling the [`get_sigmets_by_air_traffic_service_unit_and_date`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum SigmetsByAtsubyDateError {
+pub enum SigmetsByAtsuAndDateError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// Returns a list of Center Weather Advisories from a CWSU
-pub async fn cwa(
+/// Returns a specific Center Weather Advisory (CWA) identified by CWSU, date, and sequence number.
+///
+/// Corresponds to the `/aviation/cwsus/{center_weather_service_unit_id}/cwas/{date}/{sequence}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `center_weather_service_unit_id`: The ID of the issuing Center Weather Service Unit (CWSU).
+/// * `date`: The date of the advisory in `YYYY-MM-DD` format.
+/// * `sequence`: The sequence number of the advisory (must be >= 100).
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::CenterWeatherAdvisoryGeoJson`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<CenterWeatherAdvisoryError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_center_weather_advisories_by_date_and_sequence(
     configuration: &configuration::Configuration,
-    cwsu_id: models::NwsCenterWeatherServiceUnitId,
+    center_weather_service_unit_id: models::NwsCenterWeatherServiceUnitId,
     date: String,
     sequence: i32,
-) -> Result<models::CenterWeatherAdvisoryGeoJson, Error<CwaError>> {
+) -> Result<models::CenterWeatherAdvisoryGeoJson, Error<CenterWeatherAdvisoryError>> {
     let uri_str = format!(
-        "{}/aviation/cwsus/{cwsuId}/cwas/{date}/{sequence}",
+        "{}/aviation/cwsus/{center_weather_service_unit_id}/cwas/{date}/{sequence}",
         configuration.base_path,
-        cwsuId = cwsu_id,
+        center_weather_service_unit_id = center_weather_service_unit_id,
         date = date,
         sequence = sequence
     );
@@ -96,7 +128,7 @@ pub async fn cwa(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -115,7 +147,7 @@ pub async fn cwa(
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<CwaError> = serde_json::from_str(&content).ok();
+        let entity: Option<CenterWeatherAdvisoryError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -124,15 +156,34 @@ pub async fn cwa(
     }
 }
 
-/// Returns a list of Center Weather Advisories from a CWSU
-pub async fn cwas(
+/// Returns a collection of current Center Weather Advisories (CWAs) for a specific Center Weather Service Unit (CWSU).
+///
+/// Corresponds to the `/aviation/cwsus/{center_weather_service_unit_id}/cwas` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `center_weather_service_unit_id`: The ID of the Center Weather Service Unit (CWSU).
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::CenterWeatherAdvisoryCollectionGeoJson`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<CenterWeatherAdvisoryCollectionError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_center_weather_advisories(
     configuration: &configuration::Configuration,
-    cwsu_id: models::NwsCenterWeatherServiceUnitId,
-) -> Result<models::CenterWeatherAdvisoryCollectionGeoJson, Error<CwasError>> {
+    center_weather_service_unit_id: models::NwsCenterWeatherServiceUnitId,
+) -> Result<
+    models::CenterWeatherAdvisoryCollectionGeoJson,
+    Error<CenterWeatherAdvisoryCollectionError>,
+> {
     let uri_str = format!(
-        "{}/aviation/cwsus/{cwsuId}/cwas",
+        "{}/aviation/cwsus/{center_weather_service_unit_id}/cwas",
         configuration.base_path,
-        cwsuId = cwsu_id
+        center_weather_service_unit_id = center_weather_service_unit_id
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
@@ -155,7 +206,7 @@ pub async fn cwas(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -174,7 +225,8 @@ pub async fn cwas(
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<CwasError> = serde_json::from_str(&content).ok();
+        let entity: Option<CenterWeatherAdvisoryCollectionError> =
+            serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -183,15 +235,31 @@ pub async fn cwas(
     }
 }
 
-/// Returns metadata about a Center Weather Service Unit
-pub async fn cwsu(
+/// Returns metadata about a specific Center Weather Service Unit (CWSU).
+///
+/// Corresponds to the `/aviation/cwsus/{center_weather_service_unit_id}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `center_weather_service_unit_id`: The ID of the Center Weather Service Unit (CWSU).
+///
+/// # Returns
+///
+/// A `Result` containing [`models::Office`] metadata on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<CenterWeatherServiceUnitError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_center_weather_service_unit(
     configuration: &configuration::Configuration,
-    cwsu_id: models::NwsCenterWeatherServiceUnitId,
-) -> Result<models::Office, Error<CwsuError>> {
+    center_weather_service_unit_id: models::NwsCenterWeatherServiceUnitId,
+) -> Result<models::Office, Error<CenterWeatherServiceUnitError>> {
     let uri_str = format!(
-        "{}/aviation/cwsus/{cwsuId}",
+        "{}/aviation/cwsus/{center_weather_service_unit_id}",
         configuration.base_path,
-        cwsuId = cwsu_id
+        center_weather_service_unit_id = center_weather_service_unit_id
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
@@ -214,7 +282,7 @@ pub async fn cwsu(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -233,7 +301,7 @@ pub async fn cwsu(
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<CwsuError> = serde_json::from_str(&content).ok();
+        let entity: Option<CenterWeatherServiceUnitError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -242,17 +310,34 @@ pub async fn cwsu(
     }
 }
 
-/// Returns a specific SIGMET/AIRMET
-pub async fn sigmet(
+/// Returns a specific SIGMET or AIRMET product.
+///
+/// Corresponds to the `/aviation/sigmets/{air_traffic_service_unit}/{date}/{time}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `air_traffic_service_unit`: The identifier of the issuing Air Traffic Service Unit (ATSU).
+/// * `date`: The date of issuance in `YYYY-MM-DD` format.
+/// * `time`: The time of issuance in `HHMM` format (UTC).
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::SigmetGeoJson`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<SigmetError>`] if the request fails or the response cannot be parsed.
+pub async fn get_sigmet(
     configuration: &configuration::Configuration,
-    atsu: &str,
+    air_traffic_service_unit: &str,
     date: String,
     time: &str,
 ) -> Result<models::SigmetGeoJson, Error<SigmetError>> {
     let uri_str = format!(
-        "{}/aviation/sigmets/{atsu}/{date}/{time}",
+        "{}/aviation/sigmets/{air_traffic_service_unit}/{date}/{time}",
         configuration.base_path,
-        atsu = crate::apis::urlencode(atsu),
+        air_traffic_service_unit = crate::apis::urlencode(air_traffic_service_unit),
         date = date,
         time = crate::apis::urlencode(time)
     );
@@ -277,7 +362,7 @@ pub async fn sigmet(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -305,8 +390,27 @@ pub async fn sigmet(
     }
 }
 
-/// Returns a list of SIGMET/AIRMETs
-pub async fn sigmets(
+/// Returns a collection of SIGMET/AIRMET products based on query parameters.
+///
+/// Corresponds to the `/aviation/sigmets` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `start`: Optional start time for the query period (ISO 8601 format).
+/// * `end`: Optional end time for the query period (ISO 8601 format).
+/// * `date`: Optional date filter (`YYYY-MM-DD` format).
+/// * `atsu`: Optional Air Traffic Service Unit (ATSU) identifier filter.
+/// * `sequence`: Optional sequence number filter.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::SigmetCollectionGeoJson`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<SigmetQueryError>`] if the request fails or the response cannot be parsed.
+pub async fn get_sigmets(
     configuration: &configuration::Configuration,
     start: Option<String>,
     end: Option<String>,
@@ -351,7 +455,7 @@ pub async fn sigmets(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -379,15 +483,30 @@ pub async fn sigmets(
     }
 }
 
-/// Returns a list of SIGMET/AIRMETs for the specified ATSU
-pub async fn sigmets_by_atsu(
+/// Returns a collection of SIGMET/AIRMET products for a specific Air Traffic Service Unit (ATSU).
+///
+/// Corresponds to the `/aviation/sigmets/{air_traffic_service_unit}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `air_traffic_service_unit`: The identifier of the Air Traffic Service Unit (ATSU).
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::SigmetCollectionGeoJson`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<SigmetsByAtsuError>`] if the request fails or the response cannot be parsed.
+pub async fn get_sigmets_by_air_traffic_service_unit(
     configuration: &configuration::Configuration,
-    atsu: &str,
+    air_traffic_service_unit: &str,
 ) -> Result<models::SigmetCollectionGeoJson, Error<SigmetsByAtsuError>> {
     let uri_str = format!(
-        "{}/aviation/sigmets/{atsu}",
+        "{}/aviation/sigmets/{air_traffic_service_unit}",
         configuration.base_path,
-        atsu = crate::apis::urlencode(atsu)
+        air_traffic_service_unit = crate::apis::urlencode(air_traffic_service_unit)
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
@@ -410,7 +529,7 @@ pub async fn sigmets_by_atsu(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -438,16 +557,32 @@ pub async fn sigmets_by_atsu(
     }
 }
 
-/// Returns a list of SIGMET/AIRMETs for the specified ATSU for the specified date
-pub async fn sigmets_by_atsuby_date(
+/// Returns a collection of SIGMET/AIRMET products for a specific Air Traffic Service Unit (ATSU) on a specific date.
+///
+/// Corresponds to the `/aviation/sigmets/{air_traffic_service_unit}/{date}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `air_traffic_service_unit`: The identifier of the Air Traffic Service Unit (ATSU).
+/// * `date`: The date filter in `YYYY-MM-DD` format.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::SigmetCollectionGeoJson`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<SigmetsByAtsuAndDateError>`] if the request fails or the response cannot be parsed.
+pub async fn get_sigmets_by_air_traffic_service_unit_and_date(
     configuration: &configuration::Configuration,
-    atsu: &str,
+    air_traffic_service_unit: &str,
     date: String,
-) -> Result<models::SigmetCollectionGeoJson, Error<SigmetsByAtsubyDateError>> {
+) -> Result<models::SigmetCollectionGeoJson, Error<SigmetsByAtsuAndDateError>> {
     let uri_str = format!(
-        "{}/aviation/sigmets/{atsu}/{date}",
+        "{}/aviation/sigmets/{air_traffic_service_unit}/{date}",
         configuration.base_path,
-        atsu = crate::apis::urlencode(atsu),
+        air_traffic_service_unit = crate::apis::urlencode(air_traffic_service_unit),
         date = date
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
@@ -471,7 +606,7 @@ pub async fn sigmets_by_atsuby_date(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -490,7 +625,7 @@ pub async fn sigmets_by_atsuby_date(
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<SigmetsByAtsubyDateError> = serde_json::from_str(&content).ok();
+        let entity: Option<SigmetsByAtsuAndDateError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
