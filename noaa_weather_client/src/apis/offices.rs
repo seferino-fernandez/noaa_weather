@@ -5,40 +5,58 @@ use reqwest;
 use serde::de::Error as _;
 use serde::{Deserialize, Serialize};
 
-/// struct for typed errors of method [`office`]
+/// Errors that can occur when calling the [`get_forecast_office`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum OfficeError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`office_headline`]
+/// Errors that can occur when calling the [`get_forecast_office_headline`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum OfficeHeadlineError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`office_headlines`]
+/// Errors that can occur when calling the [`get_forecast_office_headlines`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum OfficeHeadlinesError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// Returns metadata about a NWS forecast office
-pub async fn office(
+/// Returns metadata about a specific NWS forecast office.
+///
+/// Corresponds to the `/offices/{id}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `id`: The NWS forecast office ID (e.g., "TOP", "LWX").
+///
+/// # Returns
+///
+/// A `Result` containing [`models::Office`] metadata on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<OfficeError>`] if the request fails (e.g., invalid office ID)
+/// or the response cannot be parsed.
+pub async fn get_forecast_office(
     configuration: &configuration::Configuration,
-    office_id: &str,
+    id: &str,
 ) -> Result<models::Office, Error<OfficeError>> {
-    let uri_str = format!(
-        "{}/offices/{officeId}",
-        configuration.base_path,
-        officeId = office_id
-    );
+    let uri_str = format!("{}/offices/{id}", configuration.base_path, id = id);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
     if let Some(ref user_agent) = configuration.user_agent {
@@ -60,7 +78,7 @@ pub async fn office(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -88,16 +106,33 @@ pub async fn office(
     }
 }
 
-/// Returns a specific news headline for a given NWS office
-pub async fn office_headline(
+/// Returns a specific news headline for a given NWS forecast office.
+///
+/// Corresponds to the `/offices/{id}/headlines/{headlineId}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `id`: The NWS forecast office ID.
+/// * `headline_id`: The unique identifier of the headline.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::OfficeHeadline`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<OfficeHeadlineError>`] if the request fails (e.g., headline not found)
+/// or the response cannot be parsed.
+pub async fn get_forecast_office_headline(
     configuration: &configuration::Configuration,
-    office_id: &str,
+    id: &str,
     headline_id: &str,
 ) -> Result<models::OfficeHeadline, Error<OfficeHeadlineError>> {
     let uri_str = format!(
-        "{}/offices/{officeId}/headlines/{headlineId}",
+        "{}/offices/{id}/headlines/{headlineId}",
         configuration.base_path,
-        officeId = office_id,
+        id = id,
         headlineId = crate::apis::urlencode(headline_id)
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
@@ -121,7 +156,7 @@ pub async fn office_headline(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -149,15 +184,31 @@ pub async fn office_headline(
     }
 }
 
-/// Returns a list of news headlines for a given NWS office
-pub async fn office_headlines(
+/// Returns a collection of recent news headlines for a given NWS forecast office.
+///
+/// Corresponds to the `/offices/{id}/headlines` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `id`: The NWS forecast office ID.
+///
+/// # Returns
+///
+/// A `Result` containing an [`models::OfficeHeadlineCollection`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<OfficeHeadlinesError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_forecast_office_headlines(
     configuration: &configuration::Configuration,
-    office_id: &str,
+    id: &str,
 ) -> Result<models::OfficeHeadlineCollection, Error<OfficeHeadlinesError>> {
     let uri_str = format!(
-        "{}/offices/{officeId}/headlines",
+        "{}/offices/{id}/headlines",
         configuration.base_path,
-        officeId = office_id
+        id = id
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
@@ -180,7 +231,7 @@ pub async fn office_headlines(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
