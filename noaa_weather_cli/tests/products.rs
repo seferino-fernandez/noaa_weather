@@ -82,6 +82,6 @@ fn test_product_success() {
     cmd.arg("products");
     cmd.arg("product");
     cmd.arg("--product-id");
-    cmd.arg("2f438c43-a869-4c64-8a4c-1188dc5491de");
+    cmd.arg("a4791428-298e-473c-8e6f-5796701c9e4a");
     cmd.assert().success();
 }

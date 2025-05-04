@@ -5,72 +5,126 @@ use reqwest;
 use serde::de::Error as _;
 use serde::{Deserialize, Serialize};
 
-/// struct for typed errors of method [`location_products`]
+/// Errors that can occur when calling the [`get_products_by_location`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum LocationProductsError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`product`]
+/// Errors that can occur when calling the [`get_product`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ProductError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`product_locations`]
+/// Errors that can occur when calling the [`get_product_locations`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ProductLocationsError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`product_types`]
+/// Errors that can occur when calling the [`get_product_types`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ProductTypesError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`products_query`]
+/// Errors that can occur when calling the [`get_products_query`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ProductsQueryError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`products_type`]
+/// Errors that can occur when calling the [`get_products_by_type`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ProductsTypeError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`products_type_location`]
+/// Errors that can occur when calling the [`get_products_by_type_and_location`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ProductsTypeLocationError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`products_type_locations`]
+/// Errors that can occur when calling the [`get_product_issuance_locations_by_type`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ProductsTypeLocationsError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// Returns a list of valid text product types for a given issuance location
-pub async fn location_products(
+/// Parameters for the [`get_products_query`] function.
+///
+/// This struct encapsulates the query parameters for filtering text products.
+#[derive(Debug, Clone, Default)]
+pub struct ProductsQueryParams {
+    /// Filter by issuance location ID (e.g., "LWX", "PQR").
+    pub location: Option<Vec<String>>,
+    /// Start time for the query period (ISO 8601 format).
+    pub start: Option<String>,
+    /// End time for the query period (ISO 8601 format).
+    pub end: Option<String>,
+    /// Filter by issuing office ID (typically WFO ID, e.g., "LWX", "PQR").
+    pub office: Option<Vec<String>>,
+    /// Filter by WMO header ID.
+    pub wmoid: Option<Vec<String>>,
+    /// Filter by product type code (e.g., "AFD", "HWO").
+    pub product_type: Option<Vec<String>>,
+    /// Limit the number of results returned.
+    pub limit: Option<i32>,
+}
+
+/// Returns a list of valid text product types for a given issuance location.
+///
+/// Corresponds to the `/products/locations/{locationId}/types` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `location_id`: The ID of the issuance location (e.g., "LWX", "PQR").
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::TextProductTypeCollection`] on success, listing
+/// the product types available for the location.
+///
+/// # Errors
+///
+/// Returns an [`Error<LocationProductsError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_products_by_location(
     configuration: &configuration::Configuration,
     location_id: &str,
 ) -> Result<models::TextProductTypeCollection, Error<LocationProductsError>> {
@@ -100,7 +154,7 @@ pub async fn location_products(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -128,8 +182,24 @@ pub async fn location_products(
     }
 }
 
-/// Returns a specific text product
-pub async fn product(
+/// Returns a specific NWS text product by its unique product ID.
+///
+/// Corresponds to the `/products/{productId}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `product_id`: The unique ID of the product.
+///
+/// # Returns
+///
+/// A `Result` containing the [`models::TextProduct`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<ProductError>`] if the request fails (e.g., product not found)
+/// or the response cannot be parsed.
+pub async fn get_product(
     configuration: &configuration::Configuration,
     product_id: &str,
 ) -> Result<models::TextProduct, Error<ProductError>> {
@@ -159,7 +229,7 @@ pub async fn product(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -187,8 +257,24 @@ pub async fn product(
     }
 }
 
-/// Returns a list of valid text product issuance locations
-pub async fn product_locations(
+/// Returns a list of valid NWS text product issuance locations.
+///
+/// Corresponds to the `/products/locations` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::TextProductLocationCollection`] on success, listing
+/// valid location IDs and their names.
+///
+/// # Errors
+///
+/// Returns an [`Error<ProductLocationsError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_product_locations(
     configuration: &configuration::Configuration,
 ) -> Result<models::TextProductLocationCollection, Error<ProductLocationsError>> {
     let uri_str = format!("{}/products/locations", configuration.base_path);
@@ -213,7 +299,7 @@ pub async fn product_locations(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -241,8 +327,24 @@ pub async fn product_locations(
     }
 }
 
-/// Returns a list of valid text product types and codes
-pub async fn product_types(
+/// Returns a list of valid NWS text product types and their codes.
+///
+/// Corresponds to the `/products/types` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::TextProductTypeCollection`] on success, listing
+/// product codes and their names.
+///
+/// # Errors
+///
+/// Returns an [`Error<ProductTypesError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_product_types(
     configuration: &configuration::Configuration,
 ) -> Result<models::TextProductTypeCollection, Error<ProductTypesError>> {
     let uri_str = format!("{}/products/types", configuration.base_path);
@@ -267,7 +369,7 @@ pub async fn product_types(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -295,21 +397,32 @@ pub async fn product_types(
     }
 }
 
-/// Returns a list of text products
-pub async fn products_query(
+/// Returns a list of text products based on specified query parameters.
+///
+/// Corresponds to the `/products` endpoint.
+/// Allows filtering by location, time range, office, WMO ID, and product type.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `params`: A [`ProductsQueryParams`] struct containing the query parameters.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::TextProductCollection`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<ProductsQueryError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_products_query(
     configuration: &configuration::Configuration,
-    location: Option<Vec<String>>,
-    start: Option<String>,
-    end: Option<String>,
-    office: Option<Vec<String>>,
-    wmoid: Option<Vec<String>>,
-    r#type: Option<Vec<String>>,
-    limit: Option<i32>,
+    params: ProductsQueryParams,
 ) -> Result<models::TextProductCollection, Error<ProductsQueryError>> {
     let uri_str = format!("{}/products", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = location {
+    if let Some(ref param_value) = params.location {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -328,13 +441,13 @@ pub async fn products_query(
             )]),
         };
     }
-    if let Some(ref param_value) = start {
+    if let Some(ref param_value) = params.start {
         req_builder = req_builder.query(&[("start", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = end {
+    if let Some(ref param_value) = params.end {
         req_builder = req_builder.query(&[("end", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = office {
+    if let Some(ref param_value) = params.office {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -353,7 +466,7 @@ pub async fn products_query(
             )]),
         };
     }
-    if let Some(ref param_value) = wmoid {
+    if let Some(ref param_value) = params.wmoid {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -372,7 +485,7 @@ pub async fn products_query(
             )]),
         };
     }
-    if let Some(ref param_value) = r#type {
+    if let Some(ref param_value) = params.product_type {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -391,7 +504,7 @@ pub async fn products_query(
             )]),
         };
     }
-    if let Some(ref param_value) = limit {
+    if let Some(ref param_value) = params.limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
     if let Some(ref user_agent) = configuration.user_agent {
@@ -413,7 +526,7 @@ pub async fn products_query(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -441,8 +554,24 @@ pub async fn products_query(
     }
 }
 
-/// Returns a list of text products of a given type
-pub async fn products_type(
+/// Returns a list of text products of a specific type.
+///
+/// Corresponds to the `/products/types/{typeId}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `type_id`: The NWS product type code (e.g., "AFD", "HWO").
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::TextProductCollection`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<ProductsTypeError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_products_by_type(
     configuration: &configuration::Configuration,
     type_id: &str,
 ) -> Result<models::TextProductCollection, Error<ProductsTypeError>> {
@@ -472,7 +601,7 @@ pub async fn products_type(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -500,8 +629,25 @@ pub async fn products_type(
     }
 }
 
-/// Returns a list of text products of a given type for a given issuance location
-pub async fn products_type_location(
+/// Returns a list of text products of a specific type for a specific issuance location.
+///
+/// Corresponds to the `/products/types/{typeId}/locations/{locationId}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `type_id`: The NWS product type code.
+/// * `location_id`: The ID of the issuance location.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::TextProductCollection`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<ProductsTypeLocationError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_products_by_type_and_location(
     configuration: &configuration::Configuration,
     type_id: &str,
     location_id: &str,
@@ -533,7 +679,7 @@ pub async fn products_type_location(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -561,8 +707,24 @@ pub async fn products_type_location(
     }
 }
 
-/// Returns a list of valid text product issuance locations for a given product type
-pub async fn products_type_locations(
+/// Returns a list of valid text product issuance locations for a given product type.
+///
+/// Corresponds to the `/products/types/{typeId}/locations` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `type_id`: The NWS product type code.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::TextProductLocationCollection`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<ProductsTypeLocationsError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_product_issuance_locations_by_type(
     configuration: &configuration::Configuration,
     type_id: &str,
 ) -> Result<models::TextProductLocationCollection, Error<ProductsTypeLocationsError>> {
@@ -592,7 +754,7 @@ pub async fn products_type_locations(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 

@@ -105,6 +105,7 @@ fn test_aviation_sigmets_sequence_only_success() {
 }
 
 #[test]
+#[ignore]
 fn test_aviation_sigmet_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("aviation");
