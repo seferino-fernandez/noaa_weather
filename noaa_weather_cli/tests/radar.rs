@@ -1,10 +1,10 @@
 use assert_cmd::Command;
 
 #[test]
-fn test_radar_queue_success() {
+fn test_radar_data_queue_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("radar")
-        .arg("queue")
+        .arg("data-queue")
         .arg("rds")
         .arg("--station")
         .arg("KIWA");
