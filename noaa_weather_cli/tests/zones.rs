@@ -19,11 +19,11 @@ fn test_zones_list_with_area_state_filter_success() {
 }
 
 #[test]
-fn test_zones_get_success() {
+fn test_zones_metadata_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("zones");
-    cmd.arg("get");
-    cmd.arg("--zone-id");
+    cmd.arg("metadata");
+    cmd.arg("--id");
     cmd.arg("AZZ543");
     cmd.arg("--type");
     cmd.arg("public");
@@ -35,7 +35,7 @@ fn test_zones_forecast_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("zones");
     cmd.arg("forecast");
-    cmd.arg("--zone-id");
+    cmd.arg("--id");
     cmd.arg("AZZ543");
     cmd.arg("--type");
     cmd.arg("public");
@@ -47,7 +47,7 @@ fn test_zones_observations_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("zones");
     cmd.arg("observations");
-    cmd.arg("--zone-id");
+    cmd.arg("--id");
     cmd.arg("AZZ543");
     cmd.assert().success();
 }
@@ -57,7 +57,7 @@ fn test_zones_stations_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("zones");
     cmd.arg("stations");
-    cmd.arg("--zone-id");
+    cmd.arg("--id");
     cmd.arg("AZZ543");
     cmd.assert().success();
 }

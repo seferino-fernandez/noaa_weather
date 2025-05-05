@@ -184,14 +184,15 @@ pub struct BaseForecastMeteorologicalAerodromeForecast {
     #[serde(rename = "$text")]
     pub text: Option<String>,
     #[serde(rename = "phenomenonTime")]
-    pub phenomenon_time: BaseForecastMeteorologicalAerodromeForecastPhenomenonTime,
+    pub phenomenon_time: Option<BaseForecastMeteorologicalAerodromeForecastPhenomenonTime>,
     #[serde(rename = "prevailingVisibility")]
-    pub prevailing_visibility: BaseForecastMeteorologicalAerodromeForecastPrevailingVisibility,
+    pub prevailing_visibility:
+        Option<BaseForecastMeteorologicalAerodromeForecastPrevailingVisibility>,
     #[serde(rename = "prevailingVisibilityOperator")]
-    pub prevailing_visibility_operator: String,
+    pub prevailing_visibility_operator: Option<String>,
     #[serde(rename = "surfaceWind")]
-    pub surface_wind: BaseForecastMeteorologicalAerodromeForecastSurfaceWind,
-    pub cloud: BaseForecastMeteorologicalAerodromeForecastCloud,
+    pub surface_wind: Option<BaseForecastMeteorologicalAerodromeForecastSurfaceWind>,
+    pub cloud: Option<BaseForecastMeteorologicalAerodromeForecastCloud>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -343,11 +344,12 @@ pub struct ChangeForecastMeteorologicalAerodromeForecast {
     pub ns1_id: String,
     #[serde(rename = "$text")]
     pub text: Option<String>,
-    pub weather: Option<String>,
+    pub weather: Option<Vec<Weather>>,
     #[serde(rename = "phenomenonTime")]
     pub phenomenon_time: ChangeForecastMeteorologicalAerodromeForecastPhenomenonTime,
     #[serde(rename = "prevailingVisibility")]
-    pub prevailing_visibility: ChangeForecastMeteorologicalAerodromeForecastPrevailingVisibility,
+    pub prevailing_visibility:
+        Option<ChangeForecastMeteorologicalAerodromeForecastPrevailingVisibility>,
     pub cloud: ChangeForecastMeteorologicalAerodromeForecastCloud,
     #[serde(rename = "surfaceWind")]
     pub surface_wind: Option<ChangeForecastMeteorologicalAerodromeForecastSurfaceWind>,
