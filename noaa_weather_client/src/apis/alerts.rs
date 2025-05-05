@@ -411,6 +411,9 @@ pub async fn get_active_alerts(
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::AlertCollectionGeoJson`",
             ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::AlertCollectionGeoJson`",
+            ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
                     "Received `{unknown_type}` content type response that cannot be converted to `models::AlertCollectionGeoJson`"
@@ -487,6 +490,9 @@ pub async fn get_active_alerts_for_area(
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::AlertCollectionGeoJson`",
             ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::AlertCollectionGeoJson`",
+            ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
                     "Received `{unknown_type}` content type response that cannot be converted to `models::AlertCollectionGeoJson`"
@@ -556,6 +562,9 @@ pub async fn get_active_alerts_count(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::AlertsActiveCount200Response`",
+            ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::AlertsActiveCount200Response`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
@@ -633,6 +642,9 @@ pub async fn get_active_alerts_for_region(
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::AlertCollectionGeoJson`",
             ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::AlertCollectionGeoJson`",
+            ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
                     "Received `{unknown_type}` content type response that cannot be converted to `models::AlertCollectionGeoJson`"
@@ -708,6 +720,9 @@ pub async fn get_active_alerts_for_zone(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::AlertCollectionGeoJson`",
+            ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::AlertCollectionGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
@@ -993,6 +1008,9 @@ pub async fn get_alerts(
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::AlertCollectionGeoJson`",
             ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::AlertCollectionGeoJson`",
+            ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
                     "Received `{unknown_type}` content type response that cannot be converted to `models::AlertCollectionGeoJson`"
@@ -1069,6 +1087,9 @@ pub async fn get_alert(
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::AlertGeoJson`",
             ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::AlertGeoJson`",
+            ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
                     "Received `{unknown_type}` content type response that cannot be converted to `models::AlertGeoJson`"
@@ -1138,6 +1159,9 @@ pub async fn get_alert_types(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::AlertsTypes200Response`",
+            ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::AlertsTypes200Response`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(

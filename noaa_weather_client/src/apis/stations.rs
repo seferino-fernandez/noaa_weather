@@ -5,80 +5,101 @@ use reqwest;
 use serde::de::Error as _;
 use serde::{Deserialize, Serialize};
 
-/// struct for typed errors of method [`obs_station`]
+/// Errors that can occur when calling the [`get_observation_station`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ObsStationError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`obs_stations`]
+/// Errors that can occur when calling the [`get_observation_stations`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ObsStationsError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`station_observation_latest`]
+/// Errors that can occur when calling the [`get_latest_observations`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum StationObservationLatestError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`station_observation_list`]
+/// Errors that can occur when calling the [`get_observations`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum StationObservationListError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`station_observation_time`]
+/// Errors that can occur when calling the [`get_observation_by_time`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum StationObservationTimeError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`taf`]
+/// Errors that can occur when calling the [`get_terminal_aerodrome_forecast`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum TafError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`tafs`]
+/// Errors that can occur when calling the [`get_terminal_aerodrome_forecasts`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum TafsError {
+    /// Standard NWS API problem detail response.
     DefaultResponse(models::ProblemDetail),
-    UnknownValue(serde_json::Value),
-}
-
-/// struct for typed errors of method [`get_city_weather`]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum GetCityWeatherError {
-    PointError(models::ProblemDetail),
-    StationError(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
     UnknownValue(serde_json::Value),
 }
 
 /// Returns metadata about a given observation station
-pub async fn obs_station(
+///
+/// Corresponds to the `/stations/{stationId}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `id`: The ID of the observation station (e.g., "KPHX", "KDEN").
+///
+/// # Returns
+///
+/// A `Result` containing an [`models::ObservationStationGeoJson`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<ObsStationError>`] if the request fails (e.g., station not found)
+/// or the response cannot be parsed.
+pub async fn get_observation_station(
     configuration: &configuration::Configuration,
-    station_id: &str,
+    id: &str,
 ) -> Result<models::ObservationStationGeoJson, Error<ObsStationError>> {
     let uri_str = format!(
-        "{}/stations/{stationId}",
+        "{}/stations/{id}",
         configuration.base_path,
-        stationId = crate::apis::urlencode(station_id)
+        id = crate::apis::urlencode(id)
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
@@ -101,7 +122,7 @@ pub async fn obs_station(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -111,6 +132,9 @@ pub async fn obs_station(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::ObservationStationGeoJson`",
+            ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::ObservationStationGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
@@ -130,7 +154,28 @@ pub async fn obs_station(
 }
 
 /// Returns a list of observation stations.
-pub async fn obs_stations(
+///
+/// Corresponds to the `/stations` endpoint.
+/// Supports filtering by station ID and state/territory.
+/// Supports pagination via `limit` and `cursor`.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `id`: Optional list of station IDs to filter by.
+/// * `state`: Optional list of state/territory abbreviations ([`models::AreaCode`]) to filter by.
+/// * `limit`: Optional limit on the number of stations returned.
+/// * `cursor`: Optional pagination cursor for fetching subsequent results.
+///
+/// # Returns
+///
+/// A `Result` containing an [`models::ObservationStationCollectionGeoJson`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<ObsStationsError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_observation_stations(
     configuration: &configuration::Configuration,
     id: Option<Vec<String>>,
     state: Option<Vec<models::AreaCode>>,
@@ -145,14 +190,14 @@ pub async fn obs_stations(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("id".to_owned(), p.to_string()))
+                    .map(|param| ("id".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "id",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(|param| param.to_string())
                     .collect::<Vec<String>>()
                     .join(",")
                     .to_string(),
@@ -164,14 +209,14 @@ pub async fn obs_stations(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("state".to_owned(), p.to_string()))
+                    .map(|param| ("state".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "state",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(|param| param.to_string())
                     .collect::<Vec<String>>()
                     .join(",")
                     .to_string(),
@@ -203,7 +248,7 @@ pub async fn obs_stations(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -213,6 +258,9 @@ pub async fn obs_stations(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::ObservationStationCollectionGeoJson`",
+            ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::ObservationStationCollectionGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
@@ -232,7 +280,25 @@ pub async fn obs_stations(
 }
 
 /// Returns the latest observation for a station
-pub async fn station_observation_latest(
+///
+/// Corresponds to the `/stations/{stationId}/observations/latest` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `station_id`: The ID of the observation station.
+/// * `require_qc`: Optional flag to require quality controlled data. Set to `false` by default.
+///   Note that non-QC'd data is preliminary.
+///
+/// # Returns
+///
+/// A `Result` containing an [`models::ObservationGeoJson`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<StationObservationLatestError>`] if the request fails, no observation is available,
+/// or the response cannot be parsed.
+pub async fn get_latest_observations(
     configuration: &configuration::Configuration,
     station_id: &str,
     require_qc: Option<bool>,
@@ -265,7 +331,7 @@ pub async fn station_observation_latest(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
     if !status.is_client_error() && !status.is_server_error() {
@@ -274,6 +340,9 @@ pub async fn station_observation_latest(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::ObservationGeoJson`",
+            ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::ObservationGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
@@ -293,7 +362,26 @@ pub async fn station_observation_latest(
 }
 
 /// Returns a list of observations for a given station
-pub async fn station_observation_list(
+///
+/// Corresponds to the `/stations/{stationId}/observations` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `station_id`: The ID of the observation station.
+/// * `start`: Optional start time (ISO 8601 format or relative duration).
+/// * `end`: Optional end time (ISO 8601 format or relative duration).
+/// * `limit`: Optional limit on the number of observations returned.
+///
+/// # Returns
+///
+/// A `Result` containing an [`models::ObservationCollectionGeoJson`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<StationObservationListError>`] if the request fails or the response
+/// cannot be parsed.
+pub async fn get_observations(
     configuration: &configuration::Configuration,
     station_id: &str,
     start: Option<String>,
@@ -335,7 +423,7 @@ pub async fn station_observation_list(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -345,6 +433,9 @@ pub async fn station_observation_list(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::ObservationCollectionGeoJson`",
+            ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::ObservationCollectionGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
@@ -364,7 +455,24 @@ pub async fn station_observation_list(
 }
 
 /// Returns a single observation.
-pub async fn station_observation_time(
+///
+/// Corresponds to the `/stations/{stationId}/observations/{time}` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `station_id`: The ID of the observation station.
+/// * `time`: The specific ISO 8601 timestamp of the desired observation.
+///
+/// # Returns
+///
+/// A `Result` containing an [`models::ObservationGeoJson`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<StationObservationTimeError>`] if the request fails (e.g., no observation
+/// found for the exact time) or the response cannot be parsed.
+pub async fn get_observation_by_time(
     configuration: &configuration::Configuration,
     station_id: &str,
     time: String,
@@ -396,7 +504,7 @@ pub async fn station_observation_time(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -406,6 +514,9 @@ pub async fn station_observation_time(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::ObservationGeoJson`",
+            ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::ObservationGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
@@ -424,13 +535,31 @@ pub async fn station_observation_time(
     }
 }
 
-/// Returns a single Terminal Aerodrome Forecast.
-pub async fn taf(
+/// Returns a single Terminal Aerodrome Forecast (TAF).
+///
+/// Corresponds to the `/stations/{stationId}/tafs/{date}/{time}` endpoint.
+/// Note: This endpoint seems less common; typically, users fetch all current TAFs.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `station_id`: The ID of the airport station (typically ICAO identifier like "KPHX").
+/// * `date`: The date of the TAF in `YYYY-MM-DD` format.
+/// * `time`: The time of the TAF in `HHMM` format (UTC) Regex: `^([01][0-9]|2[0-3])[0-5][0-9]$`.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::TerminalAerodromeForecast`] on success, representing the TAF data.
+///
+/// # Errors
+///
+/// Returns an [`Error<TafError>`] if the request fails or the response cannot be parsed.
+pub async fn get_terminal_aerodrome_forecast(
     configuration: &configuration::Configuration,
     station_id: &str,
     date: String,
     time: &str,
-) -> Result<serde_json::Value, Error<TafError>> {
+) -> Result<models::TerminalAerodromeForecast, Error<TafError>> {
     let uri_str = format!(
         "{}/stations/{stationId}/tafs/{date}/{time}",
         configuration.base_path,
@@ -459,7 +588,7 @@ pub async fn taf(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -470,6 +599,12 @@ pub async fn taf(
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
             ))),
+            ContentType::Xml => {
+                let mut deserializer = quick_xml::de::Deserializer::from_str(&content);
+                let taf = models::TerminalAerodromeForecast::deserialize(&mut deserializer)
+                    .map_err(Error::Xml)?;
+                Ok(taf)
+            }
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
                     "Received `{unknown_type}` content type response that cannot be converted to `serde_json::Value`"
@@ -488,7 +623,23 @@ pub async fn taf(
 }
 
 /// Returns Terminal Aerodrome Forecasts for the specified airport station.
-pub async fn tafs(
+///
+/// Corresponds to the `/stations/{stationId}/tafs` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `station_id`: The ID of the airport station (typically ICAO identifier like "KPHX").
+///
+/// # Returns
+///
+/// A `Result` containing a [`serde_json::Value`] on success, representing the TAF collection.
+/// *Note: The exact structure of the returned JSON is not strictly defined in the OpenAPI spec.*
+///
+/// # Errors
+///
+/// Returns an [`Error<TafsError>`] if the request fails or the response cannot be parsed.
+pub async fn get_terminal_aerodrome_forecasts(
     configuration: &configuration::Configuration,
     station_id: &str,
 ) -> Result<serde_json::Value, Error<TafsError>> {
@@ -518,7 +669,7 @@ pub async fn tafs(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -528,6 +679,9 @@ pub async fn tafs(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
+            ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `serde_json::Value`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(

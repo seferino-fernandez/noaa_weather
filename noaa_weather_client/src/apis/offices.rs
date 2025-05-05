@@ -89,6 +89,9 @@ pub async fn get_forecast_office(
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::Office`",
             ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::Office`",
+            ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
                     "Received `{unknown_type}` content type response that cannot be converted to `models::Office`"
@@ -167,6 +170,9 @@ pub async fn get_forecast_office_headline(
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::OfficeHeadline`",
             ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::OfficeHeadline`",
+            ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
                     "Received `{unknown_type}` content type response that cannot be converted to `models::OfficeHeadline`"
@@ -241,6 +247,9 @@ pub async fn get_forecast_office_headlines(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
                 "Received `text/plain` content type response that cannot be converted to `models::OfficeHeadlineCollection`",
+            ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `models::OfficeHeadlineCollection`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(

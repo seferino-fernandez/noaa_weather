@@ -202,6 +202,8 @@ pub mod sigmet_geo_json;
 pub use self::sigmet_geo_json::SigmetGeoJson;
 pub mod state_territory_code;
 pub use self::state_territory_code::StateTerritoryCode;
+pub mod terminal_aerodrome_forecast;
+pub use self::terminal_aerodrome_forecast::TerminalAerodromeForecast;
 pub mod text_product;
 pub use self::text_product::TextProduct;
 pub mod text_product_collection;

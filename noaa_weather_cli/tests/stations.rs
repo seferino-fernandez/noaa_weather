@@ -59,3 +59,17 @@ fn test_stations_tafs_success() {
     cmd.arg("KPHX");
     cmd.assert().success();
 }
+
+#[test]
+fn test_stations_taf_success() {
+    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    cmd.arg("stations");
+    cmd.arg("taf");
+    cmd.arg("--station-id");
+    cmd.arg("KPHX");
+    cmd.arg("--date");
+    cmd.arg("2025-05-03");
+    cmd.arg("--time");
+    cmd.arg("1800");
+    cmd.assert().success();
+}
