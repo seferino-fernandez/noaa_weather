@@ -1,8 +1,7 @@
 use assert_cmd::Command;
 
-// Ignore this test for now since the date needs to be updated dynamically
 #[test]
-#[ignore]
+#[ignore = "Ignore this test for now since the date needs to be updated dynamically"]
 fn test_aviation_cwa_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("aviation");
@@ -105,7 +104,7 @@ fn test_aviation_sigmets_sequence_only_success() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "Ignore this test for now since the date needs to be updated dynamically"]
 fn test_aviation_sigmet_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("aviation");

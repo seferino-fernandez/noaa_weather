@@ -48,7 +48,7 @@ fn test_gridpoints_gridpoint_success() {
 fn test_gridpoints_hourly_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("gridpoints");
-    cmd.arg("hourly");
+    cmd.arg("forecast-hourly");
     cmd.arg("--forecast-office-id");
     cmd.arg("PSR");
     cmd.arg("--x");

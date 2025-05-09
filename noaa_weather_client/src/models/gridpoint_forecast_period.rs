@@ -52,6 +52,7 @@ pub struct GridpointForecastPeriod {
     pub wind_gust: Option<Option<Box<models::GridpointForecastPeriodWindGust>>>,
     /// The prevailing direction of the wind for the period, using a 16-point compass.
     #[serde_as(as = "Option<NoneAsEmptyString>")]
+    #[serde(rename(deserialize = "windDirection"))]
     pub wind_direction: Option<Option<WindDirection>>,
     /// A link to an icon representing the forecast summary.
     #[serde(rename = "icon", skip_serializing_if = "Option::is_none")]
@@ -97,6 +98,12 @@ pub enum TemperatureUnit {
     C,
 }
 
+impl Display for TemperatureUnit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 impl Default for TemperatureUnit {
     fn default() -> TemperatureUnit {
         Self::F
@@ -137,6 +144,7 @@ impl Default for TemperatureTrend {
 }
 /// The prevailing direction of the wind for the period, using a 16-point compass.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[serde(rename_all(deserialize = "SCREAMING_SNAKE_CASE"))]
 pub enum WindDirection {
     #[serde(rename = "N")]
     N,
@@ -180,7 +188,7 @@ impl Default for WindDirection {
 
 impl Display for WindDirection {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{}", format!("{:?}", self).to_uppercase())
     }
 }
 

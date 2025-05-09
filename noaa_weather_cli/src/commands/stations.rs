@@ -3,11 +3,12 @@ use clap::Subcommand;
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::stations as station_api;
 use noaa_weather_client::models::{AreaCode, StateTerritoryCode};
-use serde_json::Value;
 use std::str::FromStr;
 
+use crate::Cli;
+
 /// Access data related to NWS observation stations.
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum StationCommands {
     /// Get metadata for a specific observation station.
     ///
@@ -108,19 +109,20 @@ pub enum StationCommands {
 /// # Arguments
 ///
 /// * `command` - The specific station subcommand and its arguments to execute.
+/// * `cli` - The CLI arguments.
 /// * `config` - The application configuration containing API details.
 ///
-/// # Returns
-///
-/// A `Result` containing the JSON `Value` of the API response on success,
-/// or an `anyhow::Error` if an error occurs during the API call or processing.
-pub async fn handle_command(command: StationCommands, config: &Configuration) -> Result<Value> {
+pub async fn handle_command(
+    command: &StationCommands,
+    _cli: Cli,
+    config: &Configuration,
+) -> Result<()> {
     match command {
         StationCommands::Metadata { id } => {
-            let result = station_api::get_observation_station(config, &id)
+            let _result = station_api::get_observation_station(config, id)
                 .await
                 .map_err(|e| anyhow!("Error getting station metadata: {e}"))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         StationCommands::List {
             id,
@@ -130,10 +132,11 @@ pub async fn handle_command(command: StationCommands, config: &Configuration) ->
         } => {
             // Parse state strings into StateTerritoryCode enums, then wrap in AreaCode
             let states_parsed = state
+                .as_ref()
                 .map(|states| {
                     states
-                        .into_iter()
-                        .map(|s| StateTerritoryCode::from_str(&s))
+                        .iter()
+                        .map(|s| StateTerritoryCode::from_str(s))
                         .collect::<Result<Vec<_>, _>>()
                         .map(|stc_vec| {
                             stc_vec
@@ -145,25 +148,25 @@ pub async fn handle_command(command: StationCommands, config: &Configuration) ->
                 .transpose()
                 .map_err(|e| anyhow!("Invalid state code provided: {e}"))?;
 
-            let result = station_api::get_observation_stations(
+            let _result = station_api::get_observation_stations(
                 config,
-                id,
+                id.clone(),
                 states_parsed,
-                limit,
+                *limit,
                 cursor.as_deref(),
             )
             .await
             .map_err(|e| anyhow!("Error listing stations: {e}"))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         StationCommands::LatestObservation {
             station_id,
             require_qc,
         } => {
-            let result = station_api::get_latest_observations(config, &station_id, require_qc)
+            let _result = station_api::get_latest_observations(config, station_id, *require_qc)
                 .await
                 .map_err(|e| anyhow!("Error getting latest observation: {e}"))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         StationCommands::Observations {
             station_id,
@@ -171,33 +174,43 @@ pub async fn handle_command(command: StationCommands, config: &Configuration) ->
             end,
             limit,
         } => {
-            let result = station_api::get_observations(config, &station_id, start, end, limit)
-                .await
-                .map_err(|e| anyhow!("Error listing observations: {e}"))?;
-            Ok(serde_json::to_value(result)?)
+            let _result = station_api::get_observations(
+                config,
+                station_id,
+                start.clone(),
+                end.clone(),
+                *limit,
+            )
+            .await
+            .map_err(|e| anyhow!("Error listing observations: {e}"))?;
+            Ok(())
         }
         StationCommands::Observation { station_id, time } => {
-            let result = station_api::get_observation_by_time(config, &station_id, time)
+            let _result = station_api::get_observation_by_time(config, station_id, time.clone())
                 .await
                 .map_err(|e| anyhow!("Error getting observation by time: {e}"))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         StationCommands::Tafs { station_id } => {
-            let result = station_api::get_terminal_aerodrome_forecasts(config, &station_id)
+            let _result = station_api::get_terminal_aerodrome_forecasts(config, station_id)
                 .await
                 .map_err(|e| anyhow!("Error getting TAFs: {e}"))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         StationCommands::Taf {
             station_id,
             date,
             time,
         } => {
-            let result =
-                station_api::get_terminal_aerodrome_forecast(config, &station_id, date, &time)
-                    .await
-                    .map_err(|e| anyhow!("Error getting specific TAF: {e}"))?;
-            Ok(serde_json::to_value(result)?)
+            let _result = station_api::get_terminal_aerodrome_forecast(
+                config,
+                station_id,
+                date.clone(),
+                time,
+            )
+            .await
+            .map_err(|e| anyhow!("Error getting specific TAF: {e}"))?;
+            Ok(())
         }
     }
 }

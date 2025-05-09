@@ -60,6 +60,7 @@ fn test_stations_tafs_success() {
     cmd.assert().success();
 }
 
+#[ignore = "Ignore this test for now since the data needs to be updated dynamically"]
 #[test]
 fn test_stations_taf_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();

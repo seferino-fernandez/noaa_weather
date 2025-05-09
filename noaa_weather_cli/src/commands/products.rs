@@ -3,10 +3,11 @@ use clap::{Args, Subcommand};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::products as products_api;
 use noaa_weather_client::apis::products::ProductsQueryParams;
-use serde_json::Value;
+
+use crate::Cli;
 
 /// Arguments for commands requiring a product issuance location ID.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct LocationProductsArgs {
     /// Product issuance location ID (e.g., LWX, OKX).
     /// See `locations` subcommand for a list of valid IDs.
@@ -15,7 +16,7 @@ pub struct LocationProductsArgs {
 }
 
 /// Arguments for commands requiring a specific product ID.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct ProductArgs {
     /// Unique NWS text product identifier.
     /// Product IDs can be found in the output of the `list` subcommand.
@@ -24,7 +25,7 @@ pub struct ProductArgs {
 }
 
 /// Arguments for querying a list of NWS text products.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct ProductsListArgs {
     /// Filter by product issuance location ID(s) (comma-separated).
     #[arg(long, value_delimiter = ',')]
@@ -57,7 +58,7 @@ pub struct ProductsListArgs {
 }
 
 /// Arguments for commands requiring a product type ID.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct ProductsTypeArgs {
     /// Product type ID (e.g., AFD, HWO).
     /// See `types` subcommand for valid codes.
@@ -66,7 +67,7 @@ pub struct ProductsTypeArgs {
 }
 
 /// Arguments for commands requiring both a product type ID and location ID.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct ProductsTypeLocationArgs {
     /// Product type ID (e.g., AFD, HWO).
     #[arg(long)]
@@ -78,7 +79,7 @@ pub struct ProductsTypeLocationArgs {
 }
 
 /// Arguments for listing locations associated with a product type.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct ProductsTypeLocationsArgs {
     /// Product type ID (e.g., AFD, HWO).
     #[arg(long)]
@@ -86,7 +87,7 @@ pub struct ProductsTypeLocationsArgs {
 }
 
 /// Access information about NWS text products.
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum ProductCommands {
     /// Get available product types for a specific issuance location.
     ///
@@ -137,75 +138,76 @@ pub enum ProductCommands {
 /// # Arguments
 ///
 /// * `command` - The specific product subcommand and its arguments to execute.
+/// * `cli` - The CLI arguments.
 /// * `config` - The application configuration containing API details.
 ///
-/// # Returns
-///
-/// A `Result` containing the JSON `Value` of the API response on success,
-/// or an `anyhow::Error` if an error occurs during the API call or processing.
-pub async fn handle_command(command: ProductCommands, config: &Configuration) -> Result<Value> {
+pub async fn handle_command(
+    command: &ProductCommands,
+    _cli: Cli,
+    config: &Configuration,
+) -> Result<()> {
     match command {
         ProductCommands::LocationProducts(args) => {
-            let result = products_api::get_products_by_location(config, &args.location_id)
+            let _result = products_api::get_products_by_location(config, &args.location_id)
                 .await
                 .map_err(|e| anyhow!("getting location products: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         ProductCommands::Product(args) => {
-            let result = products_api::get_product(config, &args.product_id)
+            let _result = products_api::get_product(config, &args.product_id)
                 .await
                 .map_err(|e| anyhow!("getting product: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         ProductCommands::Locations => {
-            let result = products_api::get_product_locations(config)
+            let _result = products_api::get_product_locations(config)
                 .await
                 .map_err(|e| anyhow!("getting product locations: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         ProductCommands::Types => {
-            let result = products_api::get_product_types(config)
+            let _result = products_api::get_product_types(config)
                 .await
                 .map_err(|e| anyhow!("getting product types: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         ProductCommands::ProductsList(args) => {
             let params = ProductsQueryParams {
-                location: args.location,
-                start: args.start,
-                end: args.end,
-                office: args.office,
-                wmoid: args.wmo_id,
-                product_type: args.r#type,
+                location: args.location.clone(),
+                start: args.start.clone(),
+                end: args.end.clone(),
+                office: args.office.clone(),
+                wmoid: args.wmo_id.clone(),
+                product_type: args.r#type.clone(),
                 limit: Some(args.limit),
             };
-            let result = products_api::get_products_query(config, params)
+            let _result = products_api::get_products_query(config, params)
                 .await
                 .map_err(|e| anyhow!("querying products: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         ProductCommands::ProductsType(args) => {
-            let result = products_api::get_products_by_type(config, &args.type_id)
+            let _result = products_api::get_products_by_type(config, &args.type_id)
                 .await
                 .map_err(|e| anyhow!("getting products by type: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         ProductCommands::ProductsTypeLocation(args) => {
-            let result = products_api::get_products_by_type_and_location(
+            let _result = products_api::get_products_by_type_and_location(
                 config,
                 &args.type_id,
                 &args.location_id,
             )
             .await
             .map_err(|e| anyhow!("getting products by type and location: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         ProductCommands::ProductsTypeLocations(args) => {
-            let result =
+            let _result =
                 products_api::get_product_issuance_locations_by_type(config, &args.type_id)
                     .await
                     .map_err(|e| anyhow!("getting locations for product type: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
     }
 }

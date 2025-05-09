@@ -8,12 +8,12 @@ use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::models::{
     self, AlertCertainty, AlertSeverity, AlertUrgency, MarineRegionCode,
 };
-use serde_json::Value;
 
+use crate::Cli;
 use crate::utils::parse::{parse_area_codes, parse_string_args_into_vec};
 
 /// Subcommands for interacting with the NWS Alerts API.
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum AlertCommands {
     /// List active alerts, optionally filtering by various criteria.
     ///
@@ -195,14 +195,14 @@ pub enum AlertCommands {
 /// # Arguments
 ///
 /// * `command`: The specific alert subcommand to execute.
+/// * `cli`: The CLI arguments.
 /// * `config`: The API client configuration.
 ///
-/// # Returns
-///
-/// A `Result` containing the JSON response from the API on success,
-/// or an `anyhow::Error` if an error occurs during parsing, API call, or
-/// result serialization.
-pub async fn handle_command(command: AlertCommands, config: &Configuration) -> Result<Value> {
+pub async fn handle_command(
+    command: &AlertCommands,
+    _cli: Cli,
+    config: &Configuration,
+) -> Result<()> {
     match command {
         AlertCommands::Active {
             status,
@@ -219,59 +219,59 @@ pub async fn handle_command(command: AlertCommands, config: &Configuration) -> R
             certainty,
             limit,
         } => {
-            let area_parsed = parse_area_codes(area)?;
-            let region_parsed = parse_string_args_into_vec::<MarineRegionCode>(region)?;
-            let urgency_parsed = parse_string_args_into_vec::<AlertUrgency>(urgency)?;
-            let severity_parsed = parse_string_args_into_vec::<AlertSeverity>(severity)?;
-            let certainty_parsed = parse_string_args_into_vec::<AlertCertainty>(certainty)?;
+            let area_parsed = parse_area_codes(area.clone())?;
+            let region_parsed = parse_string_args_into_vec::<MarineRegionCode>(region.clone())?;
+            let urgency_parsed = parse_string_args_into_vec::<AlertUrgency>(urgency.clone())?;
+            let severity_parsed = parse_string_args_into_vec::<AlertSeverity>(severity.clone())?;
+            let certainty_parsed = parse_string_args_into_vec::<AlertCertainty>(certainty.clone())?;
 
             let params = ActiveAlertsParams {
-                status,
-                message_type,
-                event,
-                code,
+                status: status.clone(),
+                message_type: message_type.clone(),
+                event: event.clone(),
+                code: code.clone(),
                 area: area_parsed,
                 point: point.as_deref(),
                 region: region_parsed,
                 region_type: region_type.as_deref(),
-                zone,
+                zone: zone.clone(),
                 urgency: urgency_parsed,
                 severity: severity_parsed,
                 certainty: certainty_parsed,
-                limit,
+                limit: *limit,
             };
 
-            let result = alerts_api::get_active_alerts(config, params)
+            let _result = alerts_api::get_active_alerts(config, params)
                 .await
                 .map_err(|e| anyhow!("Error fetching active alerts: {}", e))?;
 
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         AlertCommands::Area { area } => {
-            let result = alerts_api::get_active_alerts_for_area(config, &area)
+            let _result = alerts_api::get_active_alerts_for_area(config, area)
                 .await
                 .map_err(|e| anyhow!("Error fetching alerts for area {}: {}", area, e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         AlertCommands::Count => {
-            let result = alerts_api::get_active_alerts_count(config)
+            let _result = alerts_api::get_active_alerts_count(config)
                 .await
                 .map_err(|e| anyhow!("Error fetching active alert count: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         AlertCommands::Region { region } => {
-            let region_parsed = models::MarineRegionCode::from_str(&region)
+            let region_parsed = models::MarineRegionCode::from_str(region)
                 .map_err(|e| anyhow!("Invalid marine region code '{}': {}", region, e))?;
-            let result = alerts_api::get_active_alerts_for_region(config, region_parsed)
+            let _result = alerts_api::get_active_alerts_for_region(config, region_parsed)
                 .await
                 .map_err(|e| anyhow!("Error fetching alerts for region {}: {}", region, e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         AlertCommands::Zone { zone_id } => {
-            let result = alerts_api::get_active_alerts_for_zone(config, &zone_id)
+            let _result = alerts_api::get_active_alerts_for_zone(config, zone_id)
                 .await
                 .map_err(|e| anyhow!("Error fetching alerts for zone {}: {}", zone_id, e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         AlertCommands::List {
             active,
@@ -292,48 +292,52 @@ pub async fn handle_command(command: AlertCommands, config: &Configuration) -> R
             limit,
             cursor,
         } => {
-            let area_parsed = parse_area_codes(area)?;
-            let region_parsed = parse_string_args_into_vec::<models::MarineRegionCode>(region)?;
-            let urgency_parsed = parse_string_args_into_vec::<models::AlertUrgency>(urgency)?;
-            let severity_parsed = parse_string_args_into_vec::<models::AlertSeverity>(severity)?;
-            let certainty_parsed = parse_string_args_into_vec::<models::AlertCertainty>(certainty)?;
+            let area_parsed = parse_area_codes(area.clone())?;
+            let region_parsed =
+                parse_string_args_into_vec::<models::MarineRegionCode>(region.clone())?;
+            let urgency_parsed =
+                parse_string_args_into_vec::<models::AlertUrgency>(urgency.clone())?;
+            let severity_parsed =
+                parse_string_args_into_vec::<models::AlertSeverity>(severity.clone())?;
+            let certainty_parsed =
+                parse_string_args_into_vec::<models::AlertCertainty>(certainty.clone())?;
 
             let params = GetAlertsParams {
-                active,
-                start,
-                end,
-                status,
-                message_type,
-                event,
-                code,
+                active: *active,
+                start: start.clone(),
+                end: end.clone(),
+                status: status.clone(),
+                message_type: message_type.clone(),
+                event: event.clone(),
+                code: code.clone(),
                 area: area_parsed,
                 point: point.as_deref(),
                 region: region_parsed,
                 region_type: region_type.as_deref(),
-                zone,
+                zone: zone.clone(),
                 urgency: urgency_parsed,
                 severity: severity_parsed,
                 certainty: certainty_parsed,
-                limit,
+                limit: *limit,
                 cursor: cursor.as_deref(),
             };
 
-            let result = alerts_api::get_alerts(config, params)
+            let _result = alerts_api::get_alerts(config, params)
                 .await
                 .map_err(|e| anyhow!("Error querying alerts: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         AlertCommands::Alert { id } => {
-            let result = alerts_api::get_alert(config, &id)
+            let _result = alerts_api::get_alert(config, id)
                 .await
                 .map_err(|e| anyhow!("Error getting alert {}: {}", id, e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         AlertCommands::Types => {
-            let result = alerts_api::get_alert_types(config)
+            let _result = alerts_api::get_alert_types(config)
                 .await
                 .map_err(|e| anyhow!("Error fetching alert types: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
     }
 }

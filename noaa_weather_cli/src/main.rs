@@ -1,21 +1,21 @@
 use anyhow::Result;
 use clap::Parser;
 use noaa_weather_client::apis::configuration::Configuration;
-use std::fs::File;
-use std::io::Write;
 
 mod commands;
+mod tables;
 mod utils;
+
 use commands::{
     Commands, alerts, aviation, gridpoints, offices, points, products, radar, stations, zones,
 };
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[command(
     author,
     version,
     about,
-    long_about = "Fetches weather forecasts and alerts from the NOAA API."
+    long_about = "Fetches weather forecasts and alerts from the NOAA Weather API."
 )]
 struct Cli {
     #[command(subcommand)]
@@ -35,42 +35,44 @@ struct Cli {
     output: Option<String>,
 }
 
-/// Write output to either stdout or a file
-fn write_output(output_path: Option<&str>, content: &str) -> Result<()> {
-    if let Some(path) = output_path {
-        let mut file = File::create(path)?;
-        file.write_all(content.as_bytes())?;
-    } else {
-        println!("{}", content);
+#[tokio::main]
+async fn main() {
+    if let Err(e) = try_main().await {
+        eprintln!("error: {e}");
+        std::process::exit(1);
     }
-    Ok(())
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+async fn try_main() -> Result<()> {
     let cli = Cli::parse();
 
     let config = Configuration::new();
 
-    let result = match cli.command {
-        Commands::Alerts { command } => alerts::handle_command(*command, &config).await?,
-        Commands::Gridpoints { command } => gridpoints::handle_command(*command, &config).await?,
-        Commands::Offices { command } => offices::handle_command(*command, &config).await?,
-        Commands::Points { command } => points::handle_command(*command, &config).await?,
-        Commands::Radar { command } => radar::handle_command(*command, &config).await?,
-        Commands::Stations { command } => stations::handle_command(*command, &config).await?,
-        Commands::Zones { command } => zones::handle_command(*command, &config).await?,
-        Commands::Aviation { command } => aviation::handle_command(*command, &config).await?,
-        Commands::Products { command } => products::handle_command(*command, &config).await?,
+    match &cli.command {
+        Commands::Alerts { command } => {
+            alerts::handle_command(command, cli.clone(), &config).await?
+        }
+        Commands::Gridpoints { command } => {
+            gridpoints::handle_command(command, cli.clone(), &config).await?
+        }
+        Commands::Offices { command } => {
+            offices::handle_command(command, cli.clone(), &config).await?
+        }
+        Commands::Points { command } => {
+            points::handle_command(command, cli.clone(), &config).await?
+        }
+        Commands::Radar { command } => radar::handle_command(command, cli.clone(), &config).await?,
+        Commands::Stations { command } => {
+            stations::handle_command(command, cli.clone(), &config).await?
+        }
+        Commands::Zones { command } => zones::handle_command(command, cli.clone(), &config).await?,
+        Commands::Aviation { command } => {
+            aviation::handle_command(command, cli.clone(), &config).await?
+        }
+        Commands::Products { command } => {
+            products::handle_command(command, cli.clone(), &config).await?
+        }
     };
-
-    let output = if cli.json {
-        serde_json::to_string_pretty(&result)?
-    } else {
-        format!("{:#?}", result)
-    };
-
-    write_output(cli.output.as_deref(), &output)?;
 
     Ok(())
 }

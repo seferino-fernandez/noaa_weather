@@ -2,10 +2,11 @@ use anyhow::{Result, anyhow};
 use clap::{Args, Subcommand};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::offices as offices_api;
-use serde_json::Value;
+
+use crate::Cli;
 
 /// Arguments requiring a NWS forecast office ID.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct OfficeIdArgs {
     /// NWS forecast office ID (three-letter identifier, e.g., PSR, BOX, TOP).
     #[arg(long)]
@@ -13,7 +14,7 @@ pub struct OfficeIdArgs {
 }
 
 /// Access metadata and headlines for NWS forecast offices.
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum OfficeCommands {
     /// Get metadata for a specific NWS forecast office.
     ///
@@ -45,35 +46,36 @@ pub enum OfficeCommands {
 /// # Arguments
 ///
 /// * `command` - The specific office subcommand and its arguments to execute.
+/// * `cli` - The CLI arguments.
 /// * `config` - The application configuration containing API details.
 ///
-/// # Returns
-///
-/// A `Result` containing the JSON `Value` of the API response on success,
-/// or an `anyhow::Error` if an error occurs during the API call or processing.
-pub async fn handle_command(command: OfficeCommands, config: &Configuration) -> Result<Value> {
+pub async fn handle_command(
+    command: &OfficeCommands,
+    _cli: Cli,
+    config: &Configuration,
+) -> Result<()> {
     match command {
         OfficeCommands::Metadata(args) => {
-            let result = offices_api::get_forecast_office(config, &args.id)
+            let _result = offices_api::get_forecast_office(config, &args.id)
                 .await
                 .map_err(|e| anyhow!("Error getting NWS forecast office metadata: {e}"))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         OfficeCommands::Headlines(args) => {
-            let result = offices_api::get_forecast_office_headlines(config, &args.id)
+            let _result = offices_api::get_forecast_office_headlines(config, &args.id)
                 .await
                 .map_err(|e| anyhow!("Error getting NWS forecast office headlines: {e}"))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         OfficeCommands::Headline {
             office_args,
             headline_id,
         } => {
-            let result =
-                offices_api::get_forecast_office_headline(config, &office_args.id, &headline_id)
+            let _result =
+                offices_api::get_forecast_office_headline(config, &office_args.id, headline_id)
                     .await
                     .map_err(|e| anyhow!("Error getting NWS forecast office headline: {e}"))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
     }
 }

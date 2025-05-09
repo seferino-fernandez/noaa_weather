@@ -10,7 +10,7 @@ pub mod zones;
 
 use clap::Subcommand;
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
     /// Get weather alerts
     Alerts {

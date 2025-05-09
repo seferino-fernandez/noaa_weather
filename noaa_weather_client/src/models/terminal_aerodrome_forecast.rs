@@ -239,11 +239,11 @@ pub struct BaseForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurfac
     #[serde(rename = "$text")]
     pub text: Option<String>,
     #[serde(rename = "meanWindDirection")]
-    pub mean_wind_direction: BaseForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurfaceWindForecastMeanWindDirection,
+    pub mean_wind_direction: Option<BaseForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurfaceWindForecastMeanWindDirection>,
     #[serde(rename = "meanWindSpeed")]
-    pub mean_wind_speed: BaseForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurfaceWindForecastMeanWindSpeed,
+    pub mean_wind_speed: Option<BaseForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurfaceWindForecastMeanWindSpeed>,
     #[serde(rename = "windGustSpeed")]
-    pub wind_gust_speed: BaseForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurfaceWindForecastWindGustSpeed,
+    pub wind_gust_speed: Option<BaseForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurfaceWindForecastWindGustSpeed>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -458,11 +458,11 @@ pub struct ChangeForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurf
     #[serde(rename = "$text")]
     pub text: Option<String>,
     #[serde(rename = "windGustSpeed")]
-    pub wind_gust_speed: Option<String>,
+    pub wind_gust_speed: Option<ChangeForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurfaceWindForecastWindGustSpeed>,
     #[serde(rename = "meanWindDirection")]
-    pub mean_wind_direction: ChangeForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurfaceWindForecastMeanWindDirection,
+    pub mean_wind_direction: Option<ChangeForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurfaceWindForecastMeanWindDirection>,
     #[serde(rename = "meanWindSpeed")]
-    pub mean_wind_speed: ChangeForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurfaceWindForecastMeanWindSpeed,
+    pub mean_wind_speed: Option<ChangeForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurfaceWindForecastMeanWindSpeed>,
 }
 
 #[derive(Serialize, Deserialize)]

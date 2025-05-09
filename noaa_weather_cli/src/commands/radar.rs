@@ -3,10 +3,11 @@ use clap::{Args, Subcommand};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::radar as radar_api;
 use noaa_weather_client::apis::radar::RadarDataQueueQueryParams;
-use serde_json::Value;
+
+use crate::Cli;
 
 /// Subcommands for interacting with NWS radar data endpoints.
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 #[command(
     about = "Access radar stations, servers, data queues, and wind profilers",
     long_about = "Provides access to various endpoints related to NOAA radar stations, servers, data queues, and wind profilers."
@@ -29,7 +30,7 @@ pub enum RadarCommand {
 }
 
 /// Arguments for the `profiler` subcommand.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 #[command(about = "Get metadata for a radar wind profiler station.")]
 pub struct RadarWindProfilerArgs {
     /// The ID of the radar wind profiler station (e.g., "HWPA2").
@@ -46,7 +47,7 @@ pub struct RadarWindProfilerArgs {
 }
 
 /// Arguments for the `data-queue` subcommand.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 #[command(about = "Get metadata and entries for a radar data queue.")]
 pub struct RadarDataQueueArgs {
     /// The host name of the radar queue server (e.g., "rds").
@@ -87,7 +88,7 @@ pub struct RadarDataQueueArgs {
 }
 
 /// Arguments for the `server` subcommand.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 #[command(about = "Get metadata for a specific radar server.")]
 pub struct RadarServerArgs {
     /// The ID of the radar server (e.g., "ldm1").
@@ -100,7 +101,7 @@ pub struct RadarServerArgs {
 }
 
 /// Arguments for the `servers` subcommand.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 #[command(about = "Get a list of radar servers.")]
 pub struct RadarServersArgs {
     /// Optional: Filter by reporting host.
@@ -109,7 +110,7 @@ pub struct RadarServersArgs {
 }
 
 /// Arguments for the `station` subcommand.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 #[command(about = "Get metadata for a specific radar station.")]
 pub struct RadarStationArgs {
     /// The ID of the radar station (e.g., "KABQ", "HWPA2").
@@ -126,7 +127,7 @@ pub struct RadarStationArgs {
 }
 
 /// Arguments for the `station-alarms` subcommand.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 #[command(about = "Get alarm metadata for a specific radar station.")]
 pub struct RadarStationAlarmsArgs {
     /// The ID of the radar station (e.g., "KABQ").
@@ -135,7 +136,7 @@ pub struct RadarStationAlarmsArgs {
 }
 
 /// Arguments for the `stations` subcommand.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 #[command(about = "Get a list of radar stations.")]
 pub struct RadarStationsArgs {
     /// Optional: Filter by station type(s) (e.g., "WSR-88D", "TDWR"). Can be specified multiple times.
@@ -159,23 +160,24 @@ pub struct RadarStationsArgs {
 /// # Arguments
 ///
 /// * `command` - The specific radar subcommand and its arguments to execute.
+/// * `cli` - The CLI arguments.
 /// * `config` - The application configuration containing API details.
 ///
-/// # Returns
-///
-/// A `Result` containing the JSON `Value` of the API response on success,
-/// or an `anyhow::Error` if an error occurs during the API call or processing.
-pub async fn handle_command(command: RadarCommand, config: &Configuration) -> Result<Value> {
+pub async fn handle_command(
+    command: &RadarCommand,
+    _cli: Cli,
+    config: &Configuration,
+) -> Result<()> {
     match command {
         RadarCommand::WindProfiler(args) => {
-            let result = radar_api::get_radar_wind_profiler(
+            let _result = radar_api::get_radar_wind_profiler(
                 config,
                 &args.id,
                 args.time.as_deref(),
                 args.interval.as_deref(),
             )
             .await?;
-            Ok(result)
+            Ok(())
         }
         RadarCommand::DataQueue(args) => {
             let params = RadarDataQueueQueryParams {
@@ -188,43 +190,43 @@ pub async fn handle_command(command: RadarCommand, config: &Configuration) -> Re
                 feed: args.feed.as_deref(),
                 resolution: args.resolution,
             };
-            let result = radar_api::get_radar_data_queue(config, &args.host, params).await?;
-            Ok(result)
+            let _result = radar_api::get_radar_data_queue(config, &args.host, params).await?;
+            Ok(())
         }
         RadarCommand::Server(args) => {
-            let result =
+            let _result =
                 radar_api::get_radar_server(config, &args.id, args.reporting_host.as_deref())
                     .await?;
-            Ok(result)
+            Ok(())
         }
         RadarCommand::Servers(args) => {
-            let result =
+            let _result =
                 radar_api::get_radar_servers(config, args.reporting_host.as_deref()).await?;
-            Ok(result)
+            Ok(())
         }
         RadarCommand::Station(args) => {
-            let result = radar_api::get_radar_station(
+            let _result = radar_api::get_radar_station(
                 config,
                 &args.station_id,
                 args.reporting_host.as_deref(),
                 args.host.as_deref(),
             )
             .await?;
-            Ok(result)
+            Ok(())
         }
         RadarCommand::StationAlarms(args) => {
-            let result = radar_api::get_radar_station_alarms(config, &args.station_id).await?;
-            Ok(result)
+            let _result = radar_api::get_radar_station_alarms(config, &args.station_id).await?;
+            Ok(())
         }
         RadarCommand::Stations(args) => {
-            let result = radar_api::get_radar_stations(
+            let _result = radar_api::get_radar_stations(
                 config,
-                args.station_type,
+                args.station_type.clone(),
                 args.reporting_host.as_deref(),
                 args.host.as_deref(),
             )
             .await?;
-            Ok(result)
+            Ok(())
         }
     }
 }

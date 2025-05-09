@@ -1,12 +1,12 @@
+use crate::Cli;
 use anyhow::{Result, anyhow};
 use clap::{Args, Subcommand, value_parser};
 use noaa_weather_client::apis::aviation as aviation_api;
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::models::NwsCenterWeatherServiceUnitId;
-use serde_json::Value;
 
 /// Arguments for fetching a specific Center Weather Advisory (CWA).
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct CwaArgs {
     /// Center Weather Service Unit (CWSU) ID (e.g., ZAB, ZDC).
     #[arg(long, value_parser = value_parser!(NwsCenterWeatherServiceUnitId))]
@@ -22,7 +22,7 @@ pub struct CwaArgs {
 }
 
 /// Arguments for fetching all current CWAs for a CWSU.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct CwasArgs {
     /// Center Weather Service Unit (CWSU) ID (e.g., ZAB, ZDC).
     #[arg(long, value_parser = value_parser!(NwsCenterWeatherServiceUnitId))]
@@ -30,7 +30,7 @@ pub struct CwasArgs {
 }
 
 /// Arguments for fetching metadata about a CWSU.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct CwsuArgs {
     /// Center Weather Service Unit (CWSU) ID (e.g., ZAB, ZDC).
     #[arg(long, value_parser = value_parser!(NwsCenterWeatherServiceUnitId))]
@@ -38,7 +38,7 @@ pub struct CwsuArgs {
 }
 
 /// Arguments for fetching a specific SIGMET/AIRMET.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct SigmetArgs {
     /// Air Traffic Service Unit (ATSU) identifier (e.g., KANSAS CITY).
     #[arg(long)]
@@ -54,7 +54,7 @@ pub struct SigmetArgs {
 }
 
 /// Arguments for querying available SIGMET/AIRMET products with filters.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct SigmetsArgs {
     /// Start time for filtering (ISO 8601 format, e.g., "2023-10-27T12:00:00Z").
     #[arg(long)]
@@ -78,7 +78,7 @@ pub struct SigmetsArgs {
 }
 
 /// Access aviation weather products like CWAs and SIGMETs.
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum AviationCommands {
     /// Get a specific Center Weather Advisory (CWA) by CWSU ID, date, and sequence number.
     ///
@@ -111,55 +111,57 @@ pub enum AviationCommands {
 /// # Arguments
 ///
 /// * `command` - The specific aviation subcommand and its arguments to execute.
+/// * `cli` - The CLI arguments.
 /// * `config` - The application configuration containing API details.
 ///
-/// # Returns
-///
-/// A `Result` containing the JSON `Value` of the API response on success,
-/// or an `anyhow::Error` if an error occurs during the API call or processing.
-pub async fn handle_command(command: AviationCommands, config: &Configuration) -> Result<Value> {
+pub async fn handle_command(
+    command: &AviationCommands,
+    _cli: Cli,
+    config: &Configuration,
+) -> Result<()> {
     match command {
         AviationCommands::Cwa(args) => {
-            let result = aviation_api::get_center_weather_advisories_by_date_and_sequence(
+            let _result = aviation_api::get_center_weather_advisories_by_date_and_sequence(
                 config,
                 args.cwsu_id,
-                args.date,
+                args.date.clone(),
                 args.sequence,
             )
             .await
             .map_err(|e| anyhow!("getting CWA: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         AviationCommands::Cwas(args) => {
-            let result = aviation_api::get_center_weather_advisories(config, args.cwsu_id)
+            let _result = aviation_api::get_center_weather_advisories(config, args.cwsu_id)
                 .await
                 .map_err(|e| anyhow!("getting CWAs for CWSU: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         AviationCommands::Cwsu(args) => {
-            let result = aviation_api::get_center_weather_service_unit(config, args.cwsu_id)
+            let _result = aviation_api::get_center_weather_service_unit(config, args.cwsu_id)
                 .await
                 .map_err(|e| anyhow!("getting CWSU metadata: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         AviationCommands::Sigmet(args) => {
-            let result = aviation_api::get_sigmet(config, &args.atsu, args.date, &args.time)
-                .await
-                .map_err(|e| anyhow!("getting SIGMET: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            let _result =
+                aviation_api::get_sigmet(config, &args.atsu, args.date.clone(), &args.time)
+                    .await
+                    .map_err(|e| anyhow!("getting SIGMET: {}", e))?;
+            Ok(())
         }
         AviationCommands::Sigmets(args) => {
-            let result = aviation_api::get_sigmets(
+            let _result = aviation_api::get_sigmets(
                 config,
-                args.start,
-                args.end,
-                args.date,
+                args.start.clone(),
+                args.end.clone(),
+                args.date.clone(),
                 args.atsu.as_deref(),
                 args.sequence.as_deref(),
             )
             .await
             .map_err(|e| anyhow!("querying SIGMETs: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
     }
 }

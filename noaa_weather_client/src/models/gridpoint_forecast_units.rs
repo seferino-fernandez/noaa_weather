@@ -3,7 +3,8 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 
 /// GridpointForecastUnits : Denotes the units used in the textual portions of the forecast.
-/// Denotes the units used in the textual portions of the forecast.
+/// The International System of Units (`si`) and the United States Customary System (`us`) are the two systems of units.
+/// The default units are `us`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum GridpointForecastUnits {
     #[serde(rename = "us")]

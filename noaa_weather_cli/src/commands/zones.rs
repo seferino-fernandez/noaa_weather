@@ -3,12 +3,13 @@ use clap::{Args, Subcommand, value_parser};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::zones::{self as zones_api, GetZonesByTypeParams, GetZonesParams};
 use noaa_weather_client::models::NwsZoneType;
-use serde_json::Value;
+
+use crate::Cli;
 
 use crate::utils::parse::{parse_area_codes, parse_region_codes, parse_string_args_into_vec};
 
 /// Helper struct for commands requiring both a zone type and ID.
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct ZoneTypeAndIdArgs {
     /// Type of zone (forecast, public, coastal, offshore, fire, county)
     #[arg(short, long, value_parser = value_parser!(NwsZoneType))]
@@ -22,7 +23,7 @@ pub struct ZoneTypeAndIdArgs {
 ///
 /// Zones are geographical areas used by the NWS for issuing forecasts, watches, and warnings.
 /// Different types of zones exist (e.g., public, forecast, fire weather).
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum ZoneCommands {
     /// List zones, optionally filtered by various criteria.
     ///
@@ -115,13 +116,14 @@ pub enum ZoneCommands {
 /// # Arguments
 ///
 /// * `command` - The specific zone subcommand and its arguments to execute.
+/// * `cli` - The CLI arguments.
 /// * `config` - The application configuration containing API details.
 ///
-/// # Returns
-///
-/// A `Result` containing the JSON `Value` of the API response on success,
-/// or an `anyhow::Error` if an error occurs during the API call or processing.
-pub async fn handle_command(command: ZoneCommands, config: &Configuration) -> Result<Value> {
+pub async fn handle_command(
+    command: &ZoneCommands,
+    _cli: Cli,
+    config: &Configuration,
+) -> Result<()> {
     match command {
         ZoneCommands::List {
             id,
@@ -133,25 +135,25 @@ pub async fn handle_command(command: ZoneCommands, config: &Configuration) -> Re
             limit,
             effective,
         } => {
-            let area_parsed = parse_area_codes(area)?;
-            let region_parsed = parse_region_codes(region)?;
-            let type_parsed = parse_string_args_into_vec::<NwsZoneType>(r#type)?;
+            let area_parsed = parse_area_codes(area.clone())?;
+            let region_parsed = parse_region_codes(region.clone())?;
+            let type_parsed = parse_string_args_into_vec::<NwsZoneType>(r#type.clone())?;
 
             // Need to hold the point string ref for the lifetime of the call
             let point_ref = point.as_deref();
 
-            let result = match type_parsed {
+            let _result = match type_parsed {
                 None => {
                     // Call the general list endpoint if no type filter
                     let params = GetZonesParams {
-                        id,
+                        id: id.clone(),
                         area: area_parsed,
                         region: region_parsed,
                         r#type: None,
                         point: point_ref,
-                        include_geometry,
-                        limit,
-                        effective,
+                        include_geometry: *include_geometry,
+                        limit: *limit,
+                        effective: effective.clone(),
                     };
                     zones_api::get_zones(config, params)
                         .await
@@ -162,14 +164,14 @@ pub async fn handle_command(command: ZoneCommands, config: &Configuration) -> Re
                         // Call the type-specific list endpoint if exactly one type filter
                         let single_type = types.into_iter().next().unwrap();
                         let params = GetZonesByTypeParams {
-                            id,
+                            id: id.clone(),
                             area: area_parsed,
                             region: region_parsed,
                             type_filter: None,
                             point: point_ref,
-                            include_geometry,
-                            limit,
-                            effective,
+                            include_geometry: *include_geometry,
+                            limit: *limit,
+                            effective: effective.clone(),
                         };
                         zones_api::get_zones_by_type(config, single_type, params)
                             .await
@@ -179,14 +181,14 @@ pub async fn handle_command(command: ZoneCommands, config: &Configuration) -> Re
                     } else {
                         // Call general list endpoint with type filter if multiple types
                         let params = GetZonesParams {
-                            id,
+                            id: id.clone(),
                             area: area_parsed,
                             region: region_parsed,
                             r#type: Some(types),
                             point: point_ref,
-                            include_geometry,
-                            limit,
-                            effective,
+                            include_geometry: *include_geometry,
+                            limit: *limit,
+                            effective: effective.clone(),
                         };
                         zones_api::get_zones(config, params).await.map_err(|e| {
                             anyhow!("Error listing zones with multiple types: {}", e)
@@ -195,38 +197,39 @@ pub async fn handle_command(command: ZoneCommands, config: &Configuration) -> Re
                 }
             };
 
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         ZoneCommands::Metadata {
             zone_args,
             effective,
         } => {
             // zone_args.r#type is already parsed by clap using value_parser
-            let result = zones_api::get_zone(config, zone_args.r#type, &zone_args.id, effective)
-                .await
-                .map_err(|e| {
-                    anyhow!(
-                        "Error getting zone {}/{}: {}",
-                        zone_args.r#type,
-                        zone_args.id,
-                        e
-                    )
-                })?;
-            Ok(serde_json::to_value(result)?)
+            let _result =
+                zones_api::get_zone(config, zone_args.r#type, &zone_args.id, effective.clone())
+                    .await
+                    .map_err(|e| {
+                        anyhow!(
+                            "Error getting zone {}/{}: {}",
+                            zone_args.r#type,
+                            zone_args.id,
+                            e
+                        )
+                    })?;
+            Ok(())
         }
         ZoneCommands::Forecast { r#type, id } => {
             // r#type is already parsed by clap using value_parser
             // API expects type as string, use the Display impl
-            let result = zones_api::get_current_zone_forecast(config, &r#type.to_string(), &id)
+            let _result = zones_api::get_current_zone_forecast(config, &r#type.to_string(), id)
                 .await
                 .map_err(|e| anyhow!("Error getting forecast for zone {}/{}: {}", r#type, id, e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         ZoneCommands::Stations { id, limit, cursor } => {
-            let result = zones_api::get_stations_by_zone(config, &id, limit, cursor.as_deref())
+            let _result = zones_api::get_stations_by_zone(config, id, *limit, cursor.as_deref())
                 .await
                 .map_err(|e| anyhow!("Error getting stations for forecast zone {}: {}", id, e))?;
-            Ok(serde_json::to_value(result)?)
+            Ok(())
         }
         ZoneCommands::Observations {
             id,
@@ -234,12 +237,13 @@ pub async fn handle_command(command: ZoneCommands, config: &Configuration) -> Re
             end,
             limit,
         } => {
-            let result = zones_api::get_zone_observations(config, &id, start, end, limit)
-                .await
-                .map_err(|e| {
-                    anyhow!("Error getting observations for forecast zone {}: {}", id, e)
-                })?;
-            Ok(serde_json::to_value(result)?)
+            let _result =
+                zones_api::get_zone_observations(config, id, start.clone(), end.clone(), *limit)
+                    .await
+                    .map_err(|e| {
+                        anyhow!("Error getting observations for forecast zone {}: {}", id, e)
+                    })?;
+            Ok(())
         }
     }
 }

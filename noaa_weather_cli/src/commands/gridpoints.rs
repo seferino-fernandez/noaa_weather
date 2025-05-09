@@ -1,9 +1,10 @@
+use crate::utils::format::write_output;
+use crate::{Cli, tables};
 use anyhow::{Result, anyhow};
 use clap::{Args, Subcommand, value_parser};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::gridpoints as gridpoints_api;
 use noaa_weather_client::models::{GridpointForecastUnits, NwsForecastOfficeId};
-use serde_json::Value;
 
 /// Common arguments for identifying a specific NWS gridpoint.
 #[derive(Args, Debug, Clone)]
@@ -31,7 +32,7 @@ pub struct ForecastArgs {
     #[arg(long)]
     feature_flags: Option<Vec<String>>,
 
-    /// Specify units for forecast data (us for US customary, si for metric).
+    /// Specify units for forecast data (`us` for US customary, `si` for Metric).
     #[arg(long, value_parser = value_parser!(GridpointForecastUnits))]
     units: Option<GridpointForecastUnits>,
 }
@@ -54,7 +55,7 @@ pub struct StationsArgs {
 /// Gridpoints represent a 2.5km square area used by the NWS for forecasts.
 /// Use the `points` command to find the correct gridpoint (office ID, X, Y)
 /// for a given latitude/longitude.
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum GridpointCommands {
     /// Get raw numerical forecast data layers for a gridpoint.
     ///
@@ -68,7 +69,7 @@ pub enum GridpointCommands {
     /// Get the multi-day textual forecast for a gridpoint.
     ///
     /// Returns a human-readable forecast summary broken down into periods (e.g., "Tonight", "Thursday").
-    /// Example: `noaa-weather gridpoints forecast --forecast-office-id TOP -x 31 -y 80 --units si`
+    /// Example: `noaa-weather gridpoints forecast --forecast-office-id PSR -x 159 -y 100 --units si`
     Forecast {
         #[clap(flatten)]
         location: GridpointLocationArgs,
@@ -78,8 +79,8 @@ pub enum GridpointCommands {
     /// Get the hourly textual forecast for a gridpoint.
     ///
     /// Returns a human-readable forecast summary broken down by hour.
-    /// Example: `noaa-weather gridpoints hourly --forecast-office-id TOP -x 31 -y 80`
-    Hourly {
+    /// Example: `noaa-weather gridpoints hourly --forecast-office-id PSR -x 159 -y 100`
+    ForecastHourly {
         #[clap(flatten)]
         location: GridpointLocationArgs,
         #[clap(flatten)]
@@ -88,7 +89,7 @@ pub enum GridpointCommands {
     /// List observation stations usable for retrieving observations for a gridpoint.
     ///
     /// Returns a list of nearby stations that can provide current weather conditions.
-    /// Example: `noaa-weather gridpoints stations --forecast-office-id TOP -x 31 -y 80 --limit 5`
+    /// Example: `noaa-weather gridpoints stations --forecast-office-id PSR -x 159 -y 100 --limit 5`
     Stations {
         #[clap(flatten)]
         location: GridpointLocationArgs,
@@ -105,13 +106,14 @@ pub enum GridpointCommands {
 /// # Arguments
 ///
 /// * `command` - The specific gridpoint subcommand and its arguments to execute.
+/// * `cli` - The CLI arguments, including the `--json` flag and output path.
 /// * `config` - The application configuration containing API details.
 ///
-/// # Returns
-///
-/// A `Result` containing the JSON `Value` of the API response on success,
-/// or an `anyhow::Error` if an error occurs during the API call or processing.
-pub async fn handle_command(command: GridpointCommands, config: &Configuration) -> Result<Value> {
+pub async fn handle_command(
+    command: &GridpointCommands,
+    cli: Cli,
+    config: &Configuration,
+) -> Result<()> {
     match command {
         GridpointCommands::Gridpoint { location } => {
             let result = gridpoints_api::get_gridpoint(
@@ -122,7 +124,16 @@ pub async fn handle_command(command: GridpointCommands, config: &Configuration) 
             )
             .await
             .map_err(|e| anyhow!("getting raw gridpoint data: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&result)?,
+                )?;
+            } else {
+                let table = tables::gridpoints::format_gridpoint_table(&result)?;
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
         }
         GridpointCommands::Forecast {
             location,
@@ -133,14 +144,23 @@ pub async fn handle_command(command: GridpointCommands, config: &Configuration) 
                 location.forecast_office_id,
                 location.x,
                 location.y,
-                forecast_opts.feature_flags,
+                forecast_opts.feature_flags.clone(),
                 forecast_opts.units,
             )
             .await
             .map_err(|e| anyhow!("getting gridpoint forecast: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&result)?,
+                )?;
+            } else {
+                let table = tables::gridpoints::format_forecast_table(&result)?;
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
         }
-        GridpointCommands::Hourly {
+        GridpointCommands::ForecastHourly {
             location,
             forecast_opts,
         } => {
@@ -149,12 +169,21 @@ pub async fn handle_command(command: GridpointCommands, config: &Configuration) 
                 location.forecast_office_id,
                 location.x,
                 location.y,
-                forecast_opts.feature_flags,
+                forecast_opts.feature_flags.clone(),
                 forecast_opts.units,
             )
             .await
             .map_err(|e| anyhow!("getting hourly gridpoint forecast: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&result)?,
+                )?;
+            } else {
+                let table = tables::gridpoints::format_hourly_forecast_table(&result)?;
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
         }
         GridpointCommands::Stations {
             location,
@@ -170,7 +199,17 @@ pub async fn handle_command(command: GridpointCommands, config: &Configuration) 
             )
             .await
             .map_err(|e| anyhow!("getting gridpoint stations: {}", e))?;
-            Ok(serde_json::to_value(result)?)
+
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&result)?,
+                )?;
+            } else {
+                let table = tables::stations::format_stations_table(&result)?;
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
         }
     }
+    Ok(())
 }
