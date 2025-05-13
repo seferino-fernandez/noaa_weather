@@ -15,7 +15,7 @@ macro_rules! add_row_if_some {
 }
 
 /// Formats raw gridpoint data into a comfy table.
-pub fn format_gridpoint_table(gridpoint_data: &GridpointGeoJson) -> Result<Table> {
+pub fn create_gridpoint_table(gridpoint_data: &GridpointGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
@@ -53,7 +53,7 @@ pub fn format_gridpoint_table(gridpoint_data: &GridpointGeoJson) -> Result<Table
 }
 
 /// Formats the multi-day forecast into a comfy table.
-pub fn format_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result<Table> {
+pub fn create_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
@@ -118,7 +118,7 @@ pub fn format_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result
 }
 
 /// Formats the hourly forecast into a comfy table.
-pub fn format_hourly_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result<Table> {
+pub fn create_hourly_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::DynamicFullWidth);

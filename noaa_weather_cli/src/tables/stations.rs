@@ -4,7 +4,7 @@ use comfy_table::{ContentArrangement, Table};
 use noaa_weather_client::models::ObservationStationCollectionGeoJson;
 
 /// Formats station data into a comfy table.
-pub fn format_stations_table(station_data: &ObservationStationCollectionGeoJson) -> Result<Table> {
+pub fn create_stations_table(station_data: &ObservationStationCollectionGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::DynamicFullWidth);

@@ -131,7 +131,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::gridpoints::format_gridpoint_table(&result)?;
+                let table = tables::gridpoints::create_gridpoint_table(&result)?;
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
         }
@@ -156,7 +156,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::gridpoints::format_forecast_table(&result)?;
+                let table = tables::gridpoints::create_forecast_table(&result)?;
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
         }
@@ -181,7 +181,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::gridpoints::format_hourly_forecast_table(&result)?;
+                let table = tables::gridpoints::create_hourly_forecast_table(&result)?;
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
         }
@@ -206,7 +206,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::stations::format_stations_table(&result)?;
+                let table = tables::stations::create_stations_table(&result)?;
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
         }

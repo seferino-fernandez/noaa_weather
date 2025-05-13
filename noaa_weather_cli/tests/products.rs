@@ -76,6 +76,7 @@ fn test_products_by_location_success() {
     cmd.assert().success();
 }
 
+#[ignore = "Update to dynamically get a product id"]
 #[test]
 fn test_product_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();

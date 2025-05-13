@@ -80,7 +80,7 @@ pub async fn handle_command(
                 )?;
             } else {
                 // Format and print as a table
-                let table = tables::stations::format_stations_table(&result)?;
+                let table = tables::stations::create_stations_table(&result)?;
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
