@@ -9,6 +9,14 @@ fn test_alerts_command_success() {
 }
 
 #[test]
+fn test_alerts_command_list_success() {
+    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    cmd.arg("alerts");
+    cmd.arg("list");
+    cmd.assert().success();
+}
+
+#[test]
 fn test_alerts_command_failure_invalid_command() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("alerts");
@@ -75,5 +83,14 @@ fn test_alerts_command_types_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("alerts");
     cmd.arg("types");
+    cmd.assert().success();
+}
+
+#[test]
+fn test_alerts_zone_success() {
+    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    cmd.arg("alerts");
+    cmd.arg("zone");
+    cmd.arg("AZC013");
     cmd.assert().success();
 }

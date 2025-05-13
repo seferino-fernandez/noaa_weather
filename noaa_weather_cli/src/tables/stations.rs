@@ -1,12 +1,13 @@
 use anyhow::Result;
-use comfy_table::Table;
 use comfy_table::presets::UTF8_FULL_CONDENSED;
+use comfy_table::{ContentArrangement, Table};
 use noaa_weather_client::models::ObservationStationCollectionGeoJson;
 
 /// Formats station data into a comfy table.
 pub fn format_stations_table(station_data: &ObservationStationCollectionGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
+    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
     table.set_header(vec!["Station ID", "Name", "Elevation (m)", "Time Zone"]);
 
     for feature in &station_data.features {

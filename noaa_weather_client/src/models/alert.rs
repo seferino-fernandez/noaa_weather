@@ -153,6 +153,25 @@ pub enum Category {
     Other,
 }
 
+impl std::fmt::Display for Category {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Met => write!(f, "Met"),
+            Self::Geo => write!(f, "Geo"),
+            Self::Safety => write!(f, "Safety"),
+            Self::Security => write!(f, "Security"),
+            Self::Rescue => write!(f, "Rescue"),
+            Self::Fire => write!(f, "Fire"),
+            Self::Health => write!(f, "Health"),
+            Self::Env => write!(f, "Env"),
+            Self::Transport => write!(f, "Transport"),
+            Self::Infra => write!(f, "Infra"),
+            Self::Cbrne => write!(f, "CBRNE"),
+            Self::Other => write!(f, "Other"),
+        }
+    }
+}
+
 /// The code denoting the type of action recommended for the target audience. This corresponds to responseType in the CAP specification.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Response {
@@ -174,4 +193,20 @@ pub enum Response {
     AllClear,
     #[serde(rename = "None")]
     None,
+}
+
+impl std::fmt::Display for Response {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Shelter => write!(f, "Shelter"),
+            Self::Evacuate => write!(f, "Evacuate"),
+            Self::Prepare => write!(f, "Prepare"),
+            Self::Execute => write!(f, "Execute"),
+            Self::Avoid => write!(f, "Avoid"),
+            Self::Monitor => write!(f, "Monitor"),
+            Self::Assess => write!(f, "Assess"),
+            Self::AllClear => write!(f, "AllClear"),
+            Self::None => write!(f, "None"),
+        }
+    }
 }

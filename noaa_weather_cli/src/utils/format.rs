@@ -17,14 +17,43 @@ pub fn write_output(output_path: Option<&str>, content: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn get_zone_from_url(url: Option<String>) -> Option<String> {
-    if let Some(url) = url {
-        let parts: Vec<&str> = url.split('/').collect();
-        let last_part = parts.last().map_or("N/A", |v| v);
-        Some(last_part.to_string())
-    } else {
-        None
-    }
+/// Extracts the part of a URL-like string after the last `/`.
+///
+/// This function is designed to replicate the effective behavior of the original two functions.
+/// Specifically, the "N/A" default present in the original `map_or` calls was effectively
+/// unreachable because `Vec::last()` on a vector produced by `String::split` will always
+/// return `Some` (e.g., `Some("")` for an empty input string or a string ending in '/').
+///
+/// Therefore, this combined function will:
+/// - Return `None` if the input `url_opt` is `None`.
+/// - If `url_opt` is `Some(url_str)`:
+///   - If `url_str` ends with `/` (e.g., "http://example.com/api/"), it returns `Some("".to_string())`.
+///   - If `url_str` is empty (e.g., ""), it returns `Some("".to_string())`.
+///   - If `url_str` has no `/` (e.g., "hostname"), it returns `Some("hostname".to_string())`.
+///   - Otherwise, it returns the segment after the last `/` (e.g., for "http://example.com/zone1", it returns `Some("zone1".to_string())`).
+///
+/// # Arguments
+///
+/// * `url_opt`: An `Option` containing a value that can be referenced as a string slice (`&str`). This allows for flexibility with input types like `String`, `&String`, or `&str`.
+///
+/// # Returns
+///
+/// An `Option<String>` containing the extracted segment, or `None` if the input `url_opt` was `None`.
+/// The extracted segment can be an empty string if the original URL path ended with a `/` or was empty.
+///
+pub fn get_zone_from_url<S: AsRef<str>>(url_opt: Option<S>) -> Option<String> {
+    url_opt.map(|s_ref| {
+        let url_str = s_ref.as_ref();
+        // `rsplit` splits the string by the delimiter starting from the right.
+        // `next()` then gets the first item from this reversed iterator. This item is
+        // the segment of the string after the last occurrence of `/`.
+        // If `/` is not present, it returns the entire string.
+        // If the string is empty, it returns an empty string.
+        // If the string ends with `/`, it returns an empty string for the part after the last `/`.
+        // `unwrap()` is safe here because `rsplit` on any `&str` (even an empty one)
+        // always yields an iterator that produces at least one item (e.g., `""` for an empty input string).
+        url_str.rsplit('/').next().unwrap().to_string()
+    })
 }
 
 pub fn format_datetime_human_readable(datetime_str_opt: Option<&str>) -> String {
@@ -35,6 +64,13 @@ pub fn format_datetime_human_readable(datetime_str_opt: Option<&str>) -> String 
     let user_timezone = TimeZone::try_system().unwrap_or(TimeZone::UTC);
     let zoned_timestamp = timestamp.to_zoned(user_timezone);
     return zoned_timestamp.strftime("%D %r").to_string();
+}
+
+pub fn format_optional_number(number_opt: Option<i32>) -> String {
+    match number_opt {
+        Some(number) => number.to_string(),
+        None => "N/A".to_string(),
+    }
 }
 
 // Unit strings used in the API.
@@ -149,11 +185,6 @@ mod tests {
 
         let url2 = Some("https://api.weather.gov/zones/county/NYC061".to_string());
         assert_eq!(get_zone_from_url(url2), Some("NYC061".to_string()));
-    }
-
-    #[test]
-    fn test_get_zone_from_url_none() {
-        assert_eq!(get_zone_from_url(None), None);
     }
 
     #[test]

@@ -1,7 +1,7 @@
 use crate::utils::format::{format_datetime_human_readable, format_dewpoint};
 use anyhow::Result;
 use comfy_table::presets::UTF8_FULL_CONDENSED;
-use comfy_table::{Cell, CellAlignment, Table};
+use comfy_table::{Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::{
     GridpointForecastGeoJson, GridpointForecastPeriodTemperature, GridpointGeoJson,
 };
@@ -18,6 +18,7 @@ macro_rules! add_row_if_some {
 pub fn format_gridpoint_table(gridpoint_data: &GridpointGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
+    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
     table.set_header(vec!["Property", "Value"]);
 
     let props = &gridpoint_data.properties;
@@ -55,6 +56,7 @@ pub fn format_gridpoint_table(gridpoint_data: &GridpointGeoJson) -> Result<Table
 pub fn format_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
+    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
     table.set_header(vec!["Period", "Time", "Temp", "Wind", "Forecast"]);
 
     let props = &forecast_data.properties;
@@ -64,12 +66,14 @@ pub fn format_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result
         for period in periods {
             let temp_str = period.temperature.as_ref().map_or_else(
                 || "N/A".to_string(),
-                |t| {
+                |gridpoint_forecast_period_temperature| {
                     format_temperature(
-                        t,
+                        gridpoint_forecast_period_temperature,
                         period
                             .temperature_unit
-                            .map(|u| u.to_string())
+                            .map(|gridpoint_forecast_period_temperature_unit| {
+                                gridpoint_forecast_period_temperature_unit.to_string()
+                            })
                             .as_deref()
                             .or(default_unit.as_deref()),
                     )
@@ -81,11 +85,15 @@ pub fn format_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result
                 period
                     .wind_speed
                     .as_ref()
-                    .map(|ws| ws.to_string())
+                    .map(|gridpoint_forecast_period_wind_speed| {
+                        gridpoint_forecast_period_wind_speed.to_string()
+                    })
                     .unwrap_or_else(|| "N/A".to_string()),
                 period
                     .wind_direction
-                    .map(|wd| wd.unwrap_or_default())
+                    .map(|gridpoint_forecast_period_wind_direction| {
+                        gridpoint_forecast_period_wind_direction.unwrap_or_default()
+                    })
                     .unwrap_or_default()
             );
 
@@ -113,6 +121,7 @@ pub fn format_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result
 pub fn format_hourly_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
+    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
     table.set_header(vec![
         "Hour", "Temp", "Dewpoint", "Precip", "Humidity", "Wind", "Forecast",
     ]);
@@ -124,12 +133,14 @@ pub fn format_hourly_forecast_table(forecast_data: &GridpointForecastGeoJson) ->
         for period in periods {
             let temp_str = period.temperature.as_ref().map_or_else(
                 || "N/A".to_string(),
-                |t| {
+                |gridpoint_forecast_period_temperature| {
                     format_temperature(
-                        t,
+                        gridpoint_forecast_period_temperature,
                         period
                             .temperature_unit
-                            .map(|u| u.to_string())
+                            .map(|gridpoint_forecast_period_temperature_unit| {
+                                gridpoint_forecast_period_temperature_unit.to_string()
+                            })
                             .as_deref()
                             .or(default_unit.as_deref()),
                     )
@@ -178,11 +189,17 @@ pub fn format_hourly_forecast_table(forecast_data: &GridpointForecastGeoJson) ->
                 period
                     .wind_speed
                     .as_ref()
-                    .map(|ws| ws.to_string())
+                    .map(|gridpoint_forecast_period_wind_speed| {
+                        gridpoint_forecast_period_wind_speed.to_string()
+                    })
                     .unwrap_or_else(|| "N/A".to_string()),
                 period
                     .wind_direction
-                    .map(|wd| wd.unwrap_or_default().to_string())
+                    .map(|gridpoint_forecast_period_wind_direction| {
+                        gridpoint_forecast_period_wind_direction
+                            .unwrap_or_default()
+                            .to_string()
+                    })
                     .unwrap_or_else(|| "".to_string())
             );
             let time_formatted = format_datetime_human_readable(period.start_time.as_deref());
