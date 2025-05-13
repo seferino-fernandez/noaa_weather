@@ -1,4 +1,5 @@
-use crate::Cli;
+use crate::utils::format::write_output;
+use crate::{Cli, tables};
 use anyhow::{Result, anyhow};
 use clap::{Args, Subcommand, value_parser};
 use noaa_weather_client::apis::aviation as aviation_api;
@@ -116,38 +117,74 @@ pub enum AviationCommands {
 ///
 pub async fn handle_command(
     command: &AviationCommands,
-    _cli: Cli,
+    cli: Cli,
     config: &Configuration,
 ) -> Result<()> {
     match command {
         AviationCommands::Cwa(args) => {
-            let _result = aviation_api::get_center_weather_advisories_by_date_and_sequence(
+            let result = aviation_api::get_center_weather_advisories_by_date_and_sequence(
                 config,
                 args.cwsu_id,
                 args.date.clone(),
                 args.sequence,
             )
             .await
-            .map_err(|e| anyhow!("getting CWA: {}", e))?;
+            .map_err(|e| anyhow!("Error getting CWA: {}", e))?;
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&result)?,
+                )?;
+            } else {
+                let table = tables::aviation::create_cwa_table(&result)?;
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
             Ok(())
         }
         AviationCommands::Cwas(args) => {
-            let _result = aviation_api::get_center_weather_advisories(config, args.cwsu_id)
+            let result = aviation_api::get_center_weather_advisories(config, args.cwsu_id)
                 .await
-                .map_err(|e| anyhow!("getting CWAs for CWSU: {}", e))?;
+                .map_err(|e| anyhow!("Error getting CWAs for CWSU: {}", e))?;
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&result)?,
+                )?;
+            } else {
+                let table = tables::aviation::create_cwas_table(&result)?;
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
             Ok(())
         }
         AviationCommands::Cwsu(args) => {
-            let _result = aviation_api::get_center_weather_service_unit(config, args.cwsu_id)
+            let result = aviation_api::get_center_weather_service_unit(config, args.cwsu_id)
                 .await
-                .map_err(|e| anyhow!("getting CWSU metadata: {}", e))?;
+                .map_err(|e| anyhow!("Error getting CWSU metadata: {}", e))?;
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&result)?,
+                )?;
+            } else {
+                let table = tables::aviation::create_cwsu_table(&result)?;
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
             Ok(())
         }
         AviationCommands::Sigmet(args) => {
             let _result =
                 aviation_api::get_sigmet(config, &args.atsu, args.date.clone(), &args.time)
                     .await
-                    .map_err(|e| anyhow!("getting SIGMET: {}", e))?;
+                    .map_err(|e| anyhow!("Error getting SIGMET: {}", e))?;
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&_result)?,
+                )?;
+            } else {
+                let table = tables::aviation::create_sigmet_table(&_result)?;
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
             Ok(())
         }
         AviationCommands::Sigmets(args) => {
@@ -160,7 +197,16 @@ pub async fn handle_command(
                 args.sequence.as_deref(),
             )
             .await
-            .map_err(|e| anyhow!("querying SIGMETs: {}", e))?;
+            .map_err(|e| anyhow!("Error querying SIGMETs: {}", e))?;
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&_result)?,
+                )?;
+            } else {
+                let table = tables::aviation::create_sigmets_table(&_result)?;
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
             Ok(())
         }
     }

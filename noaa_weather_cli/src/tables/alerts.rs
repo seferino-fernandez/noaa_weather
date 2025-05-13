@@ -1,5 +1,5 @@
 use anyhow::Result;
-use comfy_table::presets::{ASCII_HORIZONTAL_ONLY, UTF8_FULL_CONDENSED};
+use comfy_table::presets::{UTF8_FULL_CONDENSED, UTF8_HORIZONTAL_ONLY};
 use comfy_table::{Attribute, Cell, CellAlignment, Color, ContentArrangement, Table};
 use noaa_weather_client::models::{
     ActiveAlertsCountResponse, Alert, AlertCollectionGeoJson, AlertGeoJson, AlertSeverity,
@@ -14,7 +14,7 @@ use crate::utils::format::{
 /// Displays a summary of each alert, highlighting severity with color.
 pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> Result<Table> {
     let mut table = Table::new();
-    table.load_preset(ASCII_HORIZONTAL_ONLY);
+    table.load_preset(UTF8_HORIZONTAL_ONLY);
     table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
     table.set_header(vec![
         Cell::new("Alert").set_alignment(CellAlignment::Center),

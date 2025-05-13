@@ -55,13 +55,11 @@ pub async fn handle_command(
                 .map_err(|e| anyhow::anyhow!("Error getting point metadata: {}", e))?;
 
             if cli.json {
-                // Print raw JSON if requested
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                // Format and print as a table
                 let table = format_point_metadata_table(&result)?;
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
@@ -73,13 +71,11 @@ pub async fn handle_command(
                 .map_err(|e| anyhow::anyhow!("Error getting point stations: {}", e))?;
 
             if cli.json {
-                // Print raw JSON if requested
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                // Format and print as a table
                 let table = tables::stations::create_stations_table(&result)?;
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }

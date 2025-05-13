@@ -18,14 +18,14 @@ pub enum Error<T> {
 
 impl<T> fmt::Display for Error<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let (module, e) = match self {
-            Error::Reqwest(e) => ("reqwest", e.to_string()),
-            Error::Serde(e) => ("serde", e.to_string()),
-            Error::Io(e) => ("IO", e.to_string()),
-            Error::Xml(e) => ("xml", e.to_string()),
-            Error::ResponseError(e) => ("response", format!("status code {}", e.status)),
+        let e = match self {
+            Error::Reqwest(e) => e.to_string(),
+            Error::Serde(e) => e.to_string(),
+            Error::Io(e) => e.to_string(),
+            Error::Xml(e) => e.to_string(),
+            Error::ResponseError(e) => e.content.to_string(),
         };
-        write!(f, "error in {}: {}", module, e)
+        write!(f, "{}", e)
     }
 }
 

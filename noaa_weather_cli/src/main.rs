@@ -38,7 +38,7 @@ struct Cli {
 #[tokio::main]
 async fn main() {
     if let Err(e) = try_main().await {
-        eprintln!("error: {e}");
+        eprintln!("{e}");
         std::process::exit(1);
     }
 }

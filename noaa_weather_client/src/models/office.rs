@@ -13,14 +13,16 @@ pub struct Office {
     pub id: Option<String>,
     #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(rename = "address", skip_serializing_if = "Option::is_none")]
-    pub address: Option<Box<models::OfficeAddress>>,
-    #[serde(rename = "telephone", skip_serializing_if = "Option::is_none")]
-    pub telephone: Option<String>,
-    #[serde(rename = "faxNumber", skip_serializing_if = "Option::is_none")]
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub address: Option<models::OfficeAddress>,
+    #[serde(rename = "phone", skip_serializing_if = "Option::is_none")]
+    pub phone_number: Option<String>,
+    #[serde(rename = "fax", skip_serializing_if = "Option::is_none")]
     pub fax_number: Option<String>,
     #[serde(rename = "email", skip_serializing_if = "Option::is_none")]
     pub email: Option<String>,
+    #[serde(rename = "webSiteUrl", skip_serializing_if = "Option::is_none")]
+    pub website_url: Option<String>,
     #[serde(rename = "sameAs", skip_serializing_if = "Option::is_none")]
     pub same_as: Option<String>,
     #[serde(rename = "nwsRegion", skip_serializing_if = "Option::is_none")]
@@ -58,9 +60,10 @@ impl Office {
             id: None,
             name: None,
             address: None,
-            telephone: None,
+            phone_number: None,
             fax_number: None,
             email: None,
+            website_url: None,
             same_as: None,
             nws_region: None,
             parent_organization: None,
