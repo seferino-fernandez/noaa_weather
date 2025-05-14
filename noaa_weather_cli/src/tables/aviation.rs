@@ -2,14 +2,14 @@ use anyhow::Result;
 use comfy_table::presets::{UTF8_FULL_CONDENSED, UTF8_HORIZONTAL_ONLY};
 use comfy_table::{Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::{
-    CenterWeatherAdvisoryCollectionGeoJson, CenterWeatherAdvisoryGeoJson, Office,
+    CenterWeatherAdvisoryCollectionGeoJson, CenterWeatherAdvisoryGeoJson, CwsuOffice,
     SigmetCollectionGeoJson, SigmetGeoJson,
 };
 
 use crate::utils::format::format_datetime_human_readable;
 
-/// Formats a collection of aviation offices into a comfy table.
-pub fn create_cwsu_table(office: &Office) -> Result<Table> {
+/// Formats a CWSU office's details into a comfy_table::Table.
+pub fn create_cwsu_table(office: &CwsuOffice) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
@@ -22,48 +22,93 @@ pub fn create_cwsu_table(office: &Office) -> Result<Table> {
         Cell::new("Website").set_alignment(CellAlignment::Center),
         Cell::new("Region").set_alignment(CellAlignment::Center),
     ]);
-    let office_id = office.id.as_deref().unwrap_or("N/A");
-    let name = office.name.as_deref().unwrap_or("N/A");
-    let address = format!(
-        "{}\n{}, {} {}",
-        office
-            .address
-            .as_ref()
-            .unwrap()
-            .street
-            .as_deref()
-            .unwrap_or(""),
-        office
-            .address
-            .as_ref()
-            .unwrap()
-            .city
-            .as_deref()
-            .unwrap_or(""),
-        office
-            .address
-            .as_ref()
-            .unwrap()
-            .state
-            .as_deref()
-            .unwrap_or(""),
-        office
-            .address
-            .as_ref()
-            .unwrap()
-            .zip_code
-            .as_deref()
-            .unwrap_or(""),
-    );
-    let phone = office.phone_number.as_deref().unwrap_or("N/A");
-    let email = office.email.as_deref().unwrap_or("N/A");
-    let website = office.website_url.as_deref().unwrap_or("N/A");
-    let region = office.nws_region.as_deref().unwrap_or("N/A");
+
+    let office_id = office
+        .id
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .unwrap_or("N/A");
+    let name = office
+        .name
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .unwrap_or("N/A");
+
+    // Dynamically construct the address string
+    // Retrieve and trim address components to handle None, empty, or whitespace-only strings
+    let street = office.street.as_deref().unwrap_or("").trim();
+    let city = office.city.as_deref().unwrap_or("").trim();
+    let state = office.state.as_deref().unwrap_or("").trim();
+    let zip_code = office.zip_code.as_deref().unwrap_or("").trim();
+
+    // Build the "City, State Zip" line
+    let mut csz_line = String::new();
+    if !city.is_empty() {
+        csz_line.push_str(city);
+    }
+
+    if !state.is_empty() {
+        if !csz_line.is_empty() {
+            // City was added, so prefix state with ", "
+            csz_line.push_str(", ");
+        }
+        csz_line.push_str(state);
+    }
+
+    if !zip_code.is_empty() {
+        if !csz_line.is_empty() {
+            // Something (city and/or state) was added, so prefix zip with a space
+            csz_line.push(' ');
+        }
+        csz_line.push_str(zip_code);
+    }
+
+    // Combine street with the csz_line, using a newline if both are present
+    let mut address_lines = Vec::new();
+    if !street.is_empty() {
+        address_lines.push(street.to_string());
+    }
+    if !csz_line.is_empty() {
+        address_lines.push(csz_line);
+    }
+
+    let final_address_str = address_lines.join("\n");
+
+    // Use "N/A" if the fully constructed address is empty, otherwise use the constructed string.
+    let address_cell_content = if final_address_str.is_empty() {
+        "N/A".to_string()
+    } else {
+        final_address_str
+    };
+
+    // For phone, email, website, and region, also ensure empty strings become "N/A"
+    // The original .map_or("N/A", |v| v) for phone would print an empty string if phone_number was Some("").
+    // The .filter(|s| !s.is_empty()) pattern handles this more robustly.
+    let phone = office
+        .phone_number
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .unwrap_or("N/A");
+    let email = office
+        .email
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .unwrap_or("N/A");
+    let website = office
+        .website_url
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .unwrap_or("N/A");
+    let region = office
+        .nws_region
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .unwrap_or("N/A");
 
     table.add_row(vec![
         Cell::new(office_id),
         Cell::new(name),
-        Cell::new(address),
+        Cell::new(address_cell_content), // Use the carefully formatted address
         Cell::new(phone),
         Cell::new(email),
         Cell::new(website),

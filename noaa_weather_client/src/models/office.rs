@@ -13,18 +13,28 @@ pub struct Office {
     pub id: Option<String>,
     #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub address: Option<models::OfficeAddress>,
-    #[serde(rename = "phone", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        alias = "telephone",
+        alias = "phone",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub phone_number: Option<String>,
-    #[serde(rename = "fax", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        alias = "fax",
+        alias = "faxNumber",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub fax_number: Option<String>,
     #[serde(rename = "email", skip_serializing_if = "Option::is_none")]
     pub email: Option<String>,
-    #[serde(rename = "webSiteUrl", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        alias = "webSiteUrl",
+        alias = "sameAs",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub website_url: Option<String>,
-    #[serde(rename = "sameAs", skip_serializing_if = "Option::is_none")]
-    pub same_as: Option<String>,
     #[serde(rename = "nwsRegion", skip_serializing_if = "Option::is_none")]
     pub nws_region: Option<String>,
     #[serde(rename = "parentOrganization", skip_serializing_if = "Option::is_none")]
@@ -64,7 +74,6 @@ impl Office {
             fax_number: None,
             email: None,
             website_url: None,
-            same_as: None,
             nws_region: None,
             parent_organization: None,
             responsible_counties: None,
@@ -74,6 +83,7 @@ impl Office {
         }
     }
 }
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum AtType {
     #[serde(rename = "GovernmentOrganization")]

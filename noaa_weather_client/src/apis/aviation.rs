@@ -261,7 +261,7 @@ pub async fn get_center_weather_advisories(
 pub async fn get_center_weather_service_unit(
     configuration: &configuration::Configuration,
     center_weather_service_unit_id: models::NwsCenterWeatherServiceUnitId,
-) -> Result<models::Office, Error<CenterWeatherServiceUnitError>> {
+) -> Result<models::CwsuOffice, Error<CenterWeatherServiceUnitError>> {
     let uri_str = format!(
         "{}/aviation/cwsus/{center_weather_service_unit_id}",
         configuration.base_path,

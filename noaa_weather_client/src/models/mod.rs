@@ -50,6 +50,8 @@ pub mod center_weather_advisory_collection_geo_json_all_of_features;
 pub use self::center_weather_advisory_collection_geo_json_all_of_features::CenterWeatherAdvisoryCollectionGeoJsonAllOfFeatures;
 pub mod center_weather_advisory_geo_json;
 pub use self::center_weather_advisory_geo_json::CenterWeatherAdvisoryGeoJson;
+pub mod cwsu_office;
+pub use self::cwsu_office::CwsuOffice;
 pub mod geo_json_feature;
 pub use self::geo_json_feature::GeoJsonFeature;
 pub mod geo_json_feature_collection;
