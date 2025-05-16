@@ -12,7 +12,7 @@ use crate::utils::format::format_datetime_human_readable;
 pub fn create_cwsu_table(office: &CwsuOffice) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
-    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID").set_alignment(CellAlignment::Center),
         Cell::new("Name").set_alignment(CellAlignment::Center),
@@ -121,7 +121,7 @@ pub fn create_cwsu_table(office: &CwsuOffice) -> Result<Table> {
 pub fn create_cwa_table(cwa: &CenterWeatherAdvisoryGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
-    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID").set_alignment(CellAlignment::Center),
         Cell::new("Issue Time").set_alignment(CellAlignment::Center),
@@ -181,7 +181,7 @@ pub fn create_cwa_table(cwa: &CenterWeatherAdvisoryGeoJson) -> Result<Table> {
 pub fn create_cwas_table(cwas: &CenterWeatherAdvisoryCollectionGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_HORIZONTAL_ONLY);
-    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID").set_alignment(CellAlignment::Center),
         Cell::new("Issue Time").set_alignment(CellAlignment::Center),
@@ -254,7 +254,7 @@ pub fn create_cwas_table(cwas: &CenterWeatherAdvisoryCollectionGeoJson) -> Resul
 pub fn create_sigmet_table(sigmet: &SigmetGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
-    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID").set_alignment(CellAlignment::Center),
         Cell::new("Issue Time").set_alignment(CellAlignment::Center),
@@ -314,7 +314,7 @@ pub fn create_sigmet_table(sigmet: &SigmetGeoJson) -> Result<Table> {
 pub fn create_sigmets_table(sigmets: &SigmetCollectionGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_HORIZONTAL_ONLY);
-    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID").set_alignment(CellAlignment::Center),
         Cell::new("Issue Time").set_alignment(CellAlignment::Center),

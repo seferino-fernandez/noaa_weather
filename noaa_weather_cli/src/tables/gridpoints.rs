@@ -18,7 +18,7 @@ macro_rules! add_row_if_some {
 pub fn create_gridpoint_table(gridpoint_data: &GridpointGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
-    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec!["Property", "Value"]);
 
     let props = &gridpoint_data.properties;
@@ -56,7 +56,7 @@ pub fn create_gridpoint_table(gridpoint_data: &GridpointGeoJson) -> Result<Table
 pub fn create_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
-    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec!["Period", "Time", "Temp", "Wind", "Forecast"]);
 
     let props = &forecast_data.properties;
@@ -121,7 +121,7 @@ pub fn create_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result
 pub fn create_hourly_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
-    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         "Hour", "Temp", "Dewpoint", "Precip", "Humidity", "Wind", "Forecast",
     ]);

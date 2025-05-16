@@ -15,7 +15,7 @@ use crate::utils::format::{
 pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_HORIZONTAL_ONLY);
-    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Alert").set_alignment(CellAlignment::Center),
         Cell::new("Areas Affected").set_alignment(CellAlignment::Center),
@@ -92,7 +92,7 @@ pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> Result<Table
 pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
-    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Alert Details").set_alignment(CellAlignment::Center),
         Cell::new("Alert Description").set_alignment(CellAlignment::Center),
@@ -224,7 +224,7 @@ pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> Result<Table> {
 pub fn create_alert_count_table(count_data: &ActiveAlertsCountResponse) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
-    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Active Alerts Summary").set_alignment(CellAlignment::Center),
         Cell::new("Alerts by Area (State/Territory)").set_alignment(CellAlignment::Center),
@@ -279,7 +279,7 @@ pub fn create_alert_count_table(count_data: &ActiveAlertsCountResponse) -> Resul
 pub fn create_alert_types_table(types_data: &AlertTypesResponse) -> Result<Table> {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
-    table.set_content_arrangement(ContentArrangement::DynamicFullWidth);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Available NWS Alert Event Types").set_alignment(CellAlignment::Center),
     ]);

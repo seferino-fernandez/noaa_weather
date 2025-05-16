@@ -13,7 +13,7 @@ fn test_products_list_with_location_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("products");
     cmd.arg("list");
-    cmd.arg("--location");
+    cmd.arg("--location-ids");
     cmd.arg("PSR");
     cmd.assert().success();
 }
@@ -81,8 +81,8 @@ fn test_products_by_location_success() {
 fn test_product_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("products");
-    cmd.arg("product");
-    cmd.arg("--product-id");
+    cmd.arg("metadata");
+    cmd.arg("--id");
     cmd.arg("a4791428-298e-473c-8e6f-5796701c9e4a");
     cmd.assert().success();
 }

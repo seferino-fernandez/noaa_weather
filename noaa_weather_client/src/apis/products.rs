@@ -91,17 +91,17 @@ pub enum ProductsTypeLocationsError {
 #[derive(Debug, Clone, Default)]
 pub struct ProductsQueryParams {
     /// Filter by issuance location ID (e.g., "LWX", "PQR").
-    pub location: Option<Vec<String>>,
+    pub location_ids: Option<Vec<String>>,
     /// Start time for the query period (ISO 8601 format).
-    pub start: Option<String>,
+    pub start_time: Option<String>,
     /// End time for the query period (ISO 8601 format).
-    pub end: Option<String>,
+    pub end_time: Option<String>,
     /// Filter by issuing office ID (typically WFO ID, e.g., "LWX", "PQR").
-    pub office: Option<Vec<String>>,
+    pub office_ids: Option<Vec<String>>,
     /// Filter by WMO header ID.
-    pub wmoid: Option<Vec<String>>,
+    pub wmo_ids: Option<Vec<String>>,
     /// Filter by product type code (e.g., "AFD", "HWO").
-    pub product_type: Option<Vec<String>>,
+    pub product_type_codes: Option<Vec<String>>,
     /// Limit the number of results returned.
     pub limit: Option<i32>,
 }
@@ -434,7 +434,7 @@ pub async fn get_products_query(
     let uri_str = format!("{}/products", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = params.location {
+    if let Some(ref param_value) = params.location_ids {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -453,13 +453,13 @@ pub async fn get_products_query(
             )]),
         };
     }
-    if let Some(ref param_value) = params.start {
+    if let Some(ref param_value) = params.start_time {
         req_builder = req_builder.query(&[("start", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = params.end {
+    if let Some(ref param_value) = params.end_time {
         req_builder = req_builder.query(&[("end", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = params.office {
+    if let Some(ref param_value) = params.office_ids {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -478,7 +478,7 @@ pub async fn get_products_query(
             )]),
         };
     }
-    if let Some(ref param_value) = params.wmoid {
+    if let Some(ref param_value) = params.wmo_ids {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -497,7 +497,7 @@ pub async fn get_products_query(
             )]),
         };
     }
-    if let Some(ref param_value) = params.product_type {
+    if let Some(ref param_value) = params.product_type_codes {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
