@@ -16,13 +16,27 @@ pub fn create_product_table(product: &TextProduct) -> Result<Table> {
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("ID").set_alignment(CellAlignment::Center),
-        Cell::new("WMO Collective ID").set_alignment(CellAlignment::Center),
-        Cell::new("Issuing Office").set_alignment(CellAlignment::Center),
-        Cell::new("Issuance Time").set_alignment(CellAlignment::Center),
-        Cell::new("Product Code").set_alignment(CellAlignment::Center),
-        Cell::new("Product Name").set_alignment(CellAlignment::Center),
-        Cell::new("Product Text").set_alignment(CellAlignment::Center),
+        Cell::new("ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("WMO Collective ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Issuing Office")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Issuance Time")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Product Code")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Product Name")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Product Text")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
     let product_id = product
         .id
@@ -51,8 +65,12 @@ pub fn create_product_types_table(product_types: &TextProductTypeCollection) -> 
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("Product Code").set_alignment(CellAlignment::Center),
-        Cell::new("Product Name").set_alignment(CellAlignment::Center),
+        Cell::new("Product Code")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Product Name")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
 
     for product_type in product_types.at_graph.iter().flatten() {
@@ -70,12 +88,24 @@ pub fn create_products_table(products: &TextProductCollection) -> Result<Table> 
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("ID").set_alignment(CellAlignment::Center),
-        Cell::new("WMO Collective ID").set_alignment(CellAlignment::Center),
-        Cell::new("Issuing Office").set_alignment(CellAlignment::Center),
-        Cell::new("Issuance Time").set_alignment(CellAlignment::Center),
-        Cell::new("Product Code").set_alignment(CellAlignment::Center),
-        Cell::new("Product Name").set_alignment(CellAlignment::Center),
+        Cell::new("ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("WMO Collective ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Issuing Office")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Issuance Time")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Product Code")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Product Name")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
 
     for product in products.at_graph.iter().flatten() {
@@ -108,8 +138,12 @@ pub fn create_products_locations_table(
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("Location ID").set_alignment(CellAlignment::Center),
-        Cell::new("Location Name").set_alignment(CellAlignment::Center),
+        Cell::new("Location ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Location Name")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
 
     for product_location in product_locations.locations.iter().flatten() {

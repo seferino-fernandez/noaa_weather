@@ -22,4 +22,6 @@ pub struct ValueUnit {
     /// The numerical value. Using f64 to accommodate both integers and floating-point numbers.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<f64>,
+    #[serde(rename = "qualityControl", skip_serializing_if = "Option::is_none")]
+    pub quality_control: Option<String>,
 }

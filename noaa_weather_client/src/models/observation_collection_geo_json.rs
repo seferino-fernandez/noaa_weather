@@ -8,13 +8,13 @@ pub struct ObservationCollectionGeoJson {
     #[serde(rename = "type")]
     pub r#type: Type,
     #[serde(rename = "features")]
-    pub features: Vec<models::ObservationCollectionGeoJsonAllOfFeatures>,
+    pub features: Vec<models::ObservationGeoJson>,
 }
 
 impl ObservationCollectionGeoJson {
     pub fn new(
         r#type: Type,
-        features: Vec<models::ObservationCollectionGeoJsonAllOfFeatures>,
+        features: Vec<models::ObservationGeoJson>,
     ) -> ObservationCollectionGeoJson {
         ObservationCollectionGeoJson {
             at_context: None,

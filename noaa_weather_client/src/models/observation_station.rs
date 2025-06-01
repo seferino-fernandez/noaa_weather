@@ -1,6 +1,8 @@
 use crate::models;
 use serde::{Deserialize, Serialize};
 
+use super::ValueUnit;
+
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ObservationStation {
     #[serde(rename = "@context", skip_serializing_if = "Option::is_none")]
@@ -18,7 +20,7 @@ pub struct ObservationStation {
     #[serde(rename = "@type", skip_serializing_if = "Option::is_none")]
     pub at_type: Option<AtType>,
     #[serde(rename = "elevation", skip_serializing_if = "Option::is_none")]
-    pub elevation: Option<Box<models::QuantitativeValue>>,
+    pub elevation: Option<ValueUnit>,
     #[serde(rename = "stationIdentifier", skip_serializing_if = "Option::is_none")]
     pub station_identifier: Option<String>,
     #[serde(rename = "name", skip_serializing_if = "Option::is_none")]

@@ -6,64 +6,26 @@ use comfy_table::{Attribute, Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::radar_server::RadarServerNetworkInterfaceStats;
 use noaa_weather_client::models::{
     RadarQueuesResponse, RadarServer, RadarServersResponse, RadarStationAlarmsResponse,
-    RadarStationFeature, RadarStationsResponse, UnitCodeType, ValueUnit,
+    RadarStationFeature, RadarStationsResponse,
 };
 
-use crate::utils::format::format_datetime_human_readable;
+use crate::utils::format::{
+    format_bytes_to_human_readable, format_datetime_human_readable, opt_bool_to_yes_no,
+    opt_f64_display_val, opt_f64_precise_val, opt_i32_val, opt_i64_val, opt_str_val,
+    opt_value_unit_val,
+};
 
 // --- Helper Functions ---
 // These are kept private to this module as they are specific to formatting radar station data.
 
-/// Formats an `Option<String>` for display, using "N/A" if None.
-fn opt_str_val(opt_s: &Option<String>) -> String {
-    opt_s.as_deref().unwrap_or("N/A").to_string()
-}
-
-/// Formats an `Option<f64>` intended for build numbers or similar integers.
-/// Displays as an integer if it has no fractional part, otherwise as float with 2 decimal places.
-/// Uses "N/A" if None.
-fn opt_f64_display_val(opt_f: &Option<f64>) -> String {
-    opt_f.map_or("N/A".to_string(), |v| {
-        if v.fract() == 0.0 {
-            format!("{}", v.trunc())
-        } else {
-            format!("{:.2}", v)
-        }
-    })
-}
-
-/// Formats an `Option<f64>` for precise display, typically converting to string directly.
-/// Uses "N/A" if None.
-fn opt_f64_precise_val(opt_f: &Option<f64>) -> String {
-    opt_f.map_or("N/A".to_string(), |v| v.to_string())
-}
-
-/// Formats an `Option<i32>` for display, using "N/A" if None.
-fn opt_i32_val(opt_i: &Option<i32>) -> String {
-    opt_i.map_or("N/A".to_string(), |v| v.to_string())
-}
-
-/// Formats an `Option<i64>` for display, using "N/A" if None.
-fn opt_i64_val(opt_i: &Option<i64>) -> String {
-    opt_i.map_or("N/A".to_string(), |v| v.to_string())
-}
-
-/// Formats an `Option<ValueUnit>` for display.
-/// Shows value with 2 decimal places and unit code. Uses "N/A" if None or parts are missing.
-fn opt_value_unit_val(opt_vu: &Option<ValueUnit>) -> String {
-    opt_vu.as_ref().map_or("N/A".to_string(), |vu| {
-        let val_str = vu
-            .value
-            .map_or_else(|| "N/A".to_string(), |v| format!("{:.2}", v));
-        let unit_str = vu.unit_code.as_ref().map_or_else(
-            || "N/A".to_string(),
-            |u: &UnitCodeType| match u {
-                UnitCodeType::Wmo(wmo_unit_code) => wmo_unit_code.alt_label().to_string(),
-                UnitCodeType::Nws(nws_unit_code) => nws_unit_code.alt_label().to_string(),
-            },
-        );
-        format!("{} {}", val_str, unit_str).trim().to_string()
-    })
+/// Adds a styled section header row to the table.
+fn add_section_header(table: &mut Table, title: &str) {
+    table.add_row(vec![
+        Cell::new(title)
+            .add_attribute(Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("").add_attribute(Attribute::Bold), // Second cell to maintain column structure
+    ]);
 }
 
 /// Formats geographic coordinates `Option<Vec<f64>>` (longitude, latitude) for display.
@@ -76,53 +38,6 @@ fn format_coords(coords: &Option<Vec<f64>>) -> String {
             "Invalid Coords".to_string()
         }
     })
-}
-
-/// Adds a styled section header row to the table.
-fn add_section_header(table: &mut Table, title: &str) {
-    table.add_row(vec![
-        Cell::new(title)
-            .add_attribute(Attribute::Bold)
-            .set_alignment(CellAlignment::Center),
-        Cell::new("").add_attribute(Attribute::Bold), // Second cell to maintain column structure
-    ]);
-}
-
-/// Formats an `Option<bool>` to "Yes", "No", or "N/A".
-fn opt_bool_to_yes_no(opt_b: &Option<bool>) -> String {
-    match opt_b {
-        Some(true) => "Yes".to_string(),
-        Some(false) => "No".to_string(),
-        None => "N/A".to_string(),
-    }
-}
-
-/// Formats byte sizes into human-readable strings (B, KiB, MiB, GiB).
-fn format_bytes_to_human_readable(bytes_opt: Option<i64>) -> String {
-    bytes_opt.map_or_else(
-        || "N/A".to_string(),
-        |bytes| {
-            if bytes < 0 {
-                return "Invalid (negative)".to_string();
-            }
-            if bytes < 1024 {
-                format!("{} B", bytes)
-            } else {
-                let kib = bytes as f64 / 1024.0;
-                if kib < 1024.0 {
-                    format!("{:.2} KiB", kib)
-                } else {
-                    let mib = kib / 1024.0;
-                    if mib < 1024.0 {
-                        format!("{:.2} MiB", mib)
-                    } else {
-                        let gib = mib / 1024.0;
-                        format!("{:.2} GiB", gib)
-                    }
-                }
-            }
-        },
-    )
 }
 
 /// Creates a summary string for ping targets (e.g., "X / Y up").
@@ -455,11 +370,21 @@ pub fn create_radar_stations_table(radar_stations: &RadarStationsResponse) -> Re
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("Station ID (ICAO)").set_alignment(CellAlignment::Center),
-        Cell::new("Name").set_alignment(CellAlignment::Center),
-        Cell::new("Type").set_alignment(CellAlignment::Center),
-        Cell::new("Elevation").set_alignment(CellAlignment::Center),
-        Cell::new("Time Zone").set_alignment(CellAlignment::Center),
+        Cell::new("Station ID (ICAO)")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Name")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Type")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Elevation")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Time Zone")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
 
     for radar_station_feature in radar_stations.features.iter().flatten() {
@@ -488,11 +413,21 @@ pub fn create_radar_station_alarms_table(
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("Station ID").set_alignment(CellAlignment::Center),
-        Cell::new("Alarm Time").set_alignment(CellAlignment::Center),
-        Cell::new("Message").set_alignment(CellAlignment::Center),
-        Cell::new("Status").set_alignment(CellAlignment::Center),
-        Cell::new("Active Channel").set_alignment(CellAlignment::Center),
+        Cell::new("Station ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Alarm Time")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Message")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Status")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Active Channel")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
 
     for alarm in radar_station_alarms.radar_station_alarms.iter().flatten() {
@@ -512,14 +447,30 @@ pub fn create_radar_data_queue_table(radar_data_queue: &RadarQueuesResponse) -> 
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("Host").set_alignment(CellAlignment::Center),
-        Cell::new("Arrival Time").set_alignment(CellAlignment::Center),
-        Cell::new("Creation Time").set_alignment(CellAlignment::Center),
-        Cell::new("Type").set_alignment(CellAlignment::Center),
-        Cell::new("Feed").set_alignment(CellAlignment::Center),
-        Cell::new("Resolution Version").set_alignment(CellAlignment::Center),
-        Cell::new("Sequence Number").set_alignment(CellAlignment::Center),
-        Cell::new("Size").set_alignment(CellAlignment::Center),
+        Cell::new("Host")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Arrival Time")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Creation Time")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Type")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Feed")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Resolution Version")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Sequence Number")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Size")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
 
     for entry in radar_data_queue.radar_queues.iter().flatten() {
@@ -802,16 +753,36 @@ pub fn create_radar_servers_table(radar_servers_response: &RadarServersResponse)
     table.set_content_arrangement(ContentArrangement::Dynamic);
 
     table.set_header(vec![
-        Cell::new("Server ID").set_alignment(CellAlignment::Center),
-        Cell::new("Type").set_alignment(CellAlignment::Center),
-        Cell::new("Active").set_alignment(CellAlignment::Center),
-        Cell::new("Primary").set_alignment(CellAlignment::Center),
-        Cell::new("Net Up").set_alignment(CellAlignment::Center),
-        Cell::new("LDM Active").set_alignment(CellAlignment::Center),
-        Cell::new("LDM Count").set_alignment(CellAlignment::Center),
-        Cell::new("Load (1m)").set_alignment(CellAlignment::Center),
-        Cell::new("Collected").set_alignment(CellAlignment::Center),
-        Cell::new("Reporter").set_alignment(CellAlignment::Center),
+        Cell::new("Server ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Type")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Active")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Primary")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Net Up")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("LDM Active")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("LDM Count")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Load (1m)")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Collected")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Reporter")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
 
     if let Some(servers) = &radar_servers_response.radar_servers {

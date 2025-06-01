@@ -1,5 +1,5 @@
 use anyhow::Result;
-use comfy_table::presets::{UTF8_FULL_CONDENSED, UTF8_HORIZONTAL_ONLY};
+use comfy_table::presets::{UTF8_FULL, UTF8_FULL_CONDENSED};
 use comfy_table::{Attribute, Cell, CellAlignment, Color, ContentArrangement, Table};
 use noaa_weather_client::models::{
     ActiveAlertsCountResponse, Alert, AlertCollectionGeoJson, AlertGeoJson, AlertSeverity,
@@ -14,20 +14,34 @@ use crate::utils::format::{
 /// Displays a summary of each alert, highlighting severity with color.
 pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> Result<Table> {
     let mut table = Table::new();
-    table.load_preset(UTF8_HORIZONTAL_ONLY);
+    table.load_preset(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("Alert").set_alignment(CellAlignment::Center),
-        Cell::new("Areas Affected").set_alignment(CellAlignment::Center),
-        Cell::new("Effective").set_alignment(CellAlignment::Center),
-        Cell::new("Severity").set_alignment(CellAlignment::Center),
-        Cell::new("Instructions").set_alignment(CellAlignment::Center),
-        Cell::new("ID").set_alignment(CellAlignment::Center),
+        Cell::new("Alert")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Areas Affected")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Effective")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Severity")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Instructions")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
 
     if alerts_data.features.is_empty() {
         table.add_row(vec![
-            Cell::new("No active alerts found.").set_alignment(CellAlignment::Center),
+            Cell::new("No active alerts found.")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .set_alignment(CellAlignment::Center),
         ]);
         return Ok(table);
     }
@@ -94,8 +108,12 @@ pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> Result<Table> {
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("Alert Details").set_alignment(CellAlignment::Center),
-        Cell::new("Alert Description").set_alignment(CellAlignment::Center),
+        Cell::new("Alert Details")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Alert Description")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
 
     let alert: &Alert = &alert_data.properties;
@@ -226,10 +244,18 @@ pub fn create_alert_count_table(count_data: &ActiveAlertsCountResponse) -> Resul
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("Active Alerts Summary").set_alignment(CellAlignment::Center),
-        Cell::new("Alerts by Area (State/Territory)").set_alignment(CellAlignment::Center),
-        Cell::new("Alerts by Marine Region").set_alignment(CellAlignment::Center),
-        Cell::new("Alerts by Zone").set_alignment(CellAlignment::Center),
+        Cell::new("Active Alerts Summary")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Alerts by Area (State/Territory)")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Alerts by Marine Region")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Alerts by Zone")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
 
     let active_alerts_summary_data = format!(
@@ -281,7 +307,9 @@ pub fn create_alert_types_table(types_data: &AlertTypesResponse) -> Result<Table
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("Available NWS Alert Event Types").set_alignment(CellAlignment::Center),
+        Cell::new("Available NWS Alert Event Types")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
 
     if let Some(event_types_vec) = &types_data.event_types {

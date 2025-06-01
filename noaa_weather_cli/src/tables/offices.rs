@@ -14,13 +14,27 @@ pub fn create_office_metadata_table(office: &Office) -> Result<Table> {
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("ID").set_alignment(CellAlignment::Center),
-        Cell::new("Name").set_alignment(CellAlignment::Center),
-        Cell::new("Address").set_alignment(CellAlignment::Center),
-        Cell::new("Phone").set_alignment(CellAlignment::Center),
-        Cell::new("Email").set_alignment(CellAlignment::Center),
-        Cell::new("Website").set_alignment(CellAlignment::Center),
-        Cell::new("Region").set_alignment(CellAlignment::Center),
+        Cell::new("ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Name")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Address")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Phone")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Email")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Website")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Region")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
 
     // Handle simple fields with robust "N/A" for None or empty strings
@@ -130,11 +144,21 @@ pub fn create_office_headlines_table(office_headlines: &OfficeHeadlineCollection
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("ID").set_alignment(CellAlignment::Center),
-        Cell::new("Title").set_alignment(CellAlignment::Center),
-        Cell::new("Summary").set_alignment(CellAlignment::Center),
-        Cell::new("Issuance Time").set_alignment(CellAlignment::Center),
-        Cell::new("Link").set_alignment(CellAlignment::Center),
+        Cell::new("ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Title")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Summary")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Issuance Time")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Link")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
     for headline in office_headlines.at_graph.iter() {
         let headline_id = headline
@@ -182,11 +206,21 @@ pub fn create_office_headline_table(office_headline: &OfficeHeadline) -> Result<
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("ID").set_alignment(CellAlignment::Center),
-        Cell::new("Title").set_alignment(CellAlignment::Center),
-        Cell::new("Summary").set_alignment(CellAlignment::Center),
-        Cell::new("Issuance Time").set_alignment(CellAlignment::Center),
-        Cell::new("Link").set_alignment(CellAlignment::Center),
+        Cell::new("ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Title")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Summary")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Issuance Time")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Link")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
     let headline_id = office_headline
         .id

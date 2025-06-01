@@ -110,7 +110,9 @@ pub fn create_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result
         }
     } else {
         table.add_row(vec![
-            Cell::new("No forecast periods found.").set_alignment(CellAlignment::Center),
+            Cell::new("No forecast periods found.")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .set_alignment(CellAlignment::Center),
         ]);
     }
 
@@ -216,7 +218,9 @@ pub fn create_hourly_forecast_table(forecast_data: &GridpointForecastGeoJson) ->
         }
     } else {
         table.add_row(vec![
-            Cell::new("No hourly forecast periods found.").set_alignment(CellAlignment::Center),
+            Cell::new("No hourly forecast periods found.")
+                .add_attribute(comfy_table::Attribute::Bold)
+                .set_alignment(CellAlignment::Center),
         ]);
     }
 

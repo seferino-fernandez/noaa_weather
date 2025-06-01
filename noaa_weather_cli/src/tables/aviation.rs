@@ -1,5 +1,5 @@
 use anyhow::Result;
-use comfy_table::presets::{UTF8_FULL_CONDENSED, UTF8_HORIZONTAL_ONLY};
+use comfy_table::presets::{UTF8_FULL, UTF8_FULL_CONDENSED};
 use comfy_table::{Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::{
     CenterWeatherAdvisoryCollectionGeoJson, CenterWeatherAdvisoryGeoJson, CwsuOffice,
@@ -14,13 +14,27 @@ pub fn create_cwsu_table(office: &CwsuOffice) -> Result<Table> {
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("ID").set_alignment(CellAlignment::Center),
-        Cell::new("Name").set_alignment(CellAlignment::Center),
-        Cell::new("Address").set_alignment(CellAlignment::Center),
-        Cell::new("Phone").set_alignment(CellAlignment::Center),
-        Cell::new("Email").set_alignment(CellAlignment::Center),
-        Cell::new("Website").set_alignment(CellAlignment::Center),
-        Cell::new("Region").set_alignment(CellAlignment::Center),
+        Cell::new("ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Name")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Address")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Phone")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Email")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Website")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Region")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
 
     let office_id = office
@@ -123,13 +137,27 @@ pub fn create_cwa_table(cwa: &CenterWeatherAdvisoryGeoJson) -> Result<Table> {
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("ID").set_alignment(CellAlignment::Center),
-        Cell::new("Issue Time").set_alignment(CellAlignment::Center),
-        Cell::new("CWSU").set_alignment(CellAlignment::Center),
-        Cell::new("Sequence").set_alignment(CellAlignment::Center),
-        Cell::new("Start and End").set_alignment(CellAlignment::Center),
-        Cell::new("Observed Property").set_alignment(CellAlignment::Center),
-        Cell::new("Text").set_alignment(CellAlignment::Center),
+        Cell::new("ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Issue Time")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("CWSU")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Sequence")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Start and End")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Observed Property")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Text")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
     let office_id = cwa.properties.as_ref().id.as_deref().unwrap_or("N/A");
     let issue_time = cwa.properties.as_ref().issue_time.as_deref();
@@ -180,16 +208,30 @@ pub fn create_cwa_table(cwa: &CenterWeatherAdvisoryGeoJson) -> Result<Table> {
 /// Formats a collection of aviation center weather advisories into a comfy table.
 pub fn create_cwas_table(cwas: &CenterWeatherAdvisoryCollectionGeoJson) -> Result<Table> {
     let mut table = Table::new();
-    table.load_preset(UTF8_HORIZONTAL_ONLY);
+    table.load_preset(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("ID").set_alignment(CellAlignment::Center),
-        Cell::new("Issue Time").set_alignment(CellAlignment::Center),
-        Cell::new("CWSU").set_alignment(CellAlignment::Center),
-        Cell::new("Sequence").set_alignment(CellAlignment::Center),
-        Cell::new("Start and End").set_alignment(CellAlignment::Center),
-        Cell::new("Observed Property").set_alignment(CellAlignment::Center),
-        Cell::new("Text").set_alignment(CellAlignment::Center),
+        Cell::new("ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Issue Time")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("CWSU")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Sequence")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Start and End")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Observed Property")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Text")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
     for cwa in cwas.features.iter() {
         let office_id = cwa
@@ -256,13 +298,27 @@ pub fn create_sigmet_table(sigmet: &SigmetGeoJson) -> Result<Table> {
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("ID").set_alignment(CellAlignment::Center),
-        Cell::new("Issue Time").set_alignment(CellAlignment::Center),
-        Cell::new("FIR").set_alignment(CellAlignment::Center),
-        Cell::new("ATSU").set_alignment(CellAlignment::Center),
-        Cell::new("Sequence").set_alignment(CellAlignment::Center),
-        Cell::new("Phenomenon").set_alignment(CellAlignment::Center),
-        Cell::new("Start and End").set_alignment(CellAlignment::Center),
+        Cell::new("ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Issue Time")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("FIR")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("ATSU")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Sequence")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Phenomenon")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Start and End")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
     let office_id = sigmet.properties.as_ref().id.as_deref().unwrap_or("N/A");
     let issue_time = sigmet.properties.as_ref().issue_time.as_deref();
@@ -313,16 +369,30 @@ pub fn create_sigmet_table(sigmet: &SigmetGeoJson) -> Result<Table> {
 /// Formats a collection of aviation SIGMETs into a comfy table.
 pub fn create_sigmets_table(sigmets: &SigmetCollectionGeoJson) -> Result<Table> {
     let mut table = Table::new();
-    table.load_preset(UTF8_HORIZONTAL_ONLY);
+    table.load_preset(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
-        Cell::new("ID").set_alignment(CellAlignment::Center),
-        Cell::new("Issue Time").set_alignment(CellAlignment::Center),
-        Cell::new("FIR").set_alignment(CellAlignment::Center),
-        Cell::new("ATSU").set_alignment(CellAlignment::Center),
-        Cell::new("Sequence").set_alignment(CellAlignment::Center),
-        Cell::new("Phenomenon").set_alignment(CellAlignment::Center),
-        Cell::new("Start and End").set_alignment(CellAlignment::Center),
+        Cell::new("ID")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Issue Time")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("FIR")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("ATSU")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Sequence")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Phenomenon")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Start and End")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
     ]);
     for sigmet in sigmets.features.iter() {
         let office_id = sigmet.properties.as_ref().id.as_deref().unwrap_or("N/A");

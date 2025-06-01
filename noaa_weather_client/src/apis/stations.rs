@@ -597,7 +597,7 @@ pub async fn get_terminal_aerodrome_forecast(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
+                "Received `text/plain` content type response that cannot be converted to `models::TerminalAerodromeForecast`",
             ))),
             ContentType::Xml => {
                 let mut deserializer = quick_xml::de::Deserializer::from_str(&content);
@@ -607,7 +607,7 @@ pub async fn get_terminal_aerodrome_forecast(
             }
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `serde_json::Value`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::TerminalAerodromeForecast`"
                 ))))
             }
         }
@@ -622,7 +622,7 @@ pub async fn get_terminal_aerodrome_forecast(
     }
 }
 
-/// Returns Terminal Aerodrome Forecasts for the specified airport station.
+/// Returns metadata for Terminal Aerodrome Forecasts for the specified airport station.
 ///
 /// Corresponds to the `/stations/{stationId}/tafs` endpoint.
 ///
@@ -633,8 +633,7 @@ pub async fn get_terminal_aerodrome_forecast(
 ///
 /// # Returns
 ///
-/// A `Result` containing a [`serde_json::Value`] on success, representing the TAF collection.
-/// *Note: The exact structure of the returned JSON is not strictly defined in the OpenAPI spec.*
+/// A `Result` containing a [`models::TerminalAerodromeForecastsResponse`] on success, representing the TAF metadata collection.
 ///
 /// # Errors
 ///
@@ -642,7 +641,7 @@ pub async fn get_terminal_aerodrome_forecast(
 pub async fn get_terminal_aerodrome_forecasts(
     configuration: &configuration::Configuration,
     station_id: &str,
-) -> Result<serde_json::Value, Error<TafsError>> {
+) -> Result<models::TerminalAerodromeForecastsResponse, Error<TafsError>> {
     let uri_str = format!(
         "{}/stations/{stationId}/tafs",
         configuration.base_path,
@@ -678,14 +677,14 @@ pub async fn get_terminal_aerodrome_forecasts(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
+                "Received `text/plain` content type response that cannot be converted to `TerminalAerodromeForecastsResponse`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `serde_json::Value`",
+                "Received `application/xml` content type response that cannot be converted to `TerminalAerodromeForecastsResponse`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `serde_json::Value`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `TerminalAerodromeForecastsResponse`"
                 ))))
             }
         }

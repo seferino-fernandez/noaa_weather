@@ -1,6 +1,7 @@
 use anyhow::Result;
 use jiff::Timestamp;
 use jiff::tz::TimeZone;
+use noaa_weather_client::models::{UnitCodeType, ValueUnit};
 use std::fs::File;
 use std::io::Write;
 
@@ -19,18 +20,13 @@ pub fn write_output(output_path: Option<&str>, content: &str) -> Result<()> {
 
 /// Extracts the part of a URL-like string after the last `/`.
 ///
-/// This function is designed to replicate the effective behavior of the original two functions.
-/// Specifically, the "N/A" default present in the original `map_or` calls was effectively
-/// unreachable because `Vec::last()` on a vector produced by `String::split` will always
-/// return `Some` (e.g., `Some("")` for an empty input string or a string ending in '/').
-///
-/// Therefore, this combined function will:
+/// This function will:
 /// - Return `None` if the input `url_opt` is `None`.
 /// - If `url_opt` is `Some(url_str)`:
-///   - If `url_str` ends with `/` (e.g., "http://example.com/api/"), it returns `Some("".to_string())`.
+///   - If `url_str` ends with `/` (e.g., "https://api.weather.gov/zones/forecast/AZZ551"), it returns `Some("".to_string())`.
 ///   - If `url_str` is empty (e.g., ""), it returns `Some("".to_string())`.
-///   - If `url_str` has no `/` (e.g., "hostname"), it returns `Some("hostname".to_string())`.
-///   - Otherwise, it returns the segment after the last `/` (e.g., for "http://example.com/zone1", it returns `Some("zone1".to_string())`).
+///   - If `url_str` has no `/` (e.g., "AZZ551"), it returns `Some("AZZ551".to_string())`.
+///   - Otherwise, it returns the segment after the last `/` (e.g., for "https://api.weather.gov/zones/forecast/AZZ551", it returns `Some("AZZ551".to_string())`).
 ///
 /// # Arguments
 ///
@@ -172,6 +168,104 @@ pub fn format_dewpoint(
 
     // Format the rounded value with the determined unit symbol.
     format!("{} {}", rounded_final_value, display_unit_str)
+}
+
+/// Formats an `Option<String>` for display, using "N/A" if None.
+pub fn opt_str_val(opt_s: &Option<String>) -> String {
+    opt_s.as_deref().unwrap_or("N/A").to_string()
+}
+
+/// Formats an `Option<f64>` intended for build numbers or similar integers.
+/// Displays as an integer if it has no fractional part, otherwise as float with 2 decimal places.
+/// Uses "N/A" if None.
+pub fn opt_f64_display_val(opt_f: &Option<f64>) -> String {
+    opt_f.map_or("N/A".to_string(), |v| {
+        if v.fract() == 0.0 {
+            format!("{}", v.trunc())
+        } else {
+            format!("{:.2}", v)
+        }
+    })
+}
+
+/// Formats an `Option<f64>` for precise display, typically converting to string directly.
+/// Uses "N/A" if None.
+pub fn opt_f64_precise_val(opt_f: &Option<f64>) -> String {
+    opt_f.map_or("N/A".to_string(), |v| v.to_string())
+}
+
+/// Formats an `Option<i32>` for display, using "N/A" if None.
+pub fn opt_i32_val(opt_i: &Option<i32>) -> String {
+    opt_i.map_or("N/A".to_string(), |v| v.to_string())
+}
+
+/// Formats an `Option<i64>` for display, using "N/A" if None.
+pub fn opt_i64_val(opt_i: &Option<i64>) -> String {
+    opt_i.map_or("N/A".to_string(), |v| v.to_string())
+}
+
+/// Formats an `Option<ValueUnit>` for display.
+/// Shows value with 2 decimal places and unit code. Uses "N/A" if None or parts are missing.
+pub fn opt_value_unit_val(opt_value_unit: &Option<ValueUnit>) -> String {
+    if opt_value_unit.is_none() {
+        return "N/A".to_string();
+    }
+    let vu = opt_value_unit.as_ref().unwrap();
+    if vu.value.is_none() {
+        return "N/A".to_string();
+    }
+    let val_str = format!("{:.2}", vu.value.unwrap());
+    let unit_str = opt_unit_code_val(&vu.unit_code);
+    format!("{} {}", val_str, unit_str).trim().to_string()
+}
+
+/// Formats an `Option<UnitCodeType>` to its alternative label or "N/A".
+pub fn opt_unit_code_val(unit_code_opt: &Option<UnitCodeType>) -> String {
+    if unit_code_opt.is_none() {
+        return "N/A".to_string();
+    }
+    let unit_code = unit_code_opt.as_ref().unwrap();
+    match unit_code {
+        UnitCodeType::Wmo(wmo_unit_code) => wmo_unit_code.alt_label().to_string(),
+        UnitCodeType::Nws(nws_unit_code) => nws_unit_code.alt_label().to_string(),
+    }
+}
+
+/// Formats an `Option<bool>` to "Yes", "No", or "N/A".
+pub fn opt_bool_to_yes_no(opt_b: &Option<bool>) -> String {
+    match opt_b {
+        Some(true) => "Yes".to_string(),
+        Some(false) => "No".to_string(),
+        None => "N/A".to_string(),
+    }
+}
+
+/// Formats byte sizes into human-readable strings (B, KiB, MiB, GiB).
+pub fn format_bytes_to_human_readable(bytes_opt: Option<i64>) -> String {
+    bytes_opt.map_or_else(
+        || "N/A".to_string(),
+        |bytes| {
+            if bytes < 0 {
+                return "Invalid (negative)".to_string();
+            }
+            if bytes < 1024 {
+                format!("{} B", bytes)
+            } else {
+                let kib = bytes as f64 / 1024.0;
+                if kib < 1024.0 {
+                    format!("{:.2} KiB", kib)
+                } else {
+                    let mib = kib / 1024.0;
+                    if mib < 1024.0 {
+                        format!("{:.2} MiB", mib)
+                    } else {
+                        let gib = mib / 1024.0;
+                        format!("{:.2} GiB", gib)
+                    }
+                }
+            }
+        },
+    )
 }
 
 #[cfg(test)]
