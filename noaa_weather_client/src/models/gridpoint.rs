@@ -29,9 +29,9 @@ pub struct Gridpoint {
     #[serde(rename = "gridId", skip_serializing_if = "Option::is_none")]
     pub grid_id: Option<String>,
     #[serde(rename = "gridX", skip_serializing_if = "Option::is_none")]
-    pub grid_x: Option<String>,
+    pub grid_x: Option<i32>,
     #[serde(rename = "gridY", skip_serializing_if = "Option::is_none")]
-    pub grid_y: Option<String>,
+    pub grid_y: Option<i32>,
     #[serde(rename = "weather", skip_serializing_if = "Option::is_none")]
     pub weather: Option<Box<models::GridpointWeather>>,
     #[serde(rename = "hazards", skip_serializing_if = "Option::is_none")]

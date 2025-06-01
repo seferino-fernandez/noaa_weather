@@ -15,7 +15,7 @@ pub enum RadarWindProfilerError {
     UnknownValue(serde_json::Value),
 }
 
-/// Errors that can occur when calling the [`get_radar_queue`] function.
+/// Errors that can occur when calling the [`get_radar_data_queue`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RadarDataQueueError {
@@ -113,7 +113,8 @@ pub struct RadarDataQueueQueryParams<'a> {
 /// # Returns
 ///
 /// A `Result` containing a [`serde_json::Value`] on success, representing the profiler metadata.
-/// *Note: The exact structure of the returned JSON is not strictly defined in the OpenAPI spec.*
+///
+/// *Note: The exact structure of the returned JSON is unknown.*
 ///
 /// # Errors
 ///
@@ -201,8 +202,7 @@ pub async fn get_radar_wind_profiler(
 ///
 /// # Returns
 ///
-/// A `Result` containing a [`serde_json::Value`] on success, representing the queue metadata.
-/// *Note: The exact structure of the returned JSON is not strictly defined in the OpenAPI spec.*
+/// A `Result` containing a [`models::RadarQueuesResponse`] on success, representing the queue metadata.
 ///
 /// # Errors
 ///
@@ -212,7 +212,7 @@ pub async fn get_radar_data_queue(
     configuration: &configuration::Configuration,
     host: &str,
     params: RadarDataQueueQueryParams<'_>,
-) -> Result<serde_json::Value, Error<RadarDataQueueError>> {
+) -> Result<models::RadarQueuesResponse, Error<RadarDataQueueError>> {
     let uri_str = format!(
         "{}/radar/queues/{host}",
         configuration.base_path,
@@ -272,14 +272,14 @@ pub async fn get_radar_data_queue(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
+                "Received `text/plain` content type response that cannot be converted to `models::RadarQueuesResponse`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `serde_json::Value`",
+                "Received `application/xml` content type response that cannot be converted to `models::RadarQueuesResponse`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `serde_json::Value`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::RadarQueuesResponse`"
                 ))))
             }
         }
@@ -306,8 +306,7 @@ pub async fn get_radar_data_queue(
 ///
 /// # Returns
 ///
-/// A `Result` containing a [`serde_json::Value`] on success, representing the server metadata.
-/// *Note: The exact structure of the returned JSON is not strictly defined in the OpenAPI spec.*
+/// A `Result` containing a [`models::RadarServer`] on success, representing the server metadata.
 ///
 /// # Errors
 ///
@@ -317,7 +316,7 @@ pub async fn get_radar_server(
     configuration: &configuration::Configuration,
     id: &str,
     reporting_host: Option<&str>,
-) -> Result<serde_json::Value, Error<RadarServerError>> {
+) -> Result<models::RadarServer, Error<RadarServerError>> {
     let uri_str = format!(
         "{}/radar/servers/{id}",
         configuration.base_path,
@@ -356,14 +355,14 @@ pub async fn get_radar_server(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
+                "Received `text/plain` content type response that cannot be converted to `models::RadarServer`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `serde_json::Value`",
+                "Received `application/xml` content type response that cannot be converted to `models::RadarServer`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `serde_json::Value`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::RadarServer`"
                 ))))
             }
         }
@@ -389,8 +388,7 @@ pub async fn get_radar_server(
 ///
 /// # Returns
 ///
-/// A `Result` containing a [`serde_json::Value`] on success, representing the list of servers.
-/// *Note: The exact structure of the returned JSON is not strictly defined in the OpenAPI spec.*
+/// A `Result` containing a [`models::RadarServersResponse`] on success, representing the list of servers.
 ///
 /// # Errors
 ///
@@ -399,7 +397,7 @@ pub async fn get_radar_server(
 pub async fn get_radar_servers(
     configuration: &configuration::Configuration,
     reporting_host: Option<&str>,
-) -> Result<serde_json::Value, Error<RadarServersError>> {
+) -> Result<models::RadarServersResponse, Error<RadarServersError>> {
     let uri_str = format!("{}/radar/servers", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
@@ -434,14 +432,14 @@ pub async fn get_radar_servers(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
+                "Received `text/plain` content type response that cannot be converted to `models::RadarServersResponse`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `serde_json::Value`",
+                "Received `application/xml` content type response that cannot be converted to `models::RadarServersResponse`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `serde_json::Value`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::RadarServersResponse"
                 ))))
             }
         }
@@ -469,8 +467,7 @@ pub async fn get_radar_servers(
 ///
 /// # Returns
 ///
-/// A `Result` containing a [`serde_json::Value`] on success, representing the station metadata.
-/// *Note: The exact structure of the returned JSON is not strictly defined in the OpenAPI spec.*
+/// A `Result` containing a [`models::RadarStationFeature`] on success, representing the station metadata.
 ///
 /// # Errors
 ///
@@ -481,7 +478,7 @@ pub async fn get_radar_station(
     id: &str,
     reporting_host: Option<&str>,
     host: Option<&str>,
-) -> Result<serde_json::Value, Error<RadarStationError>> {
+) -> Result<models::RadarStationFeature, Error<RadarStationError>> {
     let uri_str = format!(
         "{}/radar/stations/{id}",
         configuration.base_path,
@@ -523,14 +520,14 @@ pub async fn get_radar_station(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
+                "Received `text/plain` content type response that cannot be converted to `models::RadarStationFeature`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `serde_json::Value`",
+                "Received `application/xml` content type response that cannot be converted to `models::RadarStationFeature`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `serde_json::Value`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::RadarStationFeature`"
                 ))))
             }
         }
@@ -556,8 +553,7 @@ pub async fn get_radar_station(
 ///
 /// # Returns
 ///
-/// A `Result` containing a [`serde_json::Value`] on success, representing the station alarms.
-/// *Note: The exact structure of the returned JSON is not strictly defined in the OpenAPI spec.*
+/// A `Result` containing a [`models::RadarStationAlarmsResponse`] on success, representing the station alarms.
 ///
 /// # Errors
 ///
@@ -566,7 +562,7 @@ pub async fn get_radar_station(
 pub async fn get_radar_station_alarms(
     configuration: &configuration::Configuration,
     station_id: &str,
-) -> Result<serde_json::Value, Error<RadarStationAlarmsError>> {
+) -> Result<models::RadarStationAlarmsResponse, Error<RadarStationAlarmsError>> {
     let uri_str = format!(
         "{}/radar/stations/{stationId}/alarms",
         configuration.base_path,
@@ -602,14 +598,14 @@ pub async fn get_radar_station_alarms(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
+                "Received `text/plain` content type response that cannot be converted to `models::RadarStationAlarmsResponse`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `serde_json::Value`",
+                "Received `application/xml` content type response that cannot be converted to `models::RadarStationAlarmsResponse`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `serde_json::Value`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::RadarStationAlarmsResponse`"
                 ))))
             }
         }
@@ -637,8 +633,7 @@ pub async fn get_radar_station_alarms(
 ///
 /// # Returns
 ///
-/// A `Result` containing a [`serde_json::Value`] on success, representing the list of stations.
-/// *Note: The exact structure of the returned JSON is not strictly defined in the OpenAPI spec.*
+/// A `Result` containing a [`models::RadarStationsResponse`] on success, representing the list of stations.
 ///
 /// # Errors
 ///
@@ -649,7 +644,7 @@ pub async fn get_radar_stations(
     station_type: Option<Vec<String>>,
     reporting_host: Option<&str>,
     host: Option<&str>,
-) -> Result<serde_json::Value, Error<RadarStationsError>> {
+) -> Result<models::RadarStationsResponse, Error<RadarStationsError>> {
     let uri_str = format!("{}/radar/stations", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
@@ -706,14 +701,14 @@ pub async fn get_radar_stations(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
+                "Received `text/plain` content type response that cannot be converted to `models::RadarStationsResponse`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `serde_json::Value`",
+                "Received `application/xml` content type response that cannot be converted to `models::RadarStationsResponse`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `serde_json::Value`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::RadarStationsResponse`"
                 ))))
             }
         }

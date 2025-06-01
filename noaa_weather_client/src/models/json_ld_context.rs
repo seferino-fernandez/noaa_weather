@@ -35,6 +35,12 @@ pub struct JsonLdContextObject {
     pub state: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub unit: Option<String>,
+    /// URI for WMO unit definitions.
+    #[serde(rename = "wmoUnit", skip_serializing_if = "Option::is_none")]
+    pub wmo_unit: Option<String>,
+    /// URI for NWS unit definitions.
+    #[serde(rename = "nwsUnit", skip_serializing_if = "Option::is_none")]
+    pub nws_unit: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bearing: Option<TypeDefinition>,
