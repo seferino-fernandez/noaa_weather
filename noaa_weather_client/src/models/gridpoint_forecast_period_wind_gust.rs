@@ -15,31 +15,3 @@ impl Default for GridpointForecastPeriodWindGust {
         Self::QuantitativeValue(Default::default())
     }
 }
-/// For values in observation records, the quality control flag from the MADIS system. The definitions of these flags can be found at https://madis.ncep.noaa.gov/madis_sfc_qc_notes.shtml
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-pub enum QualityControl {
-    #[serde(rename = "Z")]
-    Z,
-    #[serde(rename = "C")]
-    C,
-    #[serde(rename = "S")]
-    S,
-    #[serde(rename = "V")]
-    V,
-    #[serde(rename = "X")]
-    X,
-    #[serde(rename = "Q")]
-    Q,
-    #[serde(rename = "G")]
-    G,
-    #[serde(rename = "B")]
-    B,
-    #[serde(rename = "T")]
-    T,
-}
-
-impl Default for QualityControl {
-    fn default() -> QualityControl {
-        Self::Z
-    }
-}

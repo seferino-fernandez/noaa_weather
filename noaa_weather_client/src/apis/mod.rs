@@ -63,7 +63,6 @@ pub fn urlencode<T: AsRef<str>>(s: T) -> String {
     ::url::form_urlencoded::byte_serialize(s.as_ref().as_bytes()).collect()
 }
 
-/// Internal use only
 /// A content type supported by this client.
 #[derive(Debug)]
 enum ContentType {

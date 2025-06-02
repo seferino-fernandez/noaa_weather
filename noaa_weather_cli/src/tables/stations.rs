@@ -190,7 +190,7 @@ pub fn create_stations_observation_table(observation: &ObservationGeoJson) -> Re
 
 /// Creates a table listing the latest observation for a single observation station.
 ///
-/// This function processes an `ObservationGeoJson`, which contains a single observation,
+/// This function processes an `ObservationCollectionGeoJson`, which contains a single observation,
 /// and formats it into a table. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
@@ -637,7 +637,7 @@ fn get_weather_description(weather_opt: Option<&Vec<Weather>>) -> String {
     }
 }
 
-/// Helper function to add a forecast period's details to the table. (Unchanged)
+/// Helper function to add a forecast period's details to the table.
 fn add_forecast_period_to_table<SWD, PVD, CLD>(
     table: &mut Table,
     period_title: &str,
@@ -719,7 +719,7 @@ pub fn create_stations_taf_table(taf_bulletin: &TerminalAerodromeForecast) -> Re
 
     let taf = &taf_bulletin.ns0_meteorological_information.taf;
 
-    // --- General Information Section (All times UTC) ---
+    // --- General Information Section ---
     let airport_icao = &taf
         .aerodrome
         .aixm_airport_heliport
@@ -743,7 +743,7 @@ pub fn create_stations_taf_table(taf_bulletin: &TerminalAerodromeForecast) -> Re
         &taf.valid_period.ns1_time_period.ns1_end_position,
     );
     table.add_row(vec![
-        Cell::new("Valid Period (UTC):").add_attribute(Attribute::Bold), // Explicitly state UTC
+        Cell::new("Valid Period (UTC):").add_attribute(Attribute::Bold),
         Cell::new(valid_period_str),
     ]);
 
@@ -751,7 +751,7 @@ pub fn create_stations_taf_table(taf_bulletin: &TerminalAerodromeForecast) -> Re
     let bf_props = &taf.base_forecast.meteorological_aerodrome_forecast;
     if let Some(bf_phenom_time) = &bf_props.phenomenon_time {
         let period_title = format!(
-            "INITIAL FORECAST\nValid (UTC): {}", // Explicitly state UTC
+            "INITIAL FORECAST\nValid (UTC): {}",
             format_taf_validity_period_as_utc(
                 &bf_phenom_time.ns1_time_period.ns1_begin_position,
                 &bf_phenom_time.ns1_time_period.ns1_end_position,
@@ -780,7 +780,7 @@ pub fn create_stations_taf_table(taf_bulletin: &TerminalAerodromeForecast) -> Re
         let indicator = &cf_props.change_indicator;
 
         let period_title = format!(
-            "CHANGE GROUP: {}\nValid (UTC): {}", // Explicitly state UTC
+            "CHANGE GROUP: {}\nValid (UTC): {}",
             indicator,
             format_taf_validity_period_as_utc(
                 &cf_props.phenomenon_time.ns1_time_period.ns1_begin_position,

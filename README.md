@@ -32,10 +32,12 @@ View help for the CLI:
 cargo run -- --help
 ```
 
-Fetch weather data for Phoenix, AZ and save to a file:
+## Documentation
+
+View documentation for the CLI:
 
 ```sh
-cargo run noaa_weather_cli city phoenix az --json -o weather.json
+cargo run -- --help
 ```
 
 ## Resources

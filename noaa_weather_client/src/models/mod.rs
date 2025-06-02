@@ -174,6 +174,8 @@ pub mod point_relative_location;
 pub use self::point_relative_location::PointRelativeLocation;
 pub mod problem_detail;
 pub use self::problem_detail::ProblemDetail;
+pub mod quality_control;
+pub use self::quality_control::QualityControl;
 pub mod quantitative_value;
 pub use self::quantitative_value::QuantitativeValue;
 pub mod radar_queue;

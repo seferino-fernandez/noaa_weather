@@ -2,6 +2,8 @@ use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 
+use super::QualityControl;
+
 /// QuantitativeValue : A structured value representing a measurement and its unit of measure. This object is a slighly modified version of the schema.org definition at https://schema.org/QuantitativeValue
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct QuantitativeValue {
@@ -22,7 +24,7 @@ pub struct QuantitativeValue {
     /// A string denoting a unit of measure, expressed in the format \"{unit}\" or \"{namespace}:{unit}\". Units with the namespace \"wmo\" or \"wmoUnit\" are defined in the World Meteorological Organization Codes Registry at http://codes.wmo.int/common/unit and should be canonically resolvable to http://codes.wmo.int/common/unit/{unit}. Units with the namespace \"nwsUnit\" are currently custom and do not align to any standard. Units with no namespace or the namespace \"uc\" are compliant with the Unified Code for Units of Measure syntax defined at https://unitsofmeasure.org/. This also aligns with recent versions of the Geographic Markup Language (GML) standard, the IWXXM standard, and OGC Observations and Measurements v2.0 (ISO/DIS 19156). Namespaced units are considered deprecated. We will be aligning API to use the same standards as GML/IWXXM in the future.
     #[serde(rename = "unitCode", skip_serializing_if = "Option::is_none")]
     pub unit_code: Option<String>,
-    /// For values in observation records, the quality control flag from the MADIS system. The definitions of these flags can be found at https://madis.ncep.noaa.gov/madis_sfc_qc_notes.shtml
+    /// For values in observation records, the quality control flag from the MADIS system.
     #[serde(rename = "qualityControl", skip_serializing_if = "Option::is_none")]
     pub quality_control: Option<QualityControl>,
 }
@@ -48,34 +50,5 @@ impl Display for QuantitativeValue {
             self.value.unwrap_or_default(),
             self.unit_code.clone().unwrap_or("".to_string())
         )
-    }
-}
-
-/// For values in observation records, the quality control flag from the MADIS system. The definitions of these flags can be found at https://madis.ncep.noaa.gov/madis_sfc_qc_notes.shtml
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-pub enum QualityControl {
-    #[serde(rename = "Z")]
-    Z,
-    #[serde(rename = "C")]
-    C,
-    #[serde(rename = "S")]
-    S,
-    #[serde(rename = "V")]
-    V,
-    #[serde(rename = "X")]
-    X,
-    #[serde(rename = "Q")]
-    Q,
-    #[serde(rename = "G")]
-    G,
-    #[serde(rename = "B")]
-    B,
-    #[serde(rename = "T")]
-    T,
-}
-
-impl Default for QualityControl {
-    fn default() -> QualityControl {
-        Self::Z
     }
 }

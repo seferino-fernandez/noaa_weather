@@ -54,7 +54,7 @@ fn test_latest_observation_command_success() {
 fn test_stations_tafs_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("stations");
-    cmd.arg("tafs");
+    cmd.arg("terminal-aerodrome-forecasts");
     cmd.arg("--station-id");
     cmd.arg("KPHX");
     cmd.assert().success();
@@ -65,7 +65,7 @@ fn test_stations_tafs_success() {
 fn test_stations_taf_success() {
     let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
     cmd.arg("stations");
-    cmd.arg("taf");
+    cmd.arg("terminal-aerodrome-forecast");
     cmd.arg("--station-id");
     cmd.arg("KPHX");
     cmd.arg("--date");

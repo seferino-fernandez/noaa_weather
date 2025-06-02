@@ -79,17 +79,16 @@ pub enum StationCommands {
     },
     /// Get the metadata for Terminal Aerodrome Forecasts (TAFs) for an airport station.
     ///
-    /// Example: `noaa-weather stations tafs --station-id KPHX`
-    Tafs {
+    /// Example: `noaa-weather stations terminal-aerodrome-forecasts --station-id KPHX`
+    TerminalAerodromeForecasts {
         /// Airport Station ID (typically ICAO identifier, e.g., KPHX, KLAX).
         #[arg(short = 's', long)]
         station_id: String,
     },
     /// Get a specific Terminal Aerodrome Forecast (TAF) by date and time.
     ///
-    /// Note: This is less common than fetching the latest TAFs using the `tafs` subcommand.
-    /// Example: `noaa-weather stations taf --station-id KPHX --date 2025-05-03 --time 1800`
-    Taf {
+    /// Example: `noaa-weather stations terminal-aerodrome-forecast --station-id KPHX --date 2025-05-03 --time 1800`
+    TerminalAerodromeForecast {
         /// Airport Station ID (e.g., KPHX).
         #[arg(short = 's', long)]
         station_id: String,
@@ -237,7 +236,7 @@ pub async fn handle_command(
             }
             Ok(())
         }
-        StationCommands::Tafs { station_id } => {
+        StationCommands::TerminalAerodromeForecasts { station_id } => {
             let result = station_api::get_terminal_aerodrome_forecasts(config, station_id)
                 .await
                 .map_err(|e| anyhow!("Error getting TAFs: {e}"))?;
@@ -252,7 +251,7 @@ pub async fn handle_command(
             }
             Ok(())
         }
-        StationCommands::Taf {
+        StationCommands::TerminalAerodromeForecast {
             station_id,
             date,
             time,

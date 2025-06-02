@@ -102,9 +102,9 @@ pub struct LatencyInfo {
 /// Properties related to the RDA (Radar Data Acquisition) unit.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct RdaProperties {
-    /// Version of the resolution. Can be null.
+    /// Version of the resolution.
     #[serde(rename = "resolutionVersion", skip_serializing_if = "Option::is_none")]
-    pub resolution_version: Option<String>, // Assuming string or null
+    pub resolution_version: Option<String>,
     /// Path for NL2 data.
     #[serde(rename = "nl2Path", skip_serializing_if = "Option::is_none")]
     pub nl2_path: Option<String>,

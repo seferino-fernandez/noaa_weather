@@ -30,8 +30,14 @@ Get a specific observation by time.
 noaa_weather_cli stations observation --station-id <ID> --time <ISO_TIME>
 ```
 
-Get all available TAFs for a station.
+Get all available Terminal Aerodrome Forecasts (TAFs) for a station.
 
 ```sh
-noaa_weather_cli stations tafs --station-id <ID>
+noaa_weather_cli stations terminal-aerodrome-forecasts --station-id <ID>
+```
+
+Get a specific Terminal Aerodrome Forecast (TAF) for a station by date and time.
+
+```sh
+noaa_weather_cli stations terminal-aerodrome-forecast --station-id <ID> --date <YYYY-MM-DD> --time <HHMM>
 ```

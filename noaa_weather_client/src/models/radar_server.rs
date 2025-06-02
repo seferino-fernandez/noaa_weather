@@ -150,7 +150,7 @@ pub struct RadarServerHardwareStatus {
     pub io_utilization: Option<f64>,
     /// Disk usage or status indicator (e.g., percentage or specific value).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub disk: Option<i32>, // JSON shows 2
+    pub disk: Option<i32>,
     /// System load average over 1 minute.
     #[serde(rename = "load1", skip_serializing_if = "Option::is_none")]
     pub load1: Option<f64>,
@@ -185,7 +185,7 @@ pub struct RadarServerLdmStatus {
     pub storage_size: Option<i64>,
     /// Count of products currently in LDM storage.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub count: Option<i32>, // JSON shows 31548, fits in i32
+    pub count: Option<i32>,
     /// Indicates if the LDM is active.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub active: Option<bool>,

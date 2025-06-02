@@ -154,7 +154,7 @@ pub fn format_dewpoint(
         }
         None => {
             // If no target unit is specified, use the initial value and unit.
-            final_dewpoint_val_f64 = initial_dewpoint_val_f64; // No conversion needed
+            final_dewpoint_val_f64 = initial_dewpoint_val_f64;
             if initial_unit_is_celsius {
                 display_unit_str = DEG_C_DISPLAY;
             } else if initial_unit_is_fahrenheit {
