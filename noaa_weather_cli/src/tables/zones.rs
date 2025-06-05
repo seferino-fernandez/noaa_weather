@@ -162,7 +162,7 @@ fn create_zone_row(zone: &Zone) -> Vec<Cell> {
     let zone_type_display = zone
         .r#type
         .as_ref()
-        .map(|zone_type| format!("{:?}", zone_type))
+        .map(|zone_type| format!("{zone_type:?}"))
         .unwrap_or_else(|| "N/A".to_string());
 
     let state_display = zone
@@ -172,7 +172,7 @@ fn create_zone_row(zone: &Zone) -> Vec<Cell> {
             let actual_zone_state: &ZoneState = boxed_zone_state_ref.as_ref();
             match actual_zone_state {
                 ZoneState::StateTerritoryCode(state_code_val) => {
-                    format!("{:?}", state_code_val).to_uppercase()
+                    format!("{state_code_val:?}").to_uppercase()
                 }
                 ZoneState::String(string_val) => string_val.to_uppercase(),
             }
@@ -246,7 +246,7 @@ fn format_observation_clouds(
             .map(|layer| {
                 let amount = &layer.amount;
                 let base_str = opt_value_unit_val(&Some(layer.base.as_ref().clone()));
-                format!("{} at {}", amount, base_str)
+                format!("{amount} at {base_str}")
             })
             .collect::<Vec<String>>()
             .join("\n"),
@@ -330,7 +330,7 @@ pub fn create_zone_observations_table(
 
         let station_name = properties.station_name.as_deref().unwrap_or("N/A");
         let station_id = properties.station_id.as_deref().unwrap_or("N/A");
-        let station_name_code = format!("{}\n({})", station_name, station_id);
+        let station_name_code = format!("{station_name}\n({station_id})");
         let timestamp = format_datetime_human_readable(properties.timestamp.as_deref());
 
         let temp = opt_value_unit_val(&properties.temperature);

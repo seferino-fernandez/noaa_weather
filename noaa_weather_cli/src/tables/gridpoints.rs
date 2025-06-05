@@ -102,7 +102,7 @@ pub fn create_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Result
 
             table.add_row(vec![
                 period.name.as_deref().unwrap_or("-"),
-                &format!("{} to {}", start_time_formatted, end_time_formatted),
+                &format!("{start_time_formatted} to {end_time_formatted}"),
                 &temp_str,
                 &wind_str.trim(),
                 period.short_forecast.as_deref().unwrap_or("-"),
@@ -169,7 +169,7 @@ pub fn create_hourly_forecast_table(forecast_data: &GridpointForecastGeoJson) ->
                     pop_qv
                         .value
                         .flatten()
-                        .map_or_else(|| "N/A".to_string(), |v| format!("{:.0}%", v))
+                        .map_or_else(|| "N/A".to_string(), |v| format!("{v:.0}%"))
                 },
             );
 
@@ -179,7 +179,7 @@ pub fn create_hourly_forecast_table(forecast_data: &GridpointForecastGeoJson) ->
                     rh_qv
                         .value
                         .flatten()
-                        .map_or_else(|| "N/A".to_string(), |v| format!("{:.0}%", v))
+                        .map_or_else(|| "N/A".to_string(), |v| format!("{v:.0}%"))
                 },
             );
 
@@ -231,7 +231,7 @@ fn format_temperature(temp: &GridpointForecastPeriodTemperature, unit: Option<&s
             let value_str = qv
                 .value
                 .flatten()
-                .map_or_else(|| "N/A".to_string(), |v| format!("{:.0}", v));
+                .map_or_else(|| "N/A".to_string(), |v| format!("{v:.0}"));
             let unit_str = qv.unit_code.as_deref().unwrap_or(unit.unwrap_or("?"));
             format!(
                 "{}°{}",

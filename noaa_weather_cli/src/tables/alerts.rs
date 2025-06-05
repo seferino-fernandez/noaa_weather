@@ -81,7 +81,7 @@ pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> Result<Table
                 format_datetime_human_readable(alert_properties.effective.as_deref());
             let expires_date = format_datetime_human_readable(alert_properties.expires.as_deref());
 
-            let effective_date = format!("{}\nto\n{}", effective_date, expires_date);
+            let effective_date = format!("{effective_date}\nto\n{expires_date}");
             table.add_row(vec![
                 Cell::new(event_headline),
                 Cell::new(alert_properties.area_desc.as_deref().unwrap_or("N/A")),
@@ -228,7 +228,7 @@ pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> Result<Table> {
         "N/A".to_string()
     };
 
-    details.push(format!("Affected Zones: {}", formatted_affected_zones));
+    details.push(format!("Affected Zones: {formatted_affected_zones}"));
     let description = alert
         .description
         .clone()
@@ -265,30 +265,29 @@ pub fn create_alert_count_table(count_data: &ActiveAlertsCountResponse) -> Resul
         format_optional_number(count_data.marine)
     );
     let mut active_alerts_by_area_data = String::new();
-    if let Some(areas_map) = &count_data.areas {
-        if !areas_map.is_empty() {
-            for (area_key, count_val) in areas_map {
-                active_alerts_by_area_data.push_str(&format!("{}: {}\n", area_key, count_val));
-            }
+    if let Some(areas_map) = &count_data.areas
+        && !areas_map.is_empty()
+    {
+        for (area_key, count_val) in areas_map {
+            active_alerts_by_area_data.push_str(&format!("{area_key}: {count_val}\n"));
         }
     }
 
     let mut active_alerts_by_marine_region_data = String::new();
-    if let Some(regions_map) = &count_data.regions {
-        if !regions_map.is_empty() {
-            for (region_key, count_val) in regions_map {
-                active_alerts_by_marine_region_data
-                    .push_str(&format!("{}: {}\n", region_key, count_val));
-            }
+    if let Some(regions_map) = &count_data.regions
+        && !regions_map.is_empty()
+    {
+        for (region_key, count_val) in regions_map {
+            active_alerts_by_marine_region_data.push_str(&format!("{region_key}: {count_val}\n"));
         }
     }
 
     let mut active_alerts_by_zone_data = String::new();
-    if let Some(zones_map) = &count_data.zones {
-        if !zones_map.is_empty() {
-            for (zone_key, count_val) in zones_map {
-                active_alerts_by_zone_data.push_str(&format!("{}: {}\n", zone_key, count_val));
-            }
+    if let Some(zones_map) = &count_data.zones
+        && !zones_map.is_empty()
+    {
+        for (zone_key, count_val) in zones_map {
+            active_alerts_by_zone_data.push_str(&format!("{zone_key}: {count_val}\n"));
         }
     }
 

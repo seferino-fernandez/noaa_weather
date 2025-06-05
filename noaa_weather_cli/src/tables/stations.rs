@@ -110,7 +110,7 @@ pub fn create_stations_observation_table(observation: &ObservationGeoJson) -> Re
     let station_id_str =
         get_zone_from_url(props.station.as_ref()).unwrap_or_else(|| "N/A".to_string());
 
-    let title = format!("Station: {} - Observation", station_id_str);
+    let title = format!("Station: {station_id_str} - Observation");
     table.set_header(vec![
         Cell::new(title)
             .add_attribute(comfy_table::Attribute::Bold)
@@ -502,7 +502,7 @@ fn format_wind_generic<T: WindDataProvider>(wind_data_opt: Option<&T>) -> String
             if wind_data.is_variable_wind_direction() {
                 parts.push("Variable (VRB)".to_string());
             } else if let Some(dir_val) = wind_data.mean_wind_direction_val() {
-                parts.push(format!("{}°", dir_val));
+                parts.push(format!("{dir_val}°"));
             }
 
             if let Some(speed_val) = wind_data.mean_wind_speed_val() {
@@ -515,7 +515,7 @@ fn format_wind_generic<T: WindDataProvider>(wind_data_opt: Option<&T>) -> String
                 } else if parts.is_empty() {
                     parts.push("Wind".to_string());
                 }
-                parts.push(format!("{} {}", speed_val, speed_uom));
+                parts.push(format!("{speed_val} {speed_uom}"));
             }
 
             if let Some(gust_val) = wind_data.wind_gust_speed_val() {
@@ -524,7 +524,7 @@ fn format_wind_generic<T: WindDataProvider>(wind_data_opt: Option<&T>) -> String
                     .unwrap_or("")
                     .replace("[kn_i]", "kts");
                 parts.push("gusting".to_string());
-                parts.push(format!("{} {}", gust_val, gust_uom));
+                parts.push(format!("{gust_val} {gust_uom}"));
             }
 
             if parts
@@ -600,7 +600,7 @@ fn format_clouds_generic<CLD: CloudLayerDataProvider>(
                 let amount = get_cloud_amount_description(layer_data.amount_href());
                 let base_val = layer_data.base_value().unwrap_or_else(|| "N/A".to_string());
                 let base_uom = layer_data.base_uom().replace("[ft_i]", "ft AGL");
-                format!("{} at {} {}", amount, base_val, base_uom)
+                format!("{amount} at {base_val} {base_uom}")
             })
             .collect::<Vec<String>>()
             .join("\n"),
@@ -840,8 +840,7 @@ fn create_station_row(observation_station: &ObservationStationGeoJson) -> Vec<St
         get_zone_from_url(station.fire_weather_zone.clone()).unwrap_or_else(|| "N/A".to_owned());
 
     let zones = format!(
-        "Forecast Zone: {}\nCounty: {}\nFire Weather Zone: {}",
-        forecast_zone, county, fire_weather_zone
+        "Forecast Zone: {forecast_zone}\nCounty: {county}\nFire Weather Zone: {fire_weather_zone}"
     );
 
     vec![

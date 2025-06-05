@@ -13,7 +13,7 @@ pub fn write_output(output_path: Option<&str>, content: &str) -> Result<()> {
         let mut file = File::create(path)?;
         file.write_all(content.as_bytes())?;
     } else {
-        println!("{}", content);
+        println!("{content}");
     }
     Ok(())
 }
@@ -167,7 +167,7 @@ pub fn format_dewpoint(
     let rounded_final_value = final_dewpoint_val_f64.round();
 
     // Format the rounded value with the determined unit symbol.
-    format!("{} {}", rounded_final_value, display_unit_str)
+    format!("{rounded_final_value} {display_unit_str}")
 }
 
 /// Formats an `Option<String>` for display, using "N/A" if None.
@@ -183,7 +183,7 @@ pub fn opt_f64_display_val(opt_f: &Option<f64>) -> String {
         if v.fract() == 0.0 {
             format!("{}", v.trunc())
         } else {
-            format!("{:.2}", v)
+            format!("{v:.2}")
         }
     })
 }
@@ -216,7 +216,7 @@ pub fn opt_value_unit_val(opt_value_unit: &Option<ValueUnit>) -> String {
     }
     let val_str = format!("{:.2}", vu.value.unwrap());
     let unit_str = opt_unit_code_val(&vu.unit_code);
-    format!("{} {}", val_str, unit_str).trim().to_string()
+    format!("{val_str} {unit_str}").trim().to_string()
 }
 
 /// Formats an `Option<UnitCodeType>` to its alternative label or "N/A".
@@ -249,18 +249,18 @@ pub fn format_bytes_to_human_readable(bytes_opt: Option<i64>) -> String {
                 return "Invalid (negative)".to_string();
             }
             if bytes < 1024 {
-                format!("{} B", bytes)
+                format!("{bytes} B")
             } else {
                 let kib = bytes as f64 / 1024.0;
                 if kib < 1024.0 {
-                    format!("{:.2} KiB", kib)
+                    format!("{kib:.2} KiB")
                 } else {
                     let mib = kib / 1024.0;
                     if mib < 1024.0 {
-                        format!("{:.2} MiB", mib)
+                        format!("{mib:.2} MiB")
                     } else {
                         let gib = mib / 1024.0;
-                        format!("{:.2} GiB", gib)
+                        format!("{gib:.2} GiB")
                     }
                 }
             }
@@ -289,7 +289,7 @@ pub fn format_observation_wind(
         return speed_str;
     }
     let direction_str = opt_value_unit_val(&Some(direction_vu));
-    format!("{} {}", speed_str, direction_str)
+    format!("{speed_str} {direction_str}")
 }
 
 #[cfg(test)]

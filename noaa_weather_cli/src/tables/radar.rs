@@ -50,7 +50,7 @@ fn format_ping_map_summary(map_opt: &Option<HashMap<String, bool>>) -> String {
                 return "0 targets".to_string();
             }
             let up_count = map.values().filter(|&&v| v).count();
-            format!("{} / {} up", up_count, total)
+            format!("{up_count} / {total} up")
         },
     )
 }
@@ -62,15 +62,15 @@ fn add_network_interface_stats_rows(
     stats: &RadarServerNetworkInterfaceStats,
 ) {
     table.add_row(vec![
-        Cell::new(format!("{} Interface", if_name)),
+        Cell::new(format!("{if_name} Interface")),
         Cell::new(opt_str_val(&stats.interface)),
     ]);
     table.add_row(vec![
-        Cell::new(format!("{} Active", if_name)),
+        Cell::new(format!("{if_name} Active")),
         Cell::new(opt_bool_to_yes_no(&stats.active)),
     ]);
     table.add_row(vec![
-        Cell::new(format!("{} Tx Packets (OK/Err/Drop)", if_name)),
+        Cell::new(format!("{if_name} Tx Packets (OK/Err/Drop)")),
         Cell::new(format!(
             "{}/{}/{}",
             opt_i64_val(&stats.trans_no_error),
@@ -79,11 +79,11 @@ fn add_network_interface_stats_rows(
         )),
     ]);
     table.add_row(vec![
-        Cell::new(format!("{} Tx Overruns", if_name)),
+        Cell::new(format!("{if_name} Tx Overruns")),
         Cell::new(opt_i64_val(&stats.trans_overrun)),
     ]);
     table.add_row(vec![
-        Cell::new(format!("{} Rx Packets (OK/Err/Drop)", if_name)),
+        Cell::new(format!("{if_name} Rx Packets (OK/Err/Drop)")),
         Cell::new(format!(
             "{}/{}/{}",
             opt_i64_val(&stats.recv_no_error),
@@ -92,7 +92,7 @@ fn add_network_interface_stats_rows(
         )),
     ]);
     table.add_row(vec![
-        Cell::new(format!("{} Rx Overruns", if_name)),
+        Cell::new(format!("{if_name} Rx Overruns")),
         Cell::new(opt_i64_val(&stats.recv_overrun)),
     ]);
 }
@@ -512,7 +512,7 @@ pub fn create_radar_server_table(radar_server: &RadarServer) -> Result<Table> {
 
     let server_id_str = radar_server.id.as_deref().unwrap_or("Unknown Server");
     table.set_header(vec![
-        Cell::new(format!("Radar Server Status: {}", server_id_str)).add_attribute(Attribute::Bold),
+        Cell::new(format!("Radar Server Status: {server_id_str}")).add_attribute(Attribute::Bold),
         Cell::new("").add_attribute(Attribute::Bold),
     ]);
 
@@ -801,7 +801,7 @@ pub fn create_radar_servers_table(radar_servers_response: &RadarServersResponse)
                 .hardware
                 .as_ref()
                 .and_then(|hw| hw.load1)
-                .map_or_else(|| "N/A".to_string(), |l| format!("{:.2}", l));
+                .map_or_else(|| "N/A".to_string(), |l| format!("{l:.2}"));
 
             table.add_row(vec![
                 Cell::new(opt_str_val(&server.id)),
