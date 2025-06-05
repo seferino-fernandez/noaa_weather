@@ -232,8 +232,6 @@ pub mod zone;
 pub use self::zone::Zone;
 pub mod zone_collection_geo_json;
 pub use self::zone_collection_geo_json::ZoneCollectionGeoJson;
-pub mod zone_collection_geo_json_all_of_features;
-pub use self::zone_collection_geo_json_all_of_features::ZoneCollectionGeoJsonAllOfFeatures;
 pub mod zone_collection_json_ld;
 pub use self::zone_collection_json_ld::ZoneCollectionJsonLd;
 pub mod zone_forecast;

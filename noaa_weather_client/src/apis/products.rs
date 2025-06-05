@@ -163,14 +163,14 @@ pub async fn get_products_by_location(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::TextProductTypeCollection`",
+                "Received `text/plain` content type response that cannot be converted to `TextProductTypeCollection`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::TextProductTypeCollection`",
+                "Received `application/xml` content type response that cannot be converted to `TextProductTypeCollection`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::TextProductTypeCollection`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `TextProductTypeCollection`"
                 ))))
             }
         }
@@ -241,14 +241,14 @@ pub async fn get_product(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::TextProduct`",
+                "Received `text/plain` content type response that cannot be converted to `TextProduct`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::TextProduct`",
+                "Received `application/xml` content type response that cannot be converted to `TextProduct`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::TextProduct`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `TextProduct`"
                 ))))
             }
         }
@@ -314,14 +314,14 @@ pub async fn get_product_locations(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::TextProductLocationCollection`",
+                "Received `text/plain` content type response that cannot be converted to `TextProductLocationCollection`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::TextProductLocationCollection`",
+                "Received `application/xml` content type response that cannot be converted to `TextProductLocationCollection`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::TextProductLocationCollection`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `TextProductLocationCollection`"
                 ))))
             }
         }
@@ -387,14 +387,14 @@ pub async fn get_product_types(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::TextProductTypeCollection`",
+                "Received `text/plain` content type response that cannot be converted to `TextProductTypeCollection`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::TextProductTypeCollection`",
+                "Received `application/xml` content type response that cannot be converted to `TextProductTypeCollection`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::TextProductTypeCollection`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `TextProductTypeCollection`"
                 ))))
             }
         }
@@ -547,14 +547,14 @@ pub async fn get_products_query(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::TextProductCollection`",
+                "Received `text/plain` content type response that cannot be converted to `TextProductCollection`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::TextProductCollection`",
+                "Received `application/xml` content type response that cannot be converted to `TextProductCollection`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::TextProductCollection`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `TextProductCollection`"
                 ))))
             }
         }
@@ -625,14 +625,14 @@ pub async fn get_products_by_type(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::TextProductCollection`",
+                "Received `text/plain` content type response that cannot be converted to `TextProductCollection`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::TextProductCollection`",
+                "Received `application/xml` content type response that cannot be converted to `TextProductCollection`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::TextProductCollection`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `TextProductCollection`"
                 ))))
             }
         }
@@ -706,14 +706,14 @@ pub async fn get_products_by_type_and_location(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::TextProductCollection`",
+                "Received `text/plain` content type response that cannot be converted to `TextProductCollection`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::TextProductCollection`",
+                "Received `application/xml` content type response that cannot be converted to `TextProductCollection`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::TextProductCollection`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `TextProductCollection`"
                 ))))
             }
         }
@@ -784,14 +784,14 @@ pub async fn get_product_issuance_locations_by_type(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::TextProductLocationCollection`",
+                "Received `text/plain` content type response that cannot be converted to `TextProductLocationCollection`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::TextProductLocationCollection`",
+                "Received `application/xml` content type response that cannot be converted to `TextProductLocationCollection`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::TextProductLocationCollection`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `TextProductLocationCollection`"
                 ))))
             }
         }

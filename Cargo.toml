@@ -1,3 +1,6 @@
 [workspace]
 resolver = "2"
 members = ["noaa_weather_client", "noaa_weather_cli"]
+
+[profile.dev]
+split-debuginfo = "unpacked"

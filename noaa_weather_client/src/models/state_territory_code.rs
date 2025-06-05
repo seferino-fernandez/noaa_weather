@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum StateTerritoryCode {
     #[serde(rename = "AL")]
@@ -122,8 +124,8 @@ pub enum StateTerritoryCode {
     Mh,
 }
 
-impl std::fmt::Display for StateTerritoryCode {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Display for StateTerritoryCode {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
             Self::Al => write!(f, "AL"),
             Self::Ak => write!(f, "AK"),
@@ -188,17 +190,11 @@ impl std::fmt::Display for StateTerritoryCode {
     }
 }
 
-impl Default for StateTerritoryCode {
-    fn default() -> StateTerritoryCode {
-        Self::Al
-    }
-}
-
 impl FromStr for StateTerritoryCode {
     type Err = String;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
+    fn from_str(state_territory_code: &str) -> Result<Self, Self::Err> {
+        match state_territory_code.to_uppercase().as_str() {
             "AL" => Ok(StateTerritoryCode::Al),
             "AK" => Ok(StateTerritoryCode::Ak),
             "AS" => Ok(StateTerritoryCode::As),
@@ -258,7 +254,10 @@ impl FromStr for StateTerritoryCode {
             "PW" => Ok(StateTerritoryCode::Pw),
             "FM" => Ok(StateTerritoryCode::Fm),
             "MH" => Ok(StateTerritoryCode::Mh),
-            _ => Err(format!("Invalid state territory code: {}", s)),
+            _ => Err(format!(
+                "Invalid state territory code: {}",
+                state_territory_code
+            )),
         }
     }
 }

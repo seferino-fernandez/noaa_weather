@@ -23,6 +23,10 @@ pub struct Observation {
     pub elevation: Option<ValueUnit>,
     #[serde(rename = "station", skip_serializing_if = "Option::is_none")]
     pub station: Option<String>,
+    #[serde(rename = "stationId", skip_serializing_if = "Option::is_none")]
+    pub station_id: Option<String>,
+    #[serde(rename = "stationName", skip_serializing_if = "Option::is_none")]
+    pub station_name: Option<String>,
     #[serde(rename = "timestamp", skip_serializing_if = "Option::is_none")]
     pub timestamp: Option<String>,
     #[serde(rename = "rawMessage", skip_serializing_if = "Option::is_none")]
@@ -103,6 +107,8 @@ impl Observation {
             at_type: None,
             elevation: None,
             station: None,
+            station_id: None,
+            station_name: None,
             timestamp: None,
             raw_message: None,
             text_description: None,

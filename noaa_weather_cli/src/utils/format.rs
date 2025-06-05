@@ -268,6 +268,30 @@ pub fn format_bytes_to_human_readable(bytes_opt: Option<i64>) -> String {
     )
 }
 
+/// Formats wind observation data.
+pub fn format_observation_wind(
+    speed_vu_opt: Option<ValueUnit>,
+    direction_vu_opt: Option<ValueUnit>,
+) -> String {
+    if speed_vu_opt.is_none() {
+        return "N/A".to_string();
+    }
+    let speed_vu = speed_vu_opt.unwrap();
+    if speed_vu.value.is_none() {
+        return "N/A".to_string();
+    }
+    let speed_str = opt_value_unit_val(&Some(speed_vu));
+    if direction_vu_opt.is_none() {
+        return speed_str;
+    }
+    let direction_vu = direction_vu_opt.unwrap();
+    if direction_vu.value.is_none() {
+        return speed_str;
+    }
+    let direction_str = opt_value_unit_val(&Some(direction_vu));
+    format!("{} {}", speed_str, direction_str)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

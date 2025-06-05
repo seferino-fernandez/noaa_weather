@@ -137,14 +137,14 @@ pub async fn get_center_weather_advisories_by_date_and_sequence(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::CenterWeatherAdvisoryGeoJson`",
+                "Received `text/plain` content type response that cannot be converted to `CenterWeatherAdvisoryGeoJson`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::CenterWeatherAdvisoryGeoJson`",
+                "Received `application/xml` content type response that cannot be converted to `CenterWeatherAdvisoryGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::CenterWeatherAdvisoryGeoJson`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `CenterWeatherAdvisoryGeoJson`"
                 ))))
             }
         }
@@ -218,14 +218,14 @@ pub async fn get_center_weather_advisories(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::CenterWeatherAdvisoryCollectionGeoJson`",
+                "Received `text/plain` content type response that cannot be converted to `CenterWeatherAdvisoryCollectionGeoJson`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::CenterWeatherAdvisoryCollectionGeoJson`",
+                "Received `application/xml` content type response that cannot be converted to `CenterWeatherAdvisoryCollectionGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::CenterWeatherAdvisoryCollectionGeoJson`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `CenterWeatherAdvisoryCollectionGeoJson`"
                 ))))
             }
         }
@@ -297,14 +297,14 @@ pub async fn get_center_weather_service_unit(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::Office`",
+                "Received `text/plain` content type response that cannot be converted to `Office`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::Office`",
+                "Received `application/xml` content type response that cannot be converted to `Office`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::Office`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `Office`"
                 ))))
             }
         }
@@ -380,14 +380,14 @@ pub async fn get_sigmet(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::SigmetGeoJson`",
+                "Received `text/plain` content type response that cannot be converted to `SigmetGeoJson`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::SigmetGeoJson`",
+                "Received `application/xml` content type response that cannot be converted to `SigmetGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::SigmetGeoJson`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `SigmetGeoJson`"
                 ))))
             }
         }
@@ -476,14 +476,14 @@ pub async fn get_sigmets(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::SigmetCollectionGeoJson`",
+                "Received `text/plain` content type response that cannot be converted to `SigmetCollectionGeoJson`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::SigmetCollectionGeoJson`",
+                "Received `application/xml` content type response that cannot be converted to `SigmetCollectionGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::SigmetCollectionGeoJson`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `SigmetCollectionGeoJson`"
                 ))))
             }
         }
@@ -553,14 +553,14 @@ pub async fn get_sigmets_by_air_traffic_service_unit(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::SigmetCollectionGeoJson`",
+                "Received `text/plain` content type response that cannot be converted to `SigmetCollectionGeoJson`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::SigmetCollectionGeoJson`",
+                "Received `application/xml` content type response that cannot be converted to `SigmetCollectionGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::SigmetCollectionGeoJson`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `SigmetCollectionGeoJson`"
                 ))))
             }
         }
@@ -633,14 +633,14 @@ pub async fn get_sigmets_by_air_traffic_service_unit_and_date(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::SigmetCollectionGeoJson`",
+                "Received `text/plain` content type response that cannot be converted to `SigmetCollectionGeoJson`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::SigmetCollectionGeoJson`",
+                "Received `application/xml` content type response that cannot be converted to `SigmetCollectionGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::SigmetCollectionGeoJson`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `SigmetCollectionGeoJson`"
                 ))))
             }
         }

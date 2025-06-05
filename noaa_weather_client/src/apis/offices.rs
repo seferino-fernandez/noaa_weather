@@ -87,14 +87,14 @@ pub async fn get_forecast_office(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::Office`",
+                "Received `text/plain` content type response that cannot be converted to `Office`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::Office`",
+                "Received `application/xml` content type response that cannot be converted to `Office`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::Office`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `Office`"
                 ))))
             }
         }
@@ -168,14 +168,14 @@ pub async fn get_forecast_office_headline(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::OfficeHeadline`",
+                "Received `text/plain` content type response that cannot be converted to `OfficeHeadline`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::OfficeHeadline`",
+                "Received `application/xml` content type response that cannot be converted to `OfficeHeadline`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::OfficeHeadline`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `OfficeHeadline`"
                 ))))
             }
         }
@@ -246,14 +246,14 @@ pub async fn get_forecast_office_headlines(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::OfficeHeadlineCollection`",
+                "Received `text/plain` content type response that cannot be converted to `OfficeHeadlineCollection`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::OfficeHeadlineCollection`",
+                "Received `application/xml` content type response that cannot be converted to `OfficeHeadlineCollection`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::OfficeHeadlineCollection`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `OfficeHeadlineCollection`"
                 ))))
             }
         }

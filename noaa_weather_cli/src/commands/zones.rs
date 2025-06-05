@@ -4,7 +4,8 @@ use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::zones::{self as zones_api, GetZonesByTypeParams, GetZonesParams};
 use noaa_weather_client::models::NwsZoneType;
 
-use crate::Cli;
+use crate::utils::format::write_output;
+use crate::{Cli, tables};
 
 use crate::utils::parse::{parse_area_codes, parse_region_codes, parse_string_args_into_vec};
 
@@ -68,12 +69,8 @@ pub enum ZoneCommands {
     ///
     /// Example: `noaa-weather zones forecast --type forecast --id AZZ540`
     Forecast {
-        /// Type of zone (forecast, public, coastal, offshore, fire, county)
-        #[arg(short, long, value_parser = value_parser!(NwsZoneType))]
-        r#type: NwsZoneType,
-        /// Zone identifier (e.g., AZZ540, WVC001)
-        #[arg(short, long)]
-        id: String,
+        #[clap(flatten)]
+        zone_args: ZoneTypeAndIdArgs,
     },
     /// List observation stations within a forecast zone.
     ///
@@ -121,7 +118,7 @@ pub enum ZoneCommands {
 ///
 pub async fn handle_command(
     command: &ZoneCommands,
-    _cli: Cli,
+    cli: Cli,
     config: &Configuration,
 ) -> Result<()> {
     match command {
@@ -139,10 +136,9 @@ pub async fn handle_command(
             let region_parsed = parse_region_codes(region.clone())?;
             let type_parsed = parse_string_args_into_vec::<NwsZoneType>(r#type.clone())?;
 
-            // Need to hold the point string ref for the lifetime of the call
             let point_ref = point.as_deref();
 
-            let _result = match type_parsed {
+            let result = match type_parsed {
                 None => {
                     // Call the general list endpoint if no type filter
                     let params = GetZonesParams {
@@ -197,14 +193,23 @@ pub async fn handle_command(
                 }
             };
 
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&result)?,
+                )?;
+            } else {
+                let table = tables::zones::create_zones_table(&result)?;
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
+
             Ok(())
         }
         ZoneCommands::Metadata {
             zone_args,
             effective,
         } => {
-            // zone_args.r#type is already parsed by clap using value_parser
-            let _result =
+            let result =
                 zones_api::get_zone(config, zone_args.r#type, &zone_args.id, effective.clone())
                     .await
                     .map_err(|e| {
@@ -215,20 +220,56 @@ pub async fn handle_command(
                             e
                         )
                     })?;
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&result)?,
+                )?;
+            } else {
+                let table = tables::zones::create_zone_metadata_table(&result)?;
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
             Ok(())
         }
-        ZoneCommands::Forecast { r#type, id } => {
-            // r#type is already parsed by clap using value_parser
-            // API expects type as string, use the Display impl
-            let _result = zones_api::get_current_zone_forecast(config, &r#type.to_string(), id)
-                .await
-                .map_err(|e| anyhow!("Error getting forecast for zone {}/{}: {}", r#type, id, e))?;
+        ZoneCommands::Forecast { zone_args } => {
+            let result = zones_api::get_current_zone_forecast(
+                config,
+                &zone_args.r#type.to_string(),
+                &zone_args.id,
+            )
+            .await
+            .map_err(|e| {
+                anyhow!(
+                    "Error getting forecast for zone {}/{}: {}",
+                    zone_args.r#type,
+                    zone_args.id,
+                    e
+                )
+            })?;
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&result)?,
+                )?;
+            } else {
+                let table = tables::zones::create_zone_forecast_table(&result)?;
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
             Ok(())
         }
         ZoneCommands::Stations { id, limit, cursor } => {
-            let _result = zones_api::get_stations_by_zone(config, id, *limit, cursor.as_deref())
+            let result = zones_api::get_stations_by_zone(config, id, *limit, cursor.as_deref())
                 .await
                 .map_err(|e| anyhow!("Error getting stations for forecast zone {}: {}", id, e))?;
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&result)?,
+                )?;
+            } else {
+                let table = tables::stations::create_stations_table(&result)?;
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
             Ok(())
         }
         ZoneCommands::Observations {
@@ -237,12 +278,21 @@ pub async fn handle_command(
             end,
             limit,
         } => {
-            let _result =
+            let result =
                 zones_api::get_zone_observations(config, id, start.clone(), end.clone(), *limit)
                     .await
                     .map_err(|e| {
                         anyhow!("Error getting observations for forecast zone {}: {}", id, e)
                     })?;
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&result)?,
+                )?;
+            } else {
+                let table = tables::zones::create_zone_observations_table(&result.features)?;
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
             Ok(())
         }
     }

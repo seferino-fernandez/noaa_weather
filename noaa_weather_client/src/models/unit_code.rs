@@ -22,6 +22,12 @@ pub struct ValueUnit {
     /// The numerical value. Using f64 to accommodate both integers and floating-point numbers.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<f64>,
+    /// The maximum value of a range of measured values
+    #[serde(rename = "maxValue", skip_serializing_if = "Option::is_none")]
+    pub max_value: Option<f64>,
+    /// The minimum value of a range of measured values
+    #[serde(rename = "minValue", skip_serializing_if = "Option::is_none")]
+    pub min_value: Option<Option<f64>>,
     #[serde(rename = "qualityControl", skip_serializing_if = "Option::is_none")]
     pub quality_control: Option<String>,
 }

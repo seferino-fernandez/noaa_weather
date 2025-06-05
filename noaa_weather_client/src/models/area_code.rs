@@ -12,12 +12,6 @@ pub enum AreaCode {
     MarineAreaCode(models::MarineAreaCode),
 }
 
-impl Default for AreaCode {
-    fn default() -> Self {
-        Self::StateTerritoryCode(Default::default())
-    }
-}
-
 impl Display for AreaCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

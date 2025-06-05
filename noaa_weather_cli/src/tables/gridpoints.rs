@@ -154,13 +154,10 @@ pub fn create_hourly_forecast_table(forecast_data: &GridpointForecastGeoJson) ->
                 .as_ref()
                 .and_then(|quantitative_value| {
                     quantitative_value.value.flatten().map(|value| {
-                        // format_dewpoint from utils::temperature expects value as String,
-                        // api unit as Option<&str>, and target unit as Option<&str>.
-                        // We pass None for target unit, meaning it will format based on api_unit.
                         format_dewpoint(
                             value.to_string(),
                             quantitative_value.unit_code.as_deref(),
-                            None, // Display as per API unit; conversion (if any) handled by API based on request.
+                            None,
                         )
                     })
                 })

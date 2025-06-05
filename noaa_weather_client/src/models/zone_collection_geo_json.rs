@@ -8,14 +8,11 @@ pub struct ZoneCollectionGeoJson {
     #[serde(rename = "type")]
     pub r#type: Type,
     #[serde(rename = "features")]
-    pub features: Vec<models::ZoneCollectionGeoJsonAllOfFeatures>,
+    pub features: Vec<models::ZoneGeoJson>,
 }
 
 impl ZoneCollectionGeoJson {
-    pub fn new(
-        r#type: Type,
-        features: Vec<models::ZoneCollectionGeoJsonAllOfFeatures>,
-    ) -> ZoneCollectionGeoJson {
+    pub fn new(r#type: Type, features: Vec<models::ZoneGeoJson>) -> ZoneCollectionGeoJson {
         ZoneCollectionGeoJson {
             at_context: None,
             r#type,

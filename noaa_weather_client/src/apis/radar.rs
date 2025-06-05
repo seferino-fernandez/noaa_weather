@@ -272,14 +272,14 @@ pub async fn get_radar_data_queue(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::RadarQueuesResponse`",
+                "Received `text/plain` content type response that cannot be converted to `RadarQueuesResponse`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::RadarQueuesResponse`",
+                "Received `application/xml` content type response that cannot be converted to `RadarQueuesResponse`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::RadarQueuesResponse`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `RadarQueuesResponse`"
                 ))))
             }
         }
@@ -355,14 +355,14 @@ pub async fn get_radar_server(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::RadarServer`",
+                "Received `text/plain` content type response that cannot be converted to `RadarServer`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::RadarServer`",
+                "Received `application/xml` content type response that cannot be converted to `RadarServer`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::RadarServer`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `RadarServer`"
                 ))))
             }
         }
@@ -432,14 +432,14 @@ pub async fn get_radar_servers(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::RadarServersResponse`",
+                "Received `text/plain` content type response that cannot be converted to `RadarServersResponse`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::RadarServersResponse`",
+                "Received `application/xml` content type response that cannot be converted to `RadarServersResponse`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::RadarServersResponse"
+                    "Received `{unknown_type}` content type response that cannot be converted to `RadarServersResponse"
                 ))))
             }
         }
@@ -520,14 +520,14 @@ pub async fn get_radar_station(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::RadarStationFeature`",
+                "Received `text/plain` content type response that cannot be converted to `RadarStationFeature`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::RadarStationFeature`",
+                "Received `application/xml` content type response that cannot be converted to `RadarStationFeature`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::RadarStationFeature`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `RadarStationFeature`"
                 ))))
             }
         }
@@ -598,14 +598,14 @@ pub async fn get_radar_station_alarms(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::RadarStationAlarmsResponse`",
+                "Received `text/plain` content type response that cannot be converted to `RadarStationAlarmsResponse`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::RadarStationAlarmsResponse`",
+                "Received `application/xml` content type response that cannot be converted to `RadarStationAlarmsResponse`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::RadarStationAlarmsResponse`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `RadarStationAlarmsResponse`"
                 ))))
             }
         }
@@ -701,14 +701,14 @@ pub async fn get_radar_stations(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::RadarStationsResponse`",
+                "Received `text/plain` content type response that cannot be converted to `RadarStationsResponse`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::RadarStationsResponse`",
+                "Received `application/xml` content type response that cannot be converted to `RadarStationsResponse`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::RadarStationsResponse`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `RadarStationsResponse`"
                 ))))
             }
         }

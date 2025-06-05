@@ -186,14 +186,14 @@ pub async fn get_zone(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::ZoneGeoJson`",
+                "Received `text/plain` content type response that cannot be converted to `ZoneGeoJson`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::ZoneGeoJson`",
+                "Received `application/xml` content type response that cannot be converted to `ZoneGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::ZoneGeoJson`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `ZoneGeoJson`"
                 ))))
             }
         }
@@ -265,14 +265,14 @@ pub async fn get_current_zone_forecast(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::ZoneForecastGeoJson`",
+                "Received `text/plain` content type response that cannot be converted to `ZoneForecastGeoJson`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::ZoneForecastGeoJson`",
+                "Received `application/xml` content type response that cannot be converted to `ZoneForecastGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::ZoneForecastGeoJson`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `ZoneForecastGeoJson`"
                 ))))
             }
         }
@@ -429,14 +429,14 @@ pub async fn get_zones(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::ZoneCollectionGeoJson`",
+                "Received `text/plain` content type response that cannot be converted to `ZoneCollectionGeoJson`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::ZoneCollectionGeoJson`",
+                "Received `application/xml` content type response that cannot be converted to `ZoneCollectionGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::ZoneCollectionGeoJson`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `ZoneCollectionGeoJson`"
                 ))))
             }
         }
@@ -595,14 +595,14 @@ pub async fn get_zones_by_type(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::ZoneCollectionGeoJson`",
+                "Received `text/plain` content type response that cannot be converted to `ZoneCollectionGeoJson`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::ZoneCollectionGeoJson`",
+                "Received `application/xml` content type response that cannot be converted to `ZoneCollectionGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::ZoneCollectionGeoJson`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `ZoneCollectionGeoJson`"
                 ))))
             }
         }
@@ -688,14 +688,14 @@ pub async fn get_zone_observations(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::ObservationCollectionGeoJson`",
+                "Received `text/plain` content type response that cannot be converted to `ObservationCollectionGeoJson`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::ObservationCollectionGeoJson`",
+                "Received `application/xml` content type response that cannot be converted to `ObservationCollectionGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::ObservationCollectionGeoJson`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `ObservationCollectionGeoJson`"
                 ))))
             }
         }
@@ -775,14 +775,14 @@ pub async fn get_stations_by_zone(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `models::ObservationStationCollectionGeoJson`",
+                "Received `text/plain` content type response that cannot be converted to `ObservationStationCollectionGeoJson`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `models::ObservationStationCollectionGeoJson`",
+                "Received `application/xml` content type response that cannot be converted to `ObservationStationCollectionGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::ObservationStationCollectionGeoJson`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `ObservationStationCollectionGeoJson`"
                 ))))
             }
         }
