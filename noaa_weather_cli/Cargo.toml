@@ -7,6 +7,10 @@ license = "MIT"
 authors = ["Seferino Fernandez"]
 repository = "https://github.com/seferino-fernandez/noaa_weather"
 
+[[bin]]
+name = "noaa-weather"
+path = "src/main.rs"
+
 [dependencies]
 noaa_weather_client = { path = "../noaa_weather_client" }
 
