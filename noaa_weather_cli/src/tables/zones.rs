@@ -7,7 +7,8 @@ use noaa_weather_client::models::{
 };
 
 use crate::utils::format::{
-    format_datetime_human_readable, format_observation_wind, get_zone_from_url, opt_value_unit_val,
+    format_datetime_human_readable, format_observation_wind, format_optional_value_unit,
+    get_zone_from_url,
 };
 
 /// Creates a table listing all zones with key summary information.
@@ -245,7 +246,7 @@ fn format_observation_clouds(
             .iter()
             .map(|layer| {
                 let amount = &layer.amount;
-                let base_str = opt_value_unit_val(&Some(layer.base.as_ref().clone()));
+                let base_str = format_optional_value_unit(&Some(layer.base.as_ref().clone()));
                 format!("{amount} at {base_str}")
             })
             .collect::<Vec<String>>()
@@ -333,8 +334,8 @@ pub fn create_zone_observations_table(
         let station_name_code = format!("{station_name}\n({station_id})");
         let timestamp = format_datetime_human_readable(properties.timestamp.as_deref());
 
-        let temp = opt_value_unit_val(&properties.temperature);
-        let dewpoint = opt_value_unit_val(&properties.dewpoint);
+        let temp = format_optional_value_unit(&properties.temperature);
+        let dewpoint = format_optional_value_unit(&properties.dewpoint);
 
         let wind = format_observation_wind(
             properties.wind_speed.as_ref().cloned(),
@@ -342,7 +343,7 @@ pub fn create_zone_observations_table(
         );
 
         // Prioritize Sea Level Pressure, fallback to Barometric if SLP is not available
-        let pressure = opt_value_unit_val(
+        let pressure = format_optional_value_unit(
             &properties
                 .sea_level_pressure
                 .as_ref()
@@ -350,7 +351,7 @@ pub fn create_zone_observations_table(
                 .cloned(),
         );
 
-        let visibility = opt_value_unit_val(&properties.visibility);
+        let visibility = format_optional_value_unit(&properties.visibility);
         let clouds = format_observation_clouds(properties.cloud_layers.as_ref());
 
         // For weather description, use textDescription. If empty, use formatted presentWeather.

@@ -6,6 +6,10 @@ description = "A client library for the NOAA weather.gov API"
 license = "MIT"
 authors = ["Seferino Fernandez"]
 repository = "https://github.com/seferino-fernandez/noaa_weather"
+keywords = ["weather", "noaa", "nws", "api"]
+categories = ["api-bindings"]
+homepage = "https://github.com/seferino-fernandez/noaa_weather"
+readme = "README.md"
 
 [dependencies]
 quick-xml = { version = "0.37.5", features = ["serde", "serialize"] }

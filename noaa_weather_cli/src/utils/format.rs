@@ -171,42 +171,42 @@ pub fn format_dewpoint(
 }
 
 /// Formats an `Option<String>` for display, using "N/A" if None.
-pub fn opt_str_val(opt_s: &Option<String>) -> String {
-    opt_s.as_deref().unwrap_or("N/A").to_string()
+pub fn format_optional_string(optional_string: &Option<String>) -> String {
+    optional_string.as_deref().unwrap_or("N/A").to_string()
 }
 
 /// Formats an `Option<f64>` intended for build numbers or similar integers.
 /// Displays as an integer if it has no fractional part, otherwise as float with 2 decimal places.
 /// Uses "N/A" if None.
-pub fn opt_f64_display_val(opt_f: &Option<f64>) -> String {
-    opt_f.map_or("N/A".to_string(), |v| {
-        if v.fract() == 0.0 {
-            format!("{}", v.trunc())
+pub fn format_optional_f64_display(optional_float: &Option<f64>) -> String {
+    optional_float.map_or("N/A".to_string(), |value| {
+        if value.fract() == 0.0 {
+            format!("{}", value.trunc())
         } else {
-            format!("{v:.2}")
+            format!("{value:.2}")
         }
     })
 }
 
 /// Formats an `Option<f64>` for precise display, typically converting to string directly.
 /// Uses "N/A" if None.
-pub fn opt_f64_precise_val(opt_f: &Option<f64>) -> String {
-    opt_f.map_or("N/A".to_string(), |v| v.to_string())
+pub fn format_optional_f64_precise(optional_float: &Option<f64>) -> String {
+    optional_float.map_or("N/A".to_string(), |value| value.to_string())
 }
 
 /// Formats an `Option<i32>` for display, using "N/A" if None.
-pub fn opt_i32_val(opt_i: &Option<i32>) -> String {
-    opt_i.map_or("N/A".to_string(), |v| v.to_string())
+pub fn format_optional_i32(optional_integer: &Option<i32>) -> String {
+    optional_integer.map_or("N/A".to_string(), |value| value.to_string())
 }
 
 /// Formats an `Option<i64>` for display, using "N/A" if None.
-pub fn opt_i64_val(opt_i: &Option<i64>) -> String {
-    opt_i.map_or("N/A".to_string(), |v| v.to_string())
+pub fn format_optional_i64(optional_integer: &Option<i64>) -> String {
+    optional_integer.map_or("N/A".to_string(), |value| value.to_string())
 }
 
 /// Formats an `Option<ValueUnit>` for display.
 /// Shows value with 2 decimal places and unit code. Uses "N/A" if None or parts are missing.
-pub fn opt_value_unit_val(opt_value_unit: &Option<ValueUnit>) -> String {
+pub fn format_optional_value_unit(opt_value_unit: &Option<ValueUnit>) -> String {
     if opt_value_unit.is_none() {
         return "N/A".to_string();
     }
@@ -232,8 +232,8 @@ pub fn opt_unit_code_val(unit_code_opt: &Option<UnitCodeType>) -> String {
 }
 
 /// Formats an `Option<bool>` to "Yes", "No", or "N/A".
-pub fn opt_bool_to_yes_no(opt_b: &Option<bool>) -> String {
-    match opt_b {
+pub fn format_optional_bool_as_yes_no(optional_bool: &Option<bool>) -> String {
+    match optional_bool {
         Some(true) => "Yes".to_string(),
         Some(false) => "No".to_string(),
         None => "N/A".to_string(),
@@ -280,7 +280,7 @@ pub fn format_observation_wind(
     if speed_vu.value.is_none() {
         return "N/A".to_string();
     }
-    let speed_str = opt_value_unit_val(&Some(speed_vu));
+    let speed_str = format_optional_value_unit(&Some(speed_vu));
     if direction_vu_opt.is_none() {
         return speed_str;
     }
@@ -288,7 +288,7 @@ pub fn format_observation_wind(
     if direction_vu.value.is_none() {
         return speed_str;
     }
-    let direction_str = opt_value_unit_val(&Some(direction_vu));
+    let direction_str = format_optional_value_unit(&Some(direction_vu));
     format!("{speed_str} {direction_str}")
 }
 

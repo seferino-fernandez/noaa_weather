@@ -21,11 +21,6 @@ struct Cli {
     #[command(subcommand)]
     command: Commands,
 
-    /// Verbose mode (-v, -vv, -vvv, etc.)
-    /// Controls logging level.
-    #[command(flatten)]
-    verbose: clap_verbosity_flag::Verbosity,
-
     /// Output in JSON format
     #[arg(long, global = true)]
     json: bool,

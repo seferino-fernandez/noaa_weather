@@ -17,45 +17,45 @@ pub enum Error<T> {
 }
 
 impl<T> fmt::Display for Error<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let e = match self {
-            Error::Reqwest(e) => e.to_string(),
-            Error::Serde(e) => e.to_string(),
-            Error::Io(e) => e.to_string(),
-            Error::Xml(e) => e.to_string(),
-            Error::ResponseError(e) => e.content.to_string(),
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let error_message = match self {
+            Error::Reqwest(reqwest_error) => reqwest_error.to_string(),
+            Error::Serde(serde_error) => serde_error.to_string(),
+            Error::Io(io_error) => io_error.to_string(),
+            Error::Xml(xml_error) => xml_error.to_string(),
+            Error::ResponseError(response_error) => response_error.content.to_string(),
         };
-        write!(f, "{e}")
+        write!(formatter, "{error_message}")
     }
 }
 
 impl<T: fmt::Debug> error::Error for Error<T> {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         Some(match self {
-            Error::Reqwest(e) => e,
-            Error::Serde(e) => e,
-            Error::Io(e) => e,
-            Error::Xml(e) => e,
+            Error::Reqwest(reqwest_error) => reqwest_error,
+            Error::Serde(serde_error) => serde_error,
+            Error::Io(io_error) => io_error,
+            Error::Xml(xml_error) => xml_error,
             Error::ResponseError(_) => return None,
         })
     }
 }
 
 impl<T> From<reqwest::Error> for Error<T> {
-    fn from(e: reqwest::Error) -> Self {
-        Error::Reqwest(e)
+    fn from(reqwest_error: reqwest::Error) -> Self {
+        Error::Reqwest(reqwest_error)
     }
 }
 
 impl<T> From<serde_json::Error> for Error<T> {
-    fn from(e: serde_json::Error) -> Self {
-        Error::Serde(e)
+    fn from(serde_error: serde_json::Error) -> Self {
+        Error::Serde(serde_error)
     }
 }
 
 impl<T> From<std::io::Error> for Error<T> {
-    fn from(e: std::io::Error) -> Self {
-        Error::Io(e)
+    fn from(io_error: std::io::Error) -> Self {
+        Error::Io(io_error)
     }
 }
 

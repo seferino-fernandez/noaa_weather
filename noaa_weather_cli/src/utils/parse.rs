@@ -72,8 +72,8 @@ mod tests {
 
     impl FromStr for MyInt {
         type Err = ParseIntError;
-        fn from_str(s: &str) -> Result<Self, Self::Err> {
-            s.parse::<i32>().map(MyInt)
+        fn from_str(input_string: &str) -> Result<Self, Self::Err> {
+            input_string.parse::<i32>().map(MyInt)
         }
     }
 

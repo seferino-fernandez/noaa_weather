@@ -10,9 +10,9 @@ use noaa_weather_client::models::{
 };
 
 use crate::utils::format::{
-    format_bytes_to_human_readable, format_datetime_human_readable, opt_bool_to_yes_no,
-    opt_f64_display_val, opt_f64_precise_val, opt_i32_val, opt_i64_val, opt_str_val,
-    opt_value_unit_val,
+    format_bytes_to_human_readable, format_datetime_human_readable, format_optional_bool_as_yes_no,
+    format_optional_f64_display, format_optional_f64_precise, format_optional_i32,
+    format_optional_i64, format_optional_string, format_optional_value_unit,
 };
 
 // --- Helper Functions ---
@@ -63,37 +63,37 @@ fn add_network_interface_stats_rows(
 ) {
     table.add_row(vec![
         Cell::new(format!("{if_name} Interface")),
-        Cell::new(opt_str_val(&stats.interface)),
+        Cell::new(format_optional_string(&stats.interface)),
     ]);
     table.add_row(vec![
         Cell::new(format!("{if_name} Active")),
-        Cell::new(opt_bool_to_yes_no(&stats.active)),
+        Cell::new(format_optional_bool_as_yes_no(&stats.active)),
     ]);
     table.add_row(vec![
         Cell::new(format!("{if_name} Tx Packets (OK/Err/Drop)")),
         Cell::new(format!(
             "{}/{}/{}",
-            opt_i64_val(&stats.trans_no_error),
-            opt_i64_val(&stats.trans_error),
-            opt_i64_val(&stats.trans_dropped)
+            format_optional_i64(&stats.trans_no_error),
+            format_optional_i64(&stats.trans_error),
+            format_optional_i64(&stats.trans_dropped)
         )),
     ]);
     table.add_row(vec![
         Cell::new(format!("{if_name} Tx Overruns")),
-        Cell::new(opt_i64_val(&stats.trans_overrun)),
+        Cell::new(format_optional_i64(&stats.trans_overrun)),
     ]);
     table.add_row(vec![
         Cell::new(format!("{if_name} Rx Packets (OK/Err/Drop)")),
         Cell::new(format!(
             "{}/{}/{}",
-            opt_i64_val(&stats.recv_no_error),
-            opt_i64_val(&stats.recv_error),
-            opt_i64_val(&stats.recv_dropped)
+            format_optional_i64(&stats.recv_no_error),
+            format_optional_i64(&stats.recv_error),
+            format_optional_i64(&stats.recv_dropped)
         )),
     ]);
     table.add_row(vec![
         Cell::new(format!("{if_name} Rx Overruns")),
-        Cell::new(opt_i64_val(&stats.recv_overrun)),
+        Cell::new(format_optional_i64(&stats.recv_overrun)),
     ]);
 }
 
@@ -130,7 +130,7 @@ pub fn create_radar_station_feature_table(
     add_section_header(&mut table, "General Information");
     table.add_row(vec![
         Cell::new("Feature ID (URL)"),
-        Cell::new(opt_str_val(&radar_station_feature.id)),
+        Cell::new(format_optional_string(&radar_station_feature.id)),
     ]);
 
     if let Some(geometry) = &radar_station_feature.geometry {
@@ -145,34 +145,34 @@ pub fn create_radar_station_feature_table(
     if let Some(station) = &radar_station_feature.radar_station {
         table.add_row(vec![
             Cell::new("Station ID (ICAO)"),
-            Cell::new(opt_str_val(&station.id)),
+            Cell::new(format_optional_string(&station.id)),
         ]);
         table.add_row(vec![
             Cell::new("Name"),
-            Cell::new(opt_str_val(&station.name)),
+            Cell::new(format_optional_string(&station.name)),
         ]);
         table.add_row(vec![
             Cell::new("Type"),
-            Cell::new(opt_str_val(&station.station_type)),
+            Cell::new(format_optional_string(&station.station_type)),
         ]);
         table.add_row(vec![
             Cell::new("Elevation"),
-            Cell::new(opt_value_unit_val(&station.elevation)),
+            Cell::new(format_optional_value_unit(&station.elevation)),
         ]);
         table.add_row(vec![
             Cell::new("Time Zone"),
-            Cell::new(opt_str_val(&station.time_zone)),
+            Cell::new(format_optional_string(&station.time_zone)),
         ]);
 
         add_section_header(&mut table, "Latency Information");
         if let Some(latency) = &station.latency {
             table.add_row(vec![
                 Cell::new("Current Latency"),
-                Cell::new(opt_value_unit_val(&latency.current)),
+                Cell::new(format_optional_value_unit(&latency.current)),
             ]);
             table.add_row(vec![
                 Cell::new("Average Latency"),
-                Cell::new(opt_value_unit_val(&latency.average)),
+                Cell::new(format_optional_value_unit(&latency.average)),
             ]);
             table.add_row(vec![
                 Cell::new("Max Latency"),
@@ -194,11 +194,11 @@ pub fn create_radar_station_feature_table(
             ]);
             table.add_row(vec![
                 Cell::new("Reporting Host"),
-                Cell::new(opt_str_val(&latency.reporting_host)),
+                Cell::new(format_optional_string(&latency.reporting_host)),
             ]);
             table.add_row(vec![
                 Cell::new("Data Host"),
-                Cell::new(opt_str_val(&latency.host)),
+                Cell::new(format_optional_string(&latency.host)),
             ]);
         } else {
             table.add_row(vec![Cell::new("Latency Data"), Cell::new("N/A")]);
@@ -214,52 +214,54 @@ pub fn create_radar_station_feature_table(
             ]);
             table.add_row(vec![
                 Cell::new("RDA Reporting Host"),
-                Cell::new(opt_str_val(&rda_info.reporting_host)),
+                Cell::new(format_optional_string(&rda_info.reporting_host)),
             ]);
             if let Some(rda_props) = &rda_info.properties {
                 table.add_row(vec![
                     Cell::new("Volume Coverage Pattern (VCP)"),
-                    Cell::new(opt_str_val(&rda_props.volume_coverage_pattern)),
+                    Cell::new(format_optional_string(&rda_props.volume_coverage_pattern)),
                 ]);
                 table.add_row(vec![
                     Cell::new("Control Status"),
-                    Cell::new(opt_str_val(&rda_props.control_status)),
+                    Cell::new(format_optional_string(&rda_props.control_status)),
                 ]);
                 table.add_row(vec![
                     Cell::new("Build Number"),
-                    Cell::new(opt_f64_display_val(&rda_props.build_number)),
+                    Cell::new(format_optional_f64_display(&rda_props.build_number)),
                 ]);
                 table.add_row(vec![
                     Cell::new("Alarm Summary"),
-                    Cell::new(opt_str_val(&rda_props.alarm_summary)),
+                    Cell::new(format_optional_string(&rda_props.alarm_summary)),
                 ]);
                 table.add_row(vec![
                     Cell::new("Mode"),
-                    Cell::new(opt_str_val(&rda_props.mode)),
+                    Cell::new(format_optional_string(&rda_props.mode)),
                 ]);
                 table.add_row(vec![
                     Cell::new("Generator State"),
-                    Cell::new(opt_str_val(&rda_props.generator_state)),
+                    Cell::new(format_optional_string(&rda_props.generator_state)),
                 ]);
                 table.add_row(vec![
                     Cell::new("Super Resolution Status"),
-                    Cell::new(opt_str_val(&rda_props.super_resolution_status)),
+                    Cell::new(format_optional_string(&rda_props.super_resolution_status)),
                 ]);
                 table.add_row(vec![
                     Cell::new("Operability Status"),
-                    Cell::new(opt_str_val(&rda_props.operability_status)),
+                    Cell::new(format_optional_string(&rda_props.operability_status)),
                 ]);
                 table.add_row(vec![
                     Cell::new("RDA Status"),
-                    Cell::new(opt_str_val(&rda_props.status)),
+                    Cell::new(format_optional_string(&rda_props.status)),
                 ]);
                 table.add_row(vec![
                     Cell::new("Avg. Transmitter Power"),
-                    Cell::new(opt_value_unit_val(&rda_props.average_transmitter_power)),
+                    Cell::new(format_optional_value_unit(
+                        &rda_props.average_transmitter_power,
+                    )),
                 ]);
                 table.add_row(vec![
                     Cell::new("Reflectivity Cal. Correction"),
-                    Cell::new(opt_value_unit_val(
+                    Cell::new(format_optional_value_unit(
                         &rda_props.reflectivity_calibration_correction,
                     )),
                 ]);
@@ -280,36 +282,40 @@ pub fn create_radar_station_feature_table(
             ]);
             table.add_row(vec![
                 Cell::new("Perf. Reporting Host"),
-                Cell::new(opt_str_val(&perf_info.reporting_host)),
+                Cell::new(format_optional_string(&perf_info.reporting_host)),
             ]);
             if let Some(perf_props) = &perf_info.properties {
                 table.add_row(vec![
                     Cell::new("NTP Status"),
-                    Cell::new(opt_i32_val(&perf_props.ntp_status)),
+                    Cell::new(format_optional_i32(&perf_props.ntp_status)),
                 ]);
                 table.add_row(vec![
                     Cell::new("Linearity"),
-                    Cell::new(opt_f64_precise_val(&perf_props.linearity)),
+                    Cell::new(format_optional_f64_precise(&perf_props.linearity)),
                 ]);
                 table.add_row(vec![
                     Cell::new("Power Source"),
-                    Cell::new(opt_str_val(&perf_props.power_source)),
+                    Cell::new(format_optional_string(&perf_props.power_source)),
                 ]);
                 table.add_row(vec![
                     Cell::new("Fuel Level"),
-                    Cell::new(opt_value_unit_val(&perf_props.fuel_level)),
+                    Cell::new(format_optional_value_unit(&perf_props.fuel_level)),
                 ]);
                 table.add_row(vec![
                     Cell::new("Shelter Temp."),
-                    Cell::new(opt_value_unit_val(&perf_props.shelter_temperature)),
+                    Cell::new(format_optional_value_unit(&perf_props.shelter_temperature)),
                 ]);
                 table.add_row(vec![
                     Cell::new("Radome Air Temp."),
-                    Cell::new(opt_value_unit_val(&perf_props.radome_air_temperature)),
+                    Cell::new(format_optional_value_unit(
+                        &perf_props.radome_air_temperature,
+                    )),
                 ]);
                 table.add_row(vec![
                     Cell::new("Transmitter Peak Power"),
-                    Cell::new(opt_value_unit_val(&perf_props.transmitter_peak_power)),
+                    Cell::new(format_optional_value_unit(
+                        &perf_props.transmitter_peak_power,
+                    )),
                 ]);
                 table.add_row(vec![
                     Cell::new("Performance Check Time"),
@@ -335,17 +341,19 @@ pub fn create_radar_station_feature_table(
             if let Some(adapt_props) = &adapt_info.properties {
                 table.add_row(vec![
                     Cell::new("Transmitter Freq."),
-                    Cell::new(opt_value_unit_val(&adapt_props.transmitter_frequency)),
+                    Cell::new(format_optional_value_unit(
+                        &adapt_props.transmitter_frequency,
+                    )),
                 ]);
                 table.add_row(vec![
                     Cell::new("Antenna Gain (incl. Radome)"),
-                    Cell::new(opt_value_unit_val(
+                    Cell::new(format_optional_value_unit(
                         &adapt_props.antenna_gain_including_radome,
                     )),
                 ]);
                 table.add_row(vec![
                     Cell::new("Tx Spectrum Filter Installed"),
-                    Cell::new(opt_str_val(
+                    Cell::new(format_optional_string(
                         &adapt_props.transmitter_spectrum_filter_installed,
                     )),
                 ]);
@@ -390,11 +398,11 @@ pub fn create_radar_stations_table(radar_stations: &RadarStationsResponse) -> Re
     for radar_station_feature in radar_stations.features.iter().flatten() {
         if let Some(station) = &radar_station_feature.radar_station {
             table.add_row(vec![
-                Cell::new(opt_str_val(&station.id)),
-                Cell::new(opt_str_val(&station.name)),
-                Cell::new(opt_str_val(&station.station_type)),
-                Cell::new(opt_value_unit_val(&station.elevation)),
-                Cell::new(opt_str_val(&station.time_zone)),
+                Cell::new(format_optional_string(&station.id)),
+                Cell::new(format_optional_string(&station.name)),
+                Cell::new(format_optional_string(&station.station_type)),
+                Cell::new(format_optional_value_unit(&station.elevation)),
+                Cell::new(format_optional_string(&station.time_zone)),
             ]);
         }
     }
@@ -432,11 +440,11 @@ pub fn create_radar_station_alarms_table(
 
     for alarm in radar_station_alarms.radar_station_alarms.iter().flatten() {
         table.add_row(vec![
-            Cell::new(opt_str_val(&alarm.station_id)),
+            Cell::new(format_optional_string(&alarm.station_id)),
             Cell::new(format_datetime_human_readable(alarm.timestamp.as_deref())),
-            Cell::new(opt_str_val(&alarm.message)),
-            Cell::new(opt_str_val(&alarm.status).to_uppercase()),
-            Cell::new(opt_i32_val(&alarm.active_channel)),
+            Cell::new(format_optional_string(&alarm.message)),
+            Cell::new(format_optional_string(&alarm.status).to_uppercase()),
+            Cell::new(format_optional_i32(&alarm.active_channel)),
         ]);
     }
     Ok(table)
@@ -475,18 +483,18 @@ pub fn create_radar_data_queue_table(radar_data_queue: &RadarQueuesResponse) -> 
 
     for entry in radar_data_queue.radar_queues.iter().flatten() {
         table.add_row(vec![
-            Cell::new(opt_str_val(&entry.host)),
+            Cell::new(format_optional_string(&entry.host)),
             Cell::new(format_datetime_human_readable(
                 entry.arrival_time.as_deref(),
             )),
             Cell::new(format_datetime_human_readable(
                 entry.creation_time.as_deref(),
             )),
-            Cell::new(opt_str_val(&entry.r#type)),
-            Cell::new(opt_str_val(&entry.feed)),
-            Cell::new(opt_i32_val(&entry.resolution_version)),
-            Cell::new(opt_str_val(&entry.sequence_number)),
-            Cell::new(opt_i32_val(&entry.size)),
+            Cell::new(format_optional_string(&entry.r#type)),
+            Cell::new(format_optional_string(&entry.feed)),
+            Cell::new(format_optional_i32(&entry.resolution_version)),
+            Cell::new(format_optional_string(&entry.sequence_number)),
+            Cell::new(format_optional_i32(&entry.size)),
         ]);
     }
     Ok(table)
@@ -520,31 +528,33 @@ pub fn create_radar_server_table(radar_server: &RadarServer) -> Result<Table> {
     add_section_header(&mut table, "General");
     table.add_row(vec![
         Cell::new("Server ID"),
-        Cell::new(opt_str_val(&radar_server.id)),
+        Cell::new(format_optional_string(&radar_server.id)),
     ]);
     table.add_row(vec![
         Cell::new("Server Type"),
-        Cell::new(opt_str_val(&radar_server.r#type)),
+        Cell::new(format_optional_string(&radar_server.r#type)),
     ]);
     table.add_row(vec![
         Cell::new("Active"),
-        Cell::new(opt_bool_to_yes_no(&radar_server.active)),
+        Cell::new(format_optional_bool_as_yes_no(&radar_server.active)),
     ]);
     table.add_row(vec![
         Cell::new("Primary"),
-        Cell::new(opt_bool_to_yes_no(&radar_server.primary)),
+        Cell::new(format_optional_bool_as_yes_no(&radar_server.primary)),
     ]);
     table.add_row(vec![
         Cell::new("Aggregate"),
-        Cell::new(opt_bool_to_yes_no(&radar_server.aggregate)),
+        Cell::new(format_optional_bool_as_yes_no(&radar_server.aggregate)),
     ]);
     table.add_row(vec![
         Cell::new("Locked"),
-        Cell::new(opt_bool_to_yes_no(&radar_server.locked)),
+        Cell::new(format_optional_bool_as_yes_no(&radar_server.locked)),
     ]);
     table.add_row(vec![
         Cell::new("Radar Network Up"),
-        Cell::new(opt_bool_to_yes_no(&radar_server.radar_network_up)),
+        Cell::new(format_optional_bool_as_yes_no(
+            &radar_server.radar_network_up,
+        )),
     ]);
     table.add_row(vec![
         Cell::new("Collection Time"),
@@ -554,7 +564,7 @@ pub fn create_radar_server_table(radar_server: &RadarServer) -> Result<Table> {
     ]);
     table.add_row(vec![
         Cell::new("Reporting Host"),
-        Cell::new(opt_str_val(&radar_server.reporting_host)),
+        Cell::new(format_optional_string(&radar_server.reporting_host)),
     ]);
 
     // --- Ping Status ---
@@ -601,7 +611,7 @@ pub fn create_radar_server_table(radar_server: &RadarServer) -> Result<Table> {
         ]);
         table.add_row(vec![
             Cell::new("Last Executed"),
-            Cell::new(opt_str_val(&command.last_executed)),
+            Cell::new(format_optional_string(&command.last_executed)),
         ]);
         table.add_row(vec![
             Cell::new("Last Executed Time"),
@@ -617,7 +627,7 @@ pub fn create_radar_server_table(radar_server: &RadarServer) -> Result<Table> {
         ]);
         table.add_row(vec![
             Cell::new("Last Received"),
-            Cell::new(opt_str_val(&command.last_received)),
+            Cell::new(format_optional_string(&command.last_received)),
         ]);
         table.add_row(vec![
             Cell::new("Last Received Time"),
@@ -640,31 +650,37 @@ pub fn create_radar_server_table(radar_server: &RadarServer) -> Result<Table> {
         ]);
         table.add_row(vec![
             Cell::new("CPU Idle"),
-            Cell::new(format!("{} %", opt_f64_display_val(&hardware.cpu_idle))),
+            Cell::new(format!(
+                "{} %",
+                format_optional_f64_display(&hardware.cpu_idle)
+            )),
         ]);
         table.add_row(vec![
             Cell::new("I/O Utilization"),
             Cell::new(format!(
                 "{} %",
-                opt_f64_display_val(&hardware.io_utilization)
+                format_optional_f64_display(&hardware.io_utilization)
             )),
         ]);
         table.add_row(vec![
             Cell::new("Disk Status/Value"),
-            Cell::new(opt_i32_val(&hardware.disk)),
+            Cell::new(format_optional_i32(&hardware.disk)),
         ]);
         table.add_row(vec![
             Cell::new("Load Avg (1m/5m/15m)"),
             Cell::new(format!(
                 "{}/{}/{}",
-                opt_f64_display_val(&hardware.load1),
-                opt_f64_display_val(&hardware.load5),
-                opt_f64_display_val(&hardware.load15)
+                format_optional_f64_display(&hardware.load1),
+                format_optional_f64_display(&hardware.load5),
+                format_optional_f64_display(&hardware.load15)
             )),
         ]);
         table.add_row(vec![
             Cell::new("Memory Usage"),
-            Cell::new(format!("{} %", opt_f64_display_val(&hardware.memory))),
+            Cell::new(format!(
+                "{} %",
+                format_optional_f64_display(&hardware.memory)
+            )),
         ]);
         table.add_row(vec![
             Cell::new("System Uptime Since"),
@@ -683,7 +699,7 @@ pub fn create_radar_server_table(radar_server: &RadarServer) -> Result<Table> {
         ]);
         table.add_row(vec![
             Cell::new("LDM Active"),
-            Cell::new(opt_bool_to_yes_no(&ldm.active)),
+            Cell::new(format_optional_bool_as_yes_no(&ldm.active)),
         ]);
         table.add_row(vec![
             Cell::new("Latest Product Time"),
@@ -703,7 +719,7 @@ pub fn create_radar_server_table(radar_server: &RadarServer) -> Result<Table> {
         ]);
         table.add_row(vec![
             Cell::new("Product Count"),
-            Cell::new(opt_i32_val(&ldm.count)),
+            Cell::new(format_optional_i32(&ldm.count)),
         ]);
     } else {
         table.add_row(vec![Cell::new("LDM Data"), Cell::new("N/A")]);
@@ -787,11 +803,10 @@ pub fn create_radar_servers_table(radar_servers_response: &RadarServersResponse)
 
     if let Some(servers) = &radar_servers_response.radar_servers {
         for server in servers {
-            let ldm_active = server
-                .ldm
-                .as_ref()
-                .and_then(|ldm| ldm.active)
-                .map_or_else(|| "N/A".to_string(), |b| opt_bool_to_yes_no(&Some(b)));
+            let ldm_active = server.ldm.as_ref().and_then(|ldm| ldm.active).map_or_else(
+                || "N/A".to_string(),
+                |b| format_optional_bool_as_yes_no(&Some(b)),
+            );
             let ldm_count = server
                 .ldm
                 .as_ref()
@@ -804,18 +819,18 @@ pub fn create_radar_servers_table(radar_servers_response: &RadarServersResponse)
                 .map_or_else(|| "N/A".to_string(), |l| format!("{l:.2}"));
 
             table.add_row(vec![
-                Cell::new(opt_str_val(&server.id)),
-                Cell::new(opt_str_val(&server.r#type)),
-                Cell::new(opt_bool_to_yes_no(&server.active)),
-                Cell::new(opt_bool_to_yes_no(&server.primary)),
-                Cell::new(opt_bool_to_yes_no(&server.radar_network_up)),
+                Cell::new(format_optional_string(&server.id)),
+                Cell::new(format_optional_string(&server.r#type)),
+                Cell::new(format_optional_bool_as_yes_no(&server.active)),
+                Cell::new(format_optional_bool_as_yes_no(&server.primary)),
+                Cell::new(format_optional_bool_as_yes_no(&server.radar_network_up)),
                 Cell::new(ldm_active),
                 Cell::new(ldm_count).set_alignment(CellAlignment::Right),
                 Cell::new(load1).set_alignment(CellAlignment::Right),
                 Cell::new(format_datetime_human_readable(
                     server.collection_time.as_deref(),
                 )),
-                Cell::new(opt_str_val(&server.reporting_host)),
+                Cell::new(format_optional_string(&server.reporting_host)),
             ]);
         }
     } else {

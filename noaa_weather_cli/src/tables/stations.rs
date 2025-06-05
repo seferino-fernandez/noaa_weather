@@ -16,7 +16,9 @@ use noaa_weather_client::models::{
     TerminalAerodromeForecastsResponse,
 };
 
-use crate::utils::format::{format_datetime_human_readable, get_zone_from_url, opt_value_unit_val};
+use crate::utils::format::{
+    format_datetime_human_readable, format_optional_value_unit, get_zone_from_url,
+};
 
 /// Creates a table listing all observation stations with key summary information.
 ///
@@ -132,57 +134,57 @@ pub fn create_stations_observation_table(observation: &ObservationGeoJson) -> Re
 
     table.add_row(vec![
         Cell::new("Temperature").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(opt_value_unit_val(&props.temperature)),
+        Cell::new(format_optional_value_unit(&props.temperature)),
     ]);
 
     table.add_row(vec![
         Cell::new("Dewpoint").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(opt_value_unit_val(&props.dewpoint)),
+        Cell::new(format_optional_value_unit(&props.dewpoint)),
     ]);
 
     table.add_row(vec![
         Cell::new("Wind Direction").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(opt_value_unit_val(&props.wind_direction)),
+        Cell::new(format_optional_value_unit(&props.wind_direction)),
     ]);
 
     table.add_row(vec![
         Cell::new("Wind Speed").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(opt_value_unit_val(&props.wind_speed)),
+        Cell::new(format_optional_value_unit(&props.wind_speed)),
     ]);
 
     table.add_row(vec![
         Cell::new("Wind Gust").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(opt_value_unit_val(&props.wind_gust)),
+        Cell::new(format_optional_value_unit(&props.wind_gust)),
     ]);
 
     table.add_row(vec![
         Cell::new("Barometric Pressure").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(opt_value_unit_val(&props.barometric_pressure)),
+        Cell::new(format_optional_value_unit(&props.barometric_pressure)),
     ]);
 
     table.add_row(vec![
         Cell::new("Sea Level Pressure").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(opt_value_unit_val(&props.sea_level_pressure)),
+        Cell::new(format_optional_value_unit(&props.sea_level_pressure)),
     ]);
 
     table.add_row(vec![
         Cell::new("Visibility").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(opt_value_unit_val(&props.visibility)),
+        Cell::new(format_optional_value_unit(&props.visibility)),
     ]);
 
     table.add_row(vec![
         Cell::new("Relative Humidity").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(opt_value_unit_val(&props.relative_humidity)),
+        Cell::new(format_optional_value_unit(&props.relative_humidity)),
     ]);
 
     table.add_row(vec![
         Cell::new("Wind Chill").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(opt_value_unit_val(&props.wind_chill)),
+        Cell::new(format_optional_value_unit(&props.wind_chill)),
     ]);
 
     table.add_row(vec![
         Cell::new("Heat Index").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(opt_value_unit_val(&props.heat_index)),
+        Cell::new(format_optional_value_unit(&props.heat_index)),
     ]);
 
     Ok(table)
@@ -244,18 +246,20 @@ pub fn create_stations_observations_table(
     for observation in observations {
         let timestamp_str =
             format_datetime_human_readable(observation.properties.timestamp.as_deref());
-        let temperature_str = opt_value_unit_val(&observation.properties.temperature);
-        let dewpoint_str = opt_value_unit_val(&observation.properties.dewpoint);
-        let wind_direction_str = opt_value_unit_val(&observation.properties.wind_direction);
-        let wind_speed_str = opt_value_unit_val(&observation.properties.wind_speed);
-        let wind_gust_str = opt_value_unit_val(&observation.properties.wind_gust);
+        let temperature_str = format_optional_value_unit(&observation.properties.temperature);
+        let dewpoint_str = format_optional_value_unit(&observation.properties.dewpoint);
+        let wind_direction_str = format_optional_value_unit(&observation.properties.wind_direction);
+        let wind_speed_str = format_optional_value_unit(&observation.properties.wind_speed);
+        let wind_gust_str = format_optional_value_unit(&observation.properties.wind_gust);
         let barometric_pressure_str =
-            opt_value_unit_val(&observation.properties.barometric_pressure);
-        let sea_level_pressure_str = opt_value_unit_val(&observation.properties.sea_level_pressure);
-        let visibility_str = opt_value_unit_val(&observation.properties.visibility);
-        let relative_humidity_str = opt_value_unit_val(&observation.properties.relative_humidity);
-        let wind_chill_str = opt_value_unit_val(&observation.properties.wind_chill);
-        let heat_index_str = opt_value_unit_val(&observation.properties.heat_index);
+            format_optional_value_unit(&observation.properties.barometric_pressure);
+        let sea_level_pressure_str =
+            format_optional_value_unit(&observation.properties.sea_level_pressure);
+        let visibility_str = format_optional_value_unit(&observation.properties.visibility);
+        let relative_humidity_str =
+            format_optional_value_unit(&observation.properties.relative_humidity);
+        let wind_chill_str = format_optional_value_unit(&observation.properties.wind_chill);
+        let heat_index_str = format_optional_value_unit(&observation.properties.heat_index);
 
         table.add_row(vec![
             Cell::new(timestamp_str),
@@ -814,7 +818,7 @@ pub fn create_stations_taf_table(taf_bulletin: &TerminalAerodromeForecast) -> Re
 fn create_station_row(observation_station: &ObservationStationGeoJson) -> Vec<String> {
     let station = &observation_station.properties;
 
-    let elevation_str = opt_value_unit_val(&station.elevation);
+    let elevation_str = format_optional_value_unit(&station.elevation);
 
     let point_str = match observation_station.geometry.as_ref() {
         Some(geo_json_geometry) => match geo_json_geometry.as_ref() {
