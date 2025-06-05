@@ -13,8 +13,8 @@ pub enum RegionCode {
 impl Display for RegionCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RegionCode::LandRegionCode(code) => write!(f, "{}", code),
-            RegionCode::MarineRegionCode(code) => write!(f, "{}", code),
+            RegionCode::LandRegionCode(code) => write!(f, "{code}"),
+            RegionCode::MarineRegionCode(code) => write!(f, "{code}"),
         }
     }
 }

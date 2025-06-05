@@ -48,7 +48,7 @@ impl FromStr for LandRegionCode {
             "PR" => Ok(LandRegionCode::Pr),
             "SR" => Ok(LandRegionCode::Sr),
             "WR" => Ok(LandRegionCode::Wr),
-            _ => Err(format!("Invalid land region code: {}", s)),
+            _ => Err(format!("Invalid land region code: {s}")),
         }
     }
 }

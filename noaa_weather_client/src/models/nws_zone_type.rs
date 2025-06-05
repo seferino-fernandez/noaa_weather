@@ -51,7 +51,7 @@ impl FromStr for NwsZoneType {
             "offshore" => Ok(NwsZoneType::Offshore),
             "fire" => Ok(NwsZoneType::Fire),
             "county" => Ok(NwsZoneType::County),
-            _ => Err(format!("Invalid NWS zone type: {}", s)),
+            _ => Err(format!("Invalid NWS zone type: {s}")),
         }
     }
 }

@@ -25,7 +25,7 @@ impl<T> fmt::Display for Error<T> {
             Error::Xml(e) => e.to_string(),
             Error::ResponseError(e) => e.content.to_string(),
         };
-        write!(f, "{}", e)
+        write!(f, "{e}")
     }
 }
 
@@ -77,11 +77,11 @@ impl From<&str> for ContentType {
         if content_type.starts_with("application") && content_type.contains("json") {
             Self::Json
         } else if content_type.starts_with("text") && content_type.contains("plain") {
-            return Self::Text;
+            Self::Text
         } else if content_type.starts_with("application") && content_type.contains("xml") {
-            return Self::Xml;
+            Self::Xml
         } else {
-            return Self::Unsupported(content_type.to_string());
+            Self::Unsupported(content_type.to_string())
         }
     }
 }

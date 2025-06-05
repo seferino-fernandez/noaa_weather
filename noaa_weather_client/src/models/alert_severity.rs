@@ -38,7 +38,7 @@ impl FromStr for AlertSeverity {
             "Moderate" => Ok(AlertSeverity::Moderate),
             "Minor" => Ok(AlertSeverity::Minor),
             "Unknown" => Ok(AlertSeverity::Unknown),
-            _ => Err(format!("Invalid alert severity: {}", s)),
+            _ => Err(format!("Invalid alert severity: {s}")),
         }
     }
 }

@@ -100,7 +100,7 @@ pub enum TemperatureUnit {
 
 impl Display for TemperatureUnit {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 
@@ -120,7 +120,7 @@ pub enum TemperatureTrend {
 
 impl Display for TemperatureTrend {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 
@@ -132,7 +132,7 @@ impl FromStr for TemperatureTrend {
         match lower_string.as_str() {
             "rising" => Ok(TemperatureTrend::Rising),
             "falling" => Ok(TemperatureTrend::Falling),
-            _ => Err(format!("Invalid temperature trend: {}", string)),
+            _ => Err(format!("Invalid temperature trend: {string}")),
         }
     }
 }
@@ -188,7 +188,7 @@ impl Default for WindDirection {
 
 impl Display for WindDirection {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", format!("{:?}", self).to_uppercase())
+        write!(f, "{}", format!("{self:?}").to_uppercase())
     }
 }
 
@@ -214,7 +214,7 @@ impl FromStr for WindDirection {
             "wnw" => Ok(WindDirection::Wnw),
             "nw" => Ok(WindDirection::Nw),
             "nnw" => Ok(WindDirection::Nnw),
-            _ => Err(format!("Invalid wind direction: {}", string)),
+            _ => Err(format!("Invalid wind direction: {string}")),
         }
     }
 }

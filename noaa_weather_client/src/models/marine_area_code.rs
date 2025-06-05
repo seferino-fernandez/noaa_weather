@@ -94,7 +94,7 @@ impl FromStr for MarineAreaCode {
             "PS" => Ok(MarineAreaCode::Ps),
             "PZ" => Ok(MarineAreaCode::Pz),
             "SL" => Ok(MarineAreaCode::Sl),
-            _ => Err(format!("Invalid marine area code: {}", s)),
+            _ => Err(format!("Invalid marine area code: {s}")),
         }
     }
 }

@@ -110,8 +110,7 @@ impl FromStr for NwsCenterWeatherServiceUnitId {
             "zse" => Ok(Self::Zse),
             "ztl" => Ok(Self::Ztl),
             _ => Err(format!(
-                "Invalid NWS Center Weather Service Unit ID: {}",
-                string
+                "Invalid NWS Center Weather Service Unit ID: {string}"
             )),
         }
     }

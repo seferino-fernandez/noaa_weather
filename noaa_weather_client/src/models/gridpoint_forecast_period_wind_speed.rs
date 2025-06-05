@@ -18,7 +18,7 @@ impl Display for GridpointForecastPeriodWindSpeed {
                 write!(f, "{:?}", qv.value)
             }
             GridpointForecastPeriodWindSpeed::String(s) => {
-                write!(f, "{}", s)
+                write!(f, "{s}")
             }
         }
     }

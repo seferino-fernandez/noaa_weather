@@ -37,7 +37,7 @@ impl FromStr for AlertUrgency {
             "Future" => Ok(AlertUrgency::Future),
             "Past" => Ok(AlertUrgency::Past),
             "Unknown" => Ok(AlertUrgency::Unknown),
-            _ => Err(format!("Invalid alert urgency: {}", s)),
+            _ => Err(format!("Invalid alert urgency: {s}")),
         }
     }
 }

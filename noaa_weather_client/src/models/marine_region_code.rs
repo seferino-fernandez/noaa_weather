@@ -57,7 +57,7 @@ impl FromStr for MarineRegionCode {
             "GM" => Ok(MarineRegionCode::Gm),
             "PA" => Ok(MarineRegionCode::Pa),
             "PI" => Ok(MarineRegionCode::Pi),
-            _ => Err(format!("Invalid marine region code: {}", s)),
+            _ => Err(format!("Invalid marine region code: {s}")),
         }
     }
 }

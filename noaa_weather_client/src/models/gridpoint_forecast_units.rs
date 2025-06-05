@@ -29,7 +29,7 @@ impl FromStr for GridpointForecastUnits {
         match string.to_lowercase().as_str() {
             "us" => Ok(Self::Us),
             "si" => Ok(Self::Si),
-            _ => Err(format!("Invalid gridpoint forecast units: {}", string)),
+            _ => Err(format!("Invalid gridpoint forecast units: {string}")),
         }
     }
 }

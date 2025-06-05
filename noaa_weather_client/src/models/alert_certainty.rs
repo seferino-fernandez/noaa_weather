@@ -44,7 +44,7 @@ impl FromStr for AlertCertainty {
             "Possible" => Ok(AlertCertainty::Possible),
             "Unlikely" => Ok(AlertCertainty::Unlikely),
             "Unknown" => Ok(AlertCertainty::Unknown),
-            _ => Err(format!("Invalid alert certainty: {}", s)),
+            _ => Err(format!("Invalid alert certainty: {s}")),
         }
     }
 }

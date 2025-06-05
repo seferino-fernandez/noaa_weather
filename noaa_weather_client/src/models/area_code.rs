@@ -15,8 +15,8 @@ pub enum AreaCode {
 impl Display for AreaCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            AreaCode::StateTerritoryCode(code) => write!(f, "{}", code),
-            AreaCode::MarineAreaCode(code) => write!(f, "{}", code),
+            AreaCode::StateTerritoryCode(code) => write!(f, "{code}"),
+            AreaCode::MarineAreaCode(code) => write!(f, "{code}"),
         }
     }
 }

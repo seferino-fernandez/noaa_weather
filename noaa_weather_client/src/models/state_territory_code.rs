@@ -255,8 +255,7 @@ impl FromStr for StateTerritoryCode {
             "FM" => Ok(StateTerritoryCode::Fm),
             "MH" => Ok(StateTerritoryCode::Mh),
             _ => Err(format!(
-                "Invalid state territory code: {}",
-                state_territory_code
+                "Invalid state territory code: {state_territory_code}"
             )),
         }
     }
