@@ -3,7 +3,7 @@ use assert_cmd::Command;
 #[test]
 #[ignore = "Ignore this test for now since the date needs to be updated dynamically"]
 fn test_aviation_cwa_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("aviation");
     cmd.arg("cwa");
     cmd.arg("--cwsu-id");
@@ -17,7 +17,7 @@ fn test_aviation_cwa_success() {
 
 #[test]
 fn test_aviation_cwa_failure_sequence_too_low() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("aviation");
     cmd.arg("cwa");
     cmd.arg("--cwsu-id");
@@ -31,7 +31,7 @@ fn test_aviation_cwa_failure_sequence_too_low() {
 
 #[test]
 fn test_aviation_cwas_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("aviation");
     cmd.arg("cwas");
     cmd.arg("--cwsu-id");
@@ -41,7 +41,7 @@ fn test_aviation_cwas_success() {
 
 #[test]
 fn test_aviation_cwsu_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("aviation");
     cmd.arg("cwsu");
     cmd.arg("--cwsu-id");
@@ -51,7 +51,7 @@ fn test_aviation_cwsu_success() {
 
 #[test]
 fn test_aviation_sigmets_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("aviation");
     cmd.arg("sigmets");
     cmd.assert().success();
@@ -59,7 +59,7 @@ fn test_aviation_sigmets_success() {
 
 #[test]
 fn test_aviation_sigmets_atsu_only_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("aviation");
     cmd.arg("sigmets");
     cmd.arg("--atsu");
@@ -69,7 +69,7 @@ fn test_aviation_sigmets_atsu_only_success() {
 
 #[test]
 fn test_aviation_sigmets_atsu_and_date_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("aviation");
     cmd.arg("sigmets");
     cmd.arg("--atsu");
@@ -81,7 +81,7 @@ fn test_aviation_sigmets_atsu_and_date_success() {
 
 #[test]
 fn test_aviation_sigmets_atsu_and_start_and_end_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("aviation");
     cmd.arg("sigmets");
     cmd.arg("--atsu");
@@ -95,7 +95,7 @@ fn test_aviation_sigmets_atsu_and_start_and_end_success() {
 
 #[test]
 fn test_aviation_sigmets_sequence_only_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("aviation");
     cmd.arg("sigmets");
     cmd.arg("--sequence");
@@ -106,7 +106,7 @@ fn test_aviation_sigmets_sequence_only_success() {
 #[test]
 #[ignore = "Ignore this test for now since the date needs to be updated dynamically"]
 fn test_aviation_sigmet_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("aviation");
     cmd.arg("sigmet");
     cmd.arg("--date");

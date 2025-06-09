@@ -2,7 +2,7 @@ use assert_cmd::Command;
 
 #[test]
 fn test_alerts_command_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("active");
     cmd.assert().success();
@@ -10,7 +10,7 @@ fn test_alerts_command_success() {
 
 #[test]
 fn test_alerts_command_list_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("list");
     cmd.assert().success();
@@ -18,7 +18,7 @@ fn test_alerts_command_list_success() {
 
 #[test]
 fn test_alerts_command_failure_invalid_command() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("invalid");
     cmd.assert().failure();
@@ -26,7 +26,7 @@ fn test_alerts_command_failure_invalid_command() {
 
 #[test]
 fn test_alerts_command_area_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("area");
     cmd.arg("AZ");
@@ -35,7 +35,7 @@ fn test_alerts_command_area_success() {
 
 #[test]
 fn test_alerts_command_area_failure_invalid_area() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("area");
     cmd.arg("invalid");
@@ -44,7 +44,7 @@ fn test_alerts_command_area_failure_invalid_area() {
 
 #[test]
 fn test_alerts_command_count_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("count");
     cmd.assert().success();
@@ -52,7 +52,7 @@ fn test_alerts_command_count_success() {
 
 #[test]
 fn test_alerts_command_region_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("region");
     cmd.arg("PI");
@@ -61,7 +61,7 @@ fn test_alerts_command_region_success() {
 
 #[test]
 fn test_alerts_command_region_failure_invalid_region() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("region");
     cmd.arg("invalid");
@@ -71,7 +71,7 @@ fn test_alerts_command_region_failure_invalid_region() {
 #[test]
 #[ignore = "Ignore this test for now since the alert id needs to be updated"]
 fn test_alerts_command_get_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("alert");
     cmd.arg("urn:oid:2.49.0.1.840.0.eb79fad94f63c186cdfb1678251f96b5c628af14.001.1");
@@ -80,7 +80,7 @@ fn test_alerts_command_get_success() {
 
 #[test]
 fn test_alerts_command_types_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("types");
     cmd.assert().success();
@@ -88,7 +88,7 @@ fn test_alerts_command_types_success() {
 
 #[test]
 fn test_alerts_zone_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("zone");
     cmd.arg("AZC013");

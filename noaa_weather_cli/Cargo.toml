@@ -17,7 +17,7 @@ name = "noaa-weather"
 path = "src/main.rs"
 
 [dependencies]
-noaa_weather_client = { path = "../noaa_weather_client" }
+noaa_weather_client = { path = "../noaa_weather_client", features = ["clap"] }
 
 clap = { version = "4.5.39", features = ["derive"] }
 tokio = { version = "1.45.1", features = ["macros", "rt-multi-thread"] }

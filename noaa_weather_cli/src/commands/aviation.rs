@@ -1,7 +1,7 @@
 use crate::utils::format::write_output;
 use crate::{Cli, tables};
 use anyhow::{Result, anyhow};
-use clap::{Args, Subcommand, value_parser};
+use clap::{Args, Subcommand};
 use noaa_weather_client::apis::aviation as aviation_api;
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::models::NwsCenterWeatherServiceUnitId;
@@ -10,7 +10,7 @@ use noaa_weather_client::models::NwsCenterWeatherServiceUnitId;
 #[derive(Args, Debug, Clone)]
 pub struct CwaArgs {
     /// Center Weather Service Unit (CWSU) ID (e.g., ZAB, ZDC).
-    #[arg(long, value_parser = value_parser!(NwsCenterWeatherServiceUnitId))]
+    #[arg(long, value_enum)]
     cwsu_id: NwsCenterWeatherServiceUnitId,
 
     /// Date of the advisory in YYYY-MM-DD format.
@@ -26,7 +26,7 @@ pub struct CwaArgs {
 #[derive(Args, Debug, Clone)]
 pub struct CwasArgs {
     /// Center Weather Service Unit (CWSU) ID (e.g., ZAB, ZDC).
-    #[arg(long, value_parser = value_parser!(NwsCenterWeatherServiceUnitId))]
+    #[arg(long, value_enum)]
     cwsu_id: NwsCenterWeatherServiceUnitId,
 }
 
@@ -34,7 +34,7 @@ pub struct CwasArgs {
 #[derive(Args, Debug, Clone)]
 pub struct CwsuArgs {
     /// Center Weather Service Unit (CWSU) ID (e.g., ZAB, ZDC).
-    #[arg(long, value_parser = value_parser!(NwsCenterWeatherServiceUnitId))]
+    #[arg(long, value_enum)]
     cwsu_id: NwsCenterWeatherServiceUnitId,
 }
 

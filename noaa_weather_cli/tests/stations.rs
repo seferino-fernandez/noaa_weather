@@ -2,7 +2,7 @@ use assert_cmd::Command;
 
 #[test]
 fn test_no_args_stations_list_command_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("stations");
     cmd.arg("list");
     cmd.assert().success();
@@ -10,7 +10,7 @@ fn test_no_args_stations_list_command_success() {
 
 #[test]
 fn test_stations_list_command_with_states_filter_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("stations");
     cmd.arg("list");
     cmd.arg("--state");
@@ -20,7 +20,7 @@ fn test_stations_list_command_with_states_filter_success() {
 
 #[test]
 fn test_stations_list_command_with_limit_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("stations");
     cmd.arg("list");
     cmd.arg("--state");
@@ -32,7 +32,7 @@ fn test_stations_list_command_with_limit_success() {
 
 #[test]
 fn test_stations_list_command_with_ids_filter_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("stations");
     cmd.arg("list");
     cmd.arg("--id");
@@ -42,7 +42,7 @@ fn test_stations_list_command_with_ids_filter_success() {
 
 #[test]
 fn test_latest_observation_command_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("stations");
     cmd.arg("latest-observation");
     cmd.arg("--station-id");
@@ -52,7 +52,7 @@ fn test_latest_observation_command_success() {
 
 #[test]
 fn test_stations_tafs_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("stations");
     cmd.arg("terminal-aerodrome-forecasts");
     cmd.arg("--station-id");
@@ -63,7 +63,7 @@ fn test_stations_tafs_success() {
 #[ignore = "Ignore this test for now since the data needs to be updated dynamically"]
 #[test]
 fn test_stations_taf_success() {
-    let mut cmd = Command::cargo_bin("noaa_weather_cli").unwrap();
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("stations");
     cmd.arg("terminal-aerodrome-forecast");
     cmd.arg("--station-id");
