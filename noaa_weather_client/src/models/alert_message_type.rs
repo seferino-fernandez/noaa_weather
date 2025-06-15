@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use serde::{Deserialize, Serialize};
 
 /// Type of the alert message
@@ -23,6 +25,21 @@ impl std::fmt::Display for AlertMessageType {
             Self::Cancel => write!(f, "Cancel"),
             Self::Ack => write!(f, "Ack"),
             Self::Error => write!(f, "Error"),
+        }
+    }
+}
+
+impl FromStr for AlertMessageType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "alert" => Ok(Self::Alert),
+            "update" => Ok(Self::Update),
+            "cancel" => Ok(Self::Cancel),
+            "ack" => Ok(Self::Ack),
+            "error" => Ok(Self::Error),
+            _ => Err(format!("Invalid alert message type: {s}")),
         }
     }
 }

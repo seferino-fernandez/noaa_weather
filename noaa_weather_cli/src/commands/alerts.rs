@@ -1,16 +1,14 @@
-use std::str::FromStr;
-
 use anyhow::{Result, anyhow};
 use clap::Subcommand;
 use noaa_weather_client::apis::alerts as alerts_api;
 use noaa_weather_client::apis::alerts::{ActiveAlertsParams, GetAlertsParams};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::models::{
-    self, AlertCertainty, AlertSeverity, AlertUrgency, MarineRegionCode,
+    AlertCertainty, AlertMessageType, AlertSeverity, AlertStatus, AlertUrgency, AreaCode,
+    MarineRegionCode, RegionType,
 };
 
 use crate::utils::format::write_output;
-use crate::utils::parse::{parse_area_codes, parse_string_args_into_vec};
 use crate::{Cli, tables};
 
 /// Subcommands for interacting with the NWS Alerts API.
@@ -21,56 +19,61 @@ pub enum AlertCommands {
     /// Fetches currently active alerts from the NWS API. You can filter results
     /// based on status, type, location, severity, and more.
     Active {
-        /// Filter by status (e.g., actual, exercise, test).
-        #[arg(long)]
-        status: Option<Vec<String>>,
+        /// Filter by alert status (actual, exercise, system, test, draft).
+        #[arg(long, value_delimiter = ',', value_enum)]
+        status: Option<Vec<AlertStatus>>,
 
-        /// Filter by message type (alert, update, cancel).
-        #[arg(long)]
-        message_type: Option<Vec<String>>,
+        /// Filter by alert message type (alert, update, cancel).
+        #[arg(long, value_delimiter = ',', value_enum)]
+        message_type: Option<Vec<AlertMessageType>>,
 
-        /// Filter by event type (e.g., "Tornado Warning", "Flood Watch").
+        /// Filter by alert event type (e.g., "Tornado Warning", "Flood Watch").
         #[arg(long)]
         event: Option<Vec<String>>,
 
         /// Filter by alert code (NWS public zone/county or SAME code).
-        #[arg(long)]
+        #[arg(long, value_delimiter = ',')]
         code: Option<Vec<String>>,
 
         /// Filter by area code (State/Territory or Marine Area, comma-separated).
-        #[arg(long, value_delimiter = ',')]
-        area: Option<Vec<String>>,
+        /// This parameter is incompatible with the following parameters: point, marine-region, region_type, zone.
+        #[arg(long, value_delimiter = ',', value_enum)]
+        area: Option<Vec<AreaCode>>,
 
         /// Filter by point (latitude,longitude).
+        /// This parameter is incompatible with the following parameters: area, marine-region, region_type, zone.
         #[arg(long)]
         point: Option<String>,
 
-        /// Filter by marine region code (e.g., AL, AT, GL, comma-separated).
-        #[arg(long, value_delimiter = ',')]
-        region: Option<Vec<String>>,
+        /// Filter by marine region code (AL, AT, GL, GM, PA, PI).
+        /// This parameter is incompatible with the following parameters: area, point, region_type, zone
+        #[arg(long, value_delimiter = ',', value_enum)]
+        marine_region: Option<Vec<MarineRegionCode>>,
 
         /// Filter by region type (land or marine).
-        #[arg(long)]
-        region_type: Option<String>,
+        /// This parameter is incompatible with the following parameters: area, point, marine-region, zone.
+        #[arg(long, value_enum)]
+        region_type: Option<RegionType>,
 
-        /// Filter by zone ID (NWS Public Zone or County, comma-separated).
+        /// Filter by Zone ID (forecast or county).
+        /// This parameter is incompatible with the following parameters: area, point, marine-region, region_type
         #[arg(long, value_delimiter = ',')]
         zone: Option<Vec<String>>,
 
         /// Filter by urgency (Immediate, Expected, Future, Past, Unknown, comma-separated).
-        #[arg(long, value_delimiter = ',')]
-        urgency: Option<Vec<String>>,
+        #[arg(long, value_delimiter = ',', value_enum)]
+        urgency: Option<Vec<AlertUrgency>>,
 
         /// Filter by severity (Extreme, Severe, Moderate, Minor, Unknown, comma-separated).
-        #[arg(long, value_delimiter = ',')]
-        severity: Option<Vec<String>>,
+        #[arg(long, value_delimiter = ',', value_enum)]
+        severity: Option<Vec<AlertSeverity>>,
 
         /// Filter by certainty (Observed, Likely, Possible, Unlikely, Unknown, comma-separated).
-        #[arg(long, value_delimiter = ',')]
-        certainty: Option<Vec<String>>,
+        #[arg(long, value_delimiter = ',', value_enum)]
+        certainty: Option<Vec<AlertCertainty>>,
 
         /// Limit number of results returned by the API.
-        #[arg(long)]
+        #[arg(long, value_parser = clap::value_parser!(i32).range(1..=500))]
         limit: Option<i32>,
     },
 
@@ -87,10 +90,19 @@ pub enum AlertCommands {
 
     /// Get active alerts for a specific marine region.
     ///
-    /// Example: `noaa-weather alerts region AT`
-    Region {
+    /// Marine region codes:
+    ///  - AL: Alaska waters
+    ///  - AT: Atlantic Ocean
+    ///  - GL: Great Lakes
+    ///  - GM: Gulf of Mexico
+    ///  - PA: Eastern Pacific Ocean and U.S. West Coast
+    ///  - PI: Central and Western Pacific
+    ///
+    /// Example: `noaa-weather alerts marine-region AT`
+    MarineRegion {
         /// Marine region code (AL, AT, GL, GM, PA, PI).
-        region: String,
+        #[arg(value_enum)]
+        marine_region: MarineRegionCode,
     },
 
     /// Get active alerts for a specific NWS zone (Public Zone or County).
@@ -118,15 +130,15 @@ pub enum AlertCommands {
         #[arg(long)]
         end: Option<String>,
 
-        /// Filter by status (e.g., actual, exercise, test, comma-separated).
-        #[arg(long, value_delimiter = ',')]
-        status: Option<Vec<String>>,
+        /// Filter by alert status (actual, exercise, test, draft).
+        #[arg(long, value_delimiter = ',', value_enum)]
+        status: Option<Vec<AlertStatus>>,
 
-        /// Filter by message type (alert, update, cancel, comma-separated).
-        #[arg(long, value_delimiter = ',')]
-        message_type: Option<Vec<String>>,
+        /// Filter by alert message type (alert, update, cancel).
+        #[arg(long, value_delimiter = ',', value_enum)]
+        message_type: Option<Vec<AlertMessageType>>,
 
-        /// Filter by event type (e.g., "Tornado Warning", comma-separated).
+        /// Filter by alert event type (e.g., "Tornado Warning").
         #[arg(long, value_delimiter = ',')]
         event: Option<Vec<String>>,
 
@@ -135,51 +147,52 @@ pub enum AlertCommands {
         code: Option<Vec<String>>,
 
         /// Filter by area code (State/Territory or Marine Area, comma-separated).
-        #[arg(long, value_delimiter = ',')]
-        area: Option<Vec<String>>,
+        /// This parameter is incompatible with the following parameters: point, marine-region, region_type, zone
+        #[arg(long, value_delimiter = ',', value_enum)]
+        area: Option<Vec<AreaCode>>,
 
         /// Filter by point (latitude,longitude).
+        /// This parameter is incompatible with the following parameters: area, marine-region, region_type, zone
         #[arg(long)]
         point: Option<String>,
 
         /// Filter by marine region code (e.g., AL, AT, GL, comma-separated).
-        #[arg(long, value_delimiter = ',')]
-        region: Option<Vec<String>>,
+        /// This parameter is incompatible with the following parameters: area, point, region_type, zone
+        #[arg(long, value_delimiter = ',', value_enum)]
+        marine_region: Option<Vec<MarineRegionCode>>,
 
         /// Filter by region type (land or marine).
-        #[arg(long)]
-        region_type: Option<String>,
+        /// This parameter is incompatible with the following parameters: area, point, marine-region, zone
+        #[arg(long, value_enum)]
+        region_type: Option<RegionType>,
 
-        /// Filter by zone ID (Public or County, comma-separated).
+        /// Filter by Zone ID (forecast or county).
+        /// This parameter is incompatible with the following parameters: area, point, marine-region, region_type
         #[arg(long, value_delimiter = ',')]
         zone: Option<Vec<String>>,
 
         /// Filter by urgency (Immediate, Expected, Future, Past, Unknown, comma-separated).
-        #[arg(long, value_delimiter = ',')]
-        urgency: Option<Vec<String>>,
+        #[arg(long, value_delimiter = ',', value_enum)]
+        urgency: Option<Vec<AlertUrgency>>,
 
         /// Filter by severity (Extreme, Severe, Moderate, Minor, Unknown, comma-separated).
-        #[arg(long, value_delimiter = ',')]
-        severity: Option<Vec<String>>,
+        #[arg(long, value_delimiter = ',', value_enum)]
+        severity: Option<Vec<AlertSeverity>>,
 
         /// Filter by certainty (Observed, Likely, Possible, Unlikely, Unknown, comma-separated).
-        #[arg(long, value_delimiter = ',')]
-        certainty: Option<Vec<String>>,
+        #[arg(long, value_delimiter = ',', value_enum)]
+        certainty: Option<Vec<AlertCertainty>>,
 
         /// Limit number of results returned by the API.
-        #[arg(long)]
+        #[arg(long, value_parser = clap::value_parser!(i32).range(1..=500))]
         limit: Option<i32>,
-
-        /// Cursor for pagination (obtained from previous query results).
-        #[arg(long)]
-        cursor: Option<String>,
     },
 
     /// Get a single alert by its unique NWS ID.
     ///
-    /// Example: `noaa-weather alerts alert NWS-ID-XYZ123`
+    /// Example: `noaa-weather alerts alert urn:oid:2.49.0.1.840.0.dcc6cd9527d1f8732519ea87f13d3810e9ef672c.001.1`
     Alert {
-        /// Unique Alert ID (e.g., "NWS-TOW-ORD-201809141900").
+        /// Unique Alert ID (e.g., "urn:oid:2.49.0.1.840.0.dcc6cd9527d1f8732519ea87f13d3810e9ef672c.001.1").
         id: String,
     },
 
@@ -212,7 +225,7 @@ pub async fn handle_command(
             code,
             area,
             point,
-            region,
+            marine_region,
             region_type,
             zone,
             urgency,
@@ -220,25 +233,19 @@ pub async fn handle_command(
             certainty,
             limit,
         } => {
-            let area_parsed = parse_area_codes(area.clone())?;
-            let region_parsed = parse_string_args_into_vec::<MarineRegionCode>(region.clone())?;
-            let urgency_parsed = parse_string_args_into_vec::<AlertUrgency>(urgency.clone())?;
-            let severity_parsed = parse_string_args_into_vec::<AlertSeverity>(severity.clone())?;
-            let certainty_parsed = parse_string_args_into_vec::<AlertCertainty>(certainty.clone())?;
-
             let params = ActiveAlertsParams {
                 status: status.clone(),
                 message_type: message_type.clone(),
                 event: event.clone(),
                 code: code.clone(),
-                area: area_parsed,
+                area: area.clone(),
                 point: point.as_deref(),
-                region: region_parsed,
-                region_type: region_type.as_deref(),
+                region: marine_region.clone(),
+                region_type: *region_type,
                 zone: zone.clone(),
-                urgency: urgency_parsed,
-                severity: severity_parsed,
-                certainty: certainty_parsed,
+                urgency: urgency.clone(),
+                severity: severity.clone(),
+                certainty: certainty.clone(),
                 limit: *limit,
             };
 
@@ -287,12 +294,12 @@ pub async fn handle_command(
             }
             Ok(())
         }
-        AlertCommands::Region { region } => {
-            let region_parsed = models::MarineRegionCode::from_str(region)
-                .map_err(|e| anyhow!("Invalid marine region code '{}': {}", region, e))?;
-            let result = alerts_api::get_active_alerts_for_region(config, region_parsed)
+        AlertCommands::MarineRegion { marine_region } => {
+            let result = alerts_api::get_active_alerts_for_marine_region(config, *marine_region)
                 .await
-                .map_err(|e| anyhow!("Error fetching alerts for region {}: {}", region, e))?;
+                .map_err(|e| {
+                    anyhow!("Error fetching alerts for region {}: {}", marine_region, e)
+                })?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
@@ -329,25 +336,14 @@ pub async fn handle_command(
             code,
             area,
             point,
-            region,
+            marine_region,
             region_type,
             zone,
             urgency,
             severity,
             certainty,
             limit,
-            cursor,
         } => {
-            let area_parsed = parse_area_codes(area.clone())?;
-            let region_parsed =
-                parse_string_args_into_vec::<models::MarineRegionCode>(region.clone())?;
-            let urgency_parsed =
-                parse_string_args_into_vec::<models::AlertUrgency>(urgency.clone())?;
-            let severity_parsed =
-                parse_string_args_into_vec::<models::AlertSeverity>(severity.clone())?;
-            let certainty_parsed =
-                parse_string_args_into_vec::<models::AlertCertainty>(certainty.clone())?;
-
             let params = GetAlertsParams {
                 active: *active,
                 start: start.clone(),
@@ -356,16 +352,16 @@ pub async fn handle_command(
                 message_type: message_type.clone(),
                 event: event.clone(),
                 code: code.clone(),
-                area: area_parsed,
+                area: area.clone(),
                 point: point.as_deref(),
-                region: region_parsed,
-                region_type: region_type.as_deref(),
+                region: marine_region.clone(),
+                region_type: *region_type,
                 zone: zone.clone(),
-                urgency: urgency_parsed,
-                severity: severity_parsed,
-                certainty: certainty_parsed,
+                urgency: urgency.clone(),
+                severity: severity.clone(),
+                certainty: certainty.clone(),
                 limit: *limit,
-                cursor: cursor.as_deref(),
+                cursor: None,
             };
 
             let result = alerts_api::get_alerts(config, params)

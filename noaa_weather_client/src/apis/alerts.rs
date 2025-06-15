@@ -91,9 +91,9 @@ pub enum GetAlertTypesError {
 #[derive(Debug, Clone, Default)]
 pub struct ActiveAlertsParams<'a> {
     /// Filter by alert status (actual, exercise, system, test, draft).
-    pub status: Option<Vec<String>>,
+    pub status: Option<Vec<models::AlertStatus>>,
     /// Filter by message type (alert, update, cancel).
-    pub message_type: Option<Vec<String>>,
+    pub message_type: Option<Vec<models::AlertMessageType>>,
     /// Filter by event name (e.g., "Tornado Warning", "Flood Watch").
     pub event: Option<Vec<String>>,
     /// Filter by NWS public zone/county code or SAME code.
@@ -105,7 +105,7 @@ pub struct ActiveAlertsParams<'a> {
     /// Filter by marine region code.
     pub region: Option<Vec<models::MarineRegionCode>>,
     /// Filter by region type (land or marine).
-    pub region_type: Option<&'a str>,
+    pub region_type: Option<models::RegionType>,
     /// Filter by NWS public zone or county identifier.
     pub zone: Option<Vec<String>>,
     /// Filter by alert urgency.
@@ -130,9 +130,9 @@ pub struct GetAlertsParams<'a> {
     /// End time for the query period (ISO 8601 format).
     pub end: Option<String>,
     /// Filter by alert status (actual, exercise, system, test, draft).
-    pub status: Option<Vec<String>>,
-    /// Filter by message type (alert, update, cancel).
-    pub message_type: Option<Vec<String>>,
+    pub status: Option<Vec<models::AlertStatus>>,
+    /// Filter by alert message type (alert, update, cancel).
+    pub message_type: Option<Vec<models::AlertMessageType>>,
     /// Filter by event name.
     pub event: Option<Vec<String>>,
     /// Filter by NWS public zone/county code or SAME code.
@@ -144,7 +144,7 @@ pub struct GetAlertsParams<'a> {
     /// Filter by marine region code.
     pub region: Option<Vec<models::MarineRegionCode>>,
     /// Filter by region type (land or marine).
-    pub region_type: Option<&'a str>,
+    pub region_type: Option<models::RegionType>,
     /// Filter by NWS public zone or county identifier.
     pub zone: Option<Vec<String>>,
     /// Filter by alert urgency.
@@ -601,7 +601,7 @@ pub async fn get_active_alerts_count(
 ///
 /// Returns an [`Error<ActiveRegionError>`] if the request fails or the response
 /// cannot be parsed.
-pub async fn get_active_alerts_for_region(
+pub async fn get_active_alerts_for_marine_region(
     configuration: &configuration::Configuration,
     region: models::MarineRegionCode,
 ) -> Result<models::AlertCollectionGeoJson, Error<ActiveRegionError>> {

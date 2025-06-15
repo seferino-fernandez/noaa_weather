@@ -2,15 +2,13 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-/// MarineRegionCode : Marine region code. These are groups of marine areas combined.
-///     * AL: Alaska waters (PK)
-///     * AT: Atlantic Ocean (AM, AN)
-///     * GL: Great Lakes (LC, LE, LH, LM, LO, LS, SL)
-///     * GM: Gulf of Mexico (GM)
-///     * PA: Eastern Pacific Ocean and U.S. West Coast (PZ)
-///     * PI: Central and Western Pacific (PH, PM, PS)
-///
-/// Marine region code. These are groups of marine areas combined. * AL: Alaska waters (PK) * AT: Atlantic Ocean (AM, AN) * GL: Great Lakes (LC, LE, LH, LM, LO, LS, SL) * GM: Gulf of Mexico (GM) * PA: Eastern Pacific Ocean and U.S. West Coast (PZ) * PI: Central and Western Pacific (PH, PM, PS)
+/// Marine region code. These are groups of marine areas combined.
+///  - AL: Alaska waters (PK)
+///  - AT: Atlantic Ocean (AM, AN)
+///  - GL: Great Lakes (LC, LE, LH, LM, LO, LS, SL)
+///  - GM: Gulf of Mexico (GM)
+///  - PA: Eastern Pacific Ocean and U.S. West Coast (PZ)
+///  - PI: Central and Western Pacific (PH, PM, PS)
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum MarineRegionCode {
     #[serde(rename = "AL")]
@@ -50,13 +48,13 @@ impl FromStr for MarineRegionCode {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "AL" => Ok(MarineRegionCode::Al),
-            "AT" => Ok(MarineRegionCode::At),
-            "GL" => Ok(MarineRegionCode::Gl),
-            "GM" => Ok(MarineRegionCode::Gm),
-            "PA" => Ok(MarineRegionCode::Pa),
-            "PI" => Ok(MarineRegionCode::Pi),
+        match s.to_lowercase().as_str() {
+            "al" => Ok(MarineRegionCode::Al),
+            "at" => Ok(MarineRegionCode::At),
+            "gl" => Ok(MarineRegionCode::Gl),
+            "gm" => Ok(MarineRegionCode::Gm),
+            "pa" => Ok(MarineRegionCode::Pa),
+            "pi" => Ok(MarineRegionCode::Pi),
             _ => Err(format!("Invalid marine region code: {s}")),
         }
     }

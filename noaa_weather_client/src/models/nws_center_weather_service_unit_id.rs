@@ -1,17 +1,9 @@
 use std::str::FromStr;
 
-#[cfg(feature = "clap")]
-use clap::ValueEnum;
-
 use serde::{Deserialize, Serialize};
 
-/// NwsCenterWeatherServiceUnitId : Three-letter identifier for a Center Weather Service Unit (CWSU).
 /// Three-letter identifier for a Center Weather Service Unit (CWSU).
-#[derive(
-    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, ValueEnum,
-)]
-#[cfg(feature = "clap")]
-#[clap(rename_all = "UPPERCASE")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum NwsCenterWeatherServiceUnitId {
     #[serde(rename = "ZAB")]
     Zab,

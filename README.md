@@ -87,6 +87,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## 📖 Documentation
 
+### Authentication
+
+From the [NOAA Weather API Documentation](https://www.weather.gov/documentation/services-web-api):
+
+> A User Agent is required to identify your application.
+> This string can be anything, and the more unique to your application the less likely it will be affected by a security event.
+> If you include contact information (website or email), we can contact you if your string is associated to a security event.
+> This will be replaced with an API key in the future.
+>
+> User-Agent: (myweatherapp.com, contact@myweatherapp.com)
+
 ### CLI Commands
 
 | Command      | Description                 | Example                                                          |

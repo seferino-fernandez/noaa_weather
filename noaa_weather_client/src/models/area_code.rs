@@ -1,6 +1,7 @@
 use std::fmt::{self, Display};
+use std::str::FromStr;
 
-use crate::models;
+use crate::models::{self, MarineAreaCode, StateTerritoryCode};
 use serde::{Deserialize, Serialize};
 
 /// AreaCode : State/territory codes and marine area codes
@@ -18,5 +19,15 @@ impl Display for AreaCode {
             AreaCode::StateTerritoryCode(code) => write!(f, "{code}"),
             AreaCode::MarineAreaCode(code) => write!(f, "{code}"),
         }
+    }
+}
+
+impl FromStr for AreaCode {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        StateTerritoryCode::from_str(s)
+            .map(AreaCode::StateTerritoryCode)
+            .or_else(|_| MarineAreaCode::from_str(s).map(AreaCode::MarineAreaCode))
     }
 }

@@ -31,12 +31,12 @@ impl FromStr for AlertUrgency {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "Immediate" => Ok(AlertUrgency::Immediate),
-            "Expected" => Ok(AlertUrgency::Expected),
-            "Future" => Ok(AlertUrgency::Future),
-            "Past" => Ok(AlertUrgency::Past),
-            "Unknown" => Ok(AlertUrgency::Unknown),
+        match s.to_lowercase().as_str() {
+            "immediate" => Ok(AlertUrgency::Immediate),
+            "expected" => Ok(AlertUrgency::Expected),
+            "future" => Ok(AlertUrgency::Future),
+            "past" => Ok(AlertUrgency::Past),
+            "unknown" => Ok(AlertUrgency::Unknown),
             _ => Err(format!("Invalid alert urgency: {s}")),
         }
     }

@@ -17,14 +17,14 @@ name = "noaa-weather"
 path = "src/main.rs"
 
 [dependencies]
-noaa_weather_client = { path = "../noaa_weather_client", features = ["clap"] }
+noaa_weather_client = { path = "../noaa_weather_client" }
 
-clap = { version = "4.5.39", features = ["derive"] }
+clap = { version = "4.5.40", features = ["derive"] }
 tokio = { version = "1.45.1", features = ["macros", "rt-multi-thread"] }
 anyhow = "1.0.98"
 serde_json = "1.0.140"
 comfy-table = "7.1.4"
-jiff = "0.2.14"
+jiff = "0.2.15"
 
 [dev-dependencies]
 assert_cmd = "2.0.17"

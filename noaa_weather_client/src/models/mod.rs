@@ -196,6 +196,8 @@ pub mod radar_stations_response;
 pub use self::radar_stations_response::RadarStationsResponse;
 pub mod region_code;
 pub use self::region_code::RegionCode;
+pub mod region_type;
+pub use self::region_type::RegionType;
 pub mod relative_location;
 pub use self::relative_location::RelativeLocation;
 pub mod relative_location_geo_json;
