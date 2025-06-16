@@ -16,38 +16,15 @@ pub struct GridpointLocationArgs {
 
     /// Grid X coordinate.
     /// Use the `points` command to find grid coordinates.
-    #[arg(short, long)]
+    /// The grid coordinates must be greater than 0.
+    #[arg(short, long, value_parser = clap::value_parser!(i32).range(1..))]
     x: i32,
 
     /// Grid Y coordinate.
     /// Use the `points` command to find grid coordinates.
-    #[arg(short, long)]
+    /// The grid coordinates must be greater than 0.
+    #[arg(short, long, value_parser = clap::value_parser!(i32).range(1..))]
     y: i32,
-}
-
-/// Common arguments for forecast-related gridpoint endpoints.
-#[derive(Args, Debug, Clone)]
-pub struct ForecastArgs {
-    /// Enable experimental API features by passing specific flags.
-    #[arg(long)]
-    feature_flags: Option<Vec<String>>,
-
-    /// Specify units for forecast data (`us` for US customary, `si` for Metric).
-    #[arg(long, value_parser = value_parser!(GridpointForecastUnits))]
-    units: Option<GridpointForecastUnits>,
-}
-
-/// Arguments specific to the gridpoint stations endpoint.
-#[derive(Args, Debug, Clone)]
-pub struct StationsArgs {
-    /// Limit the number of observation stations returned by the API.
-    #[arg(long)]
-    limit: Option<i32>,
-
-    /// Pagination cursor for fetching subsequent pages of stations.
-    /// Use the `pagination.nextCursor` value from a previous response.
-    #[arg(long)]
-    cursor: Option<String>,
 }
 
 /// Access forecast data for specific NWS gridpoints.
@@ -73,8 +50,9 @@ pub enum GridpointCommands {
     Forecast {
         #[clap(flatten)]
         location: GridpointLocationArgs,
-        #[clap(flatten)]
-        forecast_opts: ForecastArgs,
+        /// Specify units for forecast data (`us` for US customary, `si` for Metric).
+        #[arg(long, value_enum)]
+        units: Option<GridpointForecastUnits>,
     },
     /// Get the hourly textual forecast for a gridpoint.
     ///
@@ -83,8 +61,9 @@ pub enum GridpointCommands {
     ForecastHourly {
         #[clap(flatten)]
         location: GridpointLocationArgs,
-        #[clap(flatten)]
-        forecast_opts: ForecastArgs,
+        /// Specify units for forecast data (`us` for US customary, `si` for Metric).
+        #[arg(long, value_enum)]
+        units: Option<GridpointForecastUnits>,
     },
     /// List observation stations usable for retrieving observations for a gridpoint.
     ///
@@ -93,8 +72,9 @@ pub enum GridpointCommands {
     Stations {
         #[clap(flatten)]
         location: GridpointLocationArgs,
-        #[clap(flatten)]
-        station_opts: StationsArgs,
+        /// Limit the number of observation stations returned by the API.
+        #[arg(long, value_parser = clap::value_parser!(i32).range(1..=500))]
+        limit: Option<i32>,
     },
 }
 
@@ -135,17 +115,14 @@ pub async fn handle_command(
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
         }
-        GridpointCommands::Forecast {
-            location,
-            forecast_opts,
-        } => {
+        GridpointCommands::Forecast { location, units } => {
             let result = gridpoints_api::get_gridpoint_forecast(
                 config,
                 location.forecast_office_id,
                 location.x,
                 location.y,
-                forecast_opts.feature_flags.clone(),
-                forecast_opts.units,
+                None,
+                *units,
             )
             .await
             .map_err(|e| anyhow!("getting gridpoint forecast: {}", e))?;
@@ -160,17 +137,14 @@ pub async fn handle_command(
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
         }
-        GridpointCommands::ForecastHourly {
-            location,
-            forecast_opts,
-        } => {
+        GridpointCommands::ForecastHourly { location, units } => {
             let result = gridpoints_api::get_gridpoint_forecast_hourly(
                 config,
                 location.forecast_office_id,
                 location.x,
                 location.y,
-                forecast_opts.feature_flags.clone(),
-                forecast_opts.units,
+                None,
+                *units,
             )
             .await
             .map_err(|e| anyhow!("getting hourly gridpoint forecast: {}", e))?;
@@ -185,17 +159,14 @@ pub async fn handle_command(
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
         }
-        GridpointCommands::Stations {
-            location,
-            station_opts,
-        } => {
+        GridpointCommands::Stations { location, limit } => {
             let result = gridpoints_api::get_gridpoint_stations(
                 config,
                 location.forecast_office_id,
                 location.x,
                 location.y,
-                station_opts.limit,
-                station_opts.cursor.as_deref(),
+                *limit,
+                None,
             )
             .await
             .map_err(|e| anyhow!("getting gridpoint stations: {}", e))?;
