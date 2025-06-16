@@ -412,7 +412,7 @@ pub async fn get_sigmet(
 /// * `start`: Optional start time for the query period (ISO 8601 format).
 /// * `end`: Optional end time for the query period (ISO 8601 format).
 /// * `date`: Optional date filter (`YYYY-MM-DD` format).
-/// * `atsu`: Optional Air Traffic Service Unit (ATSU) identifier filter.
+/// * `air_traffic_service_unit`: Optional Air Traffic Service Unit (ATSU) identifier filter.
 /// * `sequence`: Optional sequence number filter.
 ///
 /// # Returns
@@ -427,7 +427,7 @@ pub async fn get_sigmets(
     start: Option<String>,
     end: Option<String>,
     date: Option<String>,
-    atsu: Option<&str>,
+    air_traffic_service_unit: Option<&str>,
     sequence: Option<&str>,
 ) -> Result<models::SigmetCollectionGeoJson, Error<SigmetQueryError>> {
     let uri_str = format!("{}/aviation/sigmets", configuration.base_path);
@@ -442,7 +442,7 @@ pub async fn get_sigmets(
     if let Some(ref param_value) = date {
         req_builder = req_builder.query(&[("date", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = atsu {
+    if let Some(ref param_value) = air_traffic_service_unit {
         req_builder = req_builder.query(&[("atsu", &param_value.to_string())]);
     }
     if let Some(ref param_value) = sequence {

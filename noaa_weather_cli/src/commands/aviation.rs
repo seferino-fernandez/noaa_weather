@@ -41,7 +41,7 @@ pub struct CwsuArgs {
 /// Arguments for fetching a specific SIGMET/AIRMET.
 #[derive(Args, Debug, Clone)]
 pub struct SigmetArgs {
-    /// Air Traffic Service Unit (ATSU) identifier (e.g., KANSAS CITY).
+    /// Air Traffic Service Unit (ATSU) identifier (e.g., KKCI, ANC).
     #[arg(long)]
     atsu: String,
 
@@ -69,7 +69,7 @@ pub struct SigmetsArgs {
     #[arg(long)]
     date: Option<String>,
 
-    /// Air Traffic Service Unit (ATSU) identifier for filtering.
+    /// Air Traffic Service Unit (ATSU) identifier (e.g., KKCI, ANC).
     #[arg(long)]
     atsu: Option<String>,
 
