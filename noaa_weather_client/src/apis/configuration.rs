@@ -6,8 +6,16 @@ pub struct Configuration {
 }
 
 impl Configuration {
-    pub fn new() -> Configuration {
-        Configuration::default()
+    pub fn new(
+        user_agent: Option<String>,
+        base_path: Option<String>,
+        client: Option<reqwest::Client>,
+    ) -> Self {
+        Configuration {
+            base_path: base_path.unwrap_or("https://api.weather.gov".to_owned()),
+            user_agent,
+            client: client.unwrap_or_default(),
+        }
     }
 }
 

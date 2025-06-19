@@ -39,6 +39,7 @@ fn test_alerts_command_area_success() {
     let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("area");
+    cmd.arg("--area");
     cmd.arg("AZ");
     cmd.assert().success();
 }
@@ -65,6 +66,7 @@ fn test_alerts_command_marine_region_success() {
     let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("marine-region");
+    cmd.arg("--marine-region");
     cmd.arg("PI");
     cmd.assert().success();
 }
@@ -74,6 +76,7 @@ fn test_alerts_command_marine_region_failure_invalid_region() {
     let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("marine-region");
+    cmd.arg("--marine-region");
     cmd.arg("invalid");
     cmd.assert().failure();
 }
@@ -84,6 +87,7 @@ fn test_alerts_command_get_success() {
     let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("alert");
+    cmd.arg("--id");
     cmd.arg("urn:oid:2.49.0.1.840.0.dcc6cd9527d1f8732519ea87f13d3810e9ef672c.001.1");
     cmd.assert().success();
 }
@@ -101,6 +105,7 @@ fn test_alerts_zone_success() {
     let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("alerts");
     cmd.arg("zone");
+    cmd.arg("--zone-id");
     cmd.arg("AZC013");
     cmd.assert().success();
 }

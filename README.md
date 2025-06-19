@@ -167,7 +167,7 @@ With the point metadata, you can get your location's forecast office ID, and gri
 Get your location's hourly forecast:
 
 ```bash
-noaa-weather gridpoints forecast-hourly --office-id LOX --x 155 --y 32
+noaa-weather gridpoints forecast-hourly --forecast-office-id LOX --x 155 --y 32
 ```
 
 ## 🏗️ Development
@@ -209,15 +209,7 @@ cargo build --release
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Development Guidelines
-
--   Follow [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/)
--   Ensure all tests pass: `cargo test`
--   Run clippy: `cargo clippy`
--   Format code: `cargo fmt`
--   Update documentation for new features
+I welcome any and all contributions!
 
 ### Reporting Issues
 
@@ -227,17 +219,10 @@ Please use our [GitHub Issues](https://github.com/seferino-fernandez/noaa_weathe
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
-## 🙏 Acknowledgments
-
--   [National Weather Service](https://www.weather.gov/) for providing the excellent API
--   [NOAA](https://www.noaa.gov/) for weather data and services
--   The Rust community for excellent crates and tooling
-
 ## 📚 Additional Resources
 
 -   [NOAA Weather API Documentation](https://www.weather.gov/documentation/services-web-api)
 -   [NOAA Weather API GitHub](https://github.com/weather-gov/api)
 -   [National Weather Service](https://www.weather.gov/)
--   [CLI Documentation](docs/cli/)
 
 ---

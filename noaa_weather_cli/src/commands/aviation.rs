@@ -83,15 +83,15 @@ pub struct SigmetsArgs {
 pub enum AviationCommands {
     /// Get a specific Center Weather Advisory (CWA) by CWSU ID, date, and sequence number.
     ///
-    /// Example: `noaa-weather aviation cwa --cwsu-id ZLA --date 2025-04-18 --sequence 101`
+    /// Example: `noaa-weather aviation cwa --cwsu-id ZJX --date 2025-06-12 --sequence 101`
     Cwa(CwaArgs),
     /// Get all current Center Weather Advisories (CWAs) for a Center Weather Service Unit (CWSU).
     ///
-    /// Example: `noaa-weather aviation cwas --cwsu-id ZLA`
+    /// Example: `noaa-weather aviation cwas --cwsu-id ZJX`
     Cwas(CwasArgs),
     /// Get metadata for a Center Weather Service Unit (CWSU).
     ///
-    /// Example: `noaa-weather aviation cwsu --cwsu-id ZLA`
+    /// Example: `noaa-weather aviation cwsu --cwsu-id ZJX`
     Cwsu(CwsuArgs),
     /// Get a specific SIGMET/AIRMET product identified by Air Traffic Service Unit (ATSU), date, and time.
     ///

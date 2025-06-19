@@ -1,6 +1,6 @@
 use super::{ContentType, Error, configuration};
 use crate::apis::ResponseContent;
-use crate::models;
+use crate::models::{self, AreaCode};
 use reqwest;
 use serde::de::Error as _;
 use serde::{Deserialize, Serialize};
@@ -443,7 +443,7 @@ pub async fn get_active_alerts(
 /// cannot be parsed.
 pub async fn get_active_alerts_for_area(
     configuration: &configuration::Configuration,
-    area: &str,
+    area: &AreaCode,
 ) -> Result<models::AlertCollectionGeoJson, Error<ActiveAlertsAreaError>> {
     let uri_str = format!(
         "{}/alerts/active/area/{area}",

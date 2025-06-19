@@ -38,7 +38,7 @@ pub enum RadarCommand {
 #[command(about = "Get metadata for a radar wind profiler station.")]
 pub struct RadarWindProfilerArgs {
     /// The ID of the radar wind profiler station (e.g., "HWPA2").
-    #[arg(required = true)]
+    #[arg(long, required = true)]
     id: String,
 
     /// Optional: Specify a time for the data (ISO 8601 format or relative time like "-1hour").
@@ -55,7 +55,7 @@ pub struct RadarWindProfilerArgs {
 #[command(about = "Get metadata and entries for a radar data queue.")]
 pub struct RadarDataQueueArgs {
     /// The host name of the radar queue server (e.g., "rds").
-    #[arg(required = true, value_enum)]
+    #[arg(long, required = true, value_enum)]
     host: RadarQueueHost,
 
     /// Optional: Limit the number of queue entries returned.
@@ -98,7 +98,7 @@ pub struct RadarDataQueueArgs {
 #[command(about = "Get metadata for a specific radar server.")]
 pub struct RadarServerArgs {
     /// The ID of the radar server (e.g., "ldm1").
-    #[arg(required = true)]
+    #[arg(long, required = true)]
     id: String,
 
     /// Optional: Filter by reporting host.
@@ -120,7 +120,7 @@ pub struct RadarServersArgs {
 #[command(about = "Get metadata for a specific radar station.")]
 pub struct RadarStationArgs {
     /// The ID of the radar station (e.g., "KABQ", "HWPA2").
-    #[arg(required = true)]
+    #[arg(long, required = true)]
     station_id: String,
 
     /// Optional: Filter by reporting host.
@@ -137,7 +137,7 @@ pub struct RadarStationArgs {
 #[command(about = "Get alarm metadata for a specific radar station.")]
 pub struct RadarStationAlarmsArgs {
     /// The ID of the radar station (e.g., "KABQ").
-    #[arg(required = true)]
+    #[arg(long, required = true)]
     station_id: String,
 }
 
@@ -146,7 +146,7 @@ pub struct RadarStationAlarmsArgs {
 #[command(about = "Get a list of radar stations.")]
 pub struct RadarStationsArgs {
     /// Optional: Filter by station type(s) (e.g., "WSR-88D", "TDWR"). Can be specified multiple times.
-    #[arg(long = "stationType")]
+    #[arg(long)]
     station_type: Option<Vec<String>>,
 
     /// Optional: Filter by reporting host.

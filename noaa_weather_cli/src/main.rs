@@ -41,7 +41,7 @@ async fn main() {
 async fn try_main() -> Result<()> {
     let cli = Cli::parse();
 
-    let config = Configuration::new();
+    let config = Configuration::default();
 
     match &cli.command {
         Commands::Alerts { command } => {

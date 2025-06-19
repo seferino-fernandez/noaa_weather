@@ -79,10 +79,11 @@ pub enum AlertCommands {
 
     /// Get active alerts for a specific area (State/Territory or Marine Area).
     ///
-    /// Example: `noaa-weather alerts area CA` or `noaa-weather alerts area GM`
+    /// Example: `noaa-weather alerts area --area CA` or `noaa-weather alerts area --area GM`
     Area {
         /// The state/territory abbreviation or marine area code (e.g., "AL", "GM").
-        area: String,
+        #[arg(long, value_enum)]
+        area: AreaCode,
     },
 
     /// Get the total count of active alerts, optionally summarized.
@@ -98,25 +99,26 @@ pub enum AlertCommands {
     ///  - PA: Eastern Pacific Ocean and U.S. West Coast
     ///  - PI: Central and Western Pacific
     ///
-    /// Example: `noaa-weather alerts marine-region AT`
+    /// Example: `noaa-weather alerts marine-region --marine-region AT`
     MarineRegion {
         /// Marine region code (AL, AT, GL, GM, PA, PI).
-        #[arg(value_enum)]
+        #[arg(long, value_enum)]
         marine_region: MarineRegionCode,
     },
 
     /// Get active alerts for a specific NWS zone (Public Zone or County).
     ///
-    /// Example: `noaa-weather alerts zone CAZ043`
+    /// Example: `noaa-weather alerts zone --zone-id CAZ043`
     Zone {
         /// Zone ID (e.g., "CAZ043", "CAC073") to get alerts for.
+        #[arg(long)]
         zone_id: String,
     },
 
     /// List alerts (active or inactive) with various filters and pagination.
     ///
     /// Queries the NWS API for alerts, allowing filtering by time range,
-    /// status, location, and other criteria. Supports pagination using `--cursor`.
+    /// status, location, and other criteria.
     List {
         /// Include active alerts only (if set, overrides start/end times).
         #[arg(long)]
@@ -190,9 +192,10 @@ pub enum AlertCommands {
 
     /// Get a single alert by its unique NWS ID.
     ///
-    /// Example: `noaa-weather alerts alert urn:oid:2.49.0.1.840.0.dcc6cd9527d1f8732519ea87f13d3810e9ef672c.001.1`
+    /// Example: `noaa-weather alerts alert --id urn:oid:2.49.0.1.840.0.dcc6cd9527d1f8732519ea87f13d3810e9ef672c.001.1`
     Alert {
         /// Unique Alert ID (e.g., "urn:oid:2.49.0.1.840.0.dcc6cd9527d1f8732519ea87f13d3810e9ef672c.001.1").
+        #[arg(long)]
         id: String,
     },
 

@@ -21,19 +21,19 @@ noaa-weather alerts count
 ## Get Active Alerts for a Marine Region
 
 ```sh
-noaa-weather alerts region --region <REGION>
+noaa-weather alerts marine-region --marine-region <REGION>
 ```
 
 ## Get Active Alerts for a Zone
 
 ```sh
-noaa-weather alerts zone --zone <ZONE>
+noaa-weather alerts zone --zone-id <ZONE_ID>
 ```
 
 ## Get a Single Alert by ID
 
 ```sh
-noaa-weather alerts get --id <ID>
+noaa-weather alerts alert --id <ID>
 ```
 
 ## List Available Alert Types

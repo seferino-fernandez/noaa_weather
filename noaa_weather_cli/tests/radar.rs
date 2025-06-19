@@ -5,6 +5,7 @@ fn test_radar_data_queue_success() {
     let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("radar")
         .arg("data-queue")
+        .arg("--host")
         .arg("rds")
         .arg("--station")
         .arg("KIWA");
@@ -14,7 +15,7 @@ fn test_radar_data_queue_success() {
 #[test]
 fn test_radar_server_success() {
     let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
-    cmd.arg("radar").arg("server").arg("ldm1");
+    cmd.arg("radar").arg("server").arg("--id").arg("ldm1");
     cmd.assert().success();
 }
 
@@ -28,14 +29,20 @@ fn test_radar_servers_success() {
 #[test]
 fn test_radar_station_success() {
     let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
-    cmd.arg("radar").arg("station").arg("HWPA2");
+    cmd.arg("radar")
+        .arg("station")
+        .arg("--station-id")
+        .arg("HWPA2");
     cmd.assert().success();
 }
 
 #[test]
 fn test_radar_station_alarms_success() {
     let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
-    cmd.arg("radar").arg("station-alarms").arg("KABQ");
+    cmd.arg("radar")
+        .arg("station-alarms")
+        .arg("--station-id")
+        .arg("KABQ");
     cmd.assert().success();
 }
 
@@ -51,7 +58,7 @@ fn test_radar_stations_with_type_success() {
     let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("radar")
         .arg("stations")
-        .arg("--stationType")
+        .arg("--station-type")
         .arg("WSR-88D");
     cmd.assert().success();
 }
