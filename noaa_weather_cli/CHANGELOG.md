@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.2](https://github.com/seferino-fernandez/noaa_weather/releases/tag/noaa_weather_cli-v0.1.2) - 2025-06-19
+## [0.1.3](https://github.com/seferino-fernandez/noaa_weather/releases/tag/noaa_weather_cli-v0.1.3) - 2025-06-19
 
 ### Added
 

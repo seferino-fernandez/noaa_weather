@@ -2,6 +2,21 @@
 
 ## Installation
 
+### Installation
+
+#### Homebrew
+
+Install the `noaa-weather` CLI tool using Homebrew:
+
+```bash
+brew tap seferino-fernandez/tools
+brew install noaa-weather
+```
+
+#### Cargo
+
+Install the `noaa-weather` CLI tool using Cargo:
+
 ```bash
 cargo install noaa-weather
 ```
@@ -56,7 +71,7 @@ noaa-weather stations latest-observation --station-id KJFK
 
 Get aviation weather (SIGMETs):
 
-```bash
+````bash
 noaa-weather aviation sigmets
 ```s
 
@@ -64,7 +79,7 @@ For detailed documentation on each command, run:
 
 ```bash
 noaa-weather <command> --help
-```
+````
 
 ## Get Information for your location
 

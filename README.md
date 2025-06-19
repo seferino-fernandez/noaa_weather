@@ -24,6 +24,15 @@ A comprehensive Rust client library and command-line interface for the [NOAA Wea
 
 ### Installation
 
+#### Homebrew
+
+Install the `noaa-weather` CLI tool using Homebrew:
+
+```bash
+brew tap seferino-fernandez/tools
+brew install noaa-weather
+```
+
 #### From Source
 
 ```bash
