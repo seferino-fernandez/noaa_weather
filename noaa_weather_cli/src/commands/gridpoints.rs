@@ -1,7 +1,7 @@
 use crate::utils::format::write_output;
 use crate::{Cli, tables};
 use anyhow::{Result, anyhow};
-use clap::{Args, Subcommand, value_parser};
+use clap::{Args, Subcommand};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::gridpoints as gridpoints_api;
 use noaa_weather_client::models::{GridpointForecastUnits, NwsForecastOfficeId};
@@ -11,7 +11,7 @@ use noaa_weather_client::models::{GridpointForecastUnits, NwsForecastOfficeId};
 pub struct GridpointLocationArgs {
     /// NWS forecast office ID (e.g., TOP, LWX).
     /// Use the `points` command to find the office for a location.
-    #[arg(long, value_parser = value_parser!(NwsForecastOfficeId))]
+    #[arg(long, value_enum)]
     forecast_office_id: NwsForecastOfficeId,
 
     /// Grid X coordinate.
