@@ -1,0 +1,62 @@
+name: Release
+
+permissions:
+    contents: write
+    pull-requests: write
+
+on:
+    push:
+        branches:
+            - main
+
+# Ensures that only one release-pr job runs at a time for a given branch, preventing race conditions.
+concurrency:
+    group: release-plz-${{ github.ref }}
+    cancel-in-progress: false
+
+jobs:
+    release-pr:
+        name: Create Release Pull Request
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  # `fetch-depth: 0` is required for release-plz to analyze the commit history.
+                  fetch-depth: 0
+
+            - name: Install Rust toolchain
+              uses: dtolnay/rust-toolchain@nightly
+
+            - name: Run release-plz to create a release PR
+              id: release-plz
+              uses: release-plz/action@v0.5
+              with:
+                  command: release-pr
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    release:
+        name: Release Crates
+        runs-on: ubuntu-latest
+        # This job will only execute when `release-plz` detects that the commit
+        # that triggered the workflow is the merge commit of one of its own release PRs.
+        # This behavior is enabled by the `release_always = false` setting in `release-plz.toml`.
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Install Rust toolchain
+              uses: dtolnay/rust-toolchain@nightly
+
+            - name: Run release-plz to publish
+              id: release-plz
+              uses: release-plz/action@v0.5
+              with:
+                  command: release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  # This secret is required to publish the `noaa_weather_client` crate to Crates.io.
+                  CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

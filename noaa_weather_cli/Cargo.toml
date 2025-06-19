@@ -9,7 +9,7 @@ repository = "https://github.com/seferino-fernandez/noaa_weather"
 keywords = ["weather", "noaa", "nws", "cli"]
 categories = ["command-line-utilities"]
 homepage = "https://github.com/seferino-fernandez/noaa_weather"
-documentation = "https://docs.rs/noaa_weather_client"
+documentation = "https://github.com/seferino-fernandez/noaa_weather"
 readme = "README.md"
 
 [[bin]]
