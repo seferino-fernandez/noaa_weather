@@ -34,141 +34,20 @@ cargo install --path noaa_weather_cli
 
 #### As a Library
 
-Add to your `Cargo.toml`:
+```bash
+cargo add noaa_weather_client
+```
+
+or add to your `Cargo.toml` manually:
 
 ```toml
 [dependencies]
 noaa_weather_client = "0.1.0"
 ```
 
-### CLI Usage
-
-Get current weather alerts:
-
-```bash
-noaa-weather alerts active
-```
-
-Get forecast for a specific location:
-
-```bash
-noaa-weather points metadata "39.7456,-97.0892"
-```
-
-Get latest observations from a weather station:
-
-```bash
-noaa-weather stations latest-observation --station-id KJFK
-```
-
-Get aviation weather (SIGMETs):
-
-```bash
-noaa-weather aviation sigmets
-```
-
-### Library Usage
-
-```rust
-use noaa_weather_client::apis::configuration::Configuration;
-use noaa_weather_client::apis::points;
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = Configuration::new();
-
-    // Get point metadata for coordinates
-    let point_data = points::get_point(&config, "39.7456,-97.0892").await?;
-    println!("Forecast office: {:?}", point_data.properties.forecast_office);
-
-    Ok(())
-}
-```
-
 ## 📖 Documentation
 
-### Authentication
-
-From the [NOAA Weather API Documentation](https://www.weather.gov/documentation/services-web-api):
-
-> A User Agent is required to identify your application.
-> This string can be anything, and the more unique to your application the less likely it will be affected by a security event.
-> If you include contact information (website or email), we can contact you if your string is associated to a security event.
-> This will be replaced with an API key in the future.
->
-> User-Agent: (myweatherapp.com, contact@myweatherapp.com)
-
-### CLI Commands
-
-| Command      | Description                 | Example                                                          |
-| ------------ | --------------------------- | ---------------------------------------------------------------- |
-| `alerts`     | Weather alerts and warnings | `noaa-weather alerts active --area CA`                           |
-| `gridpoints` | Detailed forecast data      | `noaa-weather gridpoints forecast --office-id TOP --x 31 --y 80` |
-| `points`     | Point metadata and stations | `noaa-weather points metadata "40.7128,-74.0060"`                |
-| `stations`   | Weather station data        | `noaa-weather stations latest-observation --station-id KJFK`     |
-| `zones`      | Zone forecasts and info     | `noaa-weather zones forecast --type forecast --id CAZ006`        |
-| `radar`      | Radar stations and data     | `noaa-weather radar stations`                                    |
-| `aviation`   | Aviation weather products   | `noaa-weather aviation sigmets --atsu KKCI`                      |
-| `products`   | NWS text products           | `noaa-weather products types`                                    |
-| `offices`    | NWS office information      | `noaa-weather offices metadata --office-id TOP`                  |
-
-### Output Formats
-
-All commands support multiple output formats:
-
--   **Human-readable tables** (default) - Perfect for terminal viewing
--   **JSON** (`--json`) - Machine-readable for scripting and integration
--   **File output** (`--output file.txt`) - Save results to a file
-
-### General Examples
-
-#### Get Weather Alerts for California
-
-```bash
-noaa-weather alerts area --area CA
-```
-
-#### Retrieve Metadata for Multiple Weather Stations
-
-```bash
-noaa-weather stations list --state CA,NV --limit 50
-```
-
-#### Get Aviation Weather for Specific Airport
-
-```bash
-noaa-weather aviation cwas --cwsu-id ZLA
-```
-
-For detailed documentation on each command, run:
-
-```bash
-noaa-weather <command> --help
-```
-
-### Get Information for your location
-
-First, get the latitude and longitude of the current location:
-
-```bash
-curl "http://ip-api.com/json?fields=lat,lon"
-```
-
-Then you can:
-
-Get your location's point metadata:
-
-```bash
-noaa-weather points metadata "33.7629,-118.1889"
-```
-
-With the point metadata, you can get your location's forecast office ID, and gridpoint coordinates.
-
-Get your location's hourly forecast:
-
-```bash
-noaa-weather gridpoints forecast-hourly --forecast-office-id LOX --x 155 --y 32
-```
+See the [noaa_weather_cli](noaa_weather_cli/README.md) and [noaa_weather_client](noaa_weather_client/README.md) documentation for more details.
 
 ## 🏗️ Development
 

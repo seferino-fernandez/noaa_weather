@@ -32,7 +32,7 @@ use noaa_weather_client::apis::{points, alerts};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = Configuration::new();
+    let config = Configuration::default();
 
     // Get point metadata for coordinates (latitude, longitude)
     let point = points::get_point(&config, "39.7456,-97.0892").await?;
@@ -51,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```rust
 use noaa_weather_client::apis::{configuration::Configuration, alerts};
 
-let config = Configuration::new();
+let config = Configuration::default();
 
 // Get all active alerts
 let active_alerts = alerts::get_active_alerts(&config, None, None, None, None, None, None, None).await?;
@@ -68,7 +68,7 @@ let zone_alerts = alerts::get_active_alerts_for_zone(&config, "CAZ006").await?;
 ```rust
 use noaa_weather_client::apis::{configuration::Configuration, stations};
 
-let config = Configuration::new();
+let config = Configuration::default();
 
 // Get latest observation for a station
 let observation = stations::get_latest_observation(&config, "KJFK", None).await?;
@@ -84,7 +84,7 @@ println!("Station name: {:?}", station.properties.name);
 ```rust
 use noaa_weather_client::apis::{configuration::Configuration, gridpoints};
 
-let config = Configuration::new();
+let config = Configuration::default();
 
 // Get forecast for specific gridpoint
 let forecast = gridpoints::get_gridpoint_forecast(&config, "TOP", 31, 80, None).await?;
@@ -101,7 +101,7 @@ The `Configuration` struct provides default settings that work out of the box:
 use noaa_weather_client::apis::configuration::Configuration;
 
 // Use default configuration
-let config = Configuration::new();
+let config = Configuration::default();
 
 // Or customize the client
 let config = Configuration {
@@ -121,7 +121,7 @@ All API functions return `Result<T, Error<E>>` where `E` is the specific error t
 ```rust
 use noaa_weather_client::apis::{configuration::Configuration, points};
 
-let config = Configuration::new();
+let config = Configuration::default();
 
 match points::get_point(&config, "invalid-point").await {
     Ok(point_data) => println!("Success: {:?}", point_data),
@@ -154,21 +154,22 @@ This client covers all major NOAA Weather API endpoints:
 | `aviation`   | Aviation weather            | `get_sigmets`, `get_center_weather_advisories`            |
 | `products`   | Text products               | `get_product_types`, `get_products`                       |
 
-## Rate Limiting
+## Authentication
 
-The NOAA Weather API doesn't require authentication but has rate limits. This client:
+The NOAA Weather API doesn't require authentication but NOAA recommends a unique User-Agent to identify your application.
 
--   Reuses HTTP connections for efficiency
--   Provides proper User-Agent headers
--   Handles rate limit responses gracefully
+From the [NOAA Weather API Documentation](https://www.weather.gov/documentation/services-web-api):
 
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](https://github.com/seferino-fernandez/noaa_weather/blob/main/CONTRIBUTING.md).
+> A User Agent is required to identify your application.
+> This string can be anything, and the more unique to your application the less likely it will be affected by a security event.
+> If you include contact information (website or email), we can contact you if your string is associated to a security event.
+> This will be replaced with an API key in the future.
+>
+> User-Agent: (myweatherapp.com, contact@myweatherapp.com)
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/seferino-fernandez/noaa_weather/blob/main/LICENSE.md) file for details.
+This project is licensed under the MIT License - see the [LICENSE.md](../LICENSE.md) file for details.
 
 ## Disclaimer
 
