@@ -3,49 +3,49 @@
 Get radar profiler data for a station.
 
 ```sh
-noaa_weather_cli radar profiler <station_id>
+noaa-weather radar profiler <station_id>
 ```
 
 Get radar queue data for a host.
 
 ```sh
-noaa_weather_cli radar queue <host>
+noaa-weather radar queue <host>
 ```
 
 Get radar server data for an ID.
 
 ```sh
-noaa_weather_cli radar server <id>
+noaa-weather radar server <id>
 ```
 
 Get all radar servers.
 
 ```sh
-noaa_weather_cli radar servers
+noaa-weather radar servers
 ```
 
 Get radar station data for a station ID.
 
 ```sh
-noaa_weather_cli radar station <station_id>
+noaa-weather radar station <station_id>
 ```
 
 Get radar station alarms for a station ID.
 
 ```sh
-noaa_weather_cli radar station-alarms <station_id>
+noaa-weather radar station-alarms <station_id>
 ```
 
 Get all radar stations.
 
 ```sh
-noaa_weather_cli radar stations
+noaa-weather radar stations
 ```
 
 Get all radar stations with a specific station type.
 
 ```sh
-noaa_weather_cli radar stations --stationType <type>
+noaa-weather radar stations --stationType <type>
 ```
 
 ## Radar Profiler
