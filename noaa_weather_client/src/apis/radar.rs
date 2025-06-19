@@ -1,6 +1,6 @@
 use super::{ContentType, Error, configuration};
 use crate::apis::ResponseContent;
-use crate::models;
+use crate::models::{self, RadarQueueHost};
 use reqwest;
 use serde::de::Error as _;
 use serde::{Deserialize, Serialize};
@@ -202,13 +202,13 @@ pub async fn get_radar_wind_profiler(
 /// cannot be parsed.
 pub async fn get_radar_data_queue(
     configuration: &configuration::Configuration,
-    host: &str,
+    host: &RadarQueueHost,
     params: RadarDataQueueQueryParams<'_>,
 ) -> Result<models::RadarQueuesResponse, Error<RadarDataQueueError>> {
     let uri_str = format!(
         "{}/radar/queues/{host}",
         configuration.base_path,
-        host = crate::apis::urlencode(host)
+        host = host
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
@@ -445,7 +445,7 @@ pub async fn get_radar_station(
     configuration: &configuration::Configuration,
     id: &str,
     reporting_host: Option<&str>,
-    host: Option<&str>,
+    host: Option<&RadarQueueHost>,
 ) -> Result<models::RadarStationFeature, Error<RadarStationError>> {
     let uri_str = format!(
         "{}/radar/stations/{id}",
@@ -595,7 +595,7 @@ pub async fn get_radar_stations(
     configuration: &configuration::Configuration,
     station_type: Option<Vec<String>>,
     reporting_host: Option<&str>,
-    host: Option<&str>,
+    host: Option<&RadarQueueHost>,
 ) -> Result<models::RadarStationsResponse, Error<RadarStationsError>> {
     let uri_str = format!("{}/radar/stations", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);

@@ -3,6 +3,7 @@ use clap::{Args, Subcommand};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::radar as radar_api;
 use noaa_weather_client::apis::radar::RadarDataQueueQueryParams;
+use noaa_weather_client::models::RadarQueueHost;
 
 use crate::utils::format::write_output;
 use crate::{Cli, tables};
@@ -54,8 +55,8 @@ pub struct RadarWindProfilerArgs {
 #[command(about = "Get metadata and entries for a radar data queue.")]
 pub struct RadarDataQueueArgs {
     /// The host name of the radar queue server (e.g., "rds").
-    #[arg(required = true)]
-    host: String,
+    #[arg(required = true, value_enum)]
+    host: RadarQueueHost,
 
     /// Optional: Limit the number of queue entries returned.
     /// A limit is required or the API will return an error.
@@ -127,8 +128,8 @@ pub struct RadarStationArgs {
     reporting_host: Option<String>,
 
     /// Optional: Filter by host server.
-    #[arg(long)]
-    host: Option<String>,
+    #[arg(long, value_enum)]
+    host: Option<RadarQueueHost>,
 }
 
 /// Arguments for the `station-alarms` subcommand.
@@ -154,7 +155,7 @@ pub struct RadarStationsArgs {
 
     /// Optional: Filter by host server.
     #[arg(long)]
-    host: Option<String>,
+    host: Option<RadarQueueHost>,
 }
 
 /// Handles the execution of radar-related subcommands.
@@ -246,7 +247,7 @@ pub async fn handle_command(
                 config,
                 &args.station_id,
                 args.reporting_host.as_deref(),
-                args.host.as_deref(),
+                args.host.as_ref(),
             )
             .await?;
             if cli.json {
@@ -278,7 +279,7 @@ pub async fn handle_command(
                 config,
                 args.station_type.clone(),
                 args.reporting_host.as_deref(),
-                args.host.as_deref(),
+                args.host.as_ref(),
             )
             .await?;
             if cli.json {

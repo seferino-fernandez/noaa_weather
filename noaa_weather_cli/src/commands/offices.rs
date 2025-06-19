@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow};
 use clap::{Args, Subcommand};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::offices as offices_api;
+use noaa_weather_client::models::NwsForecastOfficeId;
 
 use crate::utils::format::write_output;
 use crate::{Cli, tables};
@@ -10,8 +11,8 @@ use crate::{Cli, tables};
 #[derive(Args, Debug, Clone)]
 pub struct OfficeIdArgs {
     /// NWS forecast office ID (three-letter identifier, e.g., PSR, BOX, TOP).
-    #[arg(long)]
-    id: String,
+    #[arg(long, value_enum)]
+    id: NwsForecastOfficeId,
 }
 
 /// Access metadata and headlines for NWS forecast offices.

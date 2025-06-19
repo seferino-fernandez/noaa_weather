@@ -1,19 +1,17 @@
 use anyhow::{Result, anyhow};
-use clap::{Args, Subcommand, value_parser};
+use clap::{Args, Subcommand};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::zones::{self as zones_api, GetZonesByTypeParams, GetZonesParams};
-use noaa_weather_client::models::NwsZoneType;
+use noaa_weather_client::models::{AreaCode, NwsZoneType, RegionCode};
 
 use crate::utils::format::write_output;
 use crate::{Cli, tables};
-
-use crate::utils::parse::{parse_area_codes, parse_region_codes, parse_string_args_into_vec};
 
 /// Helper struct for commands requiring both a zone type and ID.
 #[derive(Args, Debug, Clone)]
 pub struct ZoneTypeAndIdArgs {
     /// Type of zone (forecast, public, coastal, offshore, fire, county)
-    #[arg(short, long, value_parser = value_parser!(NwsZoneType))]
+    #[arg(short, long, value_enum)]
     r#type: NwsZoneType,
     /// Zone identifier (e.g., AZZ540, WVC001)
     #[arg(short, long)]
@@ -34,22 +32,22 @@ pub enum ZoneCommands {
         #[arg(short, long, value_delimiter = ',')]
         id: Option<Vec<String>>,
         /// Filter by area code (State/Territory or Marine Area, comma-separated)
-        #[arg(long, value_delimiter = ',')]
-        area: Option<Vec<String>>,
+        #[arg(long, value_delimiter = ',', value_enum)]
+        area: Option<Vec<AreaCode>>,
         /// Filter by region code (Land or Marine, comma-separated)
-        #[arg(long, value_delimiter = ',')]
-        region: Option<Vec<String>>,
+        #[arg(long, value_delimiter = ',', value_enum)]
+        region: Option<Vec<RegionCode>>,
         /// Filter by zone type (comma-separated: forecast, public, etc.)
-        #[arg(short, long, value_delimiter = ',')]
-        r#type: Option<Vec<String>>,
+        #[arg(short, long, value_delimiter = ',', value_enum)]
+        r#type: Option<Vec<NwsZoneType>>,
         /// Filter by point (latitude,longitude)
         #[arg(long)]
         point: Option<String>,
         /// Include geometry in results (can be large)
         #[arg(long)]
         include_geometry: Option<bool>,
-        /// Limit number of results
-        #[arg(short, long)]
+        /// Optional: Limit the number of zones returned.
+        #[arg(long, value_parser = clap::value_parser!(i32).range(1..=500))]
         limit: Option<i32>,
         /// Filter by effective date (ISO 8601 format)
         #[arg(long)]
@@ -79,12 +77,9 @@ pub enum ZoneCommands {
         /// Forecast zone identifier (e.g., AZZ540)
         #[arg(short, long)]
         id: String,
-        /// Limit number of results
-        #[arg(short, long)]
+        /// Optional: Limit the number of stations returned.
+        #[arg(long, value_parser = clap::value_parser!(i32).range(1..=500))]
         limit: Option<i32>,
-        /// Pagination cursor
-        #[arg(long)]
-        cursor: Option<String>,
     },
     /// List recent observations for stations within a forecast zone.
     ///
@@ -99,8 +94,8 @@ pub enum ZoneCommands {
         /// End time (ISO 8601 format)
         #[arg(long)]
         end: Option<String>,
-        /// Limit number of results
-        #[arg(short, long)]
+        /// Optional: Limit the number of observations returned.
+        #[arg(long, value_parser = clap::value_parser!(i32).range(1..=500))]
         limit: Option<i32>,
     },
 }
@@ -132,19 +127,15 @@ pub async fn handle_command(
             limit,
             effective,
         } => {
-            let area_parsed = parse_area_codes(area.clone())?;
-            let region_parsed = parse_region_codes(region.clone())?;
-            let type_parsed = parse_string_args_into_vec::<NwsZoneType>(r#type.clone())?;
-
             let point_ref = point.as_deref();
 
-            let result = match type_parsed {
+            let result = match r#type {
                 None => {
                     // Call the general list endpoint if no type filter
                     let params = GetZonesParams {
                         id: id.clone(),
-                        area: area_parsed,
-                        region: region_parsed,
+                        area: area.clone(),
+                        region: region.clone(),
                         r#type: None,
                         point: point_ref,
                         include_geometry: *include_geometry,
@@ -158,18 +149,18 @@ pub async fn handle_command(
                 Some(types) => {
                     if types.len() == 1 {
                         // Call the type-specific list endpoint if exactly one type filter
-                        let single_type = types.into_iter().next().unwrap();
+                        let single_type = types.iter().next().unwrap();
                         let params = GetZonesByTypeParams {
                             id: id.clone(),
-                            area: area_parsed,
-                            region: region_parsed,
+                            area: area.clone(),
+                            region: region.clone(),
                             type_filter: None,
                             point: point_ref,
                             include_geometry: *include_geometry,
                             limit: *limit,
                             effective: effective.clone(),
                         };
-                        zones_api::get_zones_by_type(config, single_type, params)
+                        zones_api::get_zones_by_type(config, *single_type, params)
                             .await
                             .map_err(|e| {
                                 anyhow!("Error listing zones of type {}: {}", single_type, e)
@@ -178,9 +169,9 @@ pub async fn handle_command(
                         // Call general list endpoint with type filter if multiple types
                         let params = GetZonesParams {
                             id: id.clone(),
-                            area: area_parsed,
-                            region: region_parsed,
-                            r#type: Some(types),
+                            area: area.clone(),
+                            region: region.clone(),
+                            r#type: Some(types.clone()),
                             point: point_ref,
                             include_geometry: *include_geometry,
                             limit: *limit,
@@ -257,8 +248,8 @@ pub async fn handle_command(
             }
             Ok(())
         }
-        ZoneCommands::Stations { id, limit, cursor } => {
-            let result = zones_api::get_stations_by_zone(config, id, *limit, cursor.as_deref())
+        ZoneCommands::Stations { id, limit } => {
+            let result = zones_api::get_stations_by_zone(config, id, *limit, None)
                 .await
                 .map_err(|e| anyhow!("Error getting stations for forecast zone {}: {}", id, e))?;
             if cli.json {

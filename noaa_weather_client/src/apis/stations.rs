@@ -271,7 +271,7 @@ pub async fn get_observation_stations(
 ///
 /// * `configuration`: The API client configuration.
 /// * `station_id`: The ID of the observation station.
-/// * `require_qc`: Optional flag to require quality controlled data. Set to `false` by default.
+/// * `require_quality_controlled`: Optional flag to require quality controlled data. Set to `false` by default.
 ///   Note that non-QC'd data is preliminary.
 ///
 /// # Returns
@@ -285,7 +285,7 @@ pub async fn get_observation_stations(
 pub async fn get_latest_observations(
     configuration: &configuration::Configuration,
     station_id: &str,
-    require_qc: Option<bool>,
+    require_quality_controlled: Option<bool>,
 ) -> Result<models::ObservationGeoJson, Error<StationObservationLatestError>> {
     let uri_str = format!(
         "{}/stations/{stationId}/observations/latest",
@@ -294,7 +294,7 @@ pub async fn get_latest_observations(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = require_qc {
+    if let Some(ref param_value) = require_quality_controlled {
         req_builder = req_builder.query(&[("require_qc", &param_value.to_string())]);
     }
     if let Some(ref user_agent) = configuration.user_agent {

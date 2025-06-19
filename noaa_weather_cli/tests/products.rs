@@ -19,6 +19,16 @@ fn test_products_list_with_location_success() {
 }
 
 #[test]
+fn test_products_list_with_wmo_ids_success() {
+    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    cmd.arg("products");
+    cmd.arg("list");
+    cmd.arg("--wmo-ids");
+    cmd.arg("SRUS55");
+    cmd.assert().success();
+}
+
+#[test]
 fn test_products_types_success() {
     let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
     cmd.arg("products");

@@ -3,6 +3,7 @@ use clap::{Args, Subcommand};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::products as products_api;
 use noaa_weather_client::apis::products::ProductsQueryParams;
+use noaa_weather_client::models::NwsForecastOfficeId;
 
 use crate::utils::format::write_output;
 use crate::{Cli, tables};
@@ -12,8 +13,8 @@ use crate::{Cli, tables};
 pub struct LocationProductsArgs {
     /// Product issuance location ID (e.g., LWX, OKX).
     /// See `locations` subcommand for a list of valid IDs.
-    #[arg(long)]
-    location_id: String,
+    #[arg(long, value_enum)]
+    location_id: NwsForecastOfficeId,
 }
 
 /// Arguments for commands requiring a specific product ID.
@@ -29,8 +30,8 @@ pub struct ProductMetadataArgs {
 #[derive(Args, Debug, Clone)]
 pub struct ProductsListArgs {
     /// Filter by product issuance location ID(s) (comma-separated).
-    #[arg(long, value_delimiter = ',')]
-    location_ids: Option<Vec<String>>,
+    #[arg(long, value_delimiter = ',', value_enum)]
+    location_ids: Option<Vec<NwsForecastOfficeId>>,
 
     /// Filter by start time (ISO 8601 format, e.g., "2023-10-27T12:00:00Z").
     #[arg(long)]
@@ -41,8 +42,8 @@ pub struct ProductsListArgs {
     end_time: Option<String>,
 
     /// Filter by NWS office ID(s) (typically WFO ID, comma-separated).
-    #[arg(long, value_delimiter = ',')]
-    office_ids: Option<Vec<String>>,
+    #[arg(long, value_delimiter = ',', value_enum)]
+    office_ids: Option<Vec<NwsForecastOfficeId>>,
 
     /// Filter by WMO header ID(s) (comma-separated).
     #[arg(long, value_delimiter = ',')]
@@ -54,7 +55,7 @@ pub struct ProductsListArgs {
     product_type_codes: Option<Vec<String>>,
 
     /// Limit the number of results returned by the API.
-    #[arg(long, default_value_t = 500)]
+    #[arg(long, default_value_t = 500, value_parser = clap::value_parser!(i32).range(1..=500))]
     limit: i32,
 }
 
@@ -75,8 +76,8 @@ pub struct ProductsTypeLocationArgs {
     type_id: String,
 
     /// Product issuance location ID (e.g., LWX, OKX).
-    #[arg(long)]
-    location_id: String,
+    #[arg(long, value_enum)]
+    location_id: NwsForecastOfficeId,
 }
 
 /// Arguments for listing locations associated with a product type.

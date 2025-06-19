@@ -54,7 +54,7 @@ pub enum OfficeHeadlinesError {
 /// or the response cannot be parsed.
 pub async fn get_forecast_office(
     configuration: &configuration::Configuration,
-    id: &str,
+    id: &models::NwsForecastOfficeId,
 ) -> Result<models::Office, Error<OfficeError>> {
     let uri_str = format!("{}/offices/{id}", configuration.base_path, id = id);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
@@ -121,7 +121,7 @@ pub async fn get_forecast_office(
 /// or the response cannot be parsed.
 pub async fn get_forecast_office_headline(
     configuration: &configuration::Configuration,
-    id: &str,
+    id: &models::NwsForecastOfficeId,
     headline_id: &str,
 ) -> Result<models::OfficeHeadline, Error<OfficeHeadlineError>> {
     let uri_str = format!(
@@ -193,7 +193,7 @@ pub async fn get_forecast_office_headline(
 /// cannot be parsed.
 pub async fn get_forecast_office_headlines(
     configuration: &configuration::Configuration,
-    id: &str,
+    id: &models::NwsForecastOfficeId,
 ) -> Result<models::OfficeHeadlineCollection, Error<OfficeHeadlinesError>> {
     let uri_str = format!(
         "{}/offices/{id}/headlines",

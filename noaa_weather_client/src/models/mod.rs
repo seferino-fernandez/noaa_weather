@@ -180,6 +180,8 @@ pub mod quantitative_value;
 pub use self::quantitative_value::QuantitativeValue;
 pub mod radar_queue;
 pub use self::radar_queue::RadarQueue;
+pub mod radar_queue_host;
+pub use self::radar_queue_host::RadarQueueHost;
 pub mod radar_queues_response;
 pub use self::radar_queues_response::RadarQueuesResponse;
 pub mod radar_server;

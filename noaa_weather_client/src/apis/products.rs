@@ -91,13 +91,13 @@ pub enum ProductsTypeLocationsError {
 #[derive(Debug, Clone, Default)]
 pub struct ProductsQueryParams {
     /// Filter by issuance location ID (e.g., "LWX", "PQR").
-    pub location_ids: Option<Vec<String>>,
+    pub location_ids: Option<Vec<models::NwsForecastOfficeId>>,
     /// Start time for the query period (ISO 8601 format).
     pub start_time: Option<String>,
     /// End time for the query period (ISO 8601 format).
     pub end_time: Option<String>,
     /// Filter by issuing office ID (typically WFO ID, e.g., "LWX", "PQR").
-    pub office_ids: Option<Vec<String>>,
+    pub office_ids: Option<Vec<models::NwsForecastOfficeId>>,
     /// Filter by WMO header ID.
     pub wmo_ids: Option<Vec<String>>,
     /// Filter by product type code (e.g., "AFD", "HWO").
@@ -126,12 +126,12 @@ pub struct ProductsQueryParams {
 /// cannot be parsed.
 pub async fn get_products_by_location(
     configuration: &configuration::Configuration,
-    location_id: &str,
+    location_id: &models::NwsForecastOfficeId,
 ) -> Result<models::TextProductTypeCollection, Error<LocationProductsError>> {
     let uri_str = format!(
         "{}/products/locations/{locationId}/types",
         configuration.base_path,
-        locationId = crate::apis::urlencode(location_id)
+        locationId = location_id
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
@@ -620,13 +620,13 @@ pub async fn get_products_by_type(
 pub async fn get_products_by_type_and_location(
     configuration: &configuration::Configuration,
     type_id: &str,
-    location_id: &str,
+    location_id: &models::NwsForecastOfficeId,
 ) -> Result<models::TextProductCollection, Error<ProductsTypeLocationError>> {
     let uri_str = format!(
         "{}/products/types/{typeId}/locations/{locationId}",
         configuration.base_path,
-        typeId = crate::apis::urlencode(type_id),
-        locationId = crate::apis::urlencode(location_id)
+        typeId = type_id,
+        locationId = location_id
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
