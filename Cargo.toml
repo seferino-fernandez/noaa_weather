@@ -4,3 +4,8 @@ members = ["noaa_weather_client", "noaa_weather_cli"]
 
 [profile.dev]
 split-debuginfo = "unpacked"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "symbols"
