@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3](https://github.com/seferino-fernandez/noaa_weather/compare/noaa_weather_client-v0.1.2...noaa_weather_client-v0.1.3) - 2025-06-21
+
+### Added
+
+- Use rustls for linux and added Homebrew docs
+
+### Other
+
+- Revert versions to 0.1.2 to re-enable release-plz
+
 ## [0.1.0](https://github.com/seferino-fernandez/noaa_weather/releases/tag/noaa_weather_client-v0.1.0) - 2025-06-19
 
 ### Added

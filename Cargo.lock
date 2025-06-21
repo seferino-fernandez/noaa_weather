@@ -1066,7 +1066,7 @@ dependencies = [
 
 [[package]]
 name = "noaa_weather_client"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "quick-xml",
  "reqwest",
