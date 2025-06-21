@@ -14,8 +14,8 @@ pub struct ZoneForecastPeriodsInner {
 }
 
 impl ZoneForecastPeriodsInner {
-    pub fn new(number: i32, name: String, detailed_forecast: String) -> ZoneForecastPeriodsInner {
-        ZoneForecastPeriodsInner {
+    pub fn new(number: i32, name: String, detailed_forecast: String) -> Self {
+        Self {
             number,
             name,
             detailed_forecast,

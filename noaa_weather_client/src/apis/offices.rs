@@ -94,9 +94,9 @@ pub async fn get_forecast_office(
         let content = resp.text().await?;
         let entity: Option<OfficeError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -167,9 +167,9 @@ pub async fn get_forecast_office_headline(
         let content = resp.text().await?;
         let entity: Option<OfficeHeadlineError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -237,9 +237,9 @@ pub async fn get_forecast_office_headlines(
         let content = resp.text().await?;
         let entity: Option<OfficeHeadlinesError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }

@@ -116,9 +116,9 @@ pub async fn get_gridpoint(
         let content = resp.text().await?;
         let entity: Option<GridpointError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -204,9 +204,9 @@ pub async fn get_gridpoint_forecast(
         let content = resp.text().await?;
         let entity: Option<GridpointForecastError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -292,9 +292,9 @@ pub async fn get_gridpoint_forecast_hourly(
         let content = resp.text().await?;
         let entity: Option<GridpointForecastHourlyError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -380,9 +380,9 @@ pub async fn get_gridpoint_stations(
         let content = resp.text().await?;
         let entity: Option<GridpointStationsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }

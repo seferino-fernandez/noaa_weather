@@ -144,9 +144,9 @@ pub async fn get_center_weather_advisories_by_date_and_sequence(
         let content = resp.text().await?;
         let entity: Option<CenterWeatherAdvisoryError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -218,9 +218,9 @@ pub async fn get_center_weather_advisories(
         let entity: Option<CenterWeatherAdvisoryCollectionError> =
             serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -288,9 +288,9 @@ pub async fn get_center_weather_service_unit(
         let content = resp.text().await?;
         let entity: Option<CenterWeatherServiceUnitError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -363,9 +363,9 @@ pub async fn get_sigmet(
         let content = resp.text().await?;
         let entity: Option<SigmetError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -451,9 +451,9 @@ pub async fn get_sigmets(
         let content = resp.text().await?;
         let entity: Option<SigmetQueryError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -520,9 +520,9 @@ pub async fn get_sigmets_by_air_traffic_service_unit(
         let content = resp.text().await?;
         let entity: Option<SigmetsByAtsuError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -592,9 +592,9 @@ pub async fn get_sigmets_by_air_traffic_service_unit_and_date(
         let content = resp.text().await?;
         let entity: Option<SigmetsByAtsuAndDateError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }

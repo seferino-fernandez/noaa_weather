@@ -193,9 +193,9 @@ pub async fn get_zone(
         let content = resp.text().await?;
         let entity: Option<ZoneError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -264,9 +264,9 @@ pub async fn get_current_zone_forecast(
         let content = resp.text().await?;
         let entity: Option<ZoneForecastError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -420,9 +420,9 @@ pub async fn get_zones(
         let content = resp.text().await?;
         let entity: Option<ZoneListError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -578,9 +578,9 @@ pub async fn get_zones_by_type(
         let content = resp.text().await?;
         let entity: Option<ZoneListTypeError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -663,9 +663,9 @@ pub async fn get_zone_observations(
         let content = resp.text().await?;
         let entity: Option<ZoneObsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -742,9 +742,9 @@ pub async fn get_stations_by_zone(
         let content = resp.text().await?;
         let entity: Option<ZoneStationsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }

@@ -138,9 +138,9 @@ pub async fn get_observation_station(
         let content = resp.text().await?;
         let entity: Option<ObsStationError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -256,9 +256,9 @@ pub async fn get_observation_stations(
         let content = resp.text().await?;
         let entity: Option<ObsStationsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -330,9 +330,9 @@ pub async fn get_latest_observations(
         let content = resp.text().await?;
         let entity: Option<StationObservationLatestError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -415,9 +415,9 @@ pub async fn get_observations(
         let content = resp.text().await?;
         let entity: Option<StationObservationListError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -488,9 +488,9 @@ pub async fn get_observation_by_time(
         let content = resp.text().await?;
         let entity: Option<StationObservationTimeError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -567,9 +567,9 @@ pub async fn get_terminal_aerodrome_forecast(
         let content = resp.text().await?;
         let entity: Option<TafError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -636,9 +636,9 @@ pub async fn get_terminal_aerodrome_forecasts(
         let content = resp.text().await?;
         let entity: Option<TafsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }

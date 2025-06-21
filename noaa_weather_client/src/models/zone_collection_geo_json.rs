@@ -12,8 +12,8 @@ pub struct ZoneCollectionGeoJson {
 }
 
 impl ZoneCollectionGeoJson {
-    pub fn new(r#type: Type, features: Vec<models::ZoneGeoJson>) -> ZoneCollectionGeoJson {
-        ZoneCollectionGeoJson {
+    pub fn new(r#type: Type, features: Vec<models::ZoneGeoJson>) -> Self {
+        Self {
             at_context: None,
             r#type,
             features,

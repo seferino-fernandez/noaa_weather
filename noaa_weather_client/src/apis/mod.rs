@@ -2,28 +2,28 @@ use std::{error, fmt};
 
 #[derive(Debug, Clone)]
 pub struct ResponseContent<T> {
-    pub status: reqwest::StatusCode,
     pub content: String,
     pub entity: Option<T>,
+    pub status: reqwest::StatusCode,
 }
 
 #[derive(Debug)]
 pub enum Error<T> {
+    Io(std::io::Error),
+    ResponseError(ResponseContent<T>),
     Reqwest(reqwest::Error),
     Serde(serde_json::Error),
-    Io(std::io::Error),
     Xml(quick_xml::DeError),
-    ResponseError(ResponseContent<T>),
 }
 
 impl<T> fmt::Display for Error<T> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         let error_message = match self {
-            Error::Reqwest(reqwest_error) => reqwest_error.to_string(),
-            Error::Serde(serde_error) => serde_error.to_string(),
-            Error::Io(io_error) => io_error.to_string(),
-            Error::Xml(xml_error) => xml_error.to_string(),
-            Error::ResponseError(response_error) => response_error.content.to_string(),
+            Self::Reqwest(reqwest_error) => reqwest_error.to_string(),
+            Self::Serde(serde_error) => serde_error.to_string(),
+            Self::Io(io_error) => io_error.to_string(),
+            Self::Xml(xml_error) => xml_error.to_string(),
+            Self::ResponseError(response_error) => response_error.content.clone(),
         };
         write!(formatter, "{error_message}")
     }
@@ -32,18 +32,18 @@ impl<T> fmt::Display for Error<T> {
 impl<T: fmt::Debug> error::Error for Error<T> {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         Some(match self {
-            Error::Reqwest(reqwest_error) => reqwest_error,
-            Error::Serde(serde_error) => serde_error,
-            Error::Io(io_error) => io_error,
-            Error::Xml(xml_error) => xml_error,
-            Error::ResponseError(_) => return None,
+            Self::Reqwest(reqwest_error) => reqwest_error,
+            Self::Serde(serde_error) => serde_error,
+            Self::Io(io_error) => io_error,
+            Self::Xml(xml_error) => xml_error,
+            Self::ResponseError(_) => return None,
         })
     }
 }
 
 impl<T> From<reqwest::Error> for Error<T> {
     fn from(reqwest_error: reqwest::Error) -> Self {
-        Error::Reqwest(reqwest_error)
+        Self::Reqwest(reqwest_error)
     }
 }
 
@@ -68,8 +68,8 @@ pub fn urlencode<T: AsRef<str>>(s: T) -> String {
 enum ContentType {
     Json,
     Text,
-    Xml,
     Unsupported(String),
+    Xml,
 }
 
 impl From<&str> for ContentType {
@@ -81,7 +81,7 @@ impl From<&str> for ContentType {
         } else if content_type.starts_with("application") && content_type.contains("xml") {
             Self::Xml
         } else {
-            Self::Unsupported(content_type.to_string())
+            Self::Unsupported(content_type.to_owned())
         }
     }
 }

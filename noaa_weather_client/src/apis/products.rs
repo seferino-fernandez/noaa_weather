@@ -170,9 +170,9 @@ pub async fn get_products_by_location(
         let content = resp.text().await?;
         let entity: Option<LocationProductsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -240,9 +240,9 @@ pub async fn get_product(
         let content = resp.text().await?;
         let entity: Option<ProductError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -305,9 +305,9 @@ pub async fn get_product_locations(
         let content = resp.text().await?;
         let entity: Option<ProductLocationsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -370,9 +370,9 @@ pub async fn get_product_types(
         let content = resp.text().await?;
         let entity: Option<ProductTypesError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -522,9 +522,9 @@ pub async fn get_products_query(
         let content = resp.text().await?;
         let entity: Option<ProductsQueryError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -592,9 +592,9 @@ pub async fn get_products_by_type(
         let content = resp.text().await?;
         let entity: Option<ProductsTypeError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -665,9 +665,9 @@ pub async fn get_products_by_type_and_location(
         let content = resp.text().await?;
         let entity: Option<ProductsTypeLocationError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -735,9 +735,9 @@ pub async fn get_product_issuance_locations_by_type(
         let content = resp.text().await?;
         let entity: Option<ProductsTypeLocationsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }

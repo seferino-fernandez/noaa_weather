@@ -1,7 +1,7 @@
 use crate::models;
 use serde::{Deserialize, Serialize};
 
-/// ZoneForecast : An object representing a zone area forecast.
+/// `ZoneForecast` : An object representing a zone area forecast.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ZoneForecast {
     #[serde(rename = "@context", skip_serializing_if = "Option::is_none")]
@@ -27,8 +27,8 @@ pub struct ZoneForecast {
 
 impl ZoneForecast {
     /// An object representing a zone area forecast.
-    pub fn new() -> ZoneForecast {
-        ZoneForecast {
+    pub fn new() -> Self {
+        Self {
             at_context: None,
             geometry: None,
             zone: None,

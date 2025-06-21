@@ -10,8 +10,8 @@ pub struct ZoneCollectionJsonLd {
 }
 
 impl ZoneCollectionJsonLd {
-    pub fn new() -> ZoneCollectionJsonLd {
-        ZoneCollectionJsonLd {
+    pub fn new() -> Self {
+        Self {
             at_context: None,
             at_graph: None,
         }

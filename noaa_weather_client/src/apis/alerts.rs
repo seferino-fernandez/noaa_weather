@@ -184,7 +184,7 @@ pub async fn get_active_alerts(
     let uri_str = format!("{}/alerts/active", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = params.status {
+    if let Some(param_value) = &params.status {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -196,14 +196,13 @@ pub async fn get_active_alerts(
                 "status",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.message_type {
+    if let Some(param_value) = &params.message_type {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -217,12 +216,11 @@ pub async fn get_active_alerts(
                     .iter()
                     .map(|p| p.to_string())
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.event {
+    if let Some(param_value) = &params.event {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -241,7 +239,7 @@ pub async fn get_active_alerts(
             )]),
         };
     }
-    if let Some(ref param_value) = params.code {
+    if let Some(param_value) = &params.code {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -301,10 +299,10 @@ pub async fn get_active_alerts(
             )]),
         };
     }
-    if let Some(ref param_value) = params.region_type {
+    if let Some(param_value) = &params.region_type {
         req_builder = req_builder.query(&[("region_type", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = params.zone {
+    if let Some(param_value) = &params.zone {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -323,7 +321,7 @@ pub async fn get_active_alerts(
             )]),
         };
     }
-    if let Some(ref param_value) = params.urgency {
+    if let Some(param_value) = &params.urgency {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -337,12 +335,11 @@ pub async fn get_active_alerts(
                     .iter()
                     .map(|p| p.to_string())
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.severity {
+    if let Some(param_value) = &params.severity {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -356,12 +353,11 @@ pub async fn get_active_alerts(
                     .iter()
                     .map(|p| p.to_string())
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.certainty {
+    if let Some(param_value) = &params.certainty {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -373,17 +369,16 @@ pub async fn get_active_alerts(
                 "certainty",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.limit {
+    if let Some(param_value) = &params.limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -393,7 +388,7 @@ pub async fn get_active_alerts(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -416,9 +411,9 @@ pub async fn get_active_alerts(
         let content = resp.text().await?;
         let entity: Option<ActiveAlertsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -452,7 +447,7 @@ pub async fn get_active_alerts_for_area(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -487,9 +482,9 @@ pub async fn get_active_alerts_for_area(
         let content = resp.text().await?;
         let entity: Option<ActiveAlertsAreaError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -517,7 +512,7 @@ pub async fn get_active_alerts_count(
     let uri_str = format!("{}/alerts/active/count", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -528,7 +523,7 @@ pub async fn get_active_alerts_count(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -552,9 +547,9 @@ pub async fn get_active_alerts_count(
         let content = resp.text().await?;
         let entity: Option<ActiveAlertsCountError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -588,7 +583,7 @@ pub async fn get_active_alerts_for_marine_region(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -623,9 +618,9 @@ pub async fn get_active_alerts_for_marine_region(
         let content = resp.text().await?;
         let entity: Option<ActiveRegionError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -659,7 +654,7 @@ pub async fn get_active_alerts_for_zone(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -694,9 +689,9 @@ pub async fn get_active_alerts_for_zone(
         let content = resp.text().await?;
         let entity: Option<ActiveAlertsZoneError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -727,16 +722,16 @@ pub async fn get_alerts(
     let uri_str = format!("{}/alerts", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = params.active {
+    if let Some(param_value) = &params.active {
         req_builder = req_builder.query(&[("active", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = params.start {
+    if let Some(param_value) = &params.start {
         req_builder = req_builder.query(&[("start", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = params.end {
+    if let Some(param_value) = &params.end {
         req_builder = req_builder.query(&[("end", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = params.status {
+    if let Some(param_value) = &params.status {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -750,12 +745,11 @@ pub async fn get_alerts(
                     .iter()
                     .map(|p| p.to_string())
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.message_type {
+    if let Some(param_value) = &params.message_type {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -774,7 +768,7 @@ pub async fn get_alerts(
             )]),
         };
     }
-    if let Some(ref param_value) = params.event {
+    if let Some(param_value) = &params.event {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -788,12 +782,11 @@ pub async fn get_alerts(
                     .iter()
                     .map(|p| p.to_string())
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.code {
+    if let Some(param_value) = &params.code {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -807,12 +800,11 @@ pub async fn get_alerts(
                     .iter()
                     .map(|p| p.to_string())
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.area {
+    if let Some(param_value) = &params.area {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -826,15 +818,14 @@ pub async fn get_alerts(
                     .iter()
                     .map(|p| p.to_string())
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.point {
+    if let Some(param_value) = &params.point {
         req_builder = req_builder.query(&[("point", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = params.region {
+    if let Some(param_value) = &params.region {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -848,15 +839,14 @@ pub async fn get_alerts(
                     .iter()
                     .map(|p| p.to_string())
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.region_type {
+    if let Some(param_value) = &params.region_type {
         req_builder = req_builder.query(&[("region_type", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = params.zone {
+    if let Some(param_value) = &params.zone {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -870,12 +860,11 @@ pub async fn get_alerts(
                     .iter()
                     .map(|p| p.to_string())
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.urgency {
+    if let Some(param_value) = &params.urgency {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -889,12 +878,11 @@ pub async fn get_alerts(
                     .iter()
                     .map(|p| p.to_string())
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.severity {
+    if let Some(param_value) = &params.severity {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -908,12 +896,11 @@ pub async fn get_alerts(
                     .iter()
                     .map(|p| p.to_string())
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.certainty {
+    if let Some(param_value) = &params.certainty {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -927,18 +914,17 @@ pub async fn get_alerts(
                     .iter()
                     .map(|p| p.to_string())
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.limit {
+    if let Some(param_value) = &params.limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = params.cursor {
+    if let Some(param_value) = &params.cursor {
         req_builder = req_builder.query(&[("cursor", &param_value.to_string())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -973,9 +959,9 @@ pub async fn get_alerts(
         let content = resp.text().await?;
         let entity: Option<GetAlertsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -1009,7 +995,7 @@ pub async fn get_alert(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -1020,7 +1006,7 @@ pub async fn get_alert(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -1044,9 +1030,9 @@ pub async fn get_alert(
         let content = resp.text().await?;
         let entity: Option<GetAlertError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }
@@ -1074,7 +1060,7 @@ pub async fn get_alert_types(
     let uri_str = format!("{}/alerts/types", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -1085,7 +1071,7 @@ pub async fn get_alert_types(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -1109,9 +1095,9 @@ pub async fn get_alert_types(
         let content = resp.text().await?;
         let entity: Option<GetAlertTypesError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
-            status,
             content,
             entity,
+            status,
         }))
     }
 }

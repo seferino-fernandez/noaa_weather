@@ -38,26 +38,26 @@ where
         }
 
         /// Handles the case where the JSON value is an object (e.g., `{"id1": true, "id2": false}`).
-        fn visit_map<M>(self, mut map_access: M) -> Result<Self::Value, M::Error>
+        fn visit_map<M>(self, mut map: M) -> Result<Self::Value, M::Error>
         where
             M: MapAccess<'de>,
         {
-            let mut map = HashMap::with_capacity(map_access.size_hint().unwrap_or(0));
-            while let Some((key, value)) = map_access.next_entry()? {
-                map.insert(key, value);
+            let mut visitor_map = HashMap::with_capacity(map.size_hint().unwrap_or(0));
+            while let Some((key, value)) = map.next_entry()? {
+                visitor_map.insert(key, value);
             }
-            Ok(Some(map))
+            Ok(Some(visitor_map))
         }
 
         /// Handles the case where the JSON value is a sequence (e.g., `[]`).
         /// We specifically expect an *empty* sequence to be treated as an empty map.
-        fn visit_seq<S>(self, mut seq_access: S) -> Result<Self::Value, S::Error>
+        fn visit_seq<S>(self, mut seq: S) -> Result<Self::Value, S::Error>
         where
             S: SeqAccess<'de>,
         {
             // Attempt to deserialize the first element using `serde_json::Value`
             // as a generic placeholder. We only care if the sequence is empty or not.
-            if seq_access.next_element::<serde_json::Value>()?.is_some() {
+            if seq.next_element::<serde_json::Value>()?.is_some() {
                 // If `next_element` returns `Ok(Some(_))`, the sequence is not empty.
                 // This is an unexpected type in this context, as we are looking for
                 // an empty array to substitute for a map, not a populated array.

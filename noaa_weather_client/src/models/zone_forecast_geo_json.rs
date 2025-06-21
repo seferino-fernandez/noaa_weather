@@ -20,8 +20,8 @@ impl ZoneForecastGeoJson {
         r#type: Type,
         geometry: Option<models::GeoJsonGeometry>,
         properties: models::ZoneForecast,
-    ) -> ZoneForecastGeoJson {
-        ZoneForecastGeoJson {
+    ) -> Self {
+        Self {
             at_context: None,
             id: None,
             r#type,
@@ -37,7 +37,7 @@ pub enum Type {
 }
 
 impl Default for Type {
-    fn default() -> Type {
+    fn default() -> Self {
         Self::Feature
     }
 }
