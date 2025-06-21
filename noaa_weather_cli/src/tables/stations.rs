@@ -1,4 +1,3 @@
-use anyhow::Result;
 use comfy_table::presets::{UTF8_FULL, UTF8_FULL_CONDENSED};
 use comfy_table::{Attribute, Cell, CellAlignment, ContentArrangement, Table};
 use jiff::Timestamp;
@@ -26,7 +25,7 @@ use crate::utils::format::{
 /// and formats them into a table. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
-pub fn create_stations_table(station_data: &ObservationStationCollectionGeoJson) -> Result<Table> {
+pub fn create_stations_table(station_data: &ObservationStationCollectionGeoJson) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -55,7 +54,7 @@ pub fn create_stations_table(station_data: &ObservationStationCollectionGeoJson)
         table.add_row(create_station_row(feature));
     }
 
-    Ok(table)
+    table
 }
 
 /// Creates a table listing a single observation station with key summary information.
@@ -64,9 +63,7 @@ pub fn create_stations_table(station_data: &ObservationStationCollectionGeoJson)
 /// and formats it into a table. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
-pub fn create_observation_station_table(
-    observation_station: &ObservationStationGeoJson,
-) -> Result<Table> {
+pub fn create_observation_station_table(observation_station: &ObservationStationGeoJson) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -93,7 +90,7 @@ pub fn create_observation_station_table(
 
     table.add_row(create_station_row(observation_station));
 
-    Ok(table)
+    table
 }
 
 /// Creates a table listing the latest observation for a single observation station.
@@ -102,7 +99,7 @@ pub fn create_observation_station_table(
 /// and formats it into a table. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
-pub fn create_stations_observation_table(observation: &ObservationGeoJson) -> Result<Table> {
+pub fn create_stations_observation_table(observation: &ObservationGeoJson) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -110,7 +107,7 @@ pub fn create_stations_observation_table(observation: &ObservationGeoJson) -> Re
     let props = &observation.properties;
 
     let station_id_str =
-        get_zone_from_url(props.station.as_ref()).unwrap_or_else(|| "N/A".to_string());
+        get_zone_from_url(props.station.as_ref()).unwrap_or_else(|| "N/A".to_owned());
 
     let title = format!("Station: {station_id_str} - Observation");
     table.set_header(vec![
@@ -187,7 +184,7 @@ pub fn create_stations_observation_table(observation: &ObservationGeoJson) -> Re
         Cell::new(format_optional_value_unit(&props.heat_index)),
     ]);
 
-    Ok(table)
+    table
 }
 
 /// Creates a table listing the latest observation for a single observation station.
@@ -196,9 +193,7 @@ pub fn create_stations_observation_table(observation: &ObservationGeoJson) -> Re
 /// and formats it into a table. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
-pub fn create_stations_observations_table(
-    observations: &ObservationCollectionGeoJson,
-) -> Result<Table> {
+pub fn create_stations_observations_table(observations: &ObservationCollectionGeoJson) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -241,9 +236,9 @@ pub fn create_stations_observations_table(
             .add_attribute(comfy_table::Attribute::Bold)
             .set_alignment(CellAlignment::Center),
     ]);
-    let observations = &observations.features;
+    let observations_features = &observations.features;
 
-    for observation in observations {
+    for observation in observations_features {
         let timestamp_str =
             format_datetime_human_readable(observation.properties.timestamp.as_deref());
         let temperature_str = format_optional_value_unit(&observation.properties.temperature);
@@ -277,7 +272,7 @@ pub fn create_stations_observations_table(
         ]);
     }
 
-    Ok(table)
+    table
 }
 
 /// Creates a table listing the metadata for Terminal Aerodrome Forecasts (TAFs) for a single airport station.
@@ -286,9 +281,7 @@ pub fn create_stations_observations_table(
 /// and formats it into a table. Each row represents a TAF, displaying its ID, issue time, location,
 /// start time, and end time.
 ///
-pub fn create_stations_tafs_metadata_table(
-    tafs: &TerminalAerodromeForecastsResponse,
-) -> Result<Table> {
+pub fn create_stations_tafs_metadata_table(tafs: &TerminalAerodromeForecastsResponse) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -325,7 +318,7 @@ pub fn create_stations_tafs_metadata_table(
         ]);
     }
 
-    Ok(table)
+    table
 }
 
 // --- Time Formatting Helpers (Simplified for UTC Display) ---
@@ -333,24 +326,24 @@ pub fn create_stations_tafs_metadata_table(
 /// Formats a TAF timestamp string into a "DD Mon HH:MM UTC" string.
 /// Example: "01 Jun 05:27 UTC"
 fn format_taf_datetime_as_utc(datetime_str: &str) -> String {
-    match datetime_str.parse::<Timestamp>() {
-        Ok(ts) => {
+    datetime_str.parse::<Timestamp>().map_or_else(
+        |_| "Invalid time".to_owned(),
+        |ts| {
             let day = ts.strftime("%d").to_string();
             format!(
                 "{} {} UTC",
                 day.trim_start_matches('0'), // e.g., "1" instead of "01"
                 ts.strftime("%b %H:%M")      // e.g., "Jun 05:27"
             )
-        }
-        Err(_) => "Invalid time".to_string(),
-    }
+        },
+    )
 }
 
 /// Formats a TAF validity period (begin and end timestamps) as UTC.
 /// Example: "01 Jun 06:00 to 02 Jun 12:00 UTC"
 fn format_taf_validity_period_as_utc(begin_str: &str, end_str: &str) -> String {
     let begin_ts_res = begin_str.parse::<Timestamp>();
-    let end_ts_res: std::result::Result<Timestamp, jiff::Error> = end_str.parse::<Timestamp>();
+    let end_ts_res: Result<Timestamp, jiff::Error> = end_str.parse::<Timestamp>();
 
     match (begin_ts_res, end_ts_res) {
         (Ok(b_ts), Ok(e_ts)) => {
@@ -364,7 +357,7 @@ fn format_taf_validity_period_as_utc(begin_str: &str, end_str: &str) -> String {
                 e_ts.strftime("%b %H:%M")
             )
         }
-        _ => "Invalid period".to_string(),
+        _ => "Invalid period".to_owned(),
     }
 }
 
@@ -402,15 +395,15 @@ fn format_visibility_generic<T: VisibilityDataProvider>(
             let uom = vis_data.uom_val();
 
             if (value_str == "10000" || value_str == "9999") && uom == "m" {
-                return "10+ km (6+ mi)".to_string();
+                return "10+ km (6+ mi)".to_owned();
             }
 
             let mut display_str = String::new();
             if let Some(op_str) = operator_opt {
                 if op_str == "ABOVE" {
-                    display_str.push('≥');
+                    display_str.push('\u{2265}');
                 } else if op_str == "BELOW" {
-                    display_str.push('≤');
+                    display_str.push('\u{2264}');
                 }
             }
 
@@ -424,12 +417,12 @@ fn format_visibility_generic<T: VisibilityDataProvider>(
                 }
             }
             if display_str.trim().is_empty() || value_str.is_empty() {
-                "N/A".to_string()
+                "N/A".to_owned()
             } else {
                 display_str
             }
         }
-        None => "N/A".to_string(),
+        None => "N/A".to_owned(),
     }
 }
 
@@ -446,22 +439,21 @@ impl WindDataProvider
     for BaseForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurfaceWindForecast
 {
     fn mean_wind_direction_val(&self) -> Option<&str> {
-        self.mean_wind_direction
-            .as_ref()
-            .and_then(|d| d.text.as_deref())
+        let direction = self.mean_wind_direction.as_ref()?;
+        direction.text.as_deref()
     }
     fn mean_wind_speed_val(&self) -> Option<&str> {
-        self.mean_wind_speed
-            .as_ref()
-            .and_then(|s| s.text.as_deref())
+        let speed = self.mean_wind_speed.as_ref()?;
+        speed.text.as_deref()
     }
     fn mean_wind_speed_uom(&self) -> Option<&str> {
-        self.mean_wind_speed.as_ref().map(|s| s.uom.as_str())
+        self.mean_wind_speed
+            .as_ref()
+            .map(|speed| speed.uom.as_str())
     }
     fn wind_gust_speed_val(&self) -> Option<&str> {
-        self.wind_gust_speed
-            .as_ref()
-            .and_then(|g| g.text.as_deref())
+        let gust = self.wind_gust_speed.as_ref()?;
+        gust.text.as_deref()
     }
     fn wind_gust_speed_uom(&self) -> Option<&str> {
         self.wind_gust_speed.as_ref().map(|g| g.uom.as_str())
@@ -474,25 +466,24 @@ impl WindDataProvider
     for ChangeForecastMeteorologicalAerodromeForecastSurfaceWindAerodromeSurfaceWindForecast
 {
     fn mean_wind_direction_val(&self) -> Option<&str> {
-        self.mean_wind_direction
-            .as_ref()
-            .and_then(|d| d.text.as_deref())
+        let direction = self.mean_wind_direction.as_ref()?;
+        direction.text.as_deref()
     }
     fn mean_wind_speed_val(&self) -> Option<&str> {
-        self.mean_wind_speed
-            .as_ref()
-            .and_then(|s| s.text.as_deref())
+        let speed = self.mean_wind_speed.as_ref()?;
+        speed.text.as_deref()
     }
     fn mean_wind_speed_uom(&self) -> Option<&str> {
-        self.mean_wind_speed.as_ref().map(|s| s.uom.as_str())
+        self.mean_wind_speed
+            .as_ref()
+            .map(|speed| speed.uom.as_str())
     }
     fn wind_gust_speed_val(&self) -> Option<&str> {
-        self.wind_gust_speed
-            .as_ref()
-            .and_then(|g| g.text.as_deref())
+        let gust = self.wind_gust_speed.as_ref()?;
+        gust.text.as_deref()
     }
     fn wind_gust_speed_uom(&self) -> Option<&str> {
-        self.wind_gust_speed.as_ref().map(|g| g.uom.as_str())
+        self.wind_gust_speed.as_ref().map(|gust| gust.uom.as_str())
     }
     fn is_variable_wind_direction(&self) -> bool {
         self.variable_wind_direction.parse().unwrap_or(false)
@@ -500,13 +491,14 @@ impl WindDataProvider
 }
 
 fn format_wind_generic<T: WindDataProvider>(wind_data_opt: Option<&T>) -> String {
-    match wind_data_opt {
-        Some(wind_data) => {
+    wind_data_opt.map_or_else(
+        || "N/A".to_owned(),
+        |wind_data| {
             let mut parts = Vec::new();
             if wind_data.is_variable_wind_direction() {
-                parts.push("Variable (VRB)".to_string());
+                parts.push("Variable (VRB)".to_owned());
             } else if let Some(dir_val) = wind_data.mean_wind_direction_val() {
-                parts.push(format!("{dir_val}°"));
+                parts.push(format!("{dir_val}\u{b0}"));
             }
 
             if let Some(speed_val) = wind_data.mean_wind_speed_val() {
@@ -514,10 +506,10 @@ fn format_wind_generic<T: WindDataProvider>(wind_data_opt: Option<&T>) -> String
                     .mean_wind_speed_uom()
                     .unwrap_or("")
                     .replace("[kn_i]", "kts");
-                if !parts.is_empty() && parts.last().is_some_and(|p| p != "at") {
-                    parts.push("at".to_string());
+                if !parts.is_empty() && parts.last().is_some_and(|part| part != "at") {
+                    parts.push("at".to_owned());
                 } else if parts.is_empty() {
-                    parts.push("Wind".to_string());
+                    parts.push("Wind".to_owned());
                 }
                 parts.push(format!("{speed_val} {speed_uom}"));
             }
@@ -527,40 +519,39 @@ fn format_wind_generic<T: WindDataProvider>(wind_data_opt: Option<&T>) -> String
                     .wind_gust_speed_uom()
                     .unwrap_or("")
                     .replace("[kn_i]", "kts");
-                parts.push("gusting".to_string());
+                parts.push("gusting".to_owned());
                 parts.push(format!("{gust_val} {gust_uom}"));
             }
 
             if parts
                 .iter()
-                .all(|p| p == "N/A" || p.contains("N/A") || p.is_empty())
+                .all(|part| part == "N/A" || part.contains("N/A") || part.is_empty())
                 || parts.is_empty()
             {
-                "N/A".to_string()
+                "N/A".to_owned()
             } else {
                 parts.join(" ")
             }
-        }
-        None => "N/A".to_string(),
-    }
+        },
+    )
 }
 
 // Cloud amount description, CloudLayerDataProvider trait and impls, format_clouds_generic
 fn get_cloud_amount_description(xlink_href: &str) -> String {
     if xlink_href.contains("/FEW") {
-        "Few clouds".to_string()
+        "Few clouds".to_owned()
     } else if xlink_href.contains("/SCT") {
-        "Scattered clouds".to_string()
+        "Scattered clouds".to_owned()
     } else if xlink_href.contains("/BKN") {
-        "Broken clouds".to_string()
+        "Broken clouds".to_owned()
     } else if xlink_href.contains("/OVC") {
-        "Overcast".to_string()
+        "Overcast".to_owned()
     } else if xlink_href.contains("/NSC") {
-        "No significant cloud".to_string()
+        "No significant cloud".to_owned()
     } else if xlink_href.contains("/SKC") || xlink_href.contains("/CLR") {
-        "Sky clear".to_string()
+        "Sky clear".to_owned()
     } else {
-        xlink_href.rsplit('/').next().unwrap_or("N/A").to_string()
+        xlink_href.rsplit('/').next().unwrap_or("N/A").to_owned()
     }
 }
 trait CloudLayerDataProvider {
@@ -602,13 +593,13 @@ fn format_clouds_generic<CLD: CloudLayerDataProvider>(
             .iter()
             .map(|layer_data| {
                 let amount = get_cloud_amount_description(layer_data.amount_href());
-                let base_val = layer_data.base_value().unwrap_or_else(|| "N/A".to_string());
+                let base_val = layer_data.base_value().unwrap_or_else(|| "N/A".to_owned());
                 let base_uom = layer_data.base_uom().replace("[ft_i]", "ft AGL");
                 format!("{amount} at {base_val} {base_uom}")
             })
             .collect::<Vec<String>>()
             .join("\n"),
-        _ => "No significant clouds or data N/A".to_string(),
+        _ => "No significant clouds or data N/A".to_owned(),
     }
 }
 
@@ -617,27 +608,27 @@ fn get_weather_description(weather_opt: Option<&Vec<Weather>>) -> String {
     match weather_opt {
         Some(weather_vec) if !weather_vec.is_empty() => weather_vec
             .iter()
-            .map(|w| {
-                let href = &w.xlink_href;
+            .map(|weather| {
+                let href = &weather.xlink_href;
                 if href.contains("VCSH") {
-                    "Showers in Vicinity".to_string()
+                    "Showers in Vicinity".to_owned()
                 } else if href.contains("-SHRA") {
-                    "Light Rain Showers".to_string()
+                    "Light Rain Showers".to_owned()
                 } else if href.contains("SHRA") {
-                    "Rain Showers".to_string()
+                    "Rain Showers".to_owned()
                 } else if href.contains("+SHRA") {
-                    "Heavy Rain Showers".to_string()
+                    "Heavy Rain Showers".to_owned()
                 } else if href.contains("TSRA") {
-                    "Thunderstorm with Rain".to_string()
+                    "Thunderstorm with Rain".to_owned()
                 } else if href.contains("TS") {
-                    "Thunderstorm".to_string()
+                    "Thunderstorm".to_owned()
                 } else {
-                    href.rsplit('/').next().unwrap_or("Unknown").to_string()
+                    href.rsplit('/').next().unwrap_or("Unknown").to_owned()
                 }
             })
             .collect::<Vec<String>>()
             .join(", "),
-        _ => "No significant weather".to_string(),
+        _ => "No significant weather".to_owned(),
     }
 }
 
@@ -707,7 +698,7 @@ fn add_forecast_period_to_table<SWD, PVD, CLD>(
 /// # Arguments
 /// * `taf_bulletin`: A reference to the `TerminalAerodromeForecast` struct containing the TAF data.
 ///
-pub fn create_stations_taf_table(taf_bulletin: &TerminalAerodromeForecast) -> Result<Table> {
+pub fn create_stations_taf_table(taf_bulletin: &TerminalAerodromeForecast) -> Table {
     let mut table = Table::new();
     table
         .load_preset(UTF8_FULL_CONDENSED)
@@ -774,7 +765,7 @@ pub fn create_stations_taf_table(taf_bulletin: &TerminalAerodromeForecast) -> Re
             bf_props
                 .cloud
                 .as_ref()
-                .map(|c| &c.aerodrome_cloud_forecast.layer),
+                .map(|cloud| &cloud.aerodrome_cloud_forecast.layer),
         );
     }
 
@@ -806,7 +797,7 @@ pub fn create_stations_taf_table(taf_bulletin: &TerminalAerodromeForecast) -> Re
         );
     }
 
-    Ok(table)
+    table
 }
 
 /// Creates a row for a single observation station.
@@ -820,20 +811,24 @@ fn create_station_row(observation_station: &ObservationStationGeoJson) -> Vec<St
 
     let elevation_str = format_optional_value_unit(&station.elevation);
 
-    let point_str = match observation_station.geometry.as_ref() {
-        Some(geo_json_geometry) => match geo_json_geometry.as_ref() {
+    let point_str = observation_station.geometry.as_ref().map_or_else(
+        || "N/A".to_owned(),
+        |geo_json_geometry| match geo_json_geometry.as_ref() {
             GeoJsonGeometry::GeoJsonPoint(point) => {
                 format!("{:?}", point.coordinates)
             }
-            _ => "N/A".to_string(),
+            GeoJsonGeometry::GeoJsonLineString(_)
+            | GeoJsonGeometry::GeoJsonPolygon(_)
+            | GeoJsonGeometry::GeoJsonMultiPoint(_)
+            | GeoJsonGeometry::GeoJsonMultiLineString(_)
+            | GeoJsonGeometry::GeoJsonMultiPolygon(_) => "N/A".to_owned(),
         },
-        None => "N/A".to_string(),
-    };
+    );
 
     let timezone_str = station
         .time_zone
         .clone()
-        .unwrap_or_else(|| "N/A".to_string());
+        .unwrap_or_else(|| "N/A".to_owned());
 
     let forecast_zone =
         get_zone_from_url(station.forecast.clone()).unwrap_or_else(|| "N/A".to_owned());
@@ -852,8 +847,8 @@ fn create_station_row(observation_station: &ObservationStationGeoJson) -> Vec<St
             .station_identifier
             .as_deref()
             .unwrap_or("N/A")
-            .to_string(),
-        station.name.as_deref().unwrap_or("N/A").to_string(),
+            .to_owned(),
+        station.name.as_deref().unwrap_or("N/A").to_owned(),
         elevation_str,
         timezone_str,
         point_str,

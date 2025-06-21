@@ -1,15 +1,14 @@
-use anyhow::Result;
 use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::{Office, OfficeHeadline, OfficeHeadlineCollection};
 
 use crate::utils::format::format_datetime_human_readable;
 
-/// Formats an Office's metadata into a comfy_table::Table.
+/// Formats an `Office`'s metadata into a `comfy_table::Table`.
 ///
-/// This function constructs a table displaying various attributes of an Office.
+/// This function constructs a table displaying various attributes of an `Office`.
 ///
-pub fn create_office_metadata_table(office: &Office) -> Result<Table> {
+pub fn create_office_metadata_table(office: &Office) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -41,27 +40,27 @@ pub fn create_office_metadata_table(office: &Office) -> Result<Table> {
     let office_id = office
         .id
         .as_deref()
-        .filter(|s| !s.is_empty())
+        .filter(|office_id| !office_id.is_empty())
         .unwrap_or("N/A");
     let name = office
         .name
         .as_deref()
-        .filter(|s| !s.is_empty())
+        .filter(|name| !name.is_empty())
         .unwrap_or("N/A");
 
     // Dynamically construct the address string, handling nested Option
-    let (street, city, state, zip_code) = if let Some(addr_details) = office.address.as_ref() {
-        // If office.address is Some, extract its fields, trim, and default to empty string if None
-        (
-            addr_details.street_address.as_deref().unwrap_or("").trim(),
-            addr_details.city.as_deref().unwrap_or("").trim(),
-            addr_details.state.as_deref().unwrap_or("").trim(),
-            addr_details.zip_code.as_deref().unwrap_or("").trim(),
-        )
-    } else {
-        // If office.address is None, all address components are effectively empty
-        ("", "", "", "")
-    };
+    let (street, city, state, zip_code) =
+        office
+            .address
+            .as_ref()
+            .map_or(("", "", "", ""), |addr_details| {
+                (
+                    addr_details.street_address.as_deref().unwrap_or("").trim(),
+                    addr_details.city.as_deref().unwrap_or("").trim(),
+                    addr_details.state.as_deref().unwrap_or("").trim(),
+                    addr_details.zip_code.as_deref().unwrap_or("").trim(),
+                )
+            });
 
     // Build the "City, State Zip" line from extracted components
     let mut csz_line = String::new();
@@ -88,7 +87,7 @@ pub fn create_office_metadata_table(office: &Office) -> Result<Table> {
     // Combine street with csz_line
     let mut address_lines = Vec::new();
     if !street.is_empty() {
-        address_lines.push(street.to_string());
+        address_lines.push(street.to_owned());
     }
     if !csz_line.is_empty() {
         address_lines.push(csz_line);
@@ -97,7 +96,7 @@ pub fn create_office_metadata_table(office: &Office) -> Result<Table> {
     let final_address_str = address_lines.join("\n");
 
     let address_cell_content = if final_address_str.is_empty() {
-        "N/A".to_string()
+        "N/A".to_owned()
     } else {
         final_address_str
     };
@@ -105,22 +104,22 @@ pub fn create_office_metadata_table(office: &Office) -> Result<Table> {
     let phone = office
         .phone_number
         .as_deref()
-        .filter(|s| !s.is_empty())
+        .filter(|phone| !phone.is_empty())
         .unwrap_or("N/A");
     let email = office
         .email
         .as_deref()
-        .filter(|s| !s.is_empty())
+        .filter(|email| !email.is_empty())
         .unwrap_or("N/A");
     let website = office
         .website_url
         .as_deref()
-        .filter(|s| !s.is_empty())
+        .filter(|website| !website.is_empty())
         .unwrap_or("N/A");
     let region = office
         .nws_region
         .as_deref()
-        .filter(|s| !s.is_empty())
+        .filter(|region| !region.is_empty())
         .unwrap_or("N/A");
 
     table.add_row(vec![
@@ -132,14 +131,14 @@ pub fn create_office_metadata_table(office: &Office) -> Result<Table> {
         Cell::new(website),
         Cell::new(region),
     ]);
-    Ok(table)
+    table
 }
 
-/// Formats an Office's headlines into a comfy_table::Table.
+/// Formats an Office's headlines into a `comfy_table::Table`.
 ///
 /// This function constructs a table displaying various attributes of an Office.
 ///
-pub fn create_office_headlines_table(office_headlines: &OfficeHeadlineCollection) -> Result<Table> {
+pub fn create_office_headlines_table(office_headlines: &OfficeHeadlineCollection) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -160,29 +159,32 @@ pub fn create_office_headlines_table(office_headlines: &OfficeHeadlineCollection
             .add_attribute(comfy_table::Attribute::Bold)
             .set_alignment(CellAlignment::Center),
     ]);
-    for headline in office_headlines.at_graph.iter() {
+    for headline in &office_headlines.at_graph {
         let headline_id = headline
             .id
             .as_deref()
-            .filter(|s| !s.is_empty())
+            .filter(|headline_id| !headline_id.is_empty())
             .unwrap_or("N/A");
         let title = headline
             .title
             .as_deref()
-            .filter(|s| !s.is_empty())
+            .filter(|title| !title.is_empty())
             .unwrap_or("N/A");
         let summary = headline
             .summary
             .clone()
             .flatten()
-            .filter(|s| !s.is_empty())
+            .filter(|summary| !summary.is_empty())
             .unwrap_or("N/A".to_owned());
-        let issuance_time = headline.issuance_time.as_deref().filter(|s| !s.is_empty());
+        let issuance_time = headline
+            .issuance_time
+            .as_deref()
+            .filter(|issuance_time| !issuance_time.is_empty());
         let issuance_time_readable = format_datetime_human_readable(issuance_time);
         let link = headline
             .link
             .as_deref()
-            .filter(|s| !s.is_empty())
+            .filter(|link| !link.is_empty())
             .unwrap_or("N/A");
 
         table.add_row(vec![
@@ -194,14 +196,14 @@ pub fn create_office_headlines_table(office_headlines: &OfficeHeadlineCollection
         ]);
     }
 
-    Ok(table)
+    table
 }
 
-/// Formats an Office's headline into a comfy_table::Table.
+/// Formats an Office's headline into a `comfy_table::Table`.
 ///
 /// This function constructs a table displaying various attributes of an Office.
 ///
-pub fn create_office_headline_table(office_headline: &OfficeHeadline) -> Result<Table> {
+pub fn create_office_headline_table(office_headline: &OfficeHeadline) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -225,28 +227,28 @@ pub fn create_office_headline_table(office_headline: &OfficeHeadline) -> Result<
     let headline_id = office_headline
         .id
         .as_deref()
-        .filter(|s| !s.is_empty())
+        .filter(|headline_id| !headline_id.is_empty())
         .unwrap_or("N/A");
     let title = office_headline
         .title
         .as_deref()
-        .filter(|s| !s.is_empty())
+        .filter(|title| !title.is_empty())
         .unwrap_or("N/A");
     let summary = office_headline
         .summary
         .clone()
         .flatten()
-        .filter(|s| !s.is_empty())
+        .filter(|summary| !summary.is_empty())
         .unwrap_or("N/A".to_owned());
     let issuance_time = office_headline
         .issuance_time
         .as_deref()
-        .filter(|s| !s.is_empty());
+        .filter(|issuance_time| !issuance_time.is_empty());
     let issuance_time_readable = format_datetime_human_readable(issuance_time);
     let link = office_headline
         .link
         .as_deref()
-        .filter(|s| !s.is_empty())
+        .filter(|link| !link.is_empty())
         .unwrap_or("N/A");
 
     table.add_row(vec![
@@ -257,5 +259,5 @@ pub fn create_office_headline_table(office_headline: &OfficeHeadline) -> Result<
         Cell::new(link),
     ]);
 
-    Ok(table)
+    table
 }

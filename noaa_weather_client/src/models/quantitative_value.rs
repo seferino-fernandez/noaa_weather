@@ -48,7 +48,7 @@ impl Display for QuantitativeValue {
             f,
             "{:?} {:?}",
             self.value.unwrap_or_default(),
-            self.unit_code.clone().unwrap_or("".to_string())
+            self.unit_code.clone().unwrap_or_default()
         )
     }
 }

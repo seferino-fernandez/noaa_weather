@@ -135,7 +135,7 @@ pub async fn get_products_by_location(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -205,7 +205,7 @@ pub async fn get_product(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -270,7 +270,7 @@ pub async fn get_product_locations(
     let uri_str = format!("{}/products/locations", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -335,7 +335,7 @@ pub async fn get_product_types(
     let uri_str = format!("{}/products/types", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -402,7 +402,7 @@ pub async fn get_products_query(
     let uri_str = format!("{}/products", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = params.location_ids {
+    if let Some(param_value) = params.location_ids {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -414,20 +414,19 @@ pub async fn get_products_query(
                 "location",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.start_time {
-        req_builder = req_builder.query(&[("start", &param_value.to_string())]);
+    if let Some(param_value) = params.start_time {
+        req_builder = req_builder.query(&[("start", &param_value)]);
     }
-    if let Some(ref param_value) = params.end_time {
-        req_builder = req_builder.query(&[("end", &param_value.to_string())]);
+    if let Some(param_value) = params.end_time {
+        req_builder = req_builder.query(&[("end", &param_value)]);
     }
-    if let Some(ref param_value) = params.office_ids {
+    if let Some(param_value) = params.office_ids {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -439,14 +438,13 @@ pub async fn get_products_query(
                 "office",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.wmo_ids {
+    if let Some(param_value) = params.wmo_ids {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -458,14 +456,13 @@ pub async fn get_products_query(
                 "wmoid",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.product_type_codes {
+    if let Some(param_value) = params.product_type_codes {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -477,17 +474,16 @@ pub async fn get_products_query(
                 "type",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.limit {
+    if let Some(param_value) = params.limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -557,7 +553,7 @@ pub async fn get_products_by_type(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -630,7 +626,7 @@ pub async fn get_products_by_type_and_location(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -700,7 +696,7 @@ pub async fn get_product_issuance_locations_by_type(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 

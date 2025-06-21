@@ -10,12 +10,12 @@ use crate::{Cli, tables};
 /// Helper struct for commands requiring both a zone type and ID.
 #[derive(Args, Debug, Clone)]
 pub struct ZoneTypeAndIdArgs {
-    /// Type of zone (forecast, public, coastal, offshore, fire, county)
-    #[arg(short, long, value_enum)]
-    r#type: NwsZoneType,
     /// Zone identifier (e.g., AZZ540, WVC001)
     #[arg(short, long)]
     id: String,
+    /// Type of zone (forecast, public, coastal, offshore, fire, county)
+    #[arg(short, long, value_enum)]
+    r#type: NwsZoneType,
 }
 
 /// Access data related to NWS forecast, public, and other zones.
@@ -144,7 +144,7 @@ pub async fn handle_command(
                     };
                     zones_api::get_zones(config, params)
                         .await
-                        .map_err(|e| anyhow!("Error listing zones: {}", e))?
+                        .map_err(|error| anyhow!("Error listing zones: {}", error))?
                 }
                 Some(types) => {
                     if types.len() == 1 {
@@ -162,8 +162,8 @@ pub async fn handle_command(
                         };
                         zones_api::get_zones_by_type(config, *single_type, params)
                             .await
-                            .map_err(|e| {
-                                anyhow!("Error listing zones of type {}: {}", single_type, e)
+                            .map_err(|error| {
+                                anyhow!("Error listing zones of type {}: {}", single_type, error)
                             })?
                     } else {
                         // Call general list endpoint with type filter if multiple types
@@ -177,9 +177,11 @@ pub async fn handle_command(
                             limit: *limit,
                             effective: effective.clone(),
                         };
-                        zones_api::get_zones(config, params).await.map_err(|e| {
-                            anyhow!("Error listing zones with multiple types: {}", e)
-                        })?
+                        zones_api::get_zones(config, params)
+                            .await
+                            .map_err(|error| {
+                                anyhow!("Error listing zones with multiple types: {}", error)
+                            })?
                     }
                 }
             };
@@ -190,7 +192,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::zones::create_zones_table(&result)?;
+                let table = tables::zones::create_zones_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
 
@@ -203,12 +205,12 @@ pub async fn handle_command(
             let result =
                 zones_api::get_zone(config, zone_args.r#type, &zone_args.id, effective.clone())
                     .await
-                    .map_err(|e| {
+                    .map_err(|error| {
                         anyhow!(
                             "Error getting zone {}/{}: {}",
                             zone_args.r#type,
                             zone_args.id,
-                            e
+                            error
                         )
                     })?;
             if cli.json {
@@ -217,7 +219,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::zones::create_zone_metadata_table(&result)?;
+                let table = tables::zones::create_zone_metadata_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -229,12 +231,12 @@ pub async fn handle_command(
                 &zone_args.id,
             )
             .await
-            .map_err(|e| {
+            .map_err(|error| {
                 anyhow!(
                     "Error getting forecast for zone {}/{}: {}",
                     zone_args.r#type,
                     zone_args.id,
-                    e
+                    error
                 )
             })?;
             if cli.json {
@@ -243,7 +245,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::zones::create_zone_forecast_table(&result)?;
+                let table = tables::zones::create_zone_forecast_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -251,14 +253,16 @@ pub async fn handle_command(
         ZoneCommands::Stations { id, limit } => {
             let result = zones_api::get_stations_by_zone(config, id, *limit, None)
                 .await
-                .map_err(|e| anyhow!("Error getting stations for forecast zone {}: {}", id, e))?;
+                .map_err(|error| {
+                    anyhow!("Error getting stations for forecast zone {}: {}", id, error)
+                })?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::stations::create_stations_table(&result)?;
+                let table = tables::stations::create_stations_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -272,8 +276,12 @@ pub async fn handle_command(
             let result =
                 zones_api::get_zone_observations(config, id, start.clone(), end.clone(), *limit)
                     .await
-                    .map_err(|e| {
-                        anyhow!("Error getting observations for forecast zone {}: {}", id, e)
+                    .map_err(|error| {
+                        anyhow!(
+                            "Error getting observations for forecast zone {}: {}",
+                            id,
+                            error
+                        )
                     })?;
             if cli.json {
                 write_output(
@@ -281,7 +289,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::zones::create_zone_observations_table(&result.features)?;
+                let table = tables::zones::create_zone_observations_table(&result.features);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())

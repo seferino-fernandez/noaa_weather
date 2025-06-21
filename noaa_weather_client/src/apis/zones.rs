@@ -88,8 +88,9 @@ pub struct GetZonesParams<'a> {
 
 impl GetZonesParams<'_> {
     /// Creates a new [`GetZonesParams`] with default values.
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        Self::default()
     }
 }
 
@@ -119,8 +120,9 @@ pub struct GetZonesByTypeParams<'a> {
 
 impl GetZonesByTypeParams<'_> {
     /// Creates a new [`GetZonesByTypeParams`] with default values.
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        Self::default()
     }
 }
 
@@ -155,10 +157,10 @@ pub async fn get_zone(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = effective {
-        req_builder = req_builder.query(&[("effective", &param_value.to_string())]);
+    if let Some(param_value) = effective {
+        req_builder = req_builder.query(&[("effective", &param_value)]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -229,7 +231,7 @@ pub async fn get_current_zone_forecast(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -297,26 +299,18 @@ pub async fn get_zones(
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
     // Apply parameters from the struct
-    if let Some(ref param_value) = params.id {
+    if let Some(param_value) = params.id {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|param| ("id".to_owned(), param.to_string()))
+                    .map(|param| ("id".to_owned(), param.clone()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
-            _ => req_builder.query(&[(
-                "id",
-                &param_value
-                    .iter()
-                    .map(|param| param.to_string())
-                    .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
-            )]),
+            _ => req_builder.query(&[("id", &param_value.join(","))]),
         };
     }
-    if let Some(ref param_value) = params.area {
+    if let Some(param_value) = params.area {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -328,14 +322,13 @@ pub async fn get_zones(
                 "area",
                 &param_value
                     .iter()
-                    .map(|param| param.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.region {
+    if let Some(param_value) = params.region {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -347,14 +340,13 @@ pub async fn get_zones(
                 "region",
                 &param_value
                     .iter()
-                    .map(|param| param.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.r#type {
+    if let Some(param_value) = params.r#type {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -366,26 +358,25 @@ pub async fn get_zones(
                 "type",
                 &param_value
                     .iter()
-                    .map(|param| param.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.point {
-        req_builder = req_builder.query(&[("point", &param_value.to_string())]);
+    if let Some(param_value) = params.point {
+        req_builder = req_builder.query(&[("point", &param_value.to_owned())]);
     }
-    if let Some(ref param_value) = params.include_geometry {
+    if let Some(param_value) = params.include_geometry {
         req_builder = req_builder.query(&[("include_geometry", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = params.limit {
+    if let Some(param_value) = params.limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = params.effective {
-        req_builder = req_builder.query(&[("effective", &param_value.to_string())]);
+    if let Some(param_value) = params.effective {
+        req_builder = req_builder.query(&[("effective", &param_value)]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -455,26 +446,25 @@ pub async fn get_zones_by_type(
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
     // Apply parameters from the struct
-    if let Some(ref param_value) = params.id {
+    if let Some(param_value) = params.id {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|param| ("id".to_owned(), param.to_string()))
+                    .map(|param| ("id".to_owned(), param.clone()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "id",
                 &param_value
                     .iter()
-                    .map(|param| param.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.area {
+    if let Some(param_value) = params.area {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -486,14 +476,13 @@ pub async fn get_zones_by_type(
                 "area",
                 &param_value
                     .iter()
-                    .map(|param| param.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.region {
+    if let Some(param_value) = params.region {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -505,14 +494,13 @@ pub async fn get_zones_by_type(
                 "region",
                 &param_value
                     .iter()
-                    .map(|param| param.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.type_filter {
+    if let Some(param_value) = params.type_filter {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -524,26 +512,25 @@ pub async fn get_zones_by_type(
                 "type",
                 &param_value
                     .iter()
-                    .map(|param| param.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.point {
-        req_builder = req_builder.query(&[("point", &param_value.to_string())]);
+    if let Some(param_value) = params.point {
+        req_builder = req_builder.query(&[("point", &param_value.to_owned())]);
     }
-    if let Some(ref param_value) = params.include_geometry {
+    if let Some(param_value) = params.include_geometry {
         req_builder = req_builder.query(&[("include_geometry", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = params.limit {
+    if let Some(param_value) = params.limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = params.effective {
-        req_builder = req_builder.query(&[("effective", &param_value.to_string())]);
+    if let Some(param_value) = params.effective {
+        req_builder = req_builder.query(&[("effective", &param_value)]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -619,16 +606,16 @@ pub async fn get_zone_observations(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = start {
-        req_builder = req_builder.query(&[("start", &param_value.to_string())]);
+    if let Some(param_value) = start {
+        req_builder = req_builder.query(&[("start", &param_value)]);
     }
-    if let Some(ref param_value) = end {
-        req_builder = req_builder.query(&[("end", &param_value.to_string())]);
+    if let Some(param_value) = end {
+        req_builder = req_builder.query(&[("end", &param_value)]);
     }
-    if let Some(ref param_value) = limit {
+    if let Some(param_value) = limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -701,13 +688,13 @@ pub async fn get_stations_by_zone(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = limit {
+    if let Some(param_value) = limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = cursor {
-        req_builder = req_builder.query(&[("cursor", &param_value.to_string())]);
+    if let Some(param_value) = cursor {
+        req_builder = req_builder.query(&[("cursor", &param_value.to_owned())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 

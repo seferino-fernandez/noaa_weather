@@ -67,7 +67,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::offices::create_office_metadata_table(&result)?;
+                let table = tables::offices::create_office_metadata_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -75,14 +75,14 @@ pub async fn handle_command(
         OfficeCommands::Headlines(args) => {
             let result = offices_api::get_forecast_office_headlines(config, &args.id)
                 .await
-                .map_err(|e| anyhow!("Error getting NWS forecast office headlines: {e}"))?;
+                .map_err(|error| anyhow!("Error getting NWS forecast office headlines: {error}"))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::offices::create_office_headlines_table(&result)?;
+                let table = tables::offices::create_office_headlines_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -94,14 +94,16 @@ pub async fn handle_command(
             let result =
                 offices_api::get_forecast_office_headline(config, &office_args.id, headline_id)
                     .await
-                    .map_err(|e| anyhow!("Error getting NWS forecast office headline: {e}"))?;
+                    .map_err(|error| {
+                        anyhow!("Error getting NWS forecast office headline: {error}")
+                    })?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::offices::create_office_headline_table(&result)?;
+                let table = tables::offices::create_office_headline_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())

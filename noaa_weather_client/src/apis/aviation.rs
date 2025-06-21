@@ -109,7 +109,7 @@ pub async fn get_center_weather_advisories_by_date_and_sequence(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -182,7 +182,7 @@ pub async fn get_center_weather_advisories(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -253,7 +253,7 @@ pub async fn get_center_weather_service_unit(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -328,7 +328,7 @@ pub async fn get_sigmet(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -401,22 +401,22 @@ pub async fn get_sigmets(
     let uri_str = format!("{}/aviation/sigmets", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = start {
-        req_builder = req_builder.query(&[("start", &param_value.to_string())]);
+    if let Some(param_value) = start {
+        req_builder = req_builder.query(&[("start", &param_value)]);
     }
-    if let Some(ref param_value) = end {
-        req_builder = req_builder.query(&[("end", &param_value.to_string())]);
+    if let Some(param_value) = end {
+        req_builder = req_builder.query(&[("end", &param_value)]);
     }
-    if let Some(ref param_value) = date {
-        req_builder = req_builder.query(&[("date", &param_value.to_string())]);
+    if let Some(param_value) = date {
+        req_builder = req_builder.query(&[("date", &param_value)]);
     }
-    if let Some(ref param_value) = air_traffic_service_unit {
-        req_builder = req_builder.query(&[("atsu", &param_value.to_string())]);
+    if let Some(param_value) = air_traffic_service_unit {
+        req_builder = req_builder.query(&[("atsu", &param_value)]);
     }
-    if let Some(ref param_value) = sequence {
-        req_builder = req_builder.query(&[("sequence", &param_value.to_string())]);
+    if let Some(param_value) = sequence {
+        req_builder = req_builder.query(&[("sequence", &param_value)]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -485,7 +485,7 @@ pub async fn get_sigmets_by_air_traffic_service_unit(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -557,7 +557,7 @@ pub async fn get_sigmets_by_air_traffic_service_unit_and_date(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 

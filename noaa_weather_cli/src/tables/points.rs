@@ -1,19 +1,25 @@
 use crate::utils::format::get_zone_from_url;
 
-use anyhow::Result;
-use comfy_table::Table;
 use comfy_table::presets::UTF8_FULL_CONDENSED;
+use comfy_table::{Attribute, Cell, CellAlignment, Table};
 use noaa_weather_client::models::PointGeoJson;
 
-/// Formats point metadata into a comfy table.
-pub fn create_point_metadata_table(point_data: &PointGeoJson) -> Result<Table> {
+/// Formats point metadata into a `comfy_table::Table`.
+pub fn create_point_metadata_table(point_data: &PointGeoJson) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
-    table.set_header(vec!["Property", "Value"]);
+    table.set_header(vec![
+        Cell::new("Property")
+            .add_attribute(Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+        Cell::new("Value")
+            .add_attribute(comfy_table::Attribute::Bold)
+            .set_alignment(CellAlignment::Center),
+    ]);
 
     let properties = &point_data.properties;
 
-    // Helper macro to add rows for Option<T> properties
+    // Helper macro to add rows for `Option<T>` properties
     macro_rules! add_row_if_some {
         ($table:ident, $label:expr, $value:expr) => {
             if let Some(ref val) = $value {
@@ -57,5 +63,5 @@ pub fn create_point_metadata_table(point_data: &PointGeoJson) -> Result<Table> {
         get_zone_from_url(properties.radar_station.clone())
     );
 
-    Ok(table)
+    table
 }

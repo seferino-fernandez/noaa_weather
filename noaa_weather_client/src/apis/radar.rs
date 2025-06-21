@@ -133,13 +133,13 @@ pub async fn get_radar_wind_profiler(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = time {
-        req_builder = req_builder.query(&[("time", &param_value.to_string())]);
+    if let Some(param_value) = time {
+        req_builder = req_builder.query(&[("time", &param_value.to_owned())]);
     }
-    if let Some(ref param_value) = interval {
-        req_builder = req_builder.query(&[("interval", &param_value.to_string())]);
+    if let Some(param_value) = interval {
+        req_builder = req_builder.query(&[("interval", &param_value.to_owned())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -212,31 +212,31 @@ pub async fn get_radar_data_queue(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = params.limit {
+    if let Some(param_value) = params.limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = params.arrived {
-        req_builder = req_builder.query(&[("arrived", &param_value.to_string())]);
+    if let Some(param_value) = params.arrived {
+        req_builder = req_builder.query(&[("arrived", &param_value.to_owned())]);
     }
-    if let Some(ref param_value) = params.created {
-        req_builder = req_builder.query(&[("created", &param_value.to_string())]);
+    if let Some(param_value) = params.created {
+        req_builder = req_builder.query(&[("created", &param_value.to_owned())]);
     }
-    if let Some(ref param_value) = params.published {
-        req_builder = req_builder.query(&[("published", &param_value.to_string())]);
+    if let Some(param_value) = params.published {
+        req_builder = req_builder.query(&[("published", &param_value.to_owned())]);
     }
-    if let Some(ref param_value) = params.station {
-        req_builder = req_builder.query(&[("station", &param_value.to_string())]);
+    if let Some(param_value) = params.station {
+        req_builder = req_builder.query(&[("station", &param_value.to_owned())]);
     }
-    if let Some(ref param_value) = params.r#type {
-        req_builder = req_builder.query(&[("type", &param_value.to_string())]);
+    if let Some(param_value) = params.r#type {
+        req_builder = req_builder.query(&[("type", &param_value.to_owned())]);
     }
-    if let Some(ref param_value) = params.feed {
-        req_builder = req_builder.query(&[("feed", &param_value.to_string())]);
+    if let Some(param_value) = params.feed {
+        req_builder = req_builder.query(&[("feed", &param_value.to_owned())]);
     }
-    if let Some(ref param_value) = params.resolution {
-        req_builder = req_builder.query(&[("resolution", &param_value.to_string())]);
+    if let Some(param_value) = params.resolution {
+        req_builder = req_builder.query(&[("resolution", &param_value.to_owned())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -308,10 +308,10 @@ pub async fn get_radar_server(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = reporting_host {
-        req_builder = req_builder.query(&[("reportingHost", &param_value.to_string())]);
+    if let Some(param_value) = reporting_host {
+        req_builder = req_builder.query(&[("reportingHost", &param_value.to_owned())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -377,10 +377,10 @@ pub async fn get_radar_servers(
     let uri_str = format!("{}/radar/servers", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = reporting_host {
-        req_builder = req_builder.query(&[("reportingHost", &param_value.to_string())]);
+    if let Some(param_value) = reporting_host {
+        req_builder = req_builder.query(&[("reportingHost", &param_value.to_owned())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -454,13 +454,13 @@ pub async fn get_radar_station(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = reporting_host {
-        req_builder = req_builder.query(&[("reportingHost", &param_value.to_string())]);
+    if let Some(param_value) = reporting_host {
+        req_builder = req_builder.query(&[("reportingHost", &param_value.to_owned())]);
     }
-    if let Some(ref param_value) = host {
+    if let Some(param_value) = host {
         req_builder = req_builder.query(&[("host", &param_value.to_string())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -530,7 +530,7 @@ pub async fn get_radar_station_alarms(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -600,32 +600,31 @@ pub async fn get_radar_stations(
     let uri_str = format!("{}/radar/stations", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = station_type {
+    if let Some(param_value) = station_type {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("stationType".to_owned(), p.to_string()))
+                    .map(|param| ("stationType".to_owned(), param.to_owned()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "stationType",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = reporting_host {
-        req_builder = req_builder.query(&[("reportingHost", &param_value.to_string())]);
+    if let Some(param_value) = reporting_host {
+        req_builder = req_builder.query(&[("reportingHost", &param_value.to_owned())]);
     }
-    if let Some(ref param_value) = host {
+    if let Some(param_value) = host {
         req_builder = req_builder.query(&[("host", &param_value.to_string())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 

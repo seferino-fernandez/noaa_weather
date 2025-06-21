@@ -17,8 +17,6 @@ const DEFAULT_RADAR_DATA_QUEUE_LIMIT: i32 = 10;
     long_about = "Provides access to various endpoints related to NOAA radar stations, servers, data queues, and wind profilers."
 )]
 pub enum RadarCommand {
-    /// Get metadata for a specific radar wind profiler station.
-    WindProfiler(RadarWindProfilerArgs),
     /// Get metadata and recent entries for a radar data queue on a specific host.
     DataQueue(RadarDataQueueArgs),
     /// Get metadata for a specific radar server by its ID.
@@ -31,6 +29,8 @@ pub enum RadarCommand {
     StationAlarms(RadarStationAlarmsArgs),
     /// Get a list of radar stations, optionally filtered by type or host.
     Stations(RadarStationsArgs),
+    /// Get metadata for a specific radar wind profiler station.
+    WindProfiler(RadarWindProfilerArgs),
 }
 
 /// Arguments for the `profiler` subcommand.
@@ -41,19 +41,23 @@ pub struct RadarWindProfilerArgs {
     #[arg(long, required = true)]
     id: String,
 
-    /// Optional: Specify a time for the data (ISO 8601 format or relative time like "-1hour").
-    #[arg(long)]
-    time: Option<String>,
-
     /// Optional: Specify a time interval (ISO 8601 duration format, e.g., "PT1H").
     #[arg(long)]
     interval: Option<String>,
+
+    /// Optional: Specify a time for the data (ISO 8601 format or relative time like "-1hour").
+    #[arg(long)]
+    time: Option<String>,
 }
 
 /// Arguments for the `data-queue` subcommand.
 #[derive(Args, Debug, Clone)]
 #[command(about = "Get metadata and entries for a radar data queue.")]
 pub struct RadarDataQueueArgs {
+    /// Optional: Filter by arrival time range (ISO 8601 interval, e.g., "start/end", "start/", "/end").
+    #[arg(long)]
+    arrived: Option<String>,
+
     /// The host name of the radar queue server (e.g., "rds").
     #[arg(long, required = true, value_enum)]
     host: RadarQueueHost,
@@ -63,10 +67,6 @@ pub struct RadarDataQueueArgs {
     /// Default is 10.
     #[arg(long)]
     limit: Option<i32>,
-
-    /// Optional: Filter by arrival time range (ISO 8601 interval, e.g., "start/end", "start/", "/end").
-    #[arg(long)]
-    arrived: Option<String>,
 
     /// Optional: Filter by creation time range (ISO 8601 interval).
     #[arg(long)]
@@ -208,7 +208,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::radar::create_radar_data_queue_table(&result)?;
+                let table = tables::radar::create_radar_data_queue_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -223,7 +223,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::radar::create_radar_server_table(&result)?;
+                let table = tables::radar::create_radar_server_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -237,7 +237,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::radar::create_radar_servers_table(&result)?;
+                let table = tables::radar::create_radar_servers_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -256,7 +256,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::radar::create_radar_station_feature_table(&result)?;
+                let table = tables::radar::create_radar_station_feature_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -269,7 +269,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::radar::create_radar_station_alarms_table(&result)?;
+                let table = tables::radar::create_radar_station_alarms_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -288,7 +288,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::radar::create_radar_stations_table(&result)?;
+                let table = tables::radar::create_radar_stations_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())

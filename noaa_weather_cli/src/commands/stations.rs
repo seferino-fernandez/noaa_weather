@@ -3,7 +3,7 @@ use clap::Subcommand;
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::stations as station_api;
 use noaa_weather_client::models::{AreaCode, StateTerritoryCode};
-use std::str::FromStr;
+use std::str::FromStr as _;
 
 use crate::utils::format::write_output;
 use crate::{Cli, tables};
@@ -121,14 +121,14 @@ pub async fn handle_command(
         StationCommands::Metadata { id } => {
             let result = station_api::get_observation_station(config, id)
                 .await
-                .map_err(|e| anyhow!("Error getting station metadata: {e}"))?;
+                .map_err(|error| anyhow!("Error getting station metadata: {error}"))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::stations::create_observation_station_table(&result)?;
+                let table = tables::stations::create_observation_station_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -140,7 +140,7 @@ pub async fn handle_command(
                 .map(|states| {
                     states
                         .iter()
-                        .map(|s| StateTerritoryCode::from_str(s))
+                        .map(|state_code| StateTerritoryCode::from_str(state_code))
                         .collect::<Result<Vec<_>, _>>()
                         .map(|stc_vec| {
                             stc_vec
@@ -150,7 +150,7 @@ pub async fn handle_command(
                         })
                 })
                 .transpose()
-                .map_err(|e| anyhow!("Invalid state code provided: {e}"))?;
+                .map_err(|error| anyhow!("Invalid state code provided: {error}"))?;
 
             let result = station_api::get_observation_stations(
                 config,
@@ -160,14 +160,14 @@ pub async fn handle_command(
                 None,
             )
             .await
-            .map_err(|e| anyhow!("Error listing stations: {e}"))?;
+            .map_err(|error| anyhow!("Error listing stations: {error}"))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::stations::create_stations_table(&result)?;
+                let table = tables::stations::create_stations_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -182,14 +182,14 @@ pub async fn handle_command(
                 Some(*require_quality_controlled),
             )
             .await
-            .map_err(|e| anyhow!("Error getting latest observation: {e}"))?;
+            .map_err(|error| anyhow!("Error getting latest observation: {error}"))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::stations::create_stations_observation_table(&result)?;
+                let table = tables::stations::create_stations_observation_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -208,14 +208,14 @@ pub async fn handle_command(
                 *limit,
             )
             .await
-            .map_err(|e| anyhow!("Error listing observations: {e}"))?;
+            .map_err(|error| anyhow!("Error listing observations: {error}"))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::stations::create_stations_observations_table(&result)?;
+                let table = tables::stations::create_stations_observations_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -223,14 +223,14 @@ pub async fn handle_command(
         StationCommands::Observation { station_id, time } => {
             let result = station_api::get_observation_by_time(config, station_id, time.clone())
                 .await
-                .map_err(|e| anyhow!("Error getting observation by time: {e}"))?;
+                .map_err(|error| anyhow!("Error getting observation by time: {error}"))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::stations::create_stations_observation_table(&result)?;
+                let table = tables::stations::create_stations_observation_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -238,14 +238,14 @@ pub async fn handle_command(
         StationCommands::TerminalAerodromeForecasts { station_id } => {
             let result = station_api::get_terminal_aerodrome_forecasts(config, station_id)
                 .await
-                .map_err(|e| anyhow!("Error getting TAFs: {e}"))?;
+                .map_err(|error| anyhow!("Error getting TAFs: {error}"))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::stations::create_stations_tafs_metadata_table(&result)?;
+                let table = tables::stations::create_stations_tafs_metadata_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -262,14 +262,14 @@ pub async fn handle_command(
                 time,
             )
             .await
-            .map_err(|e| anyhow!("Error getting specific TAF: {e}"))?;
+            .map_err(|error| anyhow!("Error getting specific TAF: {error}"))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::stations::create_stations_taf_table(&result)?;
+                let table = tables::stations::create_stations_taf_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())

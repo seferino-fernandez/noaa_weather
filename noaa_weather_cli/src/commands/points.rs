@@ -57,7 +57,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::points::create_point_metadata_table(&result)?;
+                let table = tables::points::create_point_metadata_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -65,7 +65,7 @@ pub async fn handle_command(
         PointCommands::Stations(args) => {
             let result = points_api::get_point_stations(config, &args.point)
                 .await
-                .map_err(|e| anyhow::anyhow!("Error getting point stations: {}", e))?;
+                .map_err(|error| anyhow::anyhow!("Error getting point stations: {}", error))?;
 
             if cli.json {
                 write_output(
@@ -73,7 +73,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::stations::create_stations_table(&result)?;
+                let table = tables::stations::create_stations_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())

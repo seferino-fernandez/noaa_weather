@@ -647,7 +647,7 @@ mod tests {
         assert_eq!(
             "".parse::<NwsForecastOfficeId>(),
             Err(ParseNwsForecastOfficeIdError {
-                invalid_value: "".to_string()
+                invalid_value: String::new()
             })
         );
     }

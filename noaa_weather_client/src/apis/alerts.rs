@@ -189,7 +189,7 @@ pub async fn get_active_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("status".to_owned(), p.to_string()))
+                    .map(|param| ("status".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
@@ -207,14 +207,14 @@ pub async fn get_active_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("message_type".to_owned(), p.to_string()))
+                    .map(|param| ("message_type".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "message_type",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(","),
             )]),
@@ -225,17 +225,16 @@ pub async fn get_active_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("event".to_owned(), p.to_string()))
+                    .map(|param| ("event".to_owned(), param.clone()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "event",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
@@ -244,58 +243,55 @@ pub async fn get_active_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("code".to_owned(), p.to_string()))
+                    .map(|param| ("code".to_owned(), param.clone()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "code",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.area {
+    if let Some(param_value) = &params.area {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("area".to_owned(), p.to_string()))
+                    .map(|param| ("area".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "area",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = params.point {
-        req_builder = req_builder.query(&[("point", &param_value.to_string())]);
+    if let Some(param_value) = params.point {
+        req_builder = req_builder.query(&[("point", &param_value.to_owned())]);
     }
-    if let Some(ref param_value) = params.region {
+    if let Some(param_value) = &params.region {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("region".to_owned(), p.to_string()))
+                    .map(|param| ("region".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "region",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
@@ -307,17 +303,16 @@ pub async fn get_active_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("zone".to_owned(), p.to_string()))
+                    .map(|param| ("zone".to_owned(), param.clone()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "zone",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
@@ -326,14 +321,14 @@ pub async fn get_active_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("urgency".to_owned(), p.to_string()))
+                    .map(|param| ("urgency".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "urgency",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(","),
             )]),
@@ -344,14 +339,14 @@ pub async fn get_active_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("severity".to_owned(), p.to_string()))
+                    .map(|param| ("severity".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "severity",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(","),
             )]),
@@ -362,7 +357,7 @@ pub async fn get_active_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("certainty".to_owned(), p.to_string()))
+                    .map(|param| ("certainty".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
@@ -458,7 +453,7 @@ pub async fn get_active_alerts_for_area(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -594,7 +589,7 @@ pub async fn get_active_alerts_for_marine_region(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -665,7 +660,7 @@ pub async fn get_active_alerts_for_zone(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 
@@ -723,27 +718,27 @@ pub async fn get_alerts(
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
     if let Some(param_value) = &params.active {
-        req_builder = req_builder.query(&[("active", &param_value.to_string())]);
+        req_builder = req_builder.query(&[("active", &param_value.clone())]);
     }
     if let Some(param_value) = &params.start {
-        req_builder = req_builder.query(&[("start", &param_value.to_string())]);
+        req_builder = req_builder.query(&[("start", &param_value.clone())]);
     }
     if let Some(param_value) = &params.end {
-        req_builder = req_builder.query(&[("end", &param_value.to_string())]);
+        req_builder = req_builder.query(&[("end", &param_value.clone())]);
     }
     if let Some(param_value) = &params.status {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("status".to_owned(), p.to_string()))
+                    .map(|param| ("status".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "status",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(","),
             )]),
@@ -754,17 +749,16 @@ pub async fn get_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("message_type".to_owned(), p.to_string()))
+                    .map(|param| ("message_type".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "message_type",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
@@ -773,14 +767,14 @@ pub async fn get_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("event".to_owned(), p.to_string()))
+                    .map(|param| ("event".to_owned(), param.clone()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "event",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(","),
             )]),
@@ -798,7 +792,7 @@ pub async fn get_alerts(
                 "code",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(","),
             )]),
@@ -809,35 +803,35 @@ pub async fn get_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("area".to_owned(), p.to_string()))
+                    .map(|param| ("area".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "area",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(","),
             )]),
         };
     }
     if let Some(param_value) = &params.point {
-        req_builder = req_builder.query(&[("point", &param_value.to_string())]);
+        req_builder = req_builder.query(&[("point", &(*param_value).to_owned())]);
     }
     if let Some(param_value) = &params.region {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("region".to_owned(), p.to_string()))
+                    .map(|param| ("region".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "region",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(","),
             )]),
@@ -851,14 +845,14 @@ pub async fn get_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("zone".to_owned(), p.to_string()))
+                    .map(|param| ("zone".to_owned(), param.clone()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "zone",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(","),
             )]),
@@ -869,14 +863,14 @@ pub async fn get_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("urgency".to_owned(), p.to_string()))
+                    .map(|param| ("urgency".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "urgency",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(","),
             )]),
@@ -887,14 +881,14 @@ pub async fn get_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("severity".to_owned(), p.to_string()))
+                    .map(|param| ("severity".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "severity",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(","),
             )]),
@@ -905,14 +899,14 @@ pub async fn get_alerts(
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|p| ("certainty".to_owned(), p.to_string()))
+                    .map(|param| ("certainty".to_owned(), param.to_string()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "certainty",
                 &param_value
                     .iter()
-                    .map(|p| p.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(","),
             )]),
@@ -922,7 +916,7 @@ pub async fn get_alerts(
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
     if let Some(param_value) = &params.cursor {
-        req_builder = req_builder.query(&[("cursor", &param_value.to_string())]);
+        req_builder = req_builder.query(&[("cursor", &(*param_value).to_owned())]);
     }
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
@@ -935,7 +929,7 @@ pub async fn get_alerts(
     let content_type = resp
         .headers()
         .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
+        .and_then(|header| header.to_str().ok())
         .unwrap_or("application/octet-stream");
     let content_type = super::ContentType::from(content_type);
 

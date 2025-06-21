@@ -1,6 +1,6 @@
 use super::{ContentType, Error, configuration};
 use crate::apis::ResponseContent;
-use crate::models::{self};
+use crate::models;
 use reqwest;
 use serde::de::Error as _;
 use serde::{Deserialize, Serialize};
@@ -103,7 +103,7 @@ pub async fn get_observation_station(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -177,26 +177,25 @@ pub async fn get_observation_stations(
     let uri_str = format!("{}/stations", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = id {
+    if let Some(param_value) = id {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
                     .iter()
-                    .map(|param| ("id".to_owned(), param.to_string()))
+                    .map(|param| ("id".to_owned(), param.clone()))
                     .collect::<Vec<(std::string::String, std::string::String)>>(),
             ),
             _ => req_builder.query(&[(
                 "id",
                 &param_value
                     .iter()
-                    .map(|param| param.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = state {
+    if let Some(param_value) = state {
         req_builder = match "csv" {
             "multi" => req_builder.query(
                 &param_value
@@ -208,20 +207,19 @@ pub async fn get_observation_stations(
                 "state",
                 &param_value
                     .iter()
-                    .map(|param| param.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
-                    .join(",")
-                    .to_string(),
+                    .join(","),
             )]),
         };
     }
-    if let Some(ref param_value) = limit {
+    if let Some(param_value) = limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = cursor {
-        req_builder = req_builder.query(&[("cursor", &param_value.to_string())]);
+    if let Some(param_value) = cursor {
+        req_builder = req_builder.query(&[("cursor", &param_value.to_owned())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -294,10 +292,10 @@ pub async fn get_latest_observations(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = require_quality_controlled {
+    if let Some(param_value) = require_quality_controlled {
         req_builder = req_builder.query(&[("require_qc", &param_value.to_string())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -371,16 +369,16 @@ pub async fn get_observations(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = start {
+    if let Some(param_value) = start {
         req_builder = req_builder.query(&[("start", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = end {
+    if let Some(param_value) = end {
         req_builder = req_builder.query(&[("end", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = limit {
+    if let Some(param_value) = limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -453,7 +451,7 @@ pub async fn get_observation_by_time(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -529,7 +527,7 @@ pub async fn get_terminal_aerodrome_forecast(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -601,7 +599,7 @@ pub async fn get_terminal_aerodrome_forecasts(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 

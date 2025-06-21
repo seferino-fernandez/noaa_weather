@@ -23,8 +23,8 @@ pub fn write_output(output_path: Option<&str>, content: &str) -> Result<()> {
 /// This function will:
 /// - Return `None` if the input `url_opt` is `None`.
 /// - If `url_opt` is `Some(url_str)`:
-///   - If `url_str` ends with `/` (e.g., "<https://api.weather.gov/zones/forecast/AZZ551>"), it returns `Some("".to_string())`.
-///   - If `url_str` is empty (e.g., ""), it returns `Some("".to_string())`.
+///   - If `url_str` ends with `/` (e.g., "<https://api.weather.gov/zones/forecast/AZZ551>"), it returns `Some(String::new())`.
+///   - If `url_str` is empty (e.g., ""), it returns `Some(String::new())`.
 ///   - If `url_str` has no `/` (e.g., "AZZ551"), it returns `Some("AZZ551".to_string())`.
 ///   - Otherwise, it returns the segment after the last `/` (e.g., for "<https://api.weather.gov/zones/forecast/AZZ551>", it returns `Some("AZZ551".to_string())`).
 ///

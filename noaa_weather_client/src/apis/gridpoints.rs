@@ -81,7 +81,7 @@ pub async fn get_gridpoint(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 
@@ -163,14 +163,14 @@ pub async fn get_gridpoint_forecast(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = units {
+    if let Some(param_value) = units {
         req_builder = req_builder.query(&[("units", &param_value.to_string())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(param_value) = feature_flags {
-        req_builder = req_builder.header("Feature-Flags", param_value.join(",").to_string());
+        req_builder = req_builder.header("Feature-Flags", param_value.join(","));
     }
 
     let req = req_builder.build()?;
@@ -251,14 +251,14 @@ pub async fn get_gridpoint_forecast_hourly(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = units {
+    if let Some(param_value) = units {
         req_builder = req_builder.query(&[("units", &param_value.to_string())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(param_value) = feature_flags {
-        req_builder = req_builder.header("Feature-Flags", param_value.join(",").to_string());
+        req_builder = req_builder.header("Feature-Flags", param_value.join(","));
     }
 
     let req = req_builder.build()?;
@@ -339,13 +339,13 @@ pub async fn get_gridpoint_stations(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = limit {
+    if let Some(param_value) = limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(ref param_value) = cursor {
-        req_builder = req_builder.query(&[("cursor", &param_value.to_string())]);
+    if let Some(param_value) = cursor {
+        req_builder = req_builder.query(&[("cursor", &param_value.to_owned())]);
     }
-    if let Some(ref user_agent) = configuration.user_agent {
+    if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
 

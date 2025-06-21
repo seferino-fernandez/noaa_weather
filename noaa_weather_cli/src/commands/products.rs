@@ -152,14 +152,14 @@ pub async fn handle_command(
         ProductCommands::LocationProducts(args) => {
             let result = products_api::get_products_by_location(config, &args.location_id)
                 .await
-                .map_err(|e| anyhow!("getting location products: {}", e))?;
+                .map_err(|error| anyhow!("getting location products: {}", error))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::products::create_product_types_table(&result)?;
+                let table = tables::products::create_product_types_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -167,14 +167,14 @@ pub async fn handle_command(
         ProductCommands::Metadata(args) => {
             let result = products_api::get_product(config, &args.id)
                 .await
-                .map_err(|e| anyhow!("getting product: {}", e))?;
+                .map_err(|error| anyhow!("getting product: {}", error))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::products::create_product_table(&result)?;
+                let table = tables::products::create_product_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -182,14 +182,14 @@ pub async fn handle_command(
         ProductCommands::Locations => {
             let result = products_api::get_product_locations(config)
                 .await
-                .map_err(|e| anyhow!("getting product locations: {}", e))?;
+                .map_err(|error| anyhow!("getting product locations: {}", error))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::products::create_products_locations_table(&result)?;
+                let table = tables::products::create_products_locations_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -197,14 +197,14 @@ pub async fn handle_command(
         ProductCommands::Types => {
             let result = products_api::get_product_types(config)
                 .await
-                .map_err(|e| anyhow!("getting product types: {}", e))?;
+                .map_err(|error| anyhow!("getting product types: {}", error))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::products::create_product_types_table(&result)?;
+                let table = tables::products::create_product_types_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -221,14 +221,14 @@ pub async fn handle_command(
             };
             let result = products_api::get_products_query(config, params)
                 .await
-                .map_err(|e| anyhow!("querying products: {}", e))?;
+                .map_err(|error| anyhow!("querying products: {}", error))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::products::create_products_table(&result)?;
+                let table = tables::products::create_products_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -236,14 +236,14 @@ pub async fn handle_command(
         ProductCommands::ProductsType(args) => {
             let result = products_api::get_products_by_type(config, &args.type_id)
                 .await
-                .map_err(|e| anyhow!("getting products by type: {}", e))?;
+                .map_err(|error| anyhow!("getting products by type: {}", error))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::products::create_products_table(&result)?;
+                let table = tables::products::create_products_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -255,14 +255,14 @@ pub async fn handle_command(
                 &args.location_id,
             )
             .await
-            .map_err(|e| anyhow!("getting products by type and location: {}", e))?;
+            .map_err(|error| anyhow!("getting products by type and location: {}", error))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::products::create_products_table(&result)?;
+                let table = tables::products::create_products_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -271,14 +271,14 @@ pub async fn handle_command(
             let result =
                 products_api::get_product_issuance_locations_by_type(config, &args.type_id)
                     .await
-                    .map_err(|e| anyhow!("getting locations for product type: {}", e))?;
+                    .map_err(|error| anyhow!("getting locations for product type: {}", error))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::products::create_products_locations_table(&result)?;
+                let table = tables::products::create_products_locations_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())

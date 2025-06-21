@@ -1,4 +1,3 @@
-use anyhow::Result;
 use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::{
@@ -7,11 +6,11 @@ use noaa_weather_client::models::{
 
 use crate::utils::format::format_datetime_human_readable;
 
-/// Formats a TextProduct into a comfy_table::Table.
+/// Formats a `TextProduct` into a `comfy_table::Table`.
 ///
-/// This function constructs a table displaying various attributes of a TextProduct.
+/// This function constructs a table displaying various attributes of a `TextProduct`.
 ///
-pub fn create_product_table(product: &TextProduct) -> Result<Table> {
+pub fn create_product_table(product: &TextProduct) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -41,10 +40,13 @@ pub fn create_product_table(product: &TextProduct) -> Result<Table> {
     let product_id = product
         .id
         .as_deref()
-        .filter(|s| !s.is_empty())
+        .filter(|product_id| !product_id.is_empty())
         .unwrap_or("N/A");
 
-    let issuance_time = product.issuance_time.as_deref().filter(|s| !s.is_empty());
+    let issuance_time = product
+        .issuance_time
+        .as_deref()
+        .filter(|issuance_time| !issuance_time.is_empty());
     let issuance_time_readable = format_datetime_human_readable(issuance_time);
 
     table.add_row(vec![
@@ -57,10 +59,10 @@ pub fn create_product_table(product: &TextProduct) -> Result<Table> {
         Cell::new(product.product_text.as_deref().unwrap_or("N/A")),
     ]);
 
-    Ok(table)
+    table
 }
 
-pub fn create_product_types_table(product_types: &TextProductTypeCollection) -> Result<Table> {
+pub fn create_product_types_table(product_types: &TextProductTypeCollection) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -80,10 +82,10 @@ pub fn create_product_types_table(product_types: &TextProductTypeCollection) -> 
         ]);
     }
 
-    Ok(table)
+    table
 }
 
-pub fn create_products_table(products: &TextProductCollection) -> Result<Table> {
+pub fn create_products_table(products: &TextProductCollection) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -112,10 +114,13 @@ pub fn create_products_table(products: &TextProductCollection) -> Result<Table> 
         let product_id = product
             .id
             .as_deref()
-            .filter(|s| !s.is_empty())
+            .filter(|product_id| !product_id.is_empty())
             .unwrap_or("N/A");
 
-        let issuance_time = product.issuance_time.as_deref().filter(|s| !s.is_empty());
+        let issuance_time = product
+            .issuance_time
+            .as_deref()
+            .filter(|issuance_time| !issuance_time.is_empty());
         let issuance_time_readable = format_datetime_human_readable(issuance_time);
 
         table.add_row(vec![
@@ -128,12 +133,10 @@ pub fn create_products_table(products: &TextProductCollection) -> Result<Table> 
         ]);
     }
 
-    Ok(table)
+    table
 }
 
-pub fn create_products_locations_table(
-    product_locations: &TextProductLocationCollection,
-) -> Result<Table> {
+pub fn create_products_locations_table(product_locations: &TextProductLocationCollection) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -152,5 +155,5 @@ pub fn create_products_locations_table(
         table.add_row(vec![Cell::new(location_id), Cell::new(location_name)]);
     }
 
-    Ok(table)
+    table
 }

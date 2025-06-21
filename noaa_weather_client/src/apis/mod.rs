@@ -49,13 +49,13 @@ impl<T> From<reqwest::Error> for Error<T> {
 
 impl<T> From<serde_json::Error> for Error<T> {
     fn from(serde_error: serde_json::Error) -> Self {
-        Error::Serde(serde_error)
+        Self::Serde(serde_error)
     }
 }
 
 impl<T> From<std::io::Error> for Error<T> {
     fn from(io_error: std::io::Error) -> Self {
-        Error::Io(io_error)
+        Self::Io(io_error)
     }
 }
 

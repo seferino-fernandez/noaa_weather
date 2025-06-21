@@ -103,7 +103,7 @@ pub async fn handle_command(
                 location.y,
             )
             .await
-            .map_err(|e| anyhow!("getting raw gridpoint data: {}", e))?;
+            .map_err(|error| anyhow!("getting raw gridpoint data: {}", error))?;
 
             if cli.json {
                 write_output(
@@ -111,7 +111,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::gridpoints::create_gridpoint_table(&result)?;
+                let table = tables::gridpoints::create_gridpoint_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
         }
@@ -125,7 +125,7 @@ pub async fn handle_command(
                 *units,
             )
             .await
-            .map_err(|e| anyhow!("getting gridpoint forecast: {}", e))?;
+            .map_err(|error| anyhow!("getting gridpoint forecast: {}", error))?;
 
             if cli.json {
                 write_output(
@@ -133,7 +133,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::gridpoints::create_forecast_table(&result)?;
+                let table = tables::gridpoints::create_forecast_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
         }
@@ -147,7 +147,7 @@ pub async fn handle_command(
                 *units,
             )
             .await
-            .map_err(|e| anyhow!("getting hourly gridpoint forecast: {}", e))?;
+            .map_err(|error| anyhow!("getting hourly gridpoint forecast: {}", error))?;
 
             if cli.json {
                 write_output(
@@ -155,7 +155,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::gridpoints::create_hourly_forecast_table(&result)?;
+                let table = tables::gridpoints::create_hourly_forecast_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
         }
@@ -169,7 +169,7 @@ pub async fn handle_command(
                 None,
             )
             .await
-            .map_err(|e| anyhow!("getting gridpoint stations: {}", e))?;
+            .map_err(|error| anyhow!("getting gridpoint stations: {}", error))?;
 
             if cli.json {
                 write_output(
@@ -177,7 +177,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::stations::create_stations_table(&result)?;
+                let table = tables::stations::create_stations_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
         }

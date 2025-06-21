@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use anyhow::Result;
 use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Attribute, Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::radar_server::RadarServerNetworkInterfaceStats;
@@ -31,11 +30,11 @@ fn add_section_header(table: &mut Table, title: &str) {
 /// Formats geographic coordinates `Option<Vec<f64>>` (longitude, latitude) for display.
 /// Uses "N/A" if None or invalid.
 fn format_coords(coords: &Option<Vec<f64>>) -> String {
-    coords.as_ref().map_or("N/A".to_string(), |c| {
-        if c.len() >= 2 {
-            format!("Lon: {:.5}, Lat: {:.5}", c[0], c[1])
+    coords.as_ref().map_or("N/A".to_owned(), |coord| {
+        if coord.len() >= 2 {
+            format!("Lon: {:.5}, Lat: {:.5}", coord[0], coord[1])
         } else {
-            "Invalid Coords".to_string()
+            "Invalid Coords".to_owned()
         }
     })
 }
@@ -43,13 +42,13 @@ fn format_coords(coords: &Option<Vec<f64>>) -> String {
 /// Creates a summary string for ping targets (e.g., "X / Y up").
 fn format_ping_map_summary(map_opt: &Option<HashMap<String, bool>>) -> String {
     map_opt.as_ref().map_or_else(
-        || "N/A".to_string(),
+        || "N/A".to_owned(),
         |map| {
             let total = map.len();
             if total == 0 {
-                return "0 targets".to_string();
+                return "0 targets".to_owned();
             }
-            let up_count = map.values().filter(|&&v| v).count();
+            let up_count = map.values().filter(|&&value| value).count();
             format!("{up_count} / {total} up")
         },
     )
@@ -111,9 +110,7 @@ fn add_network_interface_stats_rows(
 ///
 /// A `Result<Table>` which is the `comfy_table::Table` ready for printing,
 /// or an error if table creation fails (though current implementation always returns Ok).
-pub fn create_radar_station_feature_table(
-    radar_station_feature: &RadarStationFeature,
-) -> Result<Table> {
+pub fn create_radar_station_feature_table(radar_station_feature: &RadarStationFeature) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -370,10 +367,10 @@ pub fn create_radar_station_feature_table(
         ]);
     }
 
-    Ok(table)
+    table
 }
 
-pub fn create_radar_stations_table(radar_stations: &RadarStationsResponse) -> Result<Table> {
+pub fn create_radar_stations_table(radar_stations: &RadarStationsResponse) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -406,7 +403,7 @@ pub fn create_radar_stations_table(radar_stations: &RadarStationsResponse) -> Re
             ]);
         }
     }
-    Ok(table)
+    table
 }
 
 /// Creates a table displaying detailed information for a single NOAA radar station alarm.
@@ -416,7 +413,7 @@ pub fn create_radar_stations_table(radar_stations: &RadarStationsResponse) -> Re
 /// Optional fields are displayed as "N/A" if not present in the data.
 pub fn create_radar_station_alarms_table(
     radar_station_alarms: &RadarStationAlarmsResponse,
-) -> Result<Table> {
+) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -447,11 +444,11 @@ pub fn create_radar_station_alarms_table(
             Cell::new(format_optional_i32(&alarm.active_channel)),
         ]);
     }
-    Ok(table)
+    table
 }
 
-pub fn create_radar_data_queue_table(radar_data_queue: &RadarQueuesResponse) -> Result<Table> {
-    let mut table: Table = Table::new();
+pub fn create_radar_data_queue_table(radar_data_queue: &RadarQueuesResponse) -> Table {
+    let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
@@ -497,7 +494,7 @@ pub fn create_radar_data_queue_table(radar_data_queue: &RadarQueuesResponse) -> 
             Cell::new(format_optional_i32(&entry.size)),
         ]);
     }
-    Ok(table)
+    table
 }
 
 /// Creates a table displaying status information for a NOAA Radar Server.
@@ -513,7 +510,7 @@ pub fn create_radar_data_queue_table(radar_data_queue: &RadarQueuesResponse) -> 
 /// # Returns
 ///
 /// A `Result<Table>` which is the `comfy_table::Table` ready for printing.
-pub fn create_radar_server_table(radar_server: &RadarServer) -> Result<Table> {
+pub fn create_radar_server_table(radar_server: &RadarServer) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -746,7 +743,7 @@ pub fn create_radar_server_table(radar_server: &RadarServer) -> Result<Table> {
         table.add_row(vec![Cell::new("Network Data"), Cell::new("N/A")]);
     }
 
-    Ok(table)
+    table
 }
 
 /// Creates a table listing multiple NOAA Radar Servers with key summary information.
@@ -763,7 +760,7 @@ pub fn create_radar_server_table(radar_server: &RadarServer) -> Result<Table> {
 /// # Returns
 ///
 /// A `Result<Table>` which is the `comfy_table::Table` ready for printing.
-pub fn create_radar_servers_table(radar_servers_response: &RadarServersResponse) -> Result<Table> {
+pub fn create_radar_servers_table(radar_servers_response: &RadarServersResponse) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -804,19 +801,19 @@ pub fn create_radar_servers_table(radar_servers_response: &RadarServersResponse)
     if let Some(servers) = &radar_servers_response.radar_servers {
         for server in servers {
             let ldm_active = server.ldm.as_ref().and_then(|ldm| ldm.active).map_or_else(
-                || "N/A".to_string(),
-                |b| format_optional_bool_as_yes_no(&Some(b)),
+                || "N/A".to_owned(),
+                |bool_opt| format_optional_bool_as_yes_no(&Some(bool_opt)),
             );
             let ldm_count = server
                 .ldm
                 .as_ref()
                 .and_then(|ldm| ldm.count)
-                .map_or_else(|| "N/A".to_string(), |c| c.to_string());
+                .map_or_else(|| "N/A".to_owned(), |count| count.to_string());
             let load1 = server
                 .hardware
                 .as_ref()
                 .and_then(|hw| hw.load1)
-                .map_or_else(|| "N/A".to_string(), |l| format!("{l:.2}"));
+                .map_or_else(|| "N/A".to_owned(), |load1| format!("{load1:.2}"));
 
             table.add_row(vec![
                 Cell::new(format_optional_string(&server.id)),
@@ -843,5 +840,5 @@ pub fn create_radar_servers_table(radar_servers_response: &RadarServersResponse)
         ]);
     }
 
-    Ok(table)
+    table
 }

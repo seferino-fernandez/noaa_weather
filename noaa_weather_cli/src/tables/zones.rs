@@ -1,4 +1,3 @@
-use anyhow::Result;
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{Attribute, Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::{
@@ -22,7 +21,7 @@ use crate::utils::format::{
 ///
 /// # Returns
 /// A `Result<Table>` which is the `comfy_table::Table` ready for display, or an error.
-pub fn create_zones_table(zone_collection: &ZoneCollectionGeoJson) -> Result<Table> {
+pub fn create_zones_table(zone_collection: &ZoneCollectionGeoJson) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -57,7 +56,7 @@ pub fn create_zones_table(zone_collection: &ZoneCollectionGeoJson) -> Result<Tab
         table.add_row(create_zone_row(properties));
     }
 
-    Ok(table)
+    table
 }
 
 /// Creates a table listing the metadata for a single zone.
@@ -71,7 +70,7 @@ pub fn create_zones_table(zone_collection: &ZoneCollectionGeoJson) -> Result<Tab
 ///
 /// # Returns
 /// A `Result<Table>` which is the `comfy_table::Table` ready for display, or an error.
-pub fn create_zone_metadata_table(zone_geo: &ZoneGeoJson) -> Result<Table> {
+pub fn create_zone_metadata_table(zone_geo: &ZoneGeoJson) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -102,7 +101,7 @@ pub fn create_zone_metadata_table(zone_geo: &ZoneGeoJson) -> Result<Table> {
 
     table.add_row(create_zone_row(&zone_geo.properties));
 
-    Ok(table)
+    table
 }
 
 /// Creates a table listing the forecast for a single zone.
@@ -116,7 +115,7 @@ pub fn create_zone_metadata_table(zone_geo: &ZoneGeoJson) -> Result<Table> {
 ///
 /// # Returns
 /// A `Result<Table>` which is the `comfy_table::Table` ready for display, or an error.
-pub fn create_zone_forecast_table(zone_forecast: &ZoneForecastGeoJson) -> Result<Table> {
+pub fn create_zone_forecast_table(zone_forecast: &ZoneForecastGeoJson) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -153,18 +152,17 @@ pub fn create_zone_forecast_table(zone_forecast: &ZoneForecastGeoJson) -> Result
         }
     }
 
-    Ok(table)
+    table
 }
 
 fn create_zone_row(zone: &Zone) -> Vec<Cell> {
-    let zone_id_str = zone.id.as_deref().unwrap_or("N/A").to_string();
-    let name_str = zone.name.as_deref().unwrap_or("N/A").to_string();
+    let zone_id_str = zone.id.as_deref().unwrap_or("N/A").to_owned();
+    let name_str = zone.name.as_deref().unwrap_or("N/A").to_owned();
 
     let zone_type_display = zone
         .r#type
         .as_ref()
-        .map(|zone_type| format!("{zone_type:?}"))
-        .unwrap_or_else(|| "N/A".to_string());
+        .map_or_else(|| "N/A".to_owned(), |zone_type| format!("{zone_type:?}"));
 
     let state_display = zone
         .state
@@ -178,28 +176,28 @@ fn create_zone_row(zone: &Zone) -> Vec<Cell> {
                 ZoneState::String(string_val) => string_val.to_uppercase(),
             }
         })
-        .unwrap_or_else(|| "N/A".to_string());
+        .unwrap_or_else(|| "N/A".to_owned());
 
     let time_zones_display = zone
         .time_zone
         .as_ref()
-        .map_or("N/A".to_string(), |time_zones| {
+        .map_or("N/A".to_owned(), |time_zones| {
             if time_zones.is_empty() {
-                "N/A".to_string()
+                "N/A".to_owned()
             } else {
                 time_zones.join(",\n")
             }
         });
 
     let forecast_office_display = get_zone_from_url(zone.forecast_office.as_deref())
-        .unwrap_or_else(|| zone.forecast_office.as_deref().unwrap_or("N/A").to_string());
+        .unwrap_or_else(|| zone.forecast_office.as_deref().unwrap_or("N/A").to_owned());
 
     let obs_stations_display =
         zone.observation_stations
             .as_ref()
-            .map_or("N/A".to_string(), |stations| {
+            .map_or("N/A".to_owned(), |stations| {
                 if stations.is_empty() {
-                    "None".to_string()
+                    "None".to_owned()
                 } else {
                     let station_ids: Vec<String> = stations
                         .iter()
@@ -209,7 +207,7 @@ fn create_zone_row(zone: &Zone) -> Vec<Cell> {
                     if station_ids.is_empty() && !stations.is_empty() {
                         format!("{} station URL(s)", stations.len())
                     } else if station_ids.is_empty() {
-                        "None".to_string()
+                        "None".to_owned()
                     } else {
                         // Show all station IDs four in a row, then wrap
                         let mut station_ids_str = String::new();
@@ -222,7 +220,7 @@ fn create_zone_row(zone: &Zone) -> Vec<Cell> {
                             }
                         }
                         // Remove trailing comma and space if any
-                        station_ids_str.trim_end_matches(", ").to_string()
+                        station_ids_str.trim_end_matches(", ").to_owned()
                     }
                 }
             });
@@ -251,9 +249,9 @@ fn format_observation_clouds(
             })
             .collect::<Vec<String>>()
             .join("\n"),
-        Some(Some(_)) => "Clear".to_string(),
-        Some(None) => "N/A (not reported)".to_string(),
-        None => "N/A".to_string(),
+        Some(Some(_)) => "Clear".to_owned(),
+        Some(None) => "N/A (not reported)".to_owned(),
+        None => "N/A".to_owned(),
     }
 }
 
@@ -262,11 +260,11 @@ fn format_observation_present_weather(weather_opt: Option<&Vec<MetarPhenomenon>>
     match weather_opt {
         Some(phenomena) if !phenomena.is_empty() => phenomena
             .iter()
-            .map(|p| p.raw_string.clone())
-            .filter(|s| !s.is_empty())
+            .map(|phenomenon| phenomenon.raw_string.clone())
+            .filter(|raw_string| !raw_string.is_empty())
             .collect::<Vec<String>>()
             .join(" "),
-        _ => "N/A".to_string(),
+        _ => "N/A".to_owned(),
     }
 }
 
@@ -280,9 +278,7 @@ fn format_observation_present_weather(weather_opt: Option<&Vec<MetarPhenomenon>>
 ///
 /// # Returns
 /// A `Result<Table>` which is the `comfy_table::Table` ready for display, or an error.
-pub fn create_zone_observations_table(
-    observations_features: &[ObservationGeoJson],
-) -> Result<Table> {
+pub fn create_zone_observations_table(observations_features: &[ObservationGeoJson]) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -323,7 +319,7 @@ pub fn create_zone_observations_table(
                 .set_alignment(CellAlignment::Center)
                 .add_attribute(Attribute::Italic),
         ]);
-        return Ok(table);
+        return table;
     }
 
     for obs_feature in observations_features {
@@ -338,8 +334,8 @@ pub fn create_zone_observations_table(
         let dewpoint = format_optional_value_unit(&properties.dewpoint);
 
         let wind = format_observation_wind(
-            properties.wind_speed.as_ref().cloned(),
-            properties.wind_direction.as_ref().cloned(),
+            properties.wind_speed.clone(),
+            properties.wind_direction.clone(),
         );
 
         // Prioritize Sea Level Pressure, fallback to Barometric if SLP is not available
@@ -360,12 +356,12 @@ pub fn create_zone_observations_table(
             .as_deref()
             .unwrap_or("")
             .trim()
-            .to_string();
+            .to_owned();
         if weather_description.is_empty() {
             weather_description =
                 format_observation_present_weather(properties.present_weather.as_ref());
             if weather_description.is_empty() {
-                weather_description = "N/A".to_string();
+                "N/A".clone_into(&mut weather_description);
             }
         }
 
@@ -382,5 +378,5 @@ pub fn create_zone_observations_table(
         ]);
     }
 
-    Ok(table)
+    table
 }

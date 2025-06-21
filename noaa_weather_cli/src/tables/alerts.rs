@@ -52,7 +52,7 @@ pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> comfy_table:
             let mut severity_cell = Cell::new(
                 alert_properties
                     .severity
-                    .map_or_else(|| "N/A".to_string(), |s| s.to_string()),
+                    .map_or_else(|| "N/A".to_owned(), |severity| severity.to_string()),
             );
             if let Some(severity_value) = alert_properties.severity {
                 match severity_value {
@@ -121,11 +121,11 @@ pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> comfy_table::Tabl
     let mut details = vec![
         format!(
             "ID: {}",
-            alert.id.clone().unwrap_or_else(|| "N/A".to_string())
+            alert.id.clone().unwrap_or_else(|| "N/A".to_owned())
         ),
         format!(
             "Event: {}",
-            alert.event.clone().unwrap_or_else(|| "N/A".to_string())
+            alert.event.clone().unwrap_or_else(|| "N/A".to_owned())
         ),
         format!(
             "Headline: {}",
@@ -133,18 +133,18 @@ pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> comfy_table::Tabl
                 .headline
                 .clone()
                 .flatten()
-                .unwrap_or_else(|| "N/A".to_string())
+                .unwrap_or_else(|| "N/A".to_owned())
         ),
         format!(
             "Area Description: {}",
-            alert.area_desc.clone().unwrap_or_else(|| "N/A".to_string())
+            alert.area_desc.clone().unwrap_or_else(|| "N/A".to_owned())
         ),
         format!(
             "Sender Name: {}",
             alert
                 .sender_name
                 .clone()
-                .unwrap_or_else(|| "N/A".to_string())
+                .unwrap_or_else(|| "N/A".to_owned())
         ),
         format!(
             "Sent: {}",
@@ -170,37 +170,37 @@ pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> comfy_table::Tabl
             "Status: {}",
             alert
                 .status
-                .map_or("N/A".to_string(), |status| status.to_string())
+                .map_or("N/A".to_owned(), |status| status.to_string())
         ),
         format!(
             "Message Type: {}",
             alert
                 .message_type
-                .map_or("N/A".to_string(), |message_type| message_type.to_string())
+                .map_or("N/A".to_owned(), |message_type| message_type.to_string())
         ),
         format!(
             "Category: {}",
             alert
                 .category
-                .map_or("N/A".to_string(), |category| category.to_string())
+                .map_or("N/A".to_owned(), |category| category.to_string())
         ),
         format!(
             "Severity: {}",
             alert
                 .severity
-                .map_or("N/A".to_string(), |severity| severity.to_string())
+                .map_or("N/A".to_owned(), |severity| severity.to_string())
         ),
         format!(
             "Certainty: {}",
             alert
                 .certainty
-                .map_or("N/A".to_string(), |certainty| certainty.to_string())
+                .map_or("N/A".to_owned(), |certainty| certainty.to_string())
         ),
         format!(
             "Urgency: {}",
             alert
                 .urgency
-                .map_or("N/A".to_string(), |urgency| urgency.to_string())
+                .map_or("N/A".to_owned(), |urgency| urgency.to_string())
         ),
         format!(
             "Instruction: {}",
@@ -208,30 +208,31 @@ pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> comfy_table::Tabl
                 .instruction
                 .clone()
                 .flatten()
-                .unwrap_or_else(|| "N/A".to_string())
+                .unwrap_or_else(|| "N/A".to_owned())
         ),
         format!(
             "Response: {}",
             alert
                 .response
-                .map_or("N/A".to_string(), |response| response.to_string())
+                .map_or("N/A".to_owned(), |response| response.to_string())
         ),
     ];
-    let formatted_affected_zones = if let Some(affected_zones_list) = &alert.affected_zones {
-        affected_zones_list
-            .iter()
-            .filter_map(|zone| get_zone_from_url(Some(zone.clone())))
-            .collect::<Vec<String>>()
-            .join(", ")
-    } else {
-        "N/A".to_string()
-    };
+    let formatted_affected_zones = alert.affected_zones.as_ref().map_or_else(
+        || "N/A".to_owned(),
+        |affected_zones_list| {
+            affected_zones_list
+                .iter()
+                .filter_map(|zone| get_zone_from_url(Some(zone.clone())))
+                .collect::<Vec<String>>()
+                .join(", ")
+        },
+    );
 
     details.push(format!("Affected Zones: {formatted_affected_zones}"));
     let description = alert
         .description
         .clone()
-        .unwrap_or_else(|| "N/A".to_string());
+        .unwrap_or_else(|| "N/A".to_owned());
 
     table.add_row(vec![Cell::new(details.join("\n")), Cell::new(description)]);
     table
