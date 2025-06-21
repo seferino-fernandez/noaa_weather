@@ -1,42 +1,18 @@
-# This is the global configuration, applied to all packages by default.
 [workspace]
-# The `release` command will only release packages when the merge commit of a
-# release-plz PR is detected. This provides a chance to review versions and
-# changelogs before publishing.
 release_always = false
-
-# When creating the release PR, run `cargo update` to refresh the Cargo.lock file.
 dependencies_update = true
 
-# The release PR will be created as a draft, allowing for manual review and
-# checks to pass before it's marked as "Ready for review".
 pr_draft = true
-
-# Add a "release" label to the PR created by release-plz for better tracking.
 pr_labels = ["release"]
 
-# --- Package-specific configurations ---
-# The double square brackets define a TOML table array.
-
-# Configuration for the client library.
 [[package]]
 name = "noaa_weather_client"
-# This package will be published to crates.io. `publish = true` is the default,
-# but it is specified here for clarity.
 publish = true
-# This package will have a GitHub Release with a changelog.
-# `git_release_enable = true` is also the default.
 git_release_enable = true
-# Keep this package's version in sync with other packages in the same group.
 version_group = "noaa_weather"
 
-# Configuration for the CLI application.
 [[package]]
 name = "noaa_weather_cli"
-# Do NOT publish the CLI binary crate to crates.io.
 publish = false
-# DO create a GitHub Release for the CLI. The `cd.yml` workflow will
-# attach the compiled binary assets to this release.
 git_release_enable = true
-# Keep this package's version in sync with other packages in the same group.
 version_group = "noaa_weather"
