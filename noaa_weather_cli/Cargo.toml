@@ -3,6 +3,7 @@ name = "noaa_weather_cli"
 version = "0.1.2"
 edition = "2024"
 description = "A CLI for the NOAA Weather API client."
+publish = false
 license = "MIT"
 authors = ["Seferino Fernandez"]
 repository = "https://github.com/seferino-fernandez/noaa_weather"
