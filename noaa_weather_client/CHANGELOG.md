@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5](https://github.com/seferino-fernandez/noaa_weather/compare/noaa_weather_client-v0.1.4...noaa_weather_client-v0.1.5)
+_21 June 2025_
+
+### Fixed
+
+* *(cli, client)* Clippy lints - removed single chars, and redundant clones, and more
+
 ## [0.1.4](https://github.com/seferino-fernandez/noaa_weather/compare/noaa_weather_client-v0.1.3...noaa_weather_client-v0.1.4) - 2025-06-21
 
 ### Fixed
