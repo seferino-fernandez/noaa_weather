@@ -3,7 +3,7 @@ use jiff::Timestamp;
 use jiff::tz::TimeZone;
 use noaa_weather_client::models::{UnitCodeType, ValueUnit};
 use std::fs::File;
-use std::io::Write;
+use std::io::Write as _;
 
 use crate::utils::temperature::{celsius_to_fahrenheit, fahrenheit_to_celsius};
 
@@ -23,10 +23,10 @@ pub fn write_output(output_path: Option<&str>, content: &str) -> Result<()> {
 /// This function will:
 /// - Return `None` if the input `url_opt` is `None`.
 /// - If `url_opt` is `Some(url_str)`:
-///   - If `url_str` ends with `/` (e.g., "https://api.weather.gov/zones/forecast/AZZ551"), it returns `Some("".to_string())`.
+///   - If `url_str` ends with `/` (e.g., "<https://api.weather.gov/zones/forecast/AZZ551>"), it returns `Some("".to_string())`.
 ///   - If `url_str` is empty (e.g., ""), it returns `Some("".to_string())`.
 ///   - If `url_str` has no `/` (e.g., "AZZ551"), it returns `Some("AZZ551".to_string())`.
-///   - Otherwise, it returns the segment after the last `/` (e.g., for "https://api.weather.gov/zones/forecast/AZZ551", it returns `Some("AZZ551".to_string())`).
+///   - Otherwise, it returns the segment after the last `/` (e.g., for "<https://api.weather.gov/zones/forecast/AZZ551>", it returns `Some("AZZ551".to_string())`).
 ///
 /// # Arguments
 ///
@@ -48,13 +48,13 @@ pub fn get_zone_from_url<S: AsRef<str>>(url_opt: Option<S>) -> Option<String> {
         // If the string ends with `/`, it returns an empty string for the part after the last `/`.
         // `unwrap()` is safe here because `rsplit` on any `&str` (even an empty one)
         // always yields an iterator that produces at least one item (e.g., `""` for an empty input string).
-        url_str.rsplit('/').next().unwrap().to_string()
+        url_str.rsplit('/').next().unwrap().to_owned()
     })
 }
 
 pub fn format_datetime_human_readable(datetime_str_opt: Option<&str>) -> String {
     if datetime_str_opt.is_none() {
-        return "N/A".to_string();
+        return "N/A".to_owned();
     }
     let timestamp = datetime_str_opt.unwrap().parse::<Timestamp>().unwrap();
     let user_timezone = TimeZone::try_system().unwrap_or(TimeZone::UTC);
@@ -63,10 +63,7 @@ pub fn format_datetime_human_readable(datetime_str_opt: Option<&str>) -> String 
 }
 
 pub fn format_optional_number(number_opt: Option<i32>) -> String {
-    match number_opt {
-        Some(number) => number.to_string(),
-        None => "N/A".to_string(),
-    }
+    number_opt.map_or_else(|| "N/A".to_owned(), |number| number.to_string())
 }
 
 // Unit strings used in the API.
@@ -78,8 +75,8 @@ pub const FAHRENHEIT: &str = "fahrenheit";
 pub const CELSIUS: &str = "celsius";
 
 // Display strings for the temperature units.
-const DEG_C_DISPLAY: &str = "°C";
-const DEG_F_DISPLAY: &str = "°F";
+const DEG_C_DISPLAY: &str = "\u{b0}C";
+const DEG_F_DISPLAY: &str = "\u{b0}F";
 
 /// Formats a dewpoint temperature value based on its original unit and a user's target unit preference.
 ///
@@ -109,13 +106,13 @@ pub fn format_dewpoint(
     // Ensure the API unit string is provided.
     let api_unit_actual_str = match api_unit_str_opt {
         Some(unit_str) => unit_str,
-        None => return "N/A".to_string(),
+        None => return "N/A".to_owned(),
     };
 
     // Attempt to parse the dewpoint value string into a floating-point number.
     let initial_dewpoint_val_f64 = match dewpoint_str_value.parse::<f64>() {
         Ok(val) => val,
-        Err(_) => return "N/A".to_string(),
+        Err(_) => return "N/A".to_owned(),
     };
 
     // Determine the initial unit type.
@@ -124,42 +121,39 @@ pub fn format_dewpoint(
 
     // Return an error if the provided API unit is not supported.
     if !initial_unit_is_celsius && !initial_unit_is_fahrenheit {
-        return "N/A".to_string();
+        return "N/A".to_owned();
     }
 
     let mut final_dewpoint_val_f64 = initial_dewpoint_val_f64;
     let mut display_unit_str = "";
 
     // Determine the target unit and perform conversion if necessary.
-    match user_target_unit_opt {
-        Some(target_unit_str) => {
-            if initial_unit_is_celsius && target_unit_str == FAHRENHEIT {
-                // Convert Celsius to Fahrenheit
-                final_dewpoint_val_f64 = celsius_to_fahrenheit(initial_dewpoint_val_f64);
-                display_unit_str = DEG_F_DISPLAY;
-            } else if initial_unit_is_fahrenheit && target_unit_str == CELSIUS {
-                // Convert Fahrenheit to Celsius
-                final_dewpoint_val_f64 = fahrenheit_to_celsius(initial_dewpoint_val_f64);
-                display_unit_str = DEG_C_DISPLAY;
-            } else {
-                // If the target unit is the same as the initial, or an unsupported target
-                // was provided, use the initial value and determine the display unit
-                // based on the initial unit.
-                if initial_unit_is_celsius {
-                    display_unit_str = DEG_C_DISPLAY;
-                } else if initial_unit_is_fahrenheit {
-                    display_unit_str = DEG_F_DISPLAY;
-                }
-            }
-        }
-        None => {
-            // If no target unit is specified, use the initial value and unit.
-            final_dewpoint_val_f64 = initial_dewpoint_val_f64;
+    if let Some(target_unit_str) = user_target_unit_opt {
+        if initial_unit_is_celsius && target_unit_str == FAHRENHEIT {
+            // Convert Celsius to Fahrenheit
+            final_dewpoint_val_f64 = celsius_to_fahrenheit(initial_dewpoint_val_f64);
+            display_unit_str = DEG_F_DISPLAY;
+        } else if initial_unit_is_fahrenheit && target_unit_str == CELSIUS {
+            // Convert Fahrenheit to Celsius
+            final_dewpoint_val_f64 = fahrenheit_to_celsius(initial_dewpoint_val_f64);
+            display_unit_str = DEG_C_DISPLAY;
+        } else {
+            // If the target unit is the same as the initial, or an unsupported target
+            // was provided, use the initial value and determine the display unit
+            // based on the initial unit.
             if initial_unit_is_celsius {
                 display_unit_str = DEG_C_DISPLAY;
             } else if initial_unit_is_fahrenheit {
                 display_unit_str = DEG_F_DISPLAY;
             }
+        }
+    } else {
+        // If no target unit is specified, use the initial value and unit.
+        final_dewpoint_val_f64 = initial_dewpoint_val_f64;
+        if initial_unit_is_celsius {
+            display_unit_str = DEG_C_DISPLAY;
+        } else if initial_unit_is_fahrenheit {
+            display_unit_str = DEG_F_DISPLAY;
         }
     }
 
@@ -172,14 +166,14 @@ pub fn format_dewpoint(
 
 /// Formats an `Option<String>` for display, using "N/A" if None.
 pub fn format_optional_string(optional_string: &Option<String>) -> String {
-    optional_string.as_deref().unwrap_or("N/A").to_string()
+    optional_string.as_deref().unwrap_or("N/A").to_owned()
 }
 
 /// Formats an `Option<f64>` intended for build numbers or similar integers.
 /// Displays as an integer if it has no fractional part, otherwise as float with 2 decimal places.
 /// Uses "N/A" if None.
 pub fn format_optional_f64_display(optional_float: &Option<f64>) -> String {
-    optional_float.map_or("N/A".to_string(), |value| {
+    optional_float.map_or("N/A".to_owned(), |value| {
         if value.fract() == 0.0 {
             format!("{}", value.trunc())
         } else {
@@ -191,62 +185,62 @@ pub fn format_optional_f64_display(optional_float: &Option<f64>) -> String {
 /// Formats an `Option<f64>` for precise display, typically converting to string directly.
 /// Uses "N/A" if None.
 pub fn format_optional_f64_precise(optional_float: &Option<f64>) -> String {
-    optional_float.map_or("N/A".to_string(), |value| value.to_string())
+    optional_float.map_or("N/A".to_owned(), |value| value.to_string())
 }
 
 /// Formats an `Option<i32>` for display, using "N/A" if None.
 pub fn format_optional_i32(optional_integer: &Option<i32>) -> String {
-    optional_integer.map_or("N/A".to_string(), |value| value.to_string())
+    optional_integer.map_or("N/A".to_owned(), |value| value.to_string())
 }
 
 /// Formats an `Option<i64>` for display, using "N/A" if None.
 pub fn format_optional_i64(optional_integer: &Option<i64>) -> String {
-    optional_integer.map_or("N/A".to_string(), |value| value.to_string())
+    optional_integer.map_or("N/A".to_owned(), |value| value.to_string())
 }
 
 /// Formats an `Option<ValueUnit>` for display.
 /// Shows value with 2 decimal places and unit code. Uses "N/A" if None or parts are missing.
 pub fn format_optional_value_unit(opt_value_unit: &Option<ValueUnit>) -> String {
     if opt_value_unit.is_none() {
-        return "N/A".to_string();
+        return "N/A".to_owned();
     }
     let vu = opt_value_unit.as_ref().unwrap();
     if vu.value.is_none() {
-        return "N/A".to_string();
+        return "N/A".to_owned();
     }
     let val_str = format!("{:.2}", vu.value.unwrap());
     let unit_str = opt_unit_code_val(&vu.unit_code);
-    format!("{val_str} {unit_str}").trim().to_string()
+    format!("{val_str} {unit_str}").trim().to_owned()
 }
 
 /// Formats an `Option<UnitCodeType>` to its alternative label or "N/A".
 pub fn opt_unit_code_val(unit_code_opt: &Option<UnitCodeType>) -> String {
     if unit_code_opt.is_none() {
-        return "N/A".to_string();
+        return "N/A".to_owned();
     }
     let unit_code = unit_code_opt.as_ref().unwrap();
     match unit_code {
-        UnitCodeType::Wmo(wmo_unit_code) => wmo_unit_code.alt_label().to_string(),
-        UnitCodeType::Nws(nws_unit_code) => nws_unit_code.alt_label().to_string(),
+        UnitCodeType::Wmo(wmo_unit_code) => wmo_unit_code.alt_label().to_owned(),
+        UnitCodeType::Nws(nws_unit_code) => nws_unit_code.alt_label().to_owned(),
     }
 }
 
 /// Formats an `Option<bool>` to "Yes", "No", or "N/A".
 pub fn format_optional_bool_as_yes_no(optional_bool: &Option<bool>) -> String {
     match optional_bool {
-        Some(true) => "Yes".to_string(),
-        Some(false) => "No".to_string(),
-        None => "N/A".to_string(),
+        Some(true) => "Yes".to_owned(),
+        Some(false) => "No".to_owned(),
+        None => "N/A".to_owned(),
     }
 }
 
 /// Formats byte sizes into human-readable strings (B, KiB, MiB, GiB).
 pub fn format_bytes_to_human_readable(bytes_opt: Option<i64>) -> String {
     bytes_opt.map_or_else(
-        || "N/A".to_string(),
+        || "N/A".to_owned(),
         |bytes| {
             if bytes < 0 {
-                return "Invalid (negative)".to_string();
+                return "Invalid (negative)".to_owned();
             }
             if bytes < 1024 {
                 format!("{bytes} B")
@@ -274,11 +268,11 @@ pub fn format_observation_wind(
     direction_vu_opt: Option<ValueUnit>,
 ) -> String {
     if speed_vu_opt.is_none() {
-        return "N/A".to_string();
+        return "N/A".to_owned();
     }
     let speed_vu = speed_vu_opt.unwrap();
     if speed_vu.value.is_none() {
-        return "N/A".to_string();
+        return "N/A".to_owned();
     }
     let speed_str = format_optional_value_unit(&Some(speed_vu));
     if direction_vu_opt.is_none() {
@@ -297,30 +291,30 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_get_zone_from_url_valid() {
-        let url = Some("https://api.weather.gov/zones/forecast/NYZ072".to_string());
-        assert_eq!(get_zone_from_url(url), Some("NYZ072".to_string()));
+    fn get_zone_from_url_valid() {
+        let url = Some("https://api.weather.gov/zones/forecast/NYZ072".to_owned());
+        assert_eq!(get_zone_from_url(url), Some("NYZ072".to_owned()));
 
-        let url2 = Some("https://api.weather.gov/zones/county/NYC061".to_string());
-        assert_eq!(get_zone_from_url(url2), Some("NYC061".to_string()));
+        let url2 = Some("https://api.weather.gov/zones/county/NYC061".to_owned());
+        assert_eq!(get_zone_from_url(url2), Some("NYC061".to_owned()));
     }
 
     #[test]
-    fn test_get_zone_from_url_empty_string() {
+    fn get_zone_from_url_empty_string() {
         // An empty string URL technically doesn't split, last() gives None -> "N/A"
-        let url = Some("".to_string());
-        assert_eq!(get_zone_from_url(url), Some("".to_string()));
+        let url = Some(String::new());
+        assert_eq!(get_zone_from_url(url), Some(String::new()));
     }
 
     #[test]
-    fn test_get_zone_from_url_no_slashes() {
-        let url = Some("justafile".to_string());
-        assert_eq!(get_zone_from_url(url), Some("justafile".to_string()));
+    fn get_zone_from_url_no_slashes() {
+        let url = Some("justafile".to_owned());
+        assert_eq!(get_zone_from_url(url), Some("justafile".to_owned()));
     }
 
     #[test]
-    fn test_get_zone_from_url_trailing_slash() {
-        let url = Some("https://api.weather.gov/zones/forecast/XYZ123/".to_string());
-        assert_eq!(get_zone_from_url(url), Some("".to_string()));
+    fn get_zone_from_url_trailing_slash() {
+        let url = Some("https://api.weather.gov/zones/forecast/XYZ123/".to_owned());
+        assert_eq!(get_zone_from_url(url), Some(String::new()));
     }
 }

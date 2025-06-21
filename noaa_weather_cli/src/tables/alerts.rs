@@ -1,4 +1,3 @@
-use anyhow::Result;
 use comfy_table::presets::{UTF8_FULL, UTF8_FULL_CONDENSED};
 use comfy_table::{Attribute, Cell, CellAlignment, Color, ContentArrangement, Table};
 use noaa_weather_client::models::{
@@ -12,7 +11,7 @@ use crate::utils::format::{
 
 /// Formats a collection of alerts into a comfy table.
 /// Displays a summary of each alert, highlighting severity with color.
-pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> Result<Table> {
+pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> comfy_table::Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -43,7 +42,7 @@ pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> Result<Table
                 .add_attribute(comfy_table::Attribute::Bold)
                 .set_alignment(CellAlignment::Center),
         ]);
-        return Ok(table);
+        return table;
     }
 
     for feature in &alerts_data.features {
@@ -99,11 +98,11 @@ pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> Result<Table
             ]);
         }
     }
-    Ok(table)
+    table
 }
 
 /// Formats a single alert's details into a comfy table.
-pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> Result<Table> {
+pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> comfy_table::Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -235,11 +234,11 @@ pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> Result<Table> {
         .unwrap_or_else(|| "N/A".to_string());
 
     table.add_row(vec![Cell::new(details.join("\n")), Cell::new(description)]);
-    Ok(table)
+    table
 }
 
 /// Formats the active alerts count into a comfy table.
-pub fn create_alert_count_table(count_data: &ActiveAlertsCountResponse) -> Result<Table> {
+pub fn create_alert_count_table(count_data: &ActiveAlertsCountResponse) -> comfy_table::Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -297,11 +296,11 @@ pub fn create_alert_count_table(count_data: &ActiveAlertsCountResponse) -> Resul
         Cell::new(active_alerts_by_marine_region_data),
         Cell::new(active_alerts_by_zone_data),
     ]);
-    Ok(table)
+    table
 }
 
 /// Formats the list of alert types into a comfy table.
-pub fn create_alert_types_table(types_data: &AlertTypesResponse) -> Result<Table> {
+pub fn create_alert_types_table(types_data: &AlertTypesResponse) -> comfy_table::Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -322,5 +321,5 @@ pub fn create_alert_types_table(types_data: &AlertTypesResponse) -> Result<Table
     } else {
         table.add_row(vec![Cell::new("No event types available.")]);
     }
-    Ok(table)
+    table
 }

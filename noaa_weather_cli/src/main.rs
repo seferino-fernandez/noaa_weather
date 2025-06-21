@@ -32,8 +32,8 @@ struct Cli {
 
 #[tokio::main]
 async fn main() {
-    if let Err(e) = try_main().await {
-        eprintln!("noaa-weather: {e}");
+    if let Err(error) = try_main().await {
+        eprintln!("noaa-weather: {error}");
         std::process::exit(1);
     }
 }
@@ -45,29 +45,29 @@ async fn try_main() -> Result<()> {
 
     match &cli.command {
         Commands::Alerts { command } => {
-            alerts::handle_command(command, cli.clone(), &config).await?
+            alerts::handle_command(command, cli.clone(), &config).await?;
         }
         Commands::Gridpoints { command } => {
-            gridpoints::handle_command(command, cli.clone(), &config).await?
+            gridpoints::handle_command(command, cli.clone(), &config).await?;
         }
         Commands::Offices { command } => {
-            offices::handle_command(command, cli.clone(), &config).await?
+            offices::handle_command(command, cli.clone(), &config).await?;
         }
         Commands::Points { command } => {
-            points::handle_command(command, cli.clone(), &config).await?
+            points::handle_command(command, cli.clone(), &config).await?;
         }
         Commands::Radar { command } => radar::handle_command(command, cli.clone(), &config).await?,
         Commands::Stations { command } => {
-            stations::handle_command(command, cli.clone(), &config).await?
+            stations::handle_command(command, cli.clone(), &config).await?;
         }
         Commands::Zones { command } => zones::handle_command(command, cli.clone(), &config).await?,
         Commands::Aviation { command } => {
-            aviation::handle_command(command, cli.clone(), &config).await?
+            aviation::handle_command(command, cli.clone(), &config).await?;
         }
         Commands::Products { command } => {
-            products::handle_command(command, cli.clone(), &config).await?
+            products::handle_command(command, cli.clone(), &config).await?;
         }
-    };
+    }
 
     Ok(())
 }

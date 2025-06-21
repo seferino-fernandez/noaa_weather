@@ -36,17 +36,17 @@ pub enum AlertCommands {
         code: Option<Vec<String>>,
 
         /// Filter by area code (State/Territory or Marine Area, comma-separated).
-        /// This parameter is incompatible with the following parameters: point, marine-region, region_type, zone.
+        /// This parameter is incompatible with the following parameters: point, marine-region, region-type, zone.
         #[arg(long, value_delimiter = ',', value_enum)]
         area: Option<Vec<AreaCode>>,
 
         /// Filter by point (latitude,longitude).
-        /// This parameter is incompatible with the following parameters: area, marine-region, region_type, zone.
+        /// This parameter is incompatible with the following parameters: area, marine-region, region-type, zone.
         #[arg(long)]
         point: Option<String>,
 
         /// Filter by marine region code (AL, AT, GL, GM, PA, PI).
-        /// This parameter is incompatible with the following parameters: area, point, region_type, zone
+        /// This parameter is incompatible with the following parameters: area, point, region-type, zone
         #[arg(long, value_delimiter = ',', value_enum)]
         marine_region: Option<Vec<MarineRegionCode>>,
 
@@ -56,7 +56,7 @@ pub enum AlertCommands {
         region_type: Option<RegionType>,
 
         /// Filter by Zone ID (forecast or county).
-        /// This parameter is incompatible with the following parameters: area, point, marine-region, region_type
+        /// This parameter is incompatible with the following parameters: area, point, marine-region, region-type
         #[arg(long, value_delimiter = ',')]
         zone: Option<Vec<String>>,
 
@@ -149,17 +149,17 @@ pub enum AlertCommands {
         code: Option<Vec<String>>,
 
         /// Filter by area code (State/Territory or Marine Area, comma-separated).
-        /// This parameter is incompatible with the following parameters: point, marine-region, region_type, zone
+        /// This parameter is incompatible with the following parameters: point, marine-region, region-type, zone
         #[arg(long, value_delimiter = ',', value_enum)]
         area: Option<Vec<AreaCode>>,
 
         /// Filter by point (latitude,longitude).
-        /// This parameter is incompatible with the following parameters: area, marine-region, region_type, zone
+        /// This parameter is incompatible with the following parameters: area, marine-region, region-type, zone
         #[arg(long)]
         point: Option<String>,
 
         /// Filter by marine region code (e.g., AL, AT, GL, comma-separated).
-        /// This parameter is incompatible with the following parameters: area, point, region_type, zone
+        /// This parameter is incompatible with the following parameters: area, point, region-type, zone
         #[arg(long, value_delimiter = ',', value_enum)]
         marine_region: Option<Vec<MarineRegionCode>>,
 
@@ -169,7 +169,7 @@ pub enum AlertCommands {
         region_type: Option<RegionType>,
 
         /// Filter by Zone ID (forecast or county).
-        /// This parameter is incompatible with the following parameters: area, point, marine-region, region_type
+        /// This parameter is incompatible with the following parameters: area, point, marine-region, region-type
         #[arg(long, value_delimiter = ',')]
         zone: Option<Vec<String>>,
 
@@ -254,7 +254,7 @@ pub async fn handle_command(
 
             let result = alerts_api::get_active_alerts(config, params)
                 .await
-                .map_err(|e| anyhow!("Error fetching active alerts: {}", e))?;
+                .map_err(|error| anyhow!("Error fetching active alerts: {}", error))?;
 
             if cli.json {
                 write_output(
@@ -262,7 +262,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::alerts::create_alerts_table(&result)?;
+                let table = tables::alerts::create_alerts_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -270,14 +270,14 @@ pub async fn handle_command(
         AlertCommands::Area { area } => {
             let result = alerts_api::get_active_alerts_for_area(config, area)
                 .await
-                .map_err(|e| anyhow!("Error fetching alerts for area {}: {}", area, e))?;
+                .map_err(|error| anyhow!("Error fetching alerts for area {}: {}", area, error))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::alerts::create_alerts_table(&result)?;
+                let table = tables::alerts::create_alerts_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -285,14 +285,14 @@ pub async fn handle_command(
         AlertCommands::Count => {
             let result = alerts_api::get_active_alerts_count(config)
                 .await
-                .map_err(|e| anyhow!("Error fetching active alert count: {}", e))?;
+                .map_err(|error| anyhow!("Error fetching active alert count: {}", error))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::alerts::create_alert_count_table(&result)?;
+                let table = tables::alerts::create_alert_count_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -300,8 +300,12 @@ pub async fn handle_command(
         AlertCommands::MarineRegion { marine_region } => {
             let result = alerts_api::get_active_alerts_for_marine_region(config, *marine_region)
                 .await
-                .map_err(|e| {
-                    anyhow!("Error fetching alerts for region {}: {}", marine_region, e)
+                .map_err(|error| {
+                    anyhow!(
+                        "Error fetching alerts for region {}: {}",
+                        marine_region,
+                        error
+                    )
                 })?;
             if cli.json {
                 write_output(
@@ -309,7 +313,7 @@ pub async fn handle_command(
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::alerts::create_alerts_table(&result)?;
+                let table = tables::alerts::create_alerts_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -317,14 +321,16 @@ pub async fn handle_command(
         AlertCommands::Zone { zone_id } => {
             let result = alerts_api::get_active_alerts_for_zone(config, zone_id)
                 .await
-                .map_err(|e| anyhow!("Error fetching alerts for zone {}: {}", zone_id, e))?;
+                .map_err(|error| {
+                    anyhow!("Error fetching alerts for zone {}: {}", zone_id, error)
+                })?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::alerts::create_alerts_table(&result)?;
+                let table = tables::alerts::create_alerts_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -369,14 +375,14 @@ pub async fn handle_command(
 
             let result = alerts_api::get_alerts(config, params)
                 .await
-                .map_err(|e| anyhow!("Error querying alerts: {}", e))?;
+                .map_err(|error| anyhow!("Error querying alerts: {}", error))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::alerts::create_alerts_table(&result)?;
+                let table = tables::alerts::create_alerts_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -384,14 +390,14 @@ pub async fn handle_command(
         AlertCommands::Alert { id } => {
             let result = alerts_api::get_alert(config, id)
                 .await
-                .map_err(|e| anyhow!("Error getting alert {}: {}", id, e))?;
+                .map_err(|error| anyhow!("Error getting alert {}: {}", id, error))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::alerts::create_single_alert_table(&result)?;
+                let table = tables::alerts::create_single_alert_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
@@ -399,14 +405,14 @@ pub async fn handle_command(
         AlertCommands::Types => {
             let result = alerts_api::get_alert_types(config)
                 .await
-                .map_err(|e| anyhow!("Error fetching alert types: {}", e))?;
+                .map_err(|error| anyhow!("Error fetching alert types: {}", error))?;
             if cli.json {
                 write_output(
                     cli.output.as_deref(),
                     &serde_json::to_string_pretty(&result)?,
                 )?;
             } else {
-                let table = tables::alerts::create_alert_types_table(&result)?;
+                let table = tables::alerts::create_alert_types_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
