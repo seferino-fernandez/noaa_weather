@@ -38,7 +38,7 @@ features_always_increment_minor = true
 dependencies_update = true
 release_commits = "^(feat|fix|docs|perf|refactor|revert|test|update)[(:]"
 
-pr_draft = true
+pr_draft = false
 pr_labels = ["release"]
 
 [[package]]
