@@ -20,8 +20,23 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-noaa_weather_client = "0.1.0"
+noaa_weather_client = "0.1.5"
 tokio = { version = "1.0", features = ["full"] }
+```
+
+### Running Examples
+
+You can run the provided examples to see the library in action:
+
+```bash
+# Using Just (recommended)
+just example-basic     # Run basic usage example
+just example-alerts    # Run weather alerts example
+just examples          # Run all examples
+
+# Or using Cargo directly
+cargo run --example basic_usage --manifest-path noaa_weather_client/Cargo.toml
+cargo run --example weather_alerts --manifest-path noaa_weather_client/Cargo.toml
 ```
 
 ### Basic Example
@@ -38,8 +53,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let point = points::get_point(&config, "39.7456,-97.0892").await?;
     println!("Forecast office: {:?}", point.properties.forecast_office);
 
-    // Get active weather alerts
-    let alerts = alerts::get_active_alerts(&config, None, None, None, None, None, None, None).await?;
+    // Get active weather alerts using struct parameters
+    let alert_params = alerts::ActiveAlertsParams::default();
+    let alerts = alerts::get_active_alerts(&config, alert_params).await?;
     println!("Active alerts: {}", alerts.features.len());
 
     Ok(())
@@ -50,17 +66,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```rust
 use noaa_weather_client::apis::{configuration::Configuration, alerts};
+use noaa_weather_client::models::{AreaCode, AlertSeverity};
 
 let config = Configuration::default();
 
 // Get all active alerts
-let active_alerts = alerts::get_active_alerts(&config, None, None, None, None, None, None, None).await?;
+let alert_params = alerts::ActiveAlertsParams::default();
+let active_alerts = alerts::get_active_alerts(&config, alert_params).await?;
 
-// Get alerts for a specific area (state/territory)
-let ca_alerts = alerts::get_active_alerts_for_area(&config, "CA").await?;
+// Get alerts for a specific area (state/territory) with filters
+let ca_alerts = alerts::get_active_alerts_for_area(&config, &AreaCode::CA).await?;
 
 // Get alerts for a specific zone
 let zone_alerts = alerts::get_active_alerts_for_zone(&config, "CAZ006").await?;
+
+// Get severe weather alerts only
+let severe_params = alerts::ActiveAlertsParams {
+    severity: Some(vec![AlertSeverity::Severe, AlertSeverity::Extreme]),
+    ..Default::default()
+};
+let severe_alerts = alerts::get_active_alerts(&config, severe_params).await?;
 ```
 
 ### Weather Observations
@@ -71,7 +96,7 @@ use noaa_weather_client::apis::{configuration::Configuration, stations};
 let config = Configuration::default();
 
 // Get latest observation for a station
-let observation = stations::get_latest_observation(&config, "KJFK", None).await?;
+let observation = stations::get_latest_observations(&config, "KJFK", None).await?;
 println!("Temperature: {:?}", observation.properties.temperature);
 
 // Get station metadata
@@ -83,14 +108,29 @@ println!("Station name: {:?}", station.properties.name);
 
 ```rust
 use noaa_weather_client::apis::{configuration::Configuration, gridpoints};
+use noaa_weather_client::models::NwsForecastOfficeId;
 
 let config = Configuration::default();
 
 // Get forecast for specific gridpoint
-let forecast = gridpoints::get_gridpoint_forecast(&config, "TOP", 31, 80, None).await?;
+let forecast = gridpoints::get_gridpoint_forecast(
+    &config, 
+    NwsForecastOfficeId::TOP, 
+    31, 
+    80, 
+    None, // feature_flags
+    None  // units
+).await?;
 
 // Get hourly forecast
-let hourly = gridpoints::get_gridpoint_forecast_hourly(&config, "TOP", 31, 80, None).await?;
+let hourly = gridpoints::get_gridpoint_forecast_hourly(
+    &config, 
+    NwsForecastOfficeId::TOP, 
+    31, 
+    80, 
+    None, // feature_flags
+    None  // units
+).await?;
 ```
 
 ## Configuration

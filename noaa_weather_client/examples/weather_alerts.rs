@@ -5,22 +5,27 @@
 //! - Get alerts for specific areas and zones
 //! - Display alert details in a user-friendly format
 //!
-//! Run with: cargo run --example weather_alerts
+//! Run with: just example-alerts
+//! Or: cargo run --example weather_alerts --manifest-path noaa_weather_client/Cargo.toml
 
-use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::alerts;
+use noaa_weather_client::apis::configuration::Configuration;
+use noaa_weather_client::models::{AlertSeverity, AreaCode, StateTerritoryCode};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = Configuration::new();
+    let config = Configuration::default();
 
     println!("🚨 NOAA Weather Alerts Example\n");
 
     // 1. Get count of all active alerts
     println!("1️⃣ Getting alert count...");
-    match alerts::get_active_alerts_count(&config, None).await {
+    match alerts::get_active_alerts_count(&config).await {
         Ok(count_response) => {
-            println!("  ✅ Total active alerts: {}", count_response.total.unwrap_or(0));
+            println!(
+                "  ✅ Total active alerts: {}",
+                count_response.total.unwrap_or(0)
+            );
             if let Some(land) = count_response.land {
                 println!("  🌍 Land alerts: {}", land);
             }
@@ -35,20 +40,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 2. Get alerts for California
     println!("\n2️⃣ Getting alerts for California...");
-    match alerts::get_active_alerts_for_area(&config, "CA").await {
+    match alerts::get_active_alerts_for_area(
+        &config,
+        &AreaCode::StateTerritoryCode(StateTerritoryCode::Ca),
+    )
+    .await
+    {
         Ok(ca_alerts) => {
-            println!("  ✅ Found {} alerts for California", ca_alerts.features.len());
+            println!(
+                "  ✅ Found {} alerts for California",
+                ca_alerts.features.len()
+            );
 
             for (index, alert_feature) in ca_alerts.features.iter().take(3).enumerate() {
                 if let Some(alert_props) = &alert_feature.properties {
                     println!("\n    Alert #{}", index + 1);
-                    println!("    📢 Event: {}", alert_props.event.as_deref().unwrap_or("Unknown"));
-                    println!("    📋 Headline: {}",
-                        alert_props.headline.as_ref()
+                    println!(
+                        "    📢 Event: {}",
+                        alert_props.event.as_deref().unwrap_or("Unknown")
+                    );
+                    println!(
+                        "    📋 Headline: {}",
+                        alert_props
+                            .headline
+                            .as_ref()
                             .and_then(|h| h.as_ref())
+                            .map(|s| s.as_str())
                             .unwrap_or("No headline")
                     );
-                    println!("    🗺️  Areas: {}", alert_props.area_desc.as_deref().unwrap_or("Unknown"));
+                    println!(
+                        "    🗺️  Areas: {}",
+                        alert_props.area_desc.as_deref().unwrap_or("Unknown")
+                    );
 
                     if let Some(severity) = &alert_props.severity {
                         println!("    ⚠️  Severity: {}", severity);
@@ -90,25 +113,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 4. Get alerts with specific filters
     println!("\n4️⃣ Getting high-severity alerts...");
-    match alerts::get_active_alerts(
-        &config,
-        None,               // status
-        None,               // message_type
-        Some("Minor,Moderate,Severe,Extreme"), // severity
-        Some(5),            // limit
-        None,               // cursor
-        None,               // area
-        None                // zone
-    ).await {
+    let severity_params = alerts::ActiveAlertsParams {
+        severity: Some(vec![
+            AlertSeverity::Minor,
+            AlertSeverity::Moderate,
+            AlertSeverity::Severe,
+            AlertSeverity::Extreme,
+        ]),
+        ..Default::default()
+    };
+    match alerts::get_active_alerts(&config, severity_params).await {
         Ok(severe_alerts) => {
-            println!("  ✅ Found {} high-severity alerts", severe_alerts.features.len());
+            println!(
+                "  ✅ Found {} high-severity alerts",
+                severe_alerts.features.len()
+            );
 
             for (index, alert_feature) in severe_alerts.features.iter().enumerate() {
                 if let Some(alert_props) = &alert_feature.properties {
-                    println!("    {}. {} - {}",
+                    println!(
+                        "    {}. {} - {}",
                         index + 1,
                         alert_props.event.as_deref().unwrap_or("Unknown"),
-                        alert_props.severity.as_ref().map(|s| s.to_string()).unwrap_or("Unknown severity".to_string())
+                        alert_props
+                            .severity
+                            .as_ref()
+                            .map(|s| s.to_string())
+                            .unwrap_or("Unknown severity".to_string())
                     );
                 }
             }
@@ -120,36 +151,43 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 5. Get specific alert by ID (if any alerts exist)
     println!("\n5️⃣ Getting detailed information for a specific alert...");
-    match alerts::get_active_alerts(&config, None, None, None, Some(1), None, None, None).await {
+    let single_alert_params = alerts::ActiveAlertsParams::default();
+    match alerts::get_active_alerts(&config, single_alert_params).await {
         Ok(any_alerts) => {
             if let Some(first_alert) = any_alerts.features.first() {
-                if let Some(alert_id) = &first_alert.properties.as_ref().and_then(|p| p.id.as_ref()) {
+                if let Some(alert_id) = &first_alert.properties.as_ref().and_then(|p| p.id.as_ref())
+                {
                     println!("  📋 Getting details for alert: {}", alert_id);
 
                     match alerts::get_alert(&config, alert_id).await {
                         Ok(detailed_alert) => {
-                            if let Some(props) = &detailed_alert.properties {
-                                println!("    ✅ Alert Details:");
-                                println!("    📢 Event: {}", props.event.as_deref().unwrap_or("Unknown"));
-                                println!("    📤 Sender: {}", props.sender_name.as_deref().unwrap_or("Unknown"));
+                            let props = &detailed_alert.properties;
+                            println!("    ✅ Alert Details:");
+                            println!(
+                                "    📢 Event: {}",
+                                props.event.as_deref().unwrap_or("Unknown")
+                            );
+                            println!(
+                                "    📤 Sender: {}",
+                                props.sender_name.as_deref().unwrap_or("Unknown")
+                            );
 
-                                if let Some(description) = &props.description {
-                                    let short_desc = if description.len() > 200 {
-                                        format!("{}...", &description[..200])
-                                    } else {
-                                        description.clone()
-                                    };
-                                    println!("    📝 Description: {}", short_desc);
-                                }
+                            if let Some(description) = &props.description {
+                                let short_desc = if description.len() > 200 {
+                                    format!("{}...", &description[..200])
+                                } else {
+                                    description.clone()
+                                };
+                                println!("    📝 Description: {}", short_desc);
+                            }
 
-                                if let Some(instruction) = &props.instruction {
-                                    let short_instruction = if instruction.len() > 200 {
-                                        format!("{}...", &instruction[..200])
-                                    } else {
-                                        instruction.clone()
-                                    };
-                                    println!("    📋 Instructions: {}", short_instruction);
-                                }
+                            if let Some(Some(instruction)) = &props.instruction {
+                                let short_instruction = if instruction.len() > 200 {
+                                    format!("{}...", &instruction[..200])
+                                } else {
+                                    instruction.clone()
+                                };
+                                println!("    📋 Instructions: {}", short_instruction);
                             }
                         }
                         Err(error) => {

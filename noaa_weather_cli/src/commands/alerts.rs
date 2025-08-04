@@ -71,10 +71,6 @@ pub enum AlertCommands {
         /// Filter by certainty (Observed, Likely, Possible, Unlikely, Unknown, comma-separated).
         #[arg(long, value_delimiter = ',', value_enum)]
         certainty: Option<Vec<AlertCertainty>>,
-
-        /// Limit number of results returned by the API.
-        #[arg(long, value_parser = clap::value_parser!(i32).range(1..=500))]
-        limit: Option<i32>,
     },
 
     /// Get active alerts for a specific area (State/Territory or Marine Area).
@@ -234,7 +230,6 @@ pub async fn handle_command(
             urgency,
             severity,
             certainty,
-            limit,
         } => {
             let params = ActiveAlertsParams {
                 status: status.clone(),
@@ -249,7 +244,6 @@ pub async fn handle_command(
                 urgency: urgency.clone(),
                 severity: severity.clone(),
                 certainty: certainty.clone(),
-                limit: *limit,
             };
 
             let result = alerts_api::get_active_alerts(config, params)

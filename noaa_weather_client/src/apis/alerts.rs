@@ -114,8 +114,6 @@ pub struct ActiveAlertsParams<'a> {
     pub severity: Option<Vec<models::AlertSeverity>>,
     /// Filter by alert certainty.
     pub certainty: Option<Vec<models::AlertCertainty>>,
-    /// Limit the number of results returned.
-    pub limit: Option<i32>,
 }
 
 /// Parameters for the [`get_alerts`] function.
@@ -369,9 +367,6 @@ pub async fn get_active_alerts(
                     .join(","),
             )]),
         };
-    }
-    if let Some(param_value) = &params.limit {
-        req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
