@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6](https://github.com/seferino-fernandez/noaa_weather/compare/noaa_weather_client-v0.1.5...noaa_weather_client-v0.1.6)
+_04 August 2025_
+
+### Fixed
+
+* Update documentation to use new structs and removed limit param from ActiveAlerts API since its not supported
+
 ## [0.1.5](https://github.com/seferino-fernandez/noaa_weather/compare/noaa_weather_client-v0.1.4...noaa_weather_client-v0.1.5)
 _21 June 2025_
 
