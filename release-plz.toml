@@ -38,17 +38,26 @@ features_always_increment_minor = true
 dependencies_update = true
 release_commits = "^(feat|fix|docs|perf|refactor|revert|test|update)[(:]"
 
+# Disable git releases and tags for all packages by default
+git_release_enable = false
+git_tag_enable = false
+
 pr_draft = false
 pr_labels = ["release"]
 
 [[package]]
 name = "noaa_weather_client"
 publish = true
+# Enable git releases and tags only for the client package
 git_release_enable = true
+git_tag_enable = true
+# Use unified tag naming without package prefix
+git_tag_name = "v{{ version }}"
+git_release_name = "v{{ version }}"
 version_group = "noaa_weather"
 
 [[package]]
 name = "noaa_weather_cli"
 publish = false
-git_release_enable = true
+# CLI inherits disabled git releases/tags from workspace
 version_group = "noaa_weather"
