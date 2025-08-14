@@ -12,8 +12,8 @@ homepage = "https://github.com/seferino-fernandez/noaa_weather"
 readme = "README.md"
 
 [dependencies]
-quick-xml = { version = "0.38.0", features = ["serde", "serialize"] }
-reqwest = { version = "0.12.22", default-features = false, features = [
+quick-xml = { version = "0.38.1", features = ["serde", "serialize"] }
+reqwest = { version = "0.12.23", default-features = false, features = [
     "json",
     "multipart",
     "rustls-tls",
