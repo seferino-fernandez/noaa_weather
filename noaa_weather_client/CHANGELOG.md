@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7](https://github.com/seferino-fernandez/noaa_weather/compare/v0.1.6...v0.1.7)
+_03 September 2025_
+
+### Updated dependencies
+
+* Update dependencies and patch slab to fix CVE-2025-55159
+
 ## [0.1.6](https://github.com/seferino-fernandez/noaa_weather/compare/noaa_weather_client-v0.1.5...noaa_weather_client-v0.1.6)
 _04 August 2025_
 
