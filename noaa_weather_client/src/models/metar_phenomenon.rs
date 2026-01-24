@@ -34,8 +34,9 @@ impl MetarPhenomenon {
 }
 
 /// Intensity of the phenomenon
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum Intensity {
     #[serde(rename = "light")]
     #[default]
@@ -44,10 +45,10 @@ pub enum Intensity {
     Heavy,
 }
 
-
 /// Modifier of the phenomenon
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum Modifier {
     #[serde(rename = "patches")]
     #[default]
@@ -66,10 +67,10 @@ pub enum Modifier {
     Showers,
 }
 
-
 /// Weather of the phenomenon
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum Weather {
     #[serde(rename = "fog_mist")]
     #[default]
@@ -119,4 +120,3 @@ pub enum Weather {
     #[serde(rename = "volcanic_ash")]
     VolcanicAsh,
 }
-

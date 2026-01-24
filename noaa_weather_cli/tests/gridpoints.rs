@@ -1,8 +1,10 @@
-use assert_cmd::Command;
+use assert_cmd::cargo::*;
+use assert_cmd::prelude::*;
+use std::process::Command;
 
 #[test]
 fn test_gridpoints_forecast_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("gridpoints");
     cmd.arg("forecast");
     cmd.arg("--forecast-office-id");
@@ -16,7 +18,7 @@ fn test_gridpoints_forecast_success() {
 
 #[test]
 fn test_gridpoints_stations_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("gridpoints");
     cmd.arg("stations");
     cmd.arg("--forecast-office-id");
@@ -32,7 +34,7 @@ fn test_gridpoints_stations_success() {
 
 #[test]
 fn test_gridpoints_gridpoint_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("gridpoints");
     cmd.arg("gridpoint");
     cmd.arg("--forecast-office-id");
@@ -46,7 +48,7 @@ fn test_gridpoints_gridpoint_success() {
 
 #[test]
 fn test_gridpoints_hourly_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("gridpoints");
     cmd.arg("forecast-hourly");
     cmd.arg("--forecast-office-id");

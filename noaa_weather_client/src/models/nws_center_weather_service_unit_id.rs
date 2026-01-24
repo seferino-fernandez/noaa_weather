@@ -3,8 +3,9 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 
 /// Three-letter identifier for a Center Weather Service Unit (CWSU).
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum NwsCenterWeatherServiceUnitId {
     #[serde(rename = "ZAB")]
     #[default]
@@ -116,4 +117,3 @@ impl FromStr for NwsCenterWeatherServiceUnitId {
         }
     }
 }
-

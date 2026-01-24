@@ -2,8 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
 /// Certainty of the alert
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum AlertCertainty {
     #[serde(rename = "Observed")]
     #[default]
@@ -29,7 +30,6 @@ impl std::fmt::Display for AlertCertainty {
         }
     }
 }
-
 
 impl FromStr for AlertCertainty {
     type Err = String;

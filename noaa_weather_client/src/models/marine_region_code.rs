@@ -9,8 +9,9 @@ use serde::{Deserialize, Serialize};
 ///  - GM: Gulf of Mexico (GM)
 ///  - PA: Eastern Pacific Ocean and U.S. West Coast (PZ)
 ///  - PI: Central and Western Pacific (PH, PM, PS)
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum MarineRegionCode {
     #[serde(rename = "AL")]
     #[default]
@@ -39,7 +40,6 @@ impl std::fmt::Display for MarineRegionCode {
         }
     }
 }
-
 
 impl FromStr for MarineRegionCode {
     type Err = String;

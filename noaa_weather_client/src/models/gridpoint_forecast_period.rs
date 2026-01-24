@@ -90,8 +90,9 @@ impl GridpointForecastPeriod {
     }
 }
 /// The unit of the temperature value (Fahrenheit or Celsius). This property is deprecated. Future versions will indicate the unit within the quantitative value object for the temperature property. To make use of the future standard format now, set the \"forecast_temperature_qv\" feature flag on the request.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum TemperatureUnit {
     #[serde(rename = "F")]
     #[default]
@@ -107,8 +108,9 @@ impl Display for TemperatureUnit {
 }
 
 /// If not null, indicates a non-diurnal temperature trend for the period (either rising temperature overnight, or falling temperature during the day)
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum TemperatureTrend {
     #[serde(rename = "rising")]
     #[default]
@@ -175,7 +177,6 @@ pub enum WindDirection {
     #[serde(rename = "NNW")]
     Nnw,
 }
-
 
 impl Display for WindDirection {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

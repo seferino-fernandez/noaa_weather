@@ -1,8 +1,10 @@
-use assert_cmd::Command;
+use assert_cmd::cargo::*;
+use assert_cmd::prelude::*;
+use std::process::Command;
 
 #[test]
 fn test_points_command_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("points");
     cmd.arg("metadata");
     cmd.arg("39.7456,-97.0892");
@@ -11,7 +13,7 @@ fn test_points_command_success() {
 
 #[test]
 fn test_points_command_failure_invalid_point() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("points");
     cmd.arg("metadata");
     cmd.arg("test");
@@ -20,7 +22,7 @@ fn test_points_command_failure_invalid_point() {
 
 #[test]
 fn test_points_command_stations_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("points");
     cmd.arg("stations");
     cmd.arg("39.7456,-97.0892");
@@ -29,7 +31,7 @@ fn test_points_command_stations_success() {
 
 #[test]
 fn test_points_command_stations_failure_invalid_point() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("points");
     cmd.arg("stations");
     cmd.arg("test");

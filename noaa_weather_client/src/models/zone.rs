@@ -83,11 +83,11 @@ impl Zone {
         }
     }
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum AtType {
     #[serde(rename = "wx:Zone")]
     #[default]
     WxColonZone,
 }
-

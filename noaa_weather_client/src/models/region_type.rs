@@ -5,8 +5,9 @@ use serde::{Deserialize, Serialize};
 /// Region type.
 ///  - Land: Land
 ///  - Marine: Marine
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum RegionType {
     #[serde(rename = "Land")]
     #[default]
@@ -23,7 +24,6 @@ impl std::fmt::Display for RegionType {
         }
     }
 }
-
 
 impl FromStr for RegionType {
     type Err = String;

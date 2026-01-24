@@ -1,8 +1,10 @@
-use assert_cmd::Command;
+use assert_cmd::cargo::*;
+use assert_cmd::prelude::*;
+use std::process::Command;
 
 #[test]
 fn test_zones_list_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("zones");
     cmd.arg("list");
     cmd.assert().success();
@@ -10,7 +12,7 @@ fn test_zones_list_success() {
 
 #[test]
 fn test_zones_list_with_area_state_filter_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("zones");
     cmd.arg("list");
     cmd.arg("--area");
@@ -20,7 +22,7 @@ fn test_zones_list_with_area_state_filter_success() {
 
 #[test]
 fn test_zones_metadata_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("zones");
     cmd.arg("metadata");
     cmd.arg("--id");
@@ -32,7 +34,7 @@ fn test_zones_metadata_success() {
 
 #[test]
 fn test_zones_forecast_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("zones");
     cmd.arg("forecast");
     cmd.arg("--id");
@@ -44,7 +46,7 @@ fn test_zones_forecast_success() {
 
 #[test]
 fn test_zones_observations_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("zones");
     cmd.arg("observations");
     cmd.arg("--id");
@@ -54,7 +56,7 @@ fn test_zones_observations_success() {
 
 #[test]
 fn test_zones_stations_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("zones");
     cmd.arg("stations");
     cmd.arg("--id");

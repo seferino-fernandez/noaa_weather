@@ -1,8 +1,10 @@
-use assert_cmd::Command;
+use assert_cmd::cargo::*;
+use assert_cmd::prelude::*;
+use std::process::Command;
 
 #[test]
 fn test_products_list_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("products");
     cmd.arg("list");
     cmd.assert().success();
@@ -10,7 +12,7 @@ fn test_products_list_success() {
 
 #[test]
 fn test_products_list_with_location_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("products");
     cmd.arg("list");
     cmd.arg("--location-ids");
@@ -20,7 +22,7 @@ fn test_products_list_with_location_success() {
 
 #[test]
 fn test_products_list_with_wmo_ids_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("products");
     cmd.arg("list");
     cmd.arg("--wmo-ids");
@@ -30,7 +32,7 @@ fn test_products_list_with_wmo_ids_success() {
 
 #[test]
 fn test_products_types_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("products");
     cmd.arg("types");
     cmd.assert().success();
@@ -38,7 +40,7 @@ fn test_products_types_success() {
 
 #[test]
 fn test_products_type_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("products");
     cmd.arg("type");
     cmd.arg("--type-id");
@@ -48,7 +50,7 @@ fn test_products_type_success() {
 
 #[test]
 fn test_products_types_by_location_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("products");
     cmd.arg("types-by-location");
     cmd.arg("--type-id");
@@ -60,7 +62,7 @@ fn test_products_types_by_location_success() {
 
 #[test]
 fn test_products_locations_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("products");
     cmd.arg("locations");
     cmd.assert().success();
@@ -68,7 +70,7 @@ fn test_products_locations_success() {
 
 #[test]
 fn test_product_locations_by_type_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("products");
     cmd.arg("locations-by-type");
     cmd.arg("--type-id");
@@ -78,7 +80,7 @@ fn test_product_locations_by_type_success() {
 
 #[test]
 fn test_products_by_location_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("products");
     cmd.arg("products-by-location");
     cmd.arg("--location-id");
@@ -89,7 +91,7 @@ fn test_products_by_location_success() {
 #[ignore = "Update to dynamically get a product id"]
 #[test]
 fn test_product_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("products");
     cmd.arg("metadata");
     cmd.arg("--id");

@@ -1,8 +1,10 @@
-use assert_cmd::Command;
+use assert_cmd::cargo::*;
+use assert_cmd::prelude::*;
+use std::process::Command;
 
 #[test]
 fn test_offices_command_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("offices");
     cmd.arg("metadata");
     cmd.arg("--id");
@@ -12,7 +14,7 @@ fn test_offices_command_success() {
 
 #[test]
 fn test_offices_command_failure_invalid_office_id() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("offices");
     cmd.arg("metadata");
     cmd.arg("--id");
@@ -22,7 +24,7 @@ fn test_offices_command_failure_invalid_office_id() {
 
 #[test]
 fn test_offices_command_headlines_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("offices");
     cmd.arg("headlines");
     cmd.arg("--id");
@@ -32,7 +34,7 @@ fn test_offices_command_headlines_success() {
 
 #[test]
 fn test_offices_command_single_headline_success() {
-    let mut cmd = Command::cargo_bin("noaa-weather").unwrap();
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("offices");
     cmd.arg("headline");
     cmd.arg("--id");

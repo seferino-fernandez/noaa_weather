@@ -34,8 +34,9 @@ impl GridpointWeatherValuesInnerValueInner {
         }
     }
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum Coverage {
     #[serde(rename = "areas")]
     #[default]
@@ -72,8 +73,9 @@ pub enum Coverage {
     Widespread,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum Weather {
     #[serde(rename = "blowing_dust")]
     #[default]
@@ -124,8 +126,9 @@ pub enum Weather {
     WaterSpouts,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum Intensity {
     #[serde(rename = "very_light")]
     #[default]
@@ -138,8 +141,9 @@ pub enum Intensity {
     Heavy,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum Attributes {
     #[serde(rename = "damaging_wind")]
     #[default]
@@ -159,4 +163,3 @@ pub enum Attributes {
     #[serde(rename = "tornadoes")]
     Tornadoes,
 }
-

@@ -2,8 +2,9 @@ use serde::{Deserialize, Serialize};
 
 /// NwsRegionalHqid : Three-letter identifier for a NWS Regional HQ.
 /// Three-letter identifier for a NWS Regional HQ.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum NwsRegionalHqid {
     #[serde(rename = "ARH")]
     #[default]
@@ -32,4 +33,3 @@ impl std::fmt::Display for NwsRegionalHqid {
         }
     }
 }
-

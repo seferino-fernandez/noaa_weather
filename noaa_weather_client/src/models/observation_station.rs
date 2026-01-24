@@ -55,11 +55,11 @@ impl ObservationStation {
         }
     }
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
 pub enum AtType {
     #[serde(rename = "wx:ObservationStation")]
     #[default]
     WxColonObservationStation,
 }
-
