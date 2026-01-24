@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8](https://github.com/seferino-fernandez/noaa_weather/compare/v0.1.7...v0.1.8)
+_24 January 2026_
+
+### Fixed
+
+* Fixed assert_cmd deprecated function errors from Clippy
+* Fixed Cargo Clippy formatting and derive errors
+
+### Updated dependencies
+
+* Update deps for both client and cli
+
 ## [0.1.7](https://github.com/seferino-fernandez/noaa_weather/compare/v0.1.6...v0.1.7)
 _03 September 2025_
 
