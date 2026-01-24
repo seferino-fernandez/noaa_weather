@@ -35,8 +35,10 @@ impl GridpointWeatherValuesInnerValueInner {
     }
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum Coverage {
     #[serde(rename = "areas")]
+    #[default]
     Areas,
     #[serde(rename = "brief")]
     Brief,
@@ -70,14 +72,11 @@ pub enum Coverage {
     Widespread,
 }
 
-impl Default for Coverage {
-    fn default() -> Coverage {
-        Self::Areas
-    }
-}
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum Weather {
     #[serde(rename = "blowing_dust")]
+    #[default]
     BlowingDust,
     #[serde(rename = "blowing_sand")]
     BlowingSand,
@@ -125,14 +124,11 @@ pub enum Weather {
     WaterSpouts,
 }
 
-impl Default for Weather {
-    fn default() -> Weather {
-        Self::BlowingDust
-    }
-}
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum Intensity {
     #[serde(rename = "very_light")]
+    #[default]
     VeryLight,
     #[serde(rename = "light")]
     Light,
@@ -142,14 +138,11 @@ pub enum Intensity {
     Heavy,
 }
 
-impl Default for Intensity {
-    fn default() -> Intensity {
-        Self::VeryLight
-    }
-}
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum Attributes {
     #[serde(rename = "damaging_wind")]
+    #[default]
     DamagingWind,
     #[serde(rename = "dry_thunderstorms")]
     DryThunderstorms,
@@ -167,8 +160,3 @@ pub enum Attributes {
     Tornadoes,
 }
 
-impl Default for Attributes {
-    fn default() -> Attributes {
-        Self::DamagingWind
-    }
-}

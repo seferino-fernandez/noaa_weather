@@ -21,13 +21,10 @@ impl GeoJsonMultiPolygon {
     }
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum Type {
     #[serde(rename = "MultiPolygon")]
+    #[default]
     MultiPolygon,
 }
 
-impl Default for Type {
-    fn default() -> Type {
-        Self::MultiPolygon
-    }
-}

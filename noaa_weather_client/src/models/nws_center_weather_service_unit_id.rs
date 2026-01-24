@@ -4,8 +4,10 @@ use serde::{Deserialize, Serialize};
 
 /// Three-letter identifier for a Center Weather Service Unit (CWSU).
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum NwsCenterWeatherServiceUnitId {
     #[serde(rename = "ZAB")]
+    #[default]
     Zab,
     #[serde(rename = "ZAN")]
     Zan,
@@ -115,8 +117,3 @@ impl FromStr for NwsCenterWeatherServiceUnitId {
     }
 }
 
-impl Default for NwsCenterWeatherServiceUnitId {
-    fn default() -> NwsCenterWeatherServiceUnitId {
-        Self::Zab
-    }
-}

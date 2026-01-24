@@ -3,8 +3,10 @@ use std::str::FromStr;
 
 /// Certainty of the alert
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum AlertCertainty {
     #[serde(rename = "Observed")]
+    #[default]
     Observed,
     #[serde(rename = "Likely")]
     Likely,
@@ -28,11 +30,6 @@ impl std::fmt::Display for AlertCertainty {
     }
 }
 
-impl Default for AlertCertainty {
-    fn default() -> AlertCertainty {
-        Self::Observed
-    }
-}
 
 impl FromStr for AlertCertainty {
     type Err = String;

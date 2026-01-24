@@ -84,13 +84,10 @@ impl Zone {
     }
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum AtType {
     #[serde(rename = "wx:Zone")]
+    #[default]
     WxColonZone,
 }
 
-impl Default for AtType {
-    fn default() -> AtType {
-        Self::WxColonZone
-    }
-}

@@ -31,13 +31,10 @@ impl RelativeLocationGeoJson {
     }
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum Type {
     #[serde(rename = "Feature")]
+    #[default]
     Feature,
 }
 
-impl Default for Type {
-    fn default() -> Type {
-        Self::Feature
-    }
-}

@@ -59,13 +59,10 @@ impl Gridpoint {
     }
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum AtType {
     #[serde(rename = "wx:Gridpoint")]
+    #[default]
     WxColonGridpoint,
 }
 
-impl Default for AtType {
-    fn default() -> AtType {
-        Self::WxColonGridpoint
-    }
-}

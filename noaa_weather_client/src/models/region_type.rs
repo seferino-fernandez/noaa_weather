@@ -6,8 +6,10 @@ use serde::{Deserialize, Serialize};
 ///  - Land: Land
 ///  - Marine: Marine
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum RegionType {
     #[serde(rename = "Land")]
+    #[default]
     Land,
     #[serde(rename = "Marine")]
     Marine,
@@ -22,11 +24,6 @@ impl std::fmt::Display for RegionType {
     }
 }
 
-impl Default for RegionType {
-    fn default() -> RegionType {
-        Self::Land
-    }
-}
 
 impl FromStr for RegionType {
     type Err = String;

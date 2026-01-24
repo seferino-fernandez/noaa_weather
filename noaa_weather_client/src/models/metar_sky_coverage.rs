@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum MetarSkyCoverage {
     #[serde(rename = "OVC")]
+    #[default]
     Ovc,
     #[serde(rename = "BKN")]
     Bkn,
@@ -32,8 +34,3 @@ impl std::fmt::Display for MetarSkyCoverage {
     }
 }
 
-impl Default for MetarSkyCoverage {
-    fn default() -> MetarSkyCoverage {
-        Self::Ovc
-    }
-}

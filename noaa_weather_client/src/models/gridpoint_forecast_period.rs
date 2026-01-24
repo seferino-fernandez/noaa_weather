@@ -91,8 +91,10 @@ impl GridpointForecastPeriod {
 }
 /// The unit of the temperature value (Fahrenheit or Celsius). This property is deprecated. Future versions will indicate the unit within the quantitative value object for the temperature property. To make use of the future standard format now, set the \"forecast_temperature_qv\" feature flag on the request.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum TemperatureUnit {
     #[serde(rename = "F")]
+    #[default]
     F,
     #[serde(rename = "C")]
     C,
@@ -104,15 +106,12 @@ impl Display for TemperatureUnit {
     }
 }
 
-impl Default for TemperatureUnit {
-    fn default() -> TemperatureUnit {
-        Self::F
-    }
-}
 /// If not null, indicates a non-diurnal temperature trend for the period (either rising temperature overnight, or falling temperature during the day)
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum TemperatureTrend {
     #[serde(rename = "rising")]
+    #[default]
     Rising,
     #[serde(rename = "falling")]
     Falling,
@@ -137,16 +136,13 @@ impl FromStr for TemperatureTrend {
     }
 }
 
-impl Default for TemperatureTrend {
-    fn default() -> TemperatureTrend {
-        Self::Rising
-    }
-}
 /// The prevailing direction of the wind for the period, using a 16-point compass.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 #[serde(rename_all(deserialize = "SCREAMING_SNAKE_CASE"))]
+#[derive(Default)]
 pub enum WindDirection {
     #[serde(rename = "N")]
+    #[default]
     N,
     #[serde(rename = "NNE")]
     Nne,
@@ -180,11 +176,6 @@ pub enum WindDirection {
     Nnw,
 }
 
-impl Default for WindDirection {
-    fn default() -> WindDirection {
-        Self::N
-    }
-}
 
 impl Display for WindDirection {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

@@ -85,13 +85,10 @@ impl Office {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum AtType {
     #[serde(rename = "GovernmentOrganization")]
+    #[default]
     GovernmentOrganization,
 }
 
-impl Default for AtType {
-    fn default() -> AtType {
-        Self::GovernmentOrganization
-    }
-}

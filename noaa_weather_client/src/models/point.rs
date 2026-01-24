@@ -78,13 +78,10 @@ impl Point {
     }
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum AtType {
     #[serde(rename = "wx:Point")]
+    #[default]
     WxColonPoint,
 }
 
-impl Default for AtType {
-    fn default() -> AtType {
-        Self::WxColonPoint
-    }
-}

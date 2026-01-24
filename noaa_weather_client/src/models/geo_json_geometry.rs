@@ -20,8 +20,10 @@ impl Default for GeoJsonGeometry {
     }
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum Type {
     #[serde(rename = "Point")]
+    #[default]
     Point,
     #[serde(rename = "LineString")]
     LineString,
@@ -35,8 +37,3 @@ pub enum Type {
     MultiPolygon,
 }
 
-impl Default for Type {
-    fn default() -> Type {
-        Self::Point
-    }
-}

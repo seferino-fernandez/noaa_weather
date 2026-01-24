@@ -21,13 +21,10 @@ impl GeoJsonMultiLineString {
     }
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum Type {
     #[serde(rename = "MultiLineString")]
+    #[default]
     MultiLineString,
 }
 
-impl Default for Type {
-    fn default() -> Type {
-        Self::MultiLineString
-    }
-}

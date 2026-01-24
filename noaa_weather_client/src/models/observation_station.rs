@@ -56,13 +56,10 @@ impl ObservationStation {
     }
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum AtType {
     #[serde(rename = "wx:ObservationStation")]
+    #[default]
     WxColonObservationStation,
 }
 
-impl Default for AtType {
-    fn default() -> AtType {
-        Self::WxColonObservationStation
-    }
-}
