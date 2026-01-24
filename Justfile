@@ -1,5 +1,5 @@
 default:
-  @just --list
+    @just --list
 
 # Run all tests
 test:
@@ -9,9 +9,9 @@ test:
 lint:
     cargo clippy
 
-# Format the code using rustfmt with the nightly toolchain
+# Format the code using rustfmt
 fmt:
-    cargo +nightly fmt --all
+    cargo fmt --all
 
 # Build the project in debug mode
 build:

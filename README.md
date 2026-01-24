@@ -10,15 +10,15 @@ A comprehensive Rust client library and command-line interface for the [NOAA Wea
 
 ## ✨ Features
 
--   🚨 **Weather Alerts** - Active alerts, warnings, and watches by location or zone
--   🗺️ **Gridpoint Forecasts** - Detailed forecasts with hourly data and weather parameters
--   🌡️ **Observations** - Current conditions from weather stations nationwide
--   📡 **Radar Data** - Access to radar stations, servers, and real-time data
--   ✈️ **Aviation Weather** - SIGMETs, AIRMETs, and Center Weather Advisories
--   🏢 **NWS Offices** - Office information, headlines, and products
--   📋 **Text Products** - Access to all NWS text-based weather products
--   🌍 **Zone Information** - Forecast zones, counties, and geographic areas
--   📍 **Point Data** - Get weather data for any latitude/longitude coordinate
+- 🚨 **Weather Alerts** - Active alerts, warnings, and watches by location or zone
+- 🗺️ **Gridpoint Forecasts** - Detailed forecasts with hourly data and weather parameters
+- 🌡️ **Observations** - Current conditions from weather stations nationwide
+- 📡 **Radar Data** - Access to radar stations, servers, and real-time data
+- ✈️ **Aviation Weather** - SIGMETs, AIRMETs, and Center Weather Advisories
+- 🏢 **NWS Offices** - Office information, headlines, and products
+- 📋 **Text Products** - Access to all NWS text-based weather products
+- 🌍 **Zone Information** - Forecast zones, counties, and geographic areas
+- 📍 **Point Data** - Get weather data for any latitude/longitude coordinate
 
 ## 🚀 Quick Start
 
@@ -62,8 +62,8 @@ See the [noaa_weather_cli](noaa_weather_cli/README.md) and [noaa_weather_client]
 
 ### Prerequisites
 
--   Rust 2024 edition or later
--   Cargo
+- Rust 2024 edition or later
+- Cargo
 
 ### Setup
 
@@ -109,8 +109,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## 📚 Additional Resources
 
--   [NOAA Weather API Documentation](https://www.weather.gov/documentation/services-web-api)
--   [NOAA Weather API GitHub](https://github.com/weather-gov/api)
--   [National Weather Service](https://www.weather.gov/)
-
----
+- [NOAA Weather API Documentation](https://www.weather.gov/documentation/services-web-api)
+- [NOAA Weather API GitHub](https://github.com/weather-gov/api)
+- [National Weather Service](https://www.weather.gov/)

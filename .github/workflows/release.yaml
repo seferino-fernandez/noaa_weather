@@ -28,7 +28,7 @@ jobs:
                   token: ${{ secrets.RELEASE_PLZ_TOKEN }}
 
             - name: Install Rust toolchain
-              uses: dtolnay/rust-toolchain@nightly
+              uses: dtolnay/rust-toolchain@stable
 
             - name: Run release-plz to create a release PR
               id: release-plz
@@ -51,7 +51,7 @@ jobs:
                   fetch-depth: 0
 
             - name: Install Rust toolchain
-              uses: dtolnay/rust-toolchain@nightly
+              uses: dtolnay/rust-toolchain@stable
 
             - name: Run release-plz to publish
               id: release-plz
