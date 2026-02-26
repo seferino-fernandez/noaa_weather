@@ -19,6 +19,10 @@ serde_json = "1.0.149"
 serde_with = { version = "^3.16.1" }
 url = "2.5.8"
 
+[features]
+default = []
+radio = []
+
 [dev-dependencies]
 wiremock = "0.6.5"
 tokio = { version = "1.49.0", features = ["full"] }

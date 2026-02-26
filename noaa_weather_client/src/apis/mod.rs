@@ -94,5 +94,7 @@ pub mod offices;
 pub mod points;
 pub mod products;
 pub mod radar;
+#[cfg(feature = "radio")]
+pub mod radio;
 pub mod stations;
 pub mod zones;

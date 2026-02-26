@@ -264,3 +264,7 @@ pub mod zone_geo_json;
 pub use self::zone_geo_json::ZoneGeoJson;
 pub mod zone_state;
 pub use self::zone_state::ZoneState;
+#[cfg(feature = "radio")]
+pub mod radio_broadcast;
+#[cfg(feature = "radio")]
+pub use self::radio_broadcast::*;
