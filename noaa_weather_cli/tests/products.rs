@@ -88,6 +88,18 @@ fn test_products_by_location_success() {
     cmd.assert().success();
 }
 
+#[test]
+fn test_products_latest_success() {
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.arg("products");
+    cmd.arg("latest");
+    cmd.arg("--type-id");
+    cmd.arg("AFD");
+    cmd.arg("--location-id");
+    cmd.arg("PSR");
+    cmd.assert().success();
+}
+
 #[ignore = "Update to dynamically get a product id"]
 #[test]
 fn test_product_success() {

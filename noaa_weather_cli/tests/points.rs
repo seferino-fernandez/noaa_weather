@@ -7,7 +7,9 @@ fn test_points_command_success() {
     let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("points");
     cmd.arg("metadata");
-    cmd.arg("39.7456,-97.0892");
+    cmd.arg("39.7456");
+    cmd.arg("--");
+    cmd.arg("-97.0892");
     cmd.assert().success();
 }
 
@@ -25,7 +27,9 @@ fn test_points_command_stations_success() {
     let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("points");
     cmd.arg("stations");
-    cmd.arg("39.7456,-97.0892");
+    cmd.arg("39.7456");
+    cmd.arg("--");
+    cmd.arg("-97.0892");
     cmd.assert().success();
 }
 
