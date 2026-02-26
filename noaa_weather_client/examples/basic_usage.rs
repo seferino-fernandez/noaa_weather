@@ -19,15 +19,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌦️ NOAA Weather Client - Basic Usage Example\n");
 
     // Example coordinates (Kansas City, MO)
-    let coordinates = "39.7456,-94.5692";
+    let latitude = 39.7456;
+    let longitude = -94.5692;
     println!(
-        "📍 Getting weather information for coordinates: {}",
-        coordinates
+        "📍 Getting weather information for coordinates: {},{}",
+        latitude, longitude
     );
 
     // 1. Get point metadata
     println!("\n1️⃣ Getting point metadata...");
-    match points::get_point(&config, coordinates).await {
+    match points::get_point(&config, latitude, longitude).await {
         Ok(point_data) => {
             let properties = &point_data.properties;
             println!("  ✅ Forecast Office: {:?}", properties.forecast_office);
@@ -71,7 +72,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 3. Get stations near the point
     println!("\n3️⃣ Getting nearby weather stations...");
-    match points::get_point_stations(&config, coordinates).await {
+    match points::get_point_stations(&config, latitude, longitude).await {
         Ok(stations_data) => {
             println!(
                 "  ✅ Found {} nearby stations",
