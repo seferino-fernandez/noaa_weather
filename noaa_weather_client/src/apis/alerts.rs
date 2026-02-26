@@ -371,6 +371,9 @@ pub async fn get_active_alerts(
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+    }
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
@@ -440,6 +443,9 @@ pub async fn get_active_alerts_for_area(
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+    }
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
@@ -504,6 +510,9 @@ pub async fn get_active_alerts_count(
 
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -576,6 +585,9 @@ pub async fn get_active_alerts_for_marine_region(
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+    }
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
@@ -646,6 +658,9 @@ pub async fn get_active_alerts_for_zone(
 
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -916,6 +931,9 @@ pub async fn get_alerts(
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+    }
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
@@ -987,6 +1005,9 @@ pub async fn get_alert(
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+    }
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
@@ -1051,6 +1072,9 @@ pub async fn get_alert_types(
 
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
     }
 
     let req = req_builder.build()?;

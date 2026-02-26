@@ -3,6 +3,7 @@ pub struct Configuration {
     pub base_path: String,
     pub client: reqwest::Client,
     pub user_agent: Option<String>,
+    pub api_key: Option<String>,
 }
 
 impl Configuration {
@@ -10,11 +11,13 @@ impl Configuration {
         user_agent: Option<String>,
         base_path: Option<String>,
         client: Option<reqwest::Client>,
+        api_key: Option<String>,
     ) -> Self {
         Self {
             base_path: base_path.unwrap_or("https://api.weather.gov".to_owned()),
             client: client.unwrap_or_default(),
             user_agent,
+            api_key,
         }
     }
 }
@@ -27,6 +30,7 @@ impl Default for Configuration {
             user_agent: Some(
                 "(noaa_weather_client_rs, com.github.noaa_weather_client_rs)".to_owned(),
             ),
+            api_key: None,
         }
     }
 }

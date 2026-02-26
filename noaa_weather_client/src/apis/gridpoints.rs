@@ -84,6 +84,9 @@ pub async fn get_gridpoint(
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+    }
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
@@ -168,6 +171,9 @@ pub async fn get_gridpoint_forecast(
     }
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
     }
     if let Some(param_value) = feature_flags {
         req_builder = req_builder.header("Feature-Flags", param_value.join(","));
@@ -256,6 +262,9 @@ pub async fn get_gridpoint_forecast_hourly(
     }
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
     }
     if let Some(param_value) = feature_flags {
         req_builder = req_builder.header("Feature-Flags", param_value.join(","));
@@ -347,6 +356,9 @@ pub async fn get_gridpoint_stations(
     }
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
     }
 
     let req = req_builder.build()?;

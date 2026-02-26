@@ -163,6 +163,9 @@ pub async fn get_zone(
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+    }
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
@@ -233,6 +236,9 @@ pub async fn get_current_zone_forecast(
 
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -378,6 +384,9 @@ pub async fn get_zones(
     }
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -533,6 +542,9 @@ pub async fn get_zones_by_type(
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+    }
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
@@ -618,6 +630,9 @@ pub async fn get_zone_observations(
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+    }
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
@@ -696,6 +711,9 @@ pub async fn get_stations_by_zone(
     }
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
     }
 
     let req = req_builder.build()?;
