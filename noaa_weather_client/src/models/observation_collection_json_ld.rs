@@ -7,6 +7,8 @@ pub struct ObservationCollectionJsonLd {
     pub at_context: Option<Box<models::JsonLdContext>>,
     #[serde(rename = "@graph", skip_serializing_if = "Option::is_none")]
     pub at_graph: Option<Vec<models::Observation>>,
+    #[serde(rename = "pagination", skip_serializing_if = "Option::is_none")]
+    pub pagination: Option<models::PaginationInfo>,
 }
 
 impl ObservationCollectionJsonLd {
@@ -14,6 +16,7 @@ impl ObservationCollectionJsonLd {
         ObservationCollectionJsonLd {
             at_context: None,
             at_graph: None,
+            pagination: None,
         }
     }
 }

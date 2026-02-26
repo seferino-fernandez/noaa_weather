@@ -9,6 +9,8 @@ pub struct ObservationCollectionGeoJson {
     pub r#type: Type,
     #[serde(rename = "features")]
     pub features: Vec<models::ObservationGeoJson>,
+    #[serde(rename = "pagination", skip_serializing_if = "Option::is_none")]
+    pub pagination: Option<models::PaginationInfo>,
 }
 
 impl ObservationCollectionGeoJson {
@@ -20,6 +22,7 @@ impl ObservationCollectionGeoJson {
             at_context: None,
             r#type,
             features,
+            pagination: None,
         }
     }
 }
