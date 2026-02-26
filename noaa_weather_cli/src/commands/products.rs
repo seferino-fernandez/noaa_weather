@@ -88,6 +88,17 @@ pub struct ProductsTypeLocationsArgs {
     type_id: String,
 }
 
+/// Arguments for getting the latest product by type and location.
+#[derive(Args, Debug, Clone)]
+pub struct LatestProductArgs {
+    /// Product type ID (e.g., AFD, HWO).
+    #[arg(long)]
+    pub type_id: String,
+    /// Product issuance location ID (e.g., LWX, PSR).
+    #[arg(long)]
+    pub location_id: String,
+}
+
 /// Access information about NWS text products.
 #[derive(Subcommand, Debug, Clone)]
 pub enum ProductCommands {
@@ -130,6 +141,11 @@ pub enum ProductCommands {
     /// Example: `noaa-weather products locations-by-type --type-id HWO`
     #[clap(name = "locations-by-type")]
     ProductsTypeLocations(ProductsTypeLocationsArgs),
+    /// Get the latest text product of a specific type for a specific issuance location.
+    ///
+    /// Example: `noaa-weather products latest --type-id AFD --location-id PSR`
+    #[clap(name = "latest")]
+    Latest(LatestProductArgs),
 }
 
 /// Handles the execution of product-related subcommands.
@@ -279,6 +295,25 @@ pub async fn handle_command(
                 )?;
             } else {
                 let table = tables::products::create_products_locations_table(&result);
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
+            Ok(())
+        }
+        ProductCommands::Latest(args) => {
+            let result = products_api::get_latest_product_by_type_and_location(
+                config,
+                &args.type_id,
+                &args.location_id,
+            )
+            .await
+            .map_err(|error| anyhow!("getting latest product: {}", error))?;
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&result)?,
+                )?;
+            } else {
+                let table = tables::products::create_product_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
