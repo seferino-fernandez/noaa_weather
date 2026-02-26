@@ -631,6 +631,22 @@ mod tests {
     }
 
     #[test]
+    fn test_from_str_pqe() {
+        assert_eq!(
+            "PQE".parse::<NwsForecastOfficeId>().unwrap(),
+            NwsForecastOfficeId::Pqe
+        );
+    }
+
+    #[test]
+    fn test_from_str_pqw() {
+        assert_eq!(
+            "PQW".parse::<NwsForecastOfficeId>().unwrap(),
+            NwsForecastOfficeId::Pqw
+        );
+    }
+
+    #[test]
     fn test_from_str_err() {
         assert_eq!(
             "INVALID".parse::<NwsForecastOfficeId>(),
