@@ -10,22 +10,24 @@ use crate::{Cli, tables};
 /// Arguments requiring a specific geographical point.
 #[derive(Args, Debug, Clone)]
 pub struct PointArgs {
-    /// Geographical point specified as "latitude,longitude" (e.g., "39.7456,-97.0892").
-    point: String,
+    /// Latitude of the point (e.g., 39.7456).
+    pub latitude: f64,
+    /// Longitude of the point (e.g., -97.0892).
+    pub longitude: f64,
 }
 
 /// Access metadata and nearby stations for a specific geographical point.
 #[derive(Subcommand, Debug, Clone)]
 pub enum PointCommands {
-    /// Get metadata for a specific latitude,longitude point.
+    /// Get metadata for a specific latitude/longitude point.
     ///
     /// Returns information like the responsible forecast office, grid coordinates,
     /// forecast zone, and links to relevant forecast endpoints.
-    /// Example: `noaa-weather points metadata "39.7456,-97.0892"`
+    /// Example: `noaa-weather points metadata 39.7456 -- -97.0892`
     Metadata(PointArgs),
-    /// Get a list of observation stations near a specific latitude,longitude point.
+    /// Get a list of observation stations near a specific latitude/longitude point.
     ///
-    /// Example: `noaa-weather points stations "39.7456,-97.0892"`
+    /// Example: `noaa-weather points stations 39.7456 -- -97.0892`
     Stations(PointArgs),
 }
 
@@ -47,7 +49,7 @@ pub async fn handle_command(
 ) -> Result<()> {
     match command {
         PointCommands::Metadata(args) => {
-            let result = points_api::get_point(config, &args.point)
+            let result = points_api::get_point(config, args.latitude, args.longitude)
                 .await
                 .map_err(|e| anyhow::anyhow!("Error getting point metadata: {}", e))?;
 
@@ -63,7 +65,7 @@ pub async fn handle_command(
             Ok(())
         }
         PointCommands::Stations(args) => {
-            let result = points_api::get_point_stations(config, &args.point)
+            let result = points_api::get_point_stations(config, args.latitude, args.longitude)
                 .await
                 .map_err(|error| anyhow::anyhow!("Error getting point stations: {}", error))?;
 
