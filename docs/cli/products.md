@@ -9,7 +9,7 @@ noaa-weather products products-by-location --location-id <LOCATION_ID>
 ## Get text product by specific ID
 
 ```bash
-noaa-weather products product --product-id <PRODUCT_ID>
+noaa-weather products metadata --id <PRODUCT_ID>
 ```
 
 ## Get all product types and codes
@@ -46,4 +46,10 @@ noaa-weather products locations-by-type --type-id <TYPE_ID>
 
 ```bash
 noaa-weather products locations
+```
+
+## Get the latest product by type and location
+
+```bash
+noaa-weather products latest --type-id <TYPE_ID> --location-id <LOCATION_ID>
 ```

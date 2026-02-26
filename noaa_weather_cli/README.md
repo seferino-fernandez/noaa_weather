@@ -23,25 +23,26 @@ cargo install noaa-weather
 
 ## CLI Commands
 
-| Command      | Description                 | Example                                                          |
-| ------------ | --------------------------- | ---------------------------------------------------------------- |
-| `alerts`     | Weather alerts and warnings | `noaa-weather alerts active --area CA`                           |
-| `gridpoints` | Detailed forecast data      | `noaa-weather gridpoints forecast --office-id TOP --x 31 --y 80` |
-| `points`     | Point metadata and stations | `noaa-weather points metadata "40.7128,-74.0060"`                |
-| `stations`   | Weather station data        | `noaa-weather stations latest-observation --station-id KJFK`     |
-| `zones`      | Zone forecasts and info     | `noaa-weather zones forecast --type forecast --id CAZ006`        |
-| `radar`      | Radar stations and data     | `noaa-weather radar stations`                                    |
-| `aviation`   | Aviation weather products   | `noaa-weather aviation sigmets --atsu KKCI`                      |
-| `products`   | NWS text products           | `noaa-weather products types`                                    |
-| `offices`    | NWS office information      | `noaa-weather offices metadata --office-id TOP`                  |
+| Command      | Description                   | Example                                                                 |
+| ------------ | ----------------------------- | ----------------------------------------------------------------------- |
+| `alerts`     | Weather alerts and warnings   | `noaa-weather alerts active --area CA`                                  |
+| `gridpoints` | Detailed forecast data        | `noaa-weather gridpoints forecast --forecast-office-id TOP -x 31 -y 80` |
+| `points`     | Point metadata and stations   | `noaa-weather points metadata 40.7128 -- -74.0060`                      |
+| `stations`   | Weather station data          | `noaa-weather stations latest-observation --station-id KJFK`            |
+| `zones`      | Zone forecasts and info       | `noaa-weather zones forecast --type forecast --id CAZ006`               |
+| `radar`      | Radar stations and data       | `noaa-weather radar stations`                                           |
+| `radio`      | NOAA Weather Radio broadcasts | `noaa-weather radio station KEC94`                                      |
+| `aviation`   | Aviation weather products     | `noaa-weather aviation sigmets --atsu KKCI`                             |
+| `products`   | NWS text products             | `noaa-weather products latest --type-id AFD --location-id PSR`          |
+| `offices`    | NWS office information        | `noaa-weather offices metadata --office-id TOP`                         |
 
 ## Output Formats
 
 All commands support multiple output formats:
 
--   **Human-readable tables** (default) - Perfect for terminal viewing
--   **JSON** (`--json`) - Machine-readable for scripting and integration
--   **File output** (`--output file.txt`) - Save results to a file
+- **Human-readable tables** (default) - Perfect for terminal viewing
+- **JSON** (`--json`) - Machine-readable for scripting and integration
+- **File output** (`--output file.txt`) - Save results to a file
 
 ## General Examples
 
@@ -71,15 +72,27 @@ noaa-weather stations latest-observation --station-id KJFK
 
 Get aviation weather (SIGMETs):
 
-````bash
+```bash
 noaa-weather aviation sigmets
-```s
+```
+
+Get the latest Area Forecast Discussion for Phoenix:
+
+```bash
+noaa-weather products latest --type-id AFD --location-id PSR
+```
+
+Get the NOAA Weather Radio broadcast for a transmitter station:
+
+```bash
+noaa-weather radio station KEC94
+```
 
 For detailed documentation on each command, run:
 
 ```bash
 noaa-weather <command> --help
-````
+```
 
 ## Get Information for your location
 
@@ -94,13 +107,19 @@ Then you can:
 Get your location's point metadata:
 
 ```bash
-noaa-weather points metadata "33.7629,-118.1889"
+noaa-weather points metadata 33.7629 -- -118.1889
 ```
 
-With the point metadata, you can get your location's forecast office ID, and gridpoint coordinates.
+With the point metadata, you can get your location's forecast office ID and gridpoint coordinates.
 
 Get your location's hourly forecast:
 
 ```bash
-noaa-weather gridpoints forecast-hourly --forecast-office-id LOX --x 155 --y 32
+noaa-weather gridpoints forecast-hourly --forecast-office-id LOX -x 155 -y 32
+```
+
+Get the NOAA Weather Radio broadcast for your location:
+
+```bash
+noaa-weather radio point 33.7629 -- -118.1889
 ```

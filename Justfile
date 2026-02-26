@@ -10,7 +10,7 @@ lint:
     cargo clippy
 
 # Format the code using rustfmt
-fmt:
+format:
     cargo fmt --all
 
 # Build the project in debug mode

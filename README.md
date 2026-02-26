@@ -1,4 +1,4 @@
-# 🌦️ NOAA Weather CLI & Client
+# NOAA Weather CLI & Client
 
 [![Build Status](https://github.com/seferino-fernandez/noaa_weather/actions/workflows/pull-request-validation.yml/badge.svg)](https://github.com/seferino-fernandez/noaa_weather/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -8,19 +8,20 @@ A comprehensive Rust client library and command-line interface for the [NOAA Wea
 
 > **Note**: This project uses data published by NOAA/NWS but is otherwise unaffiliated with the National Weather Service and is not an official NOAA/NWS library.
 
-## ✨ Features
+## Features
 
-- 🚨 **Weather Alerts** - Active alerts, warnings, and watches by location or zone
-- 🗺️ **Gridpoint Forecasts** - Detailed forecasts with hourly data and weather parameters
-- 🌡️ **Observations** - Current conditions from weather stations nationwide
-- 📡 **Radar Data** - Access to radar stations, servers, and real-time data
-- ✈️ **Aviation Weather** - SIGMETs, AIRMETs, and Center Weather Advisories
-- 🏢 **NWS Offices** - Office information, headlines, and products
-- 📋 **Text Products** - Access to all NWS text-based weather products
-- 🌍 **Zone Information** - Forecast zones, counties, and geographic areas
-- 📍 **Point Data** - Get weather data for any latitude/longitude coordinate
+- **Weather Alerts** - Active alerts, warnings, and watches by location or zone
+- **Gridpoint Forecasts** - Detailed 12-hour and hourly forecasts with weather parameters
+- **Observations** - Current conditions from weather stations nationwide
+- **Radar Data** - Access to radar stations, servers, and real-time data
+- **Aviation Weather** - SIGMETs, AIRMETs, and Center Weather Advisories
+- **NWS Offices** - Office information, headlines, and products
+- **Text Products** - Area Forecast Discussions, watches, and all NWS text products
+- **Zone Information** - Forecast zones, counties, and geographic areas
+- **Point Data** - Get weather data for any latitude/longitude coordinate
+- **NOAA Weather Radio** - Broadcast transcripts for transmitter stations and points (opt-in via `radio` feature)
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -51,14 +52,21 @@ or add to your `Cargo.toml` manually:
 
 ```toml
 [dependencies]
-noaa_weather_client = "0.1.0"
+noaa_weather_client = "0.1.8"
 ```
 
-## 📖 Documentation
+To enable NOAA Weather Radio support:
+
+```toml
+[dependencies]
+noaa_weather_client = { version = "0.1.8", features = ["radio"] }
+```
+
+## Documentation
 
 See the [noaa_weather_cli](noaa_weather_cli/README.md) and [noaa_weather_client](noaa_weather_client/README.md) documentation for more details.
 
-## 🏗️ Development
+## Development
 
 ### Prerequisites
 
@@ -95,7 +103,7 @@ cargo build
 cargo build --release
 ```
 
-## 🤝 Contributing
+## Contributing
 
 I welcome any and all contributions!
 
@@ -103,11 +111,11 @@ I welcome any and all contributions!
 
 Please use our [GitHub Issues](https://github.com/seferino-fernandez/noaa_weather/issues) to report bugs or request features.
 
-## 📜 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
-## 📚 Additional Resources
+## Additional Resources
 
 - [NOAA Weather API Documentation](https://www.weather.gov/documentation/services-web-api)
 - [NOAA Weather API GitHub](https://github.com/weather-gov/api)

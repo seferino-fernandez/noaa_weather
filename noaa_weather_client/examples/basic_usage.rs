@@ -16,42 +16,42 @@ use noaa_weather_client::apis::{alerts, points, stations};
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Configuration::default();
 
-    println!("🌦️ NOAA Weather Client - Basic Usage Example\n");
+    println!("NOAA Weather Client - Basic Usage Example\n");
 
     // Example coordinates (Kansas City, MO)
     let latitude = 39.7456;
     let longitude = -94.5692;
     println!(
-        "📍 Getting weather information for coordinates: {},{}",
+        "Getting weather information for coordinates: {},{}",
         latitude, longitude
     );
 
     // 1. Get point metadata
-    println!("\n1️⃣ Getting point metadata...");
+    println!("\n[1] Getting point metadata...");
     match points::get_point(&config, latitude, longitude).await {
         Ok(point_data) => {
             let properties = &point_data.properties;
-            println!("  ✅ Forecast Office: {:?}", properties.forecast_office);
+            println!("  Forecast Office: {:?}", properties.forecast_office);
             println!(
-                "  ✅ Grid Coordinates: {},{}",
+                "  Grid Coordinates: {},{}",
                 properties.grid_x.unwrap_or(0),
                 properties.grid_y.unwrap_or(0)
             );
             if let Some(time_zone) = &properties.time_zone {
-                println!("  ✅ Time Zone: {}", time_zone);
+                println!("  Time Zone: {}", time_zone);
             }
         }
         Err(error) => {
-            eprintln!("  ❌ Error getting point data: {}", error);
+            eprintln!("  Error getting point data: {}", error);
         }
     }
 
-    // 2. Get active weather alerts (limited to first 5)
-    println!("\n2️⃣ Getting active weather alerts...");
+    // 2. Get active weather alerts (limited to first 3)
+    println!("\n[2] Getting active weather alerts...");
     let alert_params = alerts::ActiveAlertsParams::default();
     match alerts::get_active_alerts(&config, alert_params).await {
         Ok(alerts_data) => {
-            println!("  ✅ Found {} active alerts", alerts_data.features.len());
+            println!("  Found {} active alerts", alerts_data.features.len());
             for (index, alert_feature) in alerts_data.features.iter().take(3).enumerate() {
                 if let Some(properties) = &alert_feature.properties {
                     println!(
@@ -66,63 +66,57 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
         Err(error) => {
-            eprintln!("  ❌ Error getting alerts: {}", error);
+            eprintln!("  Error getting alerts: {}", error);
         }
     }
 
     // 3. Get stations near the point
-    println!("\n3️⃣ Getting nearby weather stations...");
+    println!("\n[3] Getting nearby weather stations...");
     match points::get_point_stations(&config, latitude, longitude).await {
         Ok(stations_data) => {
-            println!(
-                "  ✅ Found {} nearby stations",
-                stations_data.features.len()
-            );
+            println!("  Found {} nearby stations", stations_data.features.len());
 
             // Try to get observation from the first station
             if let Some(first_station) = stations_data.features.first()
                 && let Some(station_id) = &first_station.properties.station_identifier
             {
-                println!(
-                    "  📡 Getting latest observation from station: {}",
-                    station_id
-                );
+                println!("  Getting latest observation from station: {}", station_id);
 
                 match stations::get_latest_observations(&config, station_id, None).await {
                     Ok(observation) => {
                         let props = &observation.properties;
                         println!(
-                            "    ✅ Station: {}",
+                            "    Station: {}",
                             props.station_name.as_deref().unwrap_or("Unknown")
                         );
 
                         if let Some(temp) = &props.temperature
                             && let Some(temp_value) = temp.value
                         {
-                            println!("    🌡️  Temperature: {:.1}°C", temp_value);
+                            println!("    Temperature: {:.1} C", temp_value);
                         }
 
                         if let Some(desc) = &props.text_description {
-                            println!("    ☁️  Conditions: {}", desc);
+                            println!("    Conditions: {}", desc);
                         }
 
                         if let Some(timestamp) = &props.timestamp {
-                            println!("    ⏰ Observed: {}", timestamp);
+                            println!("    Observed: {}", timestamp);
                         }
                     }
                     Err(error) => {
-                        eprintln!("    ❌ Error getting observation: {}", error);
+                        eprintln!("    Error getting observation: {}", error);
                     }
                 }
             }
         }
         Err(error) => {
-            eprintln!("  ❌ Error getting stations: {}", error);
+            eprintln!("  Error getting stations: {}", error);
         }
     }
 
-    println!("\n✨ Example completed!");
-    println!("\n💡 Try running other examples:");
+    println!("\nExample completed!");
+    println!("\nTry running other examples:");
     println!("   just example-alerts");
     println!("   just examples        # Run all examples");
 

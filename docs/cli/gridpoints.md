@@ -11,17 +11,17 @@ noaa-weather gridpoints gridpoint --forecast-office-id <OFFICE_ID> --x <X> --y <
 ## Forecast
 
 ```sh
-noaa-weather gridpoints forecast --forecast-office-id <OFFICE_ID> --x <X> --y <Y>
+noaa-weather gridpoints forecast --forecast-office-id <OFFICE_ID> --x <X> --y <Y> [--units <UNITS>]
 ```
 
-## Hourly
+## Hourly Forecast
 
 ```sh
-noaa-weather gridpoints hourly --forecast-office-id <OFFICE_ID> --x <X> --y <Y> --units <UNITS>
+noaa-weather gridpoints forecast-hourly --forecast-office-id <OFFICE_ID> --x <X> --y <Y> [--units <UNITS>]
 ```
 
 ## Stations
 
 ```sh
-noaa-weather gridpoints stations --forecast-office-id <OFFICE_ID> --x <X> --y <Y> --limit <LIMIT>
+noaa-weather gridpoints stations --forecast-office-id <OFFICE_ID> --x <X> --y <Y> [--limit <LIMIT>]
 ```
