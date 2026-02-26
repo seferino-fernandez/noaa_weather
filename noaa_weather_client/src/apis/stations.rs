@@ -83,6 +83,7 @@ pub enum TafsError {
 ///
 /// * `configuration`: The API client configuration.
 /// * `id`: The ID of the observation station (e.g., "KPHX", "KDEN").
+/// * `feature_flags`: Optional list of feature flags to enable experimental API features.
 ///
 /// # Returns
 ///
@@ -95,6 +96,7 @@ pub enum TafsError {
 pub async fn get_observation_station(
     configuration: &configuration::Configuration,
     id: &str,
+    feature_flags: Option<Vec<String>>,
 ) -> Result<models::ObservationStationGeoJson, Error<ObsStationError>> {
     let uri_str = format!(
         "{}/stations/{id}",
@@ -103,6 +105,9 @@ pub async fn get_observation_station(
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
+    if let Some(param_value) = feature_flags {
+        req_builder = req_builder.header("Feature-Flags", param_value.join(","));
+    }
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
@@ -161,6 +166,7 @@ pub async fn get_observation_station(
 /// * `state`: Optional list of state/territory abbreviations ([`models::AreaCode`]) to filter by.
 /// * `limit`: Optional limit on the number of stations returned.
 /// * `cursor`: Optional pagination cursor for fetching subsequent results.
+/// * `feature_flags`: Optional list of feature flags to enable experimental API features.
 ///
 /// # Returns
 ///
@@ -176,6 +182,7 @@ pub async fn get_observation_stations(
     state: Option<Vec<models::AreaCode>>,
     limit: Option<i32>,
     cursor: Option<&str>,
+    feature_flags: Option<Vec<String>>,
 ) -> Result<models::ObservationStationCollectionGeoJson, Error<ObsStationsError>> {
     let uri_str = format!("{}/stations", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
@@ -221,6 +228,9 @@ pub async fn get_observation_stations(
     }
     if let Some(param_value) = cursor {
         req_builder = req_builder.query(&[("cursor", &param_value.to_owned())]);
+    }
+    if let Some(param_value) = feature_flags {
+        req_builder = req_builder.header("Feature-Flags", param_value.join(","));
     }
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
@@ -355,6 +365,7 @@ pub async fn get_latest_observations(
 /// * `start`: Optional start time (ISO 8601 format or relative duration).
 /// * `end`: Optional end time (ISO 8601 format or relative duration).
 /// * `limit`: Optional limit on the number of observations returned.
+/// * `cursor`: Optional pagination cursor for fetching subsequent results.
 ///
 /// # Returns
 ///
@@ -370,6 +381,7 @@ pub async fn get_observations(
     start: Option<String>,
     end: Option<String>,
     limit: Option<i32>,
+    cursor: Option<&str>,
 ) -> Result<models::ObservationCollectionGeoJson, Error<StationObservationListError>> {
     let uri_str = format!(
         "{}/stations/{stationId}/observations",
@@ -386,6 +398,9 @@ pub async fn get_observations(
     }
     if let Some(param_value) = limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
+    }
+    if let Some(param_value) = cursor {
+        req_builder = req_builder.query(&[("cursor", &param_value.to_owned())]);
     }
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
