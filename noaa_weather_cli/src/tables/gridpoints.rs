@@ -2,7 +2,8 @@ use crate::utils::format::{format_datetime_human_readable, format_dewpoint};
 use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::{
-    GridpointForecastGeoJson, GridpointForecastPeriodTemperature, GridpointGeoJson,
+    Gridpoint12hForecastGeoJson, GridpointForecastPeriodTemperature, GridpointGeoJson,
+    GridpointHourlyForecastGeoJson,
 };
 
 macro_rules! add_row_if_some {
@@ -51,8 +52,8 @@ pub fn create_gridpoint_table(gridpoint_data: &GridpointGeoJson) -> Table {
     table
 }
 
-/// Formats the multi-day forecast into a comfy table.
-pub fn create_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Table {
+/// Formats the multi-day 12-hour forecast into a comfy table.
+pub fn create_forecast_table(forecast_data: &Gridpoint12hForecastGeoJson) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -119,7 +120,7 @@ pub fn create_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Table 
 }
 
 /// Formats the hourly forecast into a comfy table.
-pub fn create_hourly_forecast_table(forecast_data: &GridpointForecastGeoJson) -> Table {
+pub fn create_hourly_forecast_table(forecast_data: &GridpointHourlyForecastGeoJson) -> Table {
     let mut table = Table::new();
     table.load_preset(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
