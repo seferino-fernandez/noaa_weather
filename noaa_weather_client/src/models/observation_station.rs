@@ -36,6 +36,16 @@ pub struct ObservationStation {
     /// A link to the NWS fire weather forecast zone containing this station.
     #[serde(rename = "fireWeatherZone", skip_serializing_if = "Option::is_none")]
     pub fire_weather_zone: Option<String>,
+    /// The data provider for this station.
+    #[serde(rename = "provider", skip_serializing_if = "Option::is_none")]
+    pub provider: Option<String>,
+    /// The sub-provider for this station.
+    #[serde(rename = "subProvider", skip_serializing_if = "Option::is_none")]
+    pub sub_provider: Option<String>,
+    #[serde(rename = "distance", skip_serializing_if = "Option::is_none")]
+    pub distance: Option<models::QuantitativeValue>,
+    #[serde(rename = "bearing", skip_serializing_if = "Option::is_none")]
+    pub bearing: Option<models::QuantitativeValue>,
 }
 
 impl ObservationStation {
@@ -52,6 +62,10 @@ impl ObservationStation {
             forecast: None,
             county: None,
             fire_weather_zone: None,
+            provider: None,
+            sub_provider: None,
+            distance: None,
+            bearing: None,
         }
     }
 }
