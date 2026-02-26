@@ -6,9 +6,9 @@ use serde::{Deserialize, Serialize};
 use serde_with::{NoneAsEmptyString, serde_as};
 
 #[serde_as]
-/// GridpointForecastPeriod : An object containing forecast information for a specific time period (generally 12-hour or 1-hour).
+/// Gridpoint12hForecastPeriod : An object containing forecast information for a 12-hour time period.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct GridpointForecastPeriod {
+pub struct Gridpoint12hForecastPeriod {
     /// Sequential period number.
     #[serde(rename = "number", skip_serializing_if = "Option::is_none")]
     pub number: Option<i32>,
@@ -26,7 +26,7 @@ pub struct GridpointForecastPeriod {
     pub is_daytime: Option<bool>,
     #[serde(rename = "temperature", skip_serializing_if = "Option::is_none")]
     pub temperature: Option<Box<models::GridpointForecastPeriodTemperature>>,
-    /// The unit of the temperature value (Fahrenheit or Celsius). This property is deprecated. Future versions will indicate the unit within the quantitative value object for the temperature property. To make use of the future standard format now, set the \"forecast_temperature_qv\" feature flag on the request.
+    /// The unit of the temperature value (Fahrenheit or Celsius). This property is deprecated. Future versions will indicate the unit within the quantitative value object for the temperature property. To make use of the future standard format now, set the "forecast_temperature_qv" feature flag on the request.
     #[serde(rename = "temperatureUnit", skip_serializing_if = "Option::is_none")]
     pub temperature_unit: Option<TemperatureUnit>,
     /// If not null, indicates a non-diurnal temperature trend for the period (either rising temperature overnight, or falling temperature during the day)
@@ -37,10 +37,6 @@ pub struct GridpointForecastPeriod {
         skip_serializing_if = "Option::is_none"
     )]
     pub probability_of_precipitation: Option<Box<models::QuantitativeValue>>,
-    #[serde(rename = "dewpoint", skip_serializing_if = "Option::is_none")]
-    pub dewpoint: Option<Box<models::QuantitativeValue>>,
-    #[serde(rename = "relativeHumidity", skip_serializing_if = "Option::is_none")]
-    pub relative_humidity: Option<Box<models::QuantitativeValue>>,
     #[serde(rename = "windSpeed", skip_serializing_if = "Option::is_none")]
     pub wind_speed: Option<Box<models::GridpointForecastPeriodWindSpeed>>,
     #[serde(
@@ -65,10 +61,10 @@ pub struct GridpointForecastPeriod {
     pub detailed_forecast: Option<String>,
 }
 
-impl GridpointForecastPeriod {
-    /// An object containing forecast information for a specific time period (generally 12-hour or 1-hour).
-    pub fn new() -> GridpointForecastPeriod {
-        GridpointForecastPeriod {
+impl Gridpoint12hForecastPeriod {
+    /// An object containing forecast information for a 12-hour time period.
+    pub fn new() -> Gridpoint12hForecastPeriod {
+        Gridpoint12hForecastPeriod {
             number: None,
             name: None,
             start_time: None,
@@ -78,8 +74,6 @@ impl GridpointForecastPeriod {
             temperature_unit: None,
             temperature_trend: None,
             probability_of_precipitation: None,
-            dewpoint: None,
-            relative_humidity: None,
             wind_speed: None,
             wind_gust: None,
             wind_direction: None,
@@ -89,7 +83,7 @@ impl GridpointForecastPeriod {
         }
     }
 }
-/// The unit of the temperature value (Fahrenheit or Celsius). This property is deprecated. Future versions will indicate the unit within the quantitative value object for the temperature property. To make use of the future standard format now, set the \"forecast_temperature_qv\" feature flag on the request.
+/// The unit of the temperature value (Fahrenheit or Celsius). This property is deprecated. Future versions will indicate the unit within the quantitative value object for the temperature property. To make use of the future standard format now, set the "forecast_temperature_qv" feature flag on the request.
 #[derive(
     Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
 )]

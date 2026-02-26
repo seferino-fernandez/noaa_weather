@@ -2,7 +2,7 @@ use crate::models;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct GridpointForecastJsonLd {
+pub struct GridpointHourlyForecastJsonLd {
     #[serde(rename = "@context")]
     pub at_context: Box<models::JsonLdContext>,
     /// A geometry represented in Well-Known Text (WKT) format.
@@ -25,15 +25,15 @@ pub struct GridpointForecastJsonLd {
     pub elevation: Option<Box<models::QuantitativeValue>>,
     /// An array of forecast periods.
     #[serde(rename = "periods", skip_serializing_if = "Option::is_none")]
-    pub periods: Option<Vec<models::GridpointForecastPeriod>>,
+    pub periods: Option<Vec<models::GridpointHourlyForecastPeriod>>,
 }
 
-impl GridpointForecastJsonLd {
+impl GridpointHourlyForecastJsonLd {
     pub fn new(
         at_context: models::JsonLdContext,
         geometry: Option<String>,
-    ) -> GridpointForecastJsonLd {
-        GridpointForecastJsonLd {
+    ) -> GridpointHourlyForecastJsonLd {
+        GridpointHourlyForecastJsonLd {
             at_context: Box::new(at_context),
             geometry,
             units: None,

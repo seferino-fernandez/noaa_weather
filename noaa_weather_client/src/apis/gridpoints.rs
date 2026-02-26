@@ -142,7 +142,7 @@ pub async fn get_gridpoint(
 ///
 /// # Returns
 ///
-/// A `Result` containing a [`models::GridpointForecastGeoJson`] on success, which includes
+/// A `Result` containing a [`models::Gridpoint12hForecastGeoJson`] on success, which includes
 /// forecast periods with textual descriptions in its `properties` field.
 ///
 /// # Errors
@@ -156,7 +156,7 @@ pub async fn get_gridpoint_forecast(
     y: i32,
     feature_flags: Option<Vec<String>>,
     units: Option<models::GridpointForecastUnits>,
-) -> Result<models::GridpointForecastGeoJson, Error<GridpointForecastError>> {
+) -> Result<models::Gridpoint12hForecastGeoJson, Error<GridpointForecastError>> {
     let uri_str = format!(
         "{}/gridpoints/{forecast_office_id}/{x},{y}/forecast",
         configuration.base_path,
@@ -195,14 +195,14 @@ pub async fn get_gridpoint_forecast(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `GridpointForecastGeoJson`",
+                "Received `text/plain` content type response that cannot be converted to `Gridpoint12hForecastGeoJson`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `GridpointForecastGeoJson`",
+                "Received `application/xml` content type response that cannot be converted to `Gridpoint12hForecastGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `GridpointForecastGeoJson`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `Gridpoint12hForecastGeoJson`"
                 ))))
             }
         }
@@ -233,7 +233,7 @@ pub async fn get_gridpoint_forecast(
 ///
 /// # Returns
 ///
-/// A `Result` containing a [`models::GridpointForecastGeoJson`] on success, which includes
+/// A `Result` containing a [`models::GridpointHourlyForecastGeoJson`] on success, which includes
 /// hourly forecast periods with textual descriptions in its `properties` field.
 ///
 /// # Errors
@@ -247,7 +247,7 @@ pub async fn get_gridpoint_forecast_hourly(
     y: i32,
     feature_flags: Option<Vec<String>>,
     units: Option<models::GridpointForecastUnits>,
-) -> Result<models::GridpointForecastGeoJson, Error<GridpointForecastHourlyError>> {
+) -> Result<models::GridpointHourlyForecastGeoJson, Error<GridpointForecastHourlyError>> {
     let uri_str = format!(
         "{}/gridpoints/{forecast_office_id}/{x},{y}/forecast/hourly",
         configuration.base_path,
@@ -286,14 +286,14 @@ pub async fn get_gridpoint_forecast_hourly(
         match content_type {
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `GridpointForecastGeoJson`",
+                "Received `text/plain` content type response that cannot be converted to `GridpointHourlyForecastGeoJson`",
             ))),
             ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `GridpointForecastGeoJson`",
+                "Received `application/xml` content type response that cannot be converted to `GridpointHourlyForecastGeoJson`",
             ))),
             ContentType::Unsupported(unknown_type) => {
                 Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `GridpointForecastGeoJson`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `GridpointHourlyForecastGeoJson`"
                 ))))
             }
         }

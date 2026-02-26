@@ -2,7 +2,7 @@ use crate::models;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct GridpointForecastGeoJson {
+pub struct GridpointHourlyForecastGeoJson {
     #[serde(rename = "@context", skip_serializing_if = "Option::is_none")]
     pub at_context: Option<Box<models::JsonLdContext>>,
     #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
@@ -12,16 +12,16 @@ pub struct GridpointForecastGeoJson {
     #[serde(rename = "geometry", deserialize_with = "Option::deserialize")]
     pub geometry: Option<Box<models::GeoJsonGeometry>>,
     #[serde(rename = "properties")]
-    pub properties: Box<models::GridpointForecast>,
+    pub properties: Box<models::GridpointHourlyForecast>,
 }
 
-impl GridpointForecastGeoJson {
+impl GridpointHourlyForecastGeoJson {
     pub fn new(
         r#type: Type,
         geometry: Option<models::GeoJsonGeometry>,
-        properties: models::GridpointForecast,
-    ) -> GridpointForecastGeoJson {
-        GridpointForecastGeoJson {
+        properties: models::GridpointHourlyForecast,
+    ) -> GridpointHourlyForecastGeoJson {
+        GridpointHourlyForecastGeoJson {
             at_context: None,
             id: None,
             r#type,
