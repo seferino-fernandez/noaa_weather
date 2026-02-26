@@ -251,7 +251,7 @@ pub async fn handle_command(
             Ok(())
         }
         ZoneCommands::Stations { id, limit } => {
-            let result = zones_api::get_stations_by_zone(config, id, *limit, None)
+            let result = zones_api::get_stations_by_zone(config, id, *limit, None, None)
                 .await
                 .map_err(|error| {
                     anyhow!("Error getting stations for forecast zone {}: {}", id, error)
