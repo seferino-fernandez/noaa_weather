@@ -119,7 +119,7 @@ pub async fn handle_command(
 ) -> Result<()> {
     match command {
         StationCommands::Metadata { id } => {
-            let result = station_api::get_observation_station(config, id)
+            let result = station_api::get_observation_station(config, id, None)
                 .await
                 .map_err(|error| anyhow!("Error getting station metadata: {error}"))?;
             if cli.json {
@@ -157,6 +157,7 @@ pub async fn handle_command(
                 id.clone(),
                 states_parsed,
                 *limit,
+                None,
                 None,
             )
             .await
@@ -206,6 +207,7 @@ pub async fn handle_command(
                 start.clone(),
                 end.clone(),
                 *limit,
+                None,
             )
             .await
             .map_err(|error| anyhow!("Error listing observations: {error}"))?;
