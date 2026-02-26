@@ -9,6 +9,8 @@ mod utils;
 use commands::{
     Commands, alerts, aviation, gridpoints, offices, points, products, radar, stations, zones,
 };
+#[cfg(feature = "radio")]
+use commands::radio;
 
 #[derive(Parser, Debug, Clone)]
 #[command(
@@ -66,6 +68,10 @@ async fn try_main() -> Result<()> {
         }
         Commands::Products { command } => {
             products::handle_command(command, cli.clone(), &config).await?;
+        }
+        #[cfg(feature = "radio")]
+        Commands::Radio { command } => {
+            radio::handle_command(command, cli.clone(), &config).await?;
         }
     }
 

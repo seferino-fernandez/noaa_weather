@@ -4,6 +4,8 @@ pub mod gridpoints;
 pub mod offices;
 pub mod points;
 pub mod products;
+#[cfg(feature = "radio")]
+pub mod radio;
 pub mod radar;
 pub mod stations;
 pub mod zones;
@@ -56,5 +58,11 @@ pub enum Commands {
     Products {
         #[command(subcommand)]
         command: Box<products::ProductCommands>,
+    },
+    /// Access NOAA Weather Radio broadcast information
+    #[cfg(feature = "radio")]
+    Radio {
+        #[command(subcommand)]
+        command: Box<radio::RadioCommands>,
     },
 }
