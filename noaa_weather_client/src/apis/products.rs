@@ -85,6 +85,16 @@ pub enum ProductsTypeLocationsError {
     UnknownValue(serde_json::Value),
 }
 
+/// Errors that can occur when calling the [`get_latest_product_by_type_and_location`] function.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum LatestProductTypeLocationError {
+    /// Standard NWS API problem detail response.
+    DefaultResponse(models::ProblemDetail),
+    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
+    UnknownValue(serde_json::Value),
+}
+
 /// Parameters for the [`get_products_query`] function.
 ///
 /// This struct encapsulates the query parameters for filtering text products.
@@ -754,6 +764,83 @@ pub async fn get_product_issuance_locations_by_type(
     } else {
         let content = resp.text().await?;
         let entity: Option<ProductsTypeLocationsError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            content,
+            entity,
+            status,
+        }))
+    }
+}
+
+/// Returns the latest text product of a specific type for a specific issuance location.
+///
+/// Corresponds to the `/products/types/{typeId}/locations/{locationId}/latest` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `type_id`: The NWS product type code (e.g., "AFD", "HWO").
+/// * `location_id`: The ID of the issuance location (e.g., "LWX", "PQR").
+///
+/// # Returns
+///
+/// A `Result` containing the [`models::TextProduct`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error<LatestProductTypeLocationError>`] if the request fails (e.g., no product
+/// found for the given type and location) or the response cannot be parsed.
+pub async fn get_latest_product_by_type_and_location(
+    configuration: &configuration::Configuration,
+    type_id: &str,
+    location_id: &str,
+) -> Result<models::TextProduct, Error<LatestProductTypeLocationError>> {
+    let uri_str = format!(
+        "{}/products/types/{type_id}/locations/{location_id}/latest",
+        configuration.base_path,
+        type_id = crate::apis::urlencode(type_id),
+        location_id = crate::apis::urlencode(location_id)
+    );
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(user_agent) = &configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(api_key) = &configuration.api_key {
+        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+    }
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|header| header.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => Err(Error::from(serde_json::Error::custom(
+                "Received `text/plain` content type response that cannot be converted to `TextProduct`",
+            ))),
+            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
+                "Received `application/xml` content type response that cannot be converted to `TextProduct`",
+            ))),
+            ContentType::Unsupported(unknown_type) => {
+                Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `TextProduct`"
+                ))))
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<LatestProductTypeLocationError> =
+            serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             content,
             entity,
