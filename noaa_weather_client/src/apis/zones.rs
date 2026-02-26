@@ -682,6 +682,7 @@ pub async fn get_zone_observations(
 /// * `id`: The ID of the forecast zone (e.g., "AZZ540").
 /// * `limit`: Optional limit on the number of stations returned.
 /// * `cursor`: Optional pagination cursor for paginated results.
+/// * `feature_flags`: Optional list of feature flags to enable experimental API features.
 ///
 /// # Returns
 ///
@@ -695,6 +696,7 @@ pub async fn get_stations_by_zone(
     id: &str,
     limit: Option<i32>,
     cursor: Option<&str>,
+    feature_flags: Option<Vec<String>>,
 ) -> Result<models::ObservationStationCollectionGeoJson, Error<ZoneStationsError>> {
     let uri_str = format!(
         "{}/zones/forecast/{id}/stations",
@@ -708,6 +710,9 @@ pub async fn get_stations_by_zone(
     }
     if let Some(param_value) = cursor {
         req_builder = req_builder.query(&[("cursor", &param_value.to_owned())]);
+    }
+    if let Some(param_value) = feature_flags {
+        req_builder = req_builder.header("Feature-Flags", param_value.join(","));
     }
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
