@@ -27,14 +27,15 @@ pub enum PointStationsError {
 
 /// Returns metadata about a specific latitude/longitude point.
 ///
-/// Corresponds to the `/points/{point}` endpoint.
+/// Corresponds to the `/points/{latitude},{longitude}` endpoint.
 /// This metadata includes the responsible forecast office, grid coordinates, and links to
 /// relevant forecast endpoints for the location.
 ///
 /// # Parameters
 ///
 /// * `configuration`: The API client configuration.
-/// * `point`: The latitude and longitude of the point, formatted as "latitude,longitude" (e.g., "39.7456,-97.0892").
+/// * `latitude`: The latitude of the point (e.g., 39.7456).
+/// * `longitude`: The longitude of the point (e.g., -97.0892).
 ///
 /// # Returns
 ///
@@ -43,16 +44,18 @@ pub enum PointStationsError {
 ///
 /// # Errors
 ///
-/// Returns an [`Error<PointError>`] if the request fails (e.g., invalid point format,
+/// Returns an [`Error<PointError>`] if the request fails (e.g., invalid coordinates,
 /// point outside CONUS) or the response cannot be parsed.
 pub async fn get_point(
     configuration: &configuration::Configuration,
-    point: &str,
+    latitude: f64,
+    longitude: f64,
 ) -> Result<models::PointGeoJson, Error<PointError>> {
     let uri_str = format!(
-        "{}/points/{point}",
+        "{}/points/{latitude},{longitude}",
         configuration.base_path,
-        point = crate::apis::urlencode(point)
+        latitude = latitude,
+        longitude = longitude
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
@@ -103,12 +106,13 @@ pub async fn get_point(
 
 /// Returns a list of observation stations potentially relevant to a given latitude/longitude point.
 ///
-/// Corresponds to the `/points/{point}/stations` endpoint.
+/// Corresponds to the `/points/{latitude},{longitude}/stations` endpoint.
 ///
 /// # Parameters
 ///
 /// * `configuration`: The API client configuration.
-/// * `point`: The latitude and longitude of the point, formatted as "latitude,longitude".
+/// * `latitude`: The latitude of the point (e.g., 39.7456).
+/// * `longitude`: The longitude of the point (e.g., -97.0892).
 ///
 /// # Returns
 ///
@@ -119,12 +123,14 @@ pub async fn get_point(
 /// Returns an [`Error<PointStationsError>`] if the request fails or the response cannot be parsed.
 pub async fn get_point_stations(
     configuration: &configuration::Configuration,
-    point: &str,
+    latitude: f64,
+    longitude: f64,
 ) -> Result<models::ObservationStationCollectionGeoJson, Error<PointStationsError>> {
     let uri_str = format!(
-        "{}/points/{point}/stations",
+        "{}/points/{latitude},{longitude}/stations",
         configuration.base_path,
-        point = crate::apis::urlencode(point)
+        latitude = latitude,
+        longitude = longitude
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
