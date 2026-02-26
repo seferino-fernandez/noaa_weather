@@ -90,6 +90,21 @@ pub struct Alert {
     /// System-specific additional parameters associated with the alert message. The keys in this object correspond to parameter definitions in the NWS CAP specification.
     #[serde(rename = "parameters", skip_serializing_if = "Option::is_none")]
     pub parameters: Option<std::collections::HashMap<String, Vec<serde_json::Value>>>,
+    /// The code denoting the intended distribution of the alert message.
+    #[serde(rename = "scope", skip_serializing_if = "Option::is_none")]
+    pub scope: Option<models::AlertScope>,
+    /// The code denoting the special handling of the alert message.
+    #[serde(rename = "code", skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+    /// The code denoting the language of the info sub-element of the alert message.
+    #[serde(rename = "language", skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
+    /// The identifier of the hyperlink associating additional information within the alert message.
+    #[serde(rename = "web", skip_serializing_if = "Option::is_none")]
+    pub web: Option<String>,
+    /// System-specific code identifying the event type of the alert message.
+    #[serde(rename = "eventCode", skip_serializing_if = "Option::is_none")]
+    pub event_code: Option<std::collections::HashMap<String, Vec<serde_json::Value>>>,
 }
 
 impl Alert {
@@ -120,6 +135,11 @@ impl Alert {
             instruction: None,
             response: None,
             parameters: None,
+            scope: None,
+            code: None,
+            language: None,
+            web: None,
+            event_code: None,
         }
     }
 }

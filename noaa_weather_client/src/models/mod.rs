@@ -34,6 +34,8 @@ pub mod alert_status;
 pub use self::alert_status::AlertStatus;
 pub mod alert_urgency;
 pub use self::alert_urgency::AlertUrgency;
+pub mod alert_scope;
+pub use self::alert_scope::AlertScope;
 pub mod alert_xml_parameter;
 pub use self::alert_xml_parameter::AlertXmlParameter;
 pub mod active_alerts_count_response;
