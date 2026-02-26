@@ -13,12 +13,24 @@ pub struct AstronomicalData {
     pub civil_twilight_begin: Option<String>,
     #[serde(rename = "civilTwilightEnd", skip_serializing_if = "Option::is_none")]
     pub civil_twilight_end: Option<String>,
-    #[serde(rename = "nauticalTwilightBegin", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "nauticalTwilightBegin",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub nautical_twilight_begin: Option<String>,
-    #[serde(rename = "nauticalTwilightEnd", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "nauticalTwilightEnd",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub nautical_twilight_end: Option<String>,
-    #[serde(rename = "astronomicalTwilightBegin", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "astronomicalTwilightBegin",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub astronomical_twilight_begin: Option<String>,
-    #[serde(rename = "astronomicalTwilightEnd", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "astronomicalTwilightEnd",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub astronomical_twilight_end: Option<String>,
 }

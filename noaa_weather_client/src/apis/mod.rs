@@ -1,5 +1,7 @@
 use std::{error, fmt};
 
+pub(crate) const API_KEY_HEADER: &str = "X-Api-Key";
+
 #[derive(Debug, Clone)]
 pub struct ResponseContent<T> {
     pub content: String,

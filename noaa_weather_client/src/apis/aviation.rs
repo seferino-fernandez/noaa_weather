@@ -1,4 +1,4 @@
-use super::{ContentType, Error, configuration};
+use super::{API_KEY_HEADER, ContentType, Error, configuration};
 use crate::apis::ResponseContent;
 use crate::models;
 use reqwest;
@@ -113,7 +113,7 @@ pub async fn get_center_weather_advisories_by_date_and_sequence(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -189,7 +189,7 @@ pub async fn get_center_weather_advisories(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -263,7 +263,7 @@ pub async fn get_center_weather_service_unit(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -341,7 +341,7 @@ pub async fn get_sigmet(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -432,7 +432,7 @@ pub async fn get_sigmets(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -504,7 +504,7 @@ pub async fn get_sigmets_by_air_traffic_service_unit(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -579,7 +579,7 @@ pub async fn get_sigmets_by_air_traffic_service_unit_and_date(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;

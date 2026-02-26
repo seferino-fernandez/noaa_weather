@@ -1,4 +1,4 @@
-use super::{ContentType, Error, configuration};
+use super::{API_KEY_HEADER, ContentType, Error, configuration};
 use crate::apis::ResponseContent;
 use crate::models::{self, RadarQueueHost};
 use reqwest;
@@ -143,7 +143,7 @@ pub async fn get_radar_wind_profiler(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -243,7 +243,7 @@ pub async fn get_radar_data_queue(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -321,7 +321,7 @@ pub async fn get_radar_server(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -393,7 +393,7 @@ pub async fn get_radar_servers(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -476,7 +476,7 @@ pub async fn get_radar_station(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -549,7 +549,7 @@ pub async fn get_radar_station_alarms(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -646,7 +646,7 @@ pub async fn get_radar_stations(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;

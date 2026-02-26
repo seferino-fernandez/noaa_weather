@@ -1,4 +1,4 @@
-use super::{ContentType, Error, configuration};
+use super::{API_KEY_HEADER, ContentType, Error, configuration};
 use crate::apis::ResponseContent;
 use crate::models;
 use reqwest;
@@ -149,7 +149,7 @@ pub async fn get_products_by_location(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -222,7 +222,7 @@ pub async fn get_product(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -290,7 +290,7 @@ pub async fn get_product_locations(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -358,7 +358,7 @@ pub async fn get_product_types(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -509,7 +509,7 @@ pub async fn get_products_query(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -582,7 +582,7 @@ pub async fn get_products_by_type(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -658,7 +658,7 @@ pub async fn get_products_by_type_and_location(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -731,7 +731,7 @@ pub async fn get_product_issuance_locations_by_type(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -807,7 +807,7 @@ pub async fn get_latest_product_by_type_and_location(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -839,8 +839,7 @@ pub async fn get_latest_product_by_type_and_location(
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<LatestProductTypeLocationError> =
-            serde_json::from_str(&content).ok();
+        let entity: Option<LatestProductTypeLocationError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             content,
             entity,

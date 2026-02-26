@@ -1,4 +1,4 @@
-use super::{ContentType, Error, configuration};
+use super::{API_KEY_HEADER, ContentType, Error, configuration};
 use crate::apis::ResponseContent;
 use crate::models;
 use reqwest;
@@ -63,7 +63,7 @@ pub async fn get_forecast_office(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -139,7 +139,7 @@ pub async fn get_forecast_office_headline(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;
@@ -212,7 +212,7 @@ pub async fn get_forecast_office_headlines(
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header("X-Api-Key", api_key.clone());
+        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
     }
 
     let req = req_builder.build()?;

@@ -6,11 +6,11 @@ mod commands;
 mod tables;
 mod utils;
 
+#[cfg(feature = "radio")]
+use commands::radio;
 use commands::{
     Commands, alerts, aviation, gridpoints, offices, points, products, radar, stations, zones,
 };
-#[cfg(feature = "radio")]
-use commands::radio;
 
 #[derive(Parser, Debug, Clone)]
 #[command(
