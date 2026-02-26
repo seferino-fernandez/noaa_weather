@@ -312,7 +312,6 @@ pub async fn get_gridpoint_forecast_hourly(
 ///
 /// Corresponds to the `/gridpoints/{forecast_office_id}/{x},{y}/stations` endpoint.
 /// This helps identify nearby stations for obtaining current observations.
-/// Supports pagination via `limit` and `cursor`.
 ///
 /// # Parameters
 ///
@@ -321,7 +320,7 @@ pub async fn get_gridpoint_forecast_hourly(
 /// * `x`: The grid X coordinate.
 /// * `y`: The grid Y coordinate.
 /// * `limit`: Optional limit on the number of stations returned.
-/// * `cursor`: Optional pagination cursor for fetching subsequent results.
+/// * `feature_flags`: Optional list of feature flags to enable experimental API features.
 ///
 /// # Returns
 ///
@@ -337,7 +336,7 @@ pub async fn get_gridpoint_stations(
     x: i32,
     y: i32,
     limit: Option<i32>,
-    cursor: Option<&str>,
+    feature_flags: Option<Vec<String>>,
 ) -> Result<models::ObservationStationCollectionGeoJson, Error<GridpointStationsError>> {
     let uri_str = format!(
         "{}/gridpoints/{forecast_office_id}/{x},{y}/stations",
@@ -351,14 +350,14 @@ pub async fn get_gridpoint_stations(
     if let Some(param_value) = limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(param_value) = cursor {
-        req_builder = req_builder.query(&[("cursor", &param_value.to_owned())]);
-    }
     if let Some(user_agent) = &configuration.user_agent {
         req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
     }
     if let Some(api_key) = &configuration.api_key {
         req_builder = req_builder.header("X-Api-Key", api_key.clone());
+    }
+    if let Some(param_value) = feature_flags {
+        req_builder = req_builder.header("Feature-Flags", param_value.join(","));
     }
 
     let req = req_builder.build()?;
