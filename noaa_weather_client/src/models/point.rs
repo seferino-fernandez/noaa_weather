@@ -50,6 +50,14 @@ pub struct Point {
     pub time_zone: Option<String>,
     #[serde(rename = "radarStation", skip_serializing_if = "Option::is_none")]
     pub radar_station: Option<String>,
+    /// Whether the specific point is on land or marine.
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub point_type: Option<models::PointType>,
+    #[serde(rename = "astronomicalData", skip_serializing_if = "Option::is_none")]
+    pub astronomical_data: Option<Box<models::AstronomicalData>>,
+    /// NOAA Weather Radio metadata for this point.
+    #[serde(rename = "nwr", skip_serializing_if = "Option::is_none")]
+    pub nwr: Option<Box<models::NoaaWeatherRadio>>,
 }
 
 impl Point {
@@ -74,6 +82,9 @@ impl Point {
             fire_weather_zone: None,
             time_zone: None,
             radar_station: None,
+            point_type: None,
+            astronomical_data: None,
+            nwr: None,
         }
     }
 }
