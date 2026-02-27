@@ -1,7 +1,5 @@
-//! NOAA Weather API client library
-//!
-//! This crate provides a complete client for the NOAA Weather API,
-//! including all endpoints for forecasts, alerts, observations, and more.
+#![doc = include_str!("../README.md")]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub mod apis;
 pub mod models;

@@ -1,3 +1,12 @@
+//! Data models for NOAA Weather API responses.
+//!
+//! All types implement [`serde::Serialize`] and [`serde::Deserialize`] and
+//! map directly to the JSON (or XML) payloads returned by `api.weather.gov`.
+//!
+//! Types gated behind the **`radio`** feature: [`RadioBroadcast`],
+//! [`Paragraph`], [`Sentence`], [`SentenceContent`], [`SayAs`], and
+//! [`BroadcastMark`].
+
 pub mod astronomical_data;
 pub use self::astronomical_data::AstronomicalData;
 pub mod alert;

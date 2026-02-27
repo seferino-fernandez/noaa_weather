@@ -1,3 +1,20 @@
+//! NOAA Weather Radio broadcast transcripts in SSML format.
+//!
+//! Provides access to the `/radio` and `/points/{point}/radio` endpoints,
+//! which return SSML (Speech Synthesis Markup Language) documents containing
+//! the current broadcast script for a given location or transmitter.
+//!
+//! This module is only available when the **`radio`** feature is enabled:
+//!
+//! ```toml
+//! [dependencies]
+//! noaa_weather_client = { version = "1", features = ["radio"] }
+//! ```
+//!
+//! The returned [`RadioBroadcast`](crate::models::RadioBroadcast) contains
+//! structured paragraphs and sentences that can be rendered as plain text
+//! via [`Sentence::full_text`](crate::models::Sentence::full_text).
+
 use super::{API_KEY_HEADER, ContentType, Error, configuration};
 use crate::apis::ResponseContent;
 use crate::models;

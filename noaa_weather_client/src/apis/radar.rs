@@ -1,3 +1,8 @@
+//! Radar infrastructure: servers, stations, data queues, and wind profilers.
+//!
+//! Covers the `/radar` endpoints for metadata about NEXRAD radar stations,
+//! distribution servers, and data queue status.
+
 use super::{API_KEY_HEADER, ContentType, Error, configuration};
 use crate::apis::ResponseContent;
 use crate::models::{self, RadarQueueHost};

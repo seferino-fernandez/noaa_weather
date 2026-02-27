@@ -1,3 +1,8 @@
+//! NWS forecast zones and zone-level forecasts and observations.
+//!
+//! Covers the `/zones` endpoints for listing zones by type, retrieving
+//! zone metadata, current zone forecasts, and zone observation data.
+
 use super::{API_KEY_HEADER, ContentType, Error, configuration};
 use crate::apis::ResponseContent;
 use crate::models;

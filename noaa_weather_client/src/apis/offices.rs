@@ -1,3 +1,8 @@
+//! NWS forecast office metadata and headlines.
+//!
+//! Covers the `/offices/{officeId}` endpoints for retrieving office
+//! information and published headline summaries.
+
 use super::{API_KEY_HEADER, ContentType, Error, configuration};
 use crate::apis::ResponseContent;
 use crate::models;

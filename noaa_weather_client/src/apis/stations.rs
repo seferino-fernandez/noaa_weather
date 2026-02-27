@@ -1,3 +1,8 @@
+//! Weather observation stations, surface observations, and TAFs.
+//!
+//! Covers the `/stations` endpoints for station metadata, latest and
+//! historical surface observations, and Terminal Aerodrome Forecasts.
+
 use super::{API_KEY_HEADER, ContentType, Error, configuration};
 use crate::apis::ResponseContent;
 use crate::models;

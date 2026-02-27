@@ -1,3 +1,9 @@
+//! Gridpoint-based forecasts and raw observation data.
+//!
+//! Covers the `/gridpoints/{wfo}/{x},{y}` endpoints. Use a point's metadata
+//! (from [`super::points::get_point`]) to obtain the forecast office and grid
+//! coordinates needed by these functions.
+
 use super::{API_KEY_HEADER, ContentType, Error, configuration};
 use crate::apis::ResponseContent;
 use crate::models;

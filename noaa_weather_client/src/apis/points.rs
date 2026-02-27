@@ -1,3 +1,9 @@
+//! Geographic point metadata lookup.
+//!
+//! Covers the `/points/{latitude},{longitude}` endpoints. A point lookup
+//! returns the forecast office, grid coordinates, and zone identifiers for
+//! any lat/lon pair — the starting point for most forecast workflows.
+
 use super::{API_KEY_HEADER, ContentType, Error, configuration};
 use crate::apis::ResponseContent;
 use crate::models;

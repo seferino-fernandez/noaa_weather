@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// For values in observation records, the quality control flag from the MADIS system.
-/// The definitions of these flags can be found at https://madis.ncep.noaa.gov/madis_sfc_qc_notes.shtml
+/// The definitions of these flags can be found at <https://madis.ncep.noaa.gov/madis_sfc_qc_notes.shtml>
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum QualityControl {
     #[serde(rename = "Z")]

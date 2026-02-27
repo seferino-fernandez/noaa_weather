@@ -1,5 +1,5 @@
 //! WMO Unit Codes, derived from WMO Codelist.
-//! See: http://codes.wmo.int/def/common/unit (or the source CSV for more precise references)
+//! See: <http://codes.wmo.int/def/common/unit> (or the source CSV for more precise references)
 
 use serde::{Deserialize, Serialize};
 

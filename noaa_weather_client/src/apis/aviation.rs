@@ -1,3 +1,8 @@
+//! Aviation weather products: SIGMETs and Center Weather Advisories (CWAs).
+//!
+//! Covers the `/aviation` endpoints for in-flight weather hazard reports
+//! issued by Air Traffic Service Units and Center Weather Service Units.
+
 use super::{API_KEY_HEADER, ContentType, Error, configuration};
 use crate::apis::ResponseContent;
 use crate::models;

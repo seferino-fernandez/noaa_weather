@@ -1,3 +1,8 @@
+//! NWS text products (Area Forecast Discussions, watches, warnings, etc.).
+//!
+//! Covers the `/products` endpoints for querying, listing, and retrieving
+//! the full text of NWS-issued products by type, location, or issuance time.
+
 use super::{API_KEY_HEADER, ContentType, Error, configuration};
 use crate::apis::ResponseContent;
 use crate::models;

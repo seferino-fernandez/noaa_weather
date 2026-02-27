@@ -1,3 +1,8 @@
+//! Weather alerts, warnings, and watches from the NWS alert system.
+//!
+//! Covers the `/alerts` family of endpoints. Use [`ActiveAlertsParams`] and
+//! [`GetAlertsParams`] to filter by severity, urgency, area, and more.
+
 use super::{API_KEY_HEADER, ContentType, Error, configuration};
 use crate::apis::ResponseContent;
 use crate::models::{self, AreaCode};
@@ -35,7 +40,7 @@ pub enum ActiveAlertsCountError {
     UnknownValue(serde_json::Value),
 }
 
-/// Errors that can occur when calling the [`get_active_alerts_for_region`] function.
+/// Errors that can occur when calling the [`get_active_alerts_for_marine_region`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ActiveRegionError {

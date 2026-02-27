@@ -23,7 +23,6 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 noaa_weather_client = "1.0.0"
-tokio = { version = "1.0", features = ["full"] }
 ```
 
 To enable NOAA Weather Radio support (requires the `quick-xml` dependency):
@@ -50,7 +49,7 @@ cargo run --example weather_alerts --manifest-path noaa_weather_client/Cargo.tom
 
 ### Basic Example
 
-```rust
+```rust,no_run
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::{points, alerts};
 
@@ -73,7 +72,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### Weather Alerts
 
-```rust
+```rust,ignore
 use noaa_weather_client::apis::{configuration::Configuration, alerts};
 use noaa_weather_client::models::{AreaCode, AlertSeverity};
 
@@ -99,7 +98,7 @@ let severe_alerts = alerts::get_active_alerts(&config, severe_params).await?;
 
 ### Weather Observations
 
-```rust
+```rust,ignore
 use noaa_weather_client::apis::{configuration::Configuration, stations};
 
 let config = Configuration::default();
@@ -115,7 +114,7 @@ println!("Station name: {:?}", station.properties.name);
 
 ### Forecasts
 
-```rust
+```rust,ignore
 use noaa_weather_client::apis::{configuration::Configuration, gridpoints};
 use noaa_weather_client::models::NwsForecastOfficeId;
 
@@ -146,7 +145,7 @@ let hourly = gridpoints::get_gridpoint_forecast_hourly(
 
 The `Configuration` struct provides default settings that work out of the box:
 
-```rust
+```rust,ignore
 use noaa_weather_client::apis::configuration::Configuration;
 
 // Use default configuration
@@ -167,7 +166,7 @@ let config = Configuration {
 
 All API functions return `Result<T, Error<E>>` where `E` is the specific error type for that endpoint:
 
-```rust
+```rust,ignore
 use noaa_weather_client::apis::{configuration::Configuration, points};
 
 let config = Configuration::default();
@@ -210,7 +209,7 @@ This client covers all major NOAA Weather API endpoints:
 
 The NOAA Weather API does not require authentication, but NOAA recommends a unique User-Agent to identify your application. An optional API key can be provided via the `api_key` field on `Configuration`, which is sent as an `X-Api-Key` header.
 
-```rust
+```rust,ignore
 let config = Configuration {
     api_key: Some("your-api-key".to_owned()),
     ..Default::default()
