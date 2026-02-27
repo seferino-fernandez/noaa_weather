@@ -52,14 +52,14 @@ or add to your `Cargo.toml` manually:
 
 ```toml
 [dependencies]
-noaa_weather_client = "1.0.0"
+noaa_weather_client = "1.1.0"
 ```
 
 To enable NOAA Weather Radio support:
 
 ```toml
 [dependencies]
-noaa_weather_client = { version = "1.0.0", features = ["radio"] }
+noaa_weather_client = { version = "1.1.0", features = ["radio"] }
 ```
 
 ## Documentation
