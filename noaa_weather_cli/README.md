@@ -2,9 +2,7 @@
 
 ## Installation
 
-### Installation
-
-#### Homebrew
+### Homebrew
 
 Install the `noaa-weather` CLI tool using Homebrew:
 
@@ -13,7 +11,7 @@ brew tap seferino-fernandez/tools
 brew install noaa-weather
 ```
 
-#### Cargo
+### Cargo
 
 Install the `noaa-weather` CLI tool using Cargo:
 

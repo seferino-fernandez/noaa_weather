@@ -104,7 +104,7 @@ pub struct LatencyInfo {
 pub struct RdaProperties {
     /// Version of the resolution.
     #[serde(rename = "resolutionVersion", skip_serializing_if = "Option::is_none")]
-    pub resolution_version: Option<String>,
+    pub resolution_version: Option<i32>,
     /// Path for NL2 data.
     #[serde(rename = "nl2Path", skip_serializing_if = "Option::is_none")]
     pub nl2_path: Option<String>,
