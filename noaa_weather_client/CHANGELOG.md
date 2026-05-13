@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0](https://github.com/seferino-fernandez/noaa_weather/compare/v1.1.0...v1.2.0)
+_13 May 2026_
+
+### Added
+
+* Updated deps and fix security vulnerabilities
+
 ## [1.1.0](https://github.com/seferino-fernandez/noaa_weather/compare/v0.1.8...v1.1.0)
 
 _26 February 2026_
