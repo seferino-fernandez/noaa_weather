@@ -223,7 +223,7 @@ From the [NOAA Weather API Documentation](https://www.weather.gov/documentation/
 > If you include contact information (website or email), we can contact you if your string is associated to a security event.
 > This will be replaced with an API key in the future.
 >
-> User-Agent: (myweatherapp.com, contact@myweatherapp.com)
+> User-Agent: (myweatherapp.com, <contact@myweatherapp.com>)
 
 ## License
 

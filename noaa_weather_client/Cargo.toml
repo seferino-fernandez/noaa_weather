@@ -4,12 +4,16 @@ version = "1.2.0"
 edition = "2024"
 description = "A client library for the NOAA weather.gov API"
 license = "MIT"
-authors = ["Seferino Fernandez"]
 repository = "https://github.com/seferino-fernandez/noaa_weather"
 keywords = ["weather", "noaa", "nws", "api"]
 categories = ["api-bindings"]
 homepage = "https://github.com/seferino-fernandez/noaa_weather"
 readme = "README.md"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 
 [dependencies]
 quick-xml = { workspace = true, features = ["serde", "serialize"] }
@@ -26,7 +30,3 @@ radio = []
 [dev-dependencies]
 wiremock.workspace = true
 tokio = { workspace = true, features = ["full"] }
-
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
