@@ -7,19 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.2.1](https://github.com/seferino-fernandez/noaa_weather/compare/v1.2.0...v1.2.1)
+## [1.3.0](https://github.com/seferino-fernandez/noaa_weather/compare/v1.2.0...v1.3.0)
+
 _22 August 2026_
 
 ### Fixed
 
-* Box oversized API error payloads
+- Box oversized API error payloads
 
 ## [1.2.0](https://github.com/seferino-fernandez/noaa_weather/compare/v1.1.0...v1.2.0)
+
 _13 May 2026_
 
 ### Added
 
-* Updated deps and fix security vulnerabilities
+- Updated deps and fix security vulnerabilities
 
 ## [1.1.0](https://github.com/seferino-fernandez/noaa_weather/compare/v0.1.8...v1.1.0)
 
