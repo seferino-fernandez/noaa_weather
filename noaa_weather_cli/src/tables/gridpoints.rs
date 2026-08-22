@@ -17,7 +17,7 @@ macro_rules! add_row_if_some {
 /// Formats raw gridpoint data into a `comfy_table::Table`.
 pub fn create_gridpoint_table(gridpoint_data: &GridpointGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec!["Property", "Value"]);
 
@@ -55,7 +55,7 @@ pub fn create_gridpoint_table(gridpoint_data: &GridpointGeoJson) -> Table {
 /// Formats the multi-day 12-hour forecast into a comfy table.
 pub fn create_forecast_table(forecast_data: &Gridpoint12hForecastGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec!["Period", "Time", "Temp", "Wind", "Forecast"]);
 
@@ -122,7 +122,7 @@ pub fn create_forecast_table(forecast_data: &Gridpoint12hForecastGeoJson) -> Tab
 /// Formats the hourly forecast into a comfy table.
 pub fn create_hourly_forecast_table(forecast_data: &GridpointHourlyForecastGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         "Hour", "Temp", "Dewpoint", "Precip", "Humidity", "Wind", "Forecast",

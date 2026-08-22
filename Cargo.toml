@@ -2,6 +2,23 @@
 resolver = "2"
 members = ["noaa_weather_client", "noaa_weather_cli"]
 
+[workspace.dependencies]
+anyhow = "1.0.102"
+assert_cmd = "2.2.2"
+clap = "4.6.1"
+comfy-table = "8.0.0"
+jiff = "0.2.24"
+noaa_weather_client = { path = "noaa_weather_client" }
+quick-xml = "0.41.0"
+reqwest = "0.13.3"
+serde = "1.0.228"
+serde_json = "1.0.149"
+serde_with = "3.20.0"
+tempfile = "3.27.0"
+tokio = "1.52.3"
+url = "2.5.8"
+wiremock = "0.6.5"
+
 [profile.dev]
 split-debuginfo = "unpacked"
 

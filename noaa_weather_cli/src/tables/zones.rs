@@ -23,7 +23,7 @@ use crate::utils::format::{
 /// A `Result<Table>` which is the `comfy_table::Table` ready for display, or an error.
 pub fn create_zones_table(zone_collection: &ZoneCollectionGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL);
+    table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
 
     table.set_header(vec![
@@ -72,7 +72,7 @@ pub fn create_zones_table(zone_collection: &ZoneCollectionGeoJson) -> Table {
 /// A `Result<Table>` which is the `comfy_table::Table` ready for display, or an error.
 pub fn create_zone_metadata_table(zone_geo: &ZoneGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL);
+    table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
 
     table.set_header(vec![
@@ -117,7 +117,7 @@ pub fn create_zone_metadata_table(zone_geo: &ZoneGeoJson) -> Table {
 /// A `Result<Table>` which is the `comfy_table::Table` ready for display, or an error.
 pub fn create_zone_forecast_table(zone_forecast: &ZoneForecastGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL);
+    table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
 
     table.set_header(vec![
@@ -280,7 +280,7 @@ fn format_observation_present_weather(weather_opt: Option<&Vec<MetarPhenomenon>>
 /// A `Result<Table>` which is the `comfy_table::Table` ready for display, or an error.
 pub fn create_zone_observations_table(observations_features: &[ObservationGeoJson]) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL);
+    table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
 
     table.set_header(vec![

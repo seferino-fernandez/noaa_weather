@@ -10,7 +10,7 @@ use crate::utils::format::format_datetime_human_readable;
 ///
 pub fn create_office_metadata_table(office: &Office) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID")
@@ -140,7 +140,7 @@ pub fn create_office_metadata_table(office: &Office) -> Table {
 ///
 pub fn create_office_headlines_table(office_headlines: &OfficeHeadlineCollection) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID")
@@ -205,7 +205,7 @@ pub fn create_office_headlines_table(office_headlines: &OfficeHeadlineCollection
 ///
 pub fn create_office_headline_table(office_headline: &OfficeHeadline) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID")

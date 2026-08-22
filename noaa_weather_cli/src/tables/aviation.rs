@@ -12,7 +12,7 @@ use crate::utils::format::format_datetime_human_readable;
 /// Formats a CWSU office's details into a `comfy_table::Table`.
 pub fn create_cwsu_table(office: &CwsuOffice) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID")
@@ -135,7 +135,7 @@ pub fn create_cwsu_table(office: &CwsuOffice) -> Table {
 /// Formats a single aviation center weather advisory into a comfy table.
 pub fn create_cwa_table(cwa: &CenterWeatherAdvisoryGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID")
@@ -197,7 +197,7 @@ pub fn create_cwa_table(cwa: &CenterWeatherAdvisoryGeoJson) -> Table {
 /// Formats a collection of aviation center weather advisories into a comfy table.
 pub fn create_cwas_table(cwas: &CenterWeatherAdvisoryCollectionGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL);
+    table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID")
@@ -283,7 +283,7 @@ pub fn create_cwas_table(cwas: &CenterWeatherAdvisoryCollectionGeoJson) -> Table
 /// Formats a single aviation SIGMET into a comfy table.
 pub fn create_sigmet_table(sigmet: &SigmetGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID")
@@ -355,7 +355,7 @@ pub fn create_sigmet_table(sigmet: &SigmetGeoJson) -> Table {
 /// Formats a collection of aviation SIGMETs into a comfy table.
 pub fn create_sigmets_table(sigmets: &SigmetCollectionGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL);
+    table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID")

@@ -112,7 +112,7 @@ fn add_network_interface_stats_rows(
 /// or an error if table creation fails (though current implementation always returns Ok).
 pub fn create_radar_station_feature_table(radar_station_feature: &RadarStationFeature) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Station Information")
@@ -372,7 +372,7 @@ pub fn create_radar_station_feature_table(radar_station_feature: &RadarStationFe
 
 pub fn create_radar_stations_table(radar_stations: &RadarStationsResponse) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Station ID (ICAO)")
@@ -415,7 +415,7 @@ pub fn create_radar_station_alarms_table(
     radar_station_alarms: &RadarStationAlarmsResponse,
 ) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Station ID")
@@ -449,7 +449,7 @@ pub fn create_radar_station_alarms_table(
 
 pub fn create_radar_data_queue_table(radar_data_queue: &RadarQueuesResponse) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Host")
@@ -512,7 +512,7 @@ pub fn create_radar_data_queue_table(radar_data_queue: &RadarQueuesResponse) -> 
 /// A `Result<Table>` which is the `comfy_table::Table` ready for printing.
 pub fn create_radar_server_table(radar_server: &RadarServer) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
 
     let server_id_str = radar_server.id.as_deref().unwrap_or("Unknown Server");
@@ -762,7 +762,7 @@ pub fn create_radar_server_table(radar_server: &RadarServer) -> Table {
 /// A `Result<Table>` which is the `comfy_table::Table` ready for printing.
 pub fn create_radar_servers_table(radar_servers_response: &RadarServersResponse) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
 
     table.set_header(vec![

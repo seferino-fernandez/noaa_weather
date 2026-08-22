@@ -27,7 +27,7 @@ use crate::utils::format::{
 ///
 pub fn create_stations_table(station_data: &ObservationStationCollectionGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL);
+    table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Station ID")
@@ -65,7 +65,7 @@ pub fn create_stations_table(station_data: &ObservationStationCollectionGeoJson)
 ///
 pub fn create_observation_station_table(observation_station: &ObservationStationGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Station ID")
@@ -101,7 +101,7 @@ pub fn create_observation_station_table(observation_station: &ObservationStation
 ///
 pub fn create_stations_observation_table(observation: &ObservationGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
 
     let props = &observation.properties;
@@ -195,7 +195,7 @@ pub fn create_stations_observation_table(observation: &ObservationGeoJson) -> Ta
 ///
 pub fn create_stations_observations_table(observations: &ObservationCollectionGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL);
+    table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
 
     table.set_header(vec![
@@ -283,7 +283,7 @@ pub fn create_stations_observations_table(observations: &ObservationCollectionGe
 ///
 pub fn create_stations_tafs_metadata_table(tafs: &TerminalAerodromeForecastsResponse) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL);
+    table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
 
     table.set_header(vec![
@@ -701,7 +701,7 @@ fn add_forecast_period_to_table<SWD, PVD, CLD>(
 pub fn create_stations_taf_table(taf_bulletin: &TerminalAerodromeForecast) -> Table {
     let mut table = Table::new();
     table
-        .load_preset(UTF8_FULL_CONDENSED)
+        .load_style(UTF8_FULL_CONDENSED)
         .set_content_arrangement(ContentArrangement::Dynamic)
         .set_header(vec![
             Cell::new("Category")

@@ -12,7 +12,7 @@ use crate::utils::format::format_datetime_human_readable;
 ///
 pub fn create_product_table(product: &TextProduct) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID")
@@ -64,7 +64,7 @@ pub fn create_product_table(product: &TextProduct) -> Table {
 
 pub fn create_product_types_table(product_types: &TextProductTypeCollection) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Product Code")
@@ -87,7 +87,7 @@ pub fn create_product_types_table(product_types: &TextProductTypeCollection) -> 
 
 pub fn create_products_table(products: &TextProductCollection) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("ID")
@@ -138,7 +138,7 @@ pub fn create_products_table(products: &TextProductCollection) -> Table {
 
 pub fn create_products_locations_table(product_locations: &TextProductLocationCollection) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Location ID")

@@ -18,19 +18,19 @@ name = "noaa-weather"
 path = "src/main.rs"
 
 [dependencies]
-noaa_weather_client = { path = "../noaa_weather_client" }
+noaa_weather_client.workspace = true
 
-clap = { version = "4.6.1", features = ["derive"] }
-tokio = { version = "1.52.3", features = ["macros", "rt-multi-thread"] }
-anyhow = "1.0.102"
-serde_json = "1.0.149"
-comfy-table = "7.2.2"
-jiff = "0.2.24"
+clap = { workspace = true, features = ["derive"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+anyhow.workspace = true
+serde_json.workspace = true
+comfy-table.workspace = true
+jiff.workspace = true
 
 [features]
 default = ["radio"]
 radio = ["noaa_weather_client/radio"]
 
 [dev-dependencies]
-assert_cmd = "2.2.2"
-tempfile = "3.27.0"
+assert_cmd.workspace = true
+tempfile.workspace = true

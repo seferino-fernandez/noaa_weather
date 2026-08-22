@@ -13,7 +13,7 @@ use crate::utils::format::{
 /// Displays a summary of each alert, highlighting severity with color.
 pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> comfy_table::Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL);
+    table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Alert")
@@ -104,7 +104,7 @@ pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> comfy_table:
 /// Formats a single alert's details into a comfy table.
 pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> comfy_table::Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Alert Details")
@@ -241,7 +241,7 @@ pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> comfy_table::Tabl
 /// Formats the active alerts count into a comfy table.
 pub fn create_alert_count_table(count_data: &ActiveAlertsCountResponse) -> comfy_table::Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Active Alerts Summary")
@@ -303,7 +303,7 @@ pub fn create_alert_count_table(count_data: &ActiveAlertsCountResponse) -> comfy
 /// Formats the list of alert types into a comfy table.
 pub fn create_alert_types_table(types_data: &AlertTypesResponse) -> comfy_table::Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
     table.set_header(vec![
         Cell::new("Available NWS Alert Event Types")

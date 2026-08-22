@@ -7,7 +7,7 @@ use noaa_weather_client::models::PointGeoJson;
 /// Formats point metadata into a `comfy_table::Table`.
 pub fn create_point_metadata_table(point_data: &PointGeoJson) -> Table {
     let mut table = Table::new();
-    table.load_preset(UTF8_FULL_CONDENSED);
+    table.load_style(UTF8_FULL_CONDENSED);
     table.set_header(vec![
         Cell::new("Property")
             .add_attribute(Attribute::Bold)
