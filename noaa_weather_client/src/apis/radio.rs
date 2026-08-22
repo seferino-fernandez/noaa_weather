@@ -114,11 +114,11 @@ pub async fn get_point_radio(
     } else {
         let content = resp.text().await?;
         let entity: Option<GetPointRadioError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -194,10 +194,10 @@ pub async fn get_area_radio(
     } else {
         let content = resp.text().await?;
         let entity: Option<GetAreaRadioError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }

@@ -181,11 +181,11 @@ pub async fn get_radar_wind_profiler(
     } else {
         let content = resp.text().await?;
         let entity: Option<RadarWindProfilerError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -281,11 +281,11 @@ pub async fn get_radar_data_queue(
     } else {
         let content = resp.text().await?;
         let entity: Option<RadarDataQueueError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -359,11 +359,11 @@ pub async fn get_radar_server(
     } else {
         let content = resp.text().await?;
         let entity: Option<RadarServerError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -431,11 +431,11 @@ pub async fn get_radar_servers(
     } else {
         let content = resp.text().await?;
         let entity: Option<RadarServersError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -514,11 +514,11 @@ pub async fn get_radar_station(
     } else {
         let content = resp.text().await?;
         let entity: Option<RadarStationError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -587,11 +587,11 @@ pub async fn get_radar_station_alarms(
     } else {
         let content = resp.text().await?;
         let entity: Option<RadarStationAlarmsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -684,10 +684,10 @@ pub async fn get_radar_stations(
     } else {
         let content = resp.text().await?;
         let entity: Option<RadarStationsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }

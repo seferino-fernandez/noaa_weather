@@ -51,7 +51,7 @@ pub enum Error<T> {
     /// An I/O error occurred.
     Io(std::io::Error),
     /// The server returned a non-success HTTP status.
-    ResponseError(ResponseContent<T>),
+    ResponseError(Box<ResponseContent<T>>),
     /// The HTTP request itself failed (network, TLS, timeout, etc.).
     Reqwest(reqwest::Error),
     /// The JSON response body could not be deserialized.

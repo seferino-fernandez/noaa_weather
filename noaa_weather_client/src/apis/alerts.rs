@@ -408,11 +408,11 @@ pub async fn get_active_alerts(
     } else {
         let content = resp.text().await?;
         let entity: Option<ActiveAlertsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -482,11 +482,11 @@ pub async fn get_active_alerts_for_area(
     } else {
         let content = resp.text().await?;
         let entity: Option<ActiveAlertsAreaError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -550,11 +550,11 @@ pub async fn get_active_alerts_count(
     } else {
         let content = resp.text().await?;
         let entity: Option<ActiveAlertsCountError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -624,11 +624,11 @@ pub async fn get_active_alerts_for_marine_region(
     } else {
         let content = resp.text().await?;
         let entity: Option<ActiveRegionError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -698,11 +698,11 @@ pub async fn get_active_alerts_for_zone(
     } else {
         let content = resp.text().await?;
         let entity: Option<ActiveAlertsZoneError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -970,11 +970,11 @@ pub async fn get_alerts(
     } else {
         let content = resp.text().await?;
         let entity: Option<GetAlertsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -1044,11 +1044,11 @@ pub async fn get_alert(
     } else {
         let content = resp.text().await?;
         let entity: Option<GetAlertError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -1112,10 +1112,10 @@ pub async fn get_alert_types(
     } else {
         let content = resp.text().await?;
         let entity: Option<GetAlertTypesError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }

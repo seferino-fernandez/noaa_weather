@@ -102,11 +102,11 @@ pub async fn get_point(
     } else {
         let content = resp.text().await?;
         let entity: Option<PointError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -177,10 +177,10 @@ pub async fn get_point_stations(
     } else {
         let content = resp.text().await?;
         let entity: Option<PointStationsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }

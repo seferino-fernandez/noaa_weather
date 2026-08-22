@@ -101,11 +101,11 @@ pub async fn get_forecast_office(
     } else {
         let content = resp.text().await?;
         let entity: Option<OfficeError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -177,11 +177,11 @@ pub async fn get_forecast_office_headline(
     } else {
         let content = resp.text().await?;
         let entity: Option<OfficeHeadlineError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -250,10 +250,10 @@ pub async fn get_forecast_office_headlines(
     } else {
         let content = resp.text().await?;
         let entity: Option<OfficeHeadlinesError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }

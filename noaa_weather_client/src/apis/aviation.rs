@@ -151,11 +151,11 @@ pub async fn get_center_weather_advisories_by_date_and_sequence(
     } else {
         let content = resp.text().await?;
         let entity: Option<CenterWeatherAdvisoryError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -228,11 +228,11 @@ pub async fn get_center_weather_advisories(
         let content = resp.text().await?;
         let entity: Option<CenterWeatherAdvisoryCollectionError> =
             serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -301,11 +301,11 @@ pub async fn get_center_weather_service_unit(
     } else {
         let content = resp.text().await?;
         let entity: Option<CenterWeatherServiceUnitError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -379,11 +379,11 @@ pub async fn get_sigmet(
     } else {
         let content = resp.text().await?;
         let entity: Option<SigmetError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -470,11 +470,11 @@ pub async fn get_sigmets(
     } else {
         let content = resp.text().await?;
         let entity: Option<SigmetQueryError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -542,11 +542,11 @@ pub async fn get_sigmets_by_air_traffic_service_unit(
     } else {
         let content = resp.text().await?;
         let entity: Option<SigmetsByAtsuError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -617,10 +617,10 @@ pub async fn get_sigmets_by_air_traffic_service_unit_and_date(
     } else {
         let content = resp.text().await?;
         let entity: Option<SigmetsByAtsuAndDateError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }

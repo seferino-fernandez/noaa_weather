@@ -202,11 +202,11 @@ pub async fn get_zone(
     } else {
         let content = resp.text().await?;
         let entity: Option<ZoneError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -276,11 +276,11 @@ pub async fn get_current_zone_forecast(
     } else {
         let content = resp.text().await?;
         let entity: Option<ZoneForecastError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -424,11 +424,11 @@ pub async fn get_zones(
     } else {
         let content = resp.text().await?;
         let entity: Option<ZoneListError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -581,11 +581,11 @@ pub async fn get_zones_by_type(
     } else {
         let content = resp.text().await?;
         let entity: Option<ZoneListTypeError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -669,11 +669,11 @@ pub async fn get_zone_observations(
     } else {
         let content = resp.text().await?;
         let entity: Option<ZoneObsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -756,10 +756,10 @@ pub async fn get_stations_by_zone(
     } else {
         let content = resp.text().await?;
         let entity: Option<ZoneStationsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }

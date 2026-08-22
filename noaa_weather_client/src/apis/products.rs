@@ -187,11 +187,11 @@ pub async fn get_products_by_location(
     } else {
         let content = resp.text().await?;
         let entity: Option<LocationProductsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -260,11 +260,11 @@ pub async fn get_product(
     } else {
         let content = resp.text().await?;
         let entity: Option<ProductError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -328,11 +328,11 @@ pub async fn get_product_locations(
     } else {
         let content = resp.text().await?;
         let entity: Option<ProductLocationsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -396,11 +396,11 @@ pub async fn get_product_types(
     } else {
         let content = resp.text().await?;
         let entity: Option<ProductTypesError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -547,11 +547,11 @@ pub async fn get_products_query(
     } else {
         let content = resp.text().await?;
         let entity: Option<ProductsQueryError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -620,11 +620,11 @@ pub async fn get_products_by_type(
     } else {
         let content = resp.text().await?;
         let entity: Option<ProductsTypeError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -696,11 +696,11 @@ pub async fn get_products_by_type_and_location(
     } else {
         let content = resp.text().await?;
         let entity: Option<ProductsTypeLocationError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -769,11 +769,11 @@ pub async fn get_product_issuance_locations_by_type(
     } else {
         let content = resp.text().await?;
         let entity: Option<ProductsTypeLocationsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
 
@@ -845,10 +845,10 @@ pub async fn get_latest_product_by_type_and_location(
     } else {
         let content = resp.text().await?;
         let entity: Option<LatestProductTypeLocationError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
+        Err(Error::ResponseError(Box::new(ResponseContent {
             content,
             entity,
             status,
-        }))
+        })))
     }
 }
