@@ -16,7 +16,7 @@ pub struct PointArgs {
     pub longitude: f64,
 }
 
-/// Access metadata and nearby stations for a specific geographical point.
+/// Access metadata for a specific geographical point.
 #[derive(Subcommand, Debug, Clone)]
 pub enum PointCommands {
     /// Get metadata for a specific latitude/longitude point.
@@ -25,10 +25,6 @@ pub enum PointCommands {
     /// forecast zone, and links to relevant forecast endpoints.
     /// Example: `noaa-weather points metadata 39.7456 -- -97.0892`
     Metadata(PointArgs),
-    /// Get a list of observation stations near a specific latitude/longitude point.
-    ///
-    /// Example: `noaa-weather points stations 39.7456 -- -97.0892`
-    Stations(PointArgs),
 }
 
 /// Handles the execution of point-related subcommands.
@@ -60,22 +56,6 @@ pub async fn handle_command(
                 )?;
             } else {
                 let table = tables::points::create_point_metadata_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
-        }
-        PointCommands::Stations(args) => {
-            let result = points_api::get_point_stations(config, args.latitude, args.longitude)
-                .await
-                .map_err(|error| anyhow::anyhow!("Error getting point stations: {}", error))?;
-
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::stations::create_stations_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())

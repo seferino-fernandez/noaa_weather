@@ -3,102 +3,8 @@
 //! Covers the `/products` endpoints for querying, listing, and retrieving
 //! the full text of NWS-issued products by type, location, or issuance time.
 
-use super::{API_KEY_HEADER, ContentType, Error, configuration};
-use crate::apis::ResponseContent;
+use super::{Error, configuration, http};
 use crate::models;
-use reqwest;
-use serde::de::Error as _;
-use serde::{Deserialize, Serialize};
-
-/// Errors that can occur when calling the [`get_products_by_location`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum LocationProductsError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_product`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ProductError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_product_locations`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ProductLocationsError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_product_types`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ProductTypesError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_products_query`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ProductsQueryError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_products_by_type`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ProductsTypeError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_products_by_type_and_location`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ProductsTypeLocationError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_product_issuance_locations_by_type`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ProductsTypeLocationsError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_latest_product_by_type_and_location`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum LatestProductTypeLocationError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
 
 /// Parameters for the [`get_products_query`] function.
 ///
@@ -137,62 +43,19 @@ pub struct ProductsQueryParams {
 ///
 /// # Errors
 ///
-/// Returns an [`Error<LocationProductsError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_products_by_location(
     configuration: &configuration::Configuration,
     location_id: &models::NwsForecastOfficeId,
-) -> Result<models::TextProductTypeCollection, Error<LocationProductsError>> {
+) -> Result<models::TextProductTypeCollection, Error> {
     let uri_str = format!(
-        "{}/products/locations/{locationId}/types",
-        configuration.base_path,
+        "/products/locations/{locationId}/types",
         locationId = location_id
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `TextProductTypeCollection`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `TextProductTypeCollection`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `TextProductTypeCollection`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<LocationProductsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a specific NWS text product by its unique product ID.
@@ -210,62 +73,19 @@ pub async fn get_products_by_location(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ProductError>`] if the request fails (e.g., product not found)
+/// Returns an [`Error`] if the request fails (e.g., product not found)
 /// or the response cannot be parsed.
 pub async fn get_product(
     configuration: &configuration::Configuration,
     product_id: &str,
-) -> Result<models::TextProduct, Error<ProductError>> {
+) -> Result<models::TextProduct, Error> {
     let uri_str = format!(
-        "{}/products/{productId}",
-        configuration.base_path,
+        "/products/{productId}",
         productId = crate::apis::urlencode(product_id)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `TextProduct`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `TextProduct`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `TextProduct`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ProductError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of valid NWS text product issuance locations.
@@ -283,57 +103,15 @@ pub async fn get_product(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ProductLocationsError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_product_locations(
     configuration: &configuration::Configuration,
-) -> Result<models::TextProductLocationCollection, Error<ProductLocationsError>> {
-    let uri_str = format!("{}/products/locations", configuration.base_path);
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::TextProductLocationCollection, Error> {
+    let uri_str = "/products/locations".to_owned();
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `TextProductLocationCollection`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `TextProductLocationCollection`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `TextProductLocationCollection`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ProductLocationsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of valid NWS text product types and their codes.
@@ -351,57 +129,15 @@ pub async fn get_product_locations(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ProductTypesError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_product_types(
     configuration: &configuration::Configuration,
-) -> Result<models::TextProductTypeCollection, Error<ProductTypesError>> {
-    let uri_str = format!("{}/products/types", configuration.base_path);
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::TextProductTypeCollection, Error> {
+    let uri_str = "/products/types".to_owned();
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `TextProductTypeCollection`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `TextProductTypeCollection`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `TextProductTypeCollection`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ProductTypesError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of text products based on specified query parameters.
@@ -420,14 +156,14 @@ pub async fn get_product_types(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ProductsQueryError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_products_query(
     configuration: &configuration::Configuration,
     params: ProductsQueryParams,
-) -> Result<models::TextProductCollection, Error<ProductsQueryError>> {
-    let uri_str = format!("{}/products", configuration.base_path);
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::TextProductCollection, Error> {
+    let uri_str = "/products".to_owned();
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = params.location_ids {
         req_builder = match "csv" {
@@ -510,49 +246,8 @@ pub async fn get_products_query(
     if let Some(param_value) = params.limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `TextProductCollection`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `TextProductCollection`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `TextProductCollection`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ProductsQueryError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of text products of a specific type.
@@ -570,62 +265,19 @@ pub async fn get_products_query(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ProductsTypeError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_products_by_type(
     configuration: &configuration::Configuration,
     type_id: &str,
-) -> Result<models::TextProductCollection, Error<ProductsTypeError>> {
+) -> Result<models::TextProductCollection, Error> {
     let uri_str = format!(
-        "{}/products/types/{typeId}",
-        configuration.base_path,
+        "/products/types/{typeId}",
         typeId = crate::apis::urlencode(type_id)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `TextProductCollection`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `TextProductCollection`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `TextProductCollection`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ProductsTypeError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of text products of a specific type for a specific issuance location.
@@ -644,64 +296,21 @@ pub async fn get_products_by_type(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ProductsTypeLocationError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_products_by_type_and_location(
     configuration: &configuration::Configuration,
     type_id: &str,
     location_id: &models::NwsForecastOfficeId,
-) -> Result<models::TextProductCollection, Error<ProductsTypeLocationError>> {
+) -> Result<models::TextProductCollection, Error> {
     let uri_str = format!(
-        "{}/products/types/{typeId}/locations/{locationId}",
-        configuration.base_path,
+        "/products/types/{typeId}/locations/{locationId}",
         typeId = type_id,
         locationId = location_id
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `TextProductCollection`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `TextProductCollection`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `TextProductCollection`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ProductsTypeLocationError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of valid text product issuance locations for a given product type.
@@ -719,62 +328,19 @@ pub async fn get_products_by_type_and_location(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ProductsTypeLocationsError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_product_issuance_locations_by_type(
     configuration: &configuration::Configuration,
     type_id: &str,
-) -> Result<models::TextProductLocationCollection, Error<ProductsTypeLocationsError>> {
+) -> Result<models::TextProductLocationCollection, Error> {
     let uri_str = format!(
-        "{}/products/types/{typeId}/locations",
-        configuration.base_path,
+        "/products/types/{typeId}/locations",
         typeId = crate::apis::urlencode(type_id)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `TextProductLocationCollection`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `TextProductLocationCollection`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `TextProductLocationCollection`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ProductsTypeLocationsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns the latest text product of a specific type for a specific issuance location.
@@ -793,62 +359,19 @@ pub async fn get_product_issuance_locations_by_type(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<LatestProductTypeLocationError>`] if the request fails (e.g., no product
+/// Returns an [`Error`] if the request fails (e.g., no product
 /// found for the given type and location) or the response cannot be parsed.
 pub async fn get_latest_product_by_type_and_location(
     configuration: &configuration::Configuration,
     type_id: &str,
     location_id: &str,
-) -> Result<models::TextProduct, Error<LatestProductTypeLocationError>> {
+) -> Result<models::TextProduct, Error> {
     let uri_str = format!(
-        "{}/products/types/{type_id}/locations/{location_id}/latest",
-        configuration.base_path,
+        "/products/types/{type_id}/locations/{location_id}/latest",
         type_id = crate::apis::urlencode(type_id),
         location_id = crate::apis::urlencode(location_id)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `TextProduct`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `TextProduct`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `TextProduct`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<LatestProductTypeLocationError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }

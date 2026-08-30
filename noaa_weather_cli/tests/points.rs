@@ -23,21 +23,15 @@ fn test_points_command_failure_invalid_point() {
 }
 
 #[test]
-fn test_points_command_stations_success() {
+fn test_points_command_rejects_removed_stations_subcommand() {
     let mut cmd = Command::new(cargo_bin!("noaa-weather"));
-    cmd.arg("points");
-    cmd.arg("stations");
-    cmd.arg("39.7456");
-    cmd.arg("--");
-    cmd.arg("-97.0892");
-    cmd.assert().success();
-}
+    cmd.args(["points", "stations", "33.4484", "--", "-112.0740"]);
+    let output = cmd.output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
 
-#[test]
-fn test_points_command_stations_failure_invalid_point() {
-    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
-    cmd.arg("points");
-    cmd.arg("stations");
-    cmd.arg("test");
-    cmd.assert().failure();
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(
+        stderr.contains("unrecognized subcommand 'stations'"),
+        "{stderr}"
+    );
 }

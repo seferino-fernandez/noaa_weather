@@ -12,8 +12,4 @@ Note: Use `--` before negative longitude values to prevent them from being inter
 noaa-weather points metadata 39.7456 -- -97.0892
 ```
 
-Get observation stations near a specific point:
-
-```sh
-noaa-weather points stations <LATITUDE> <LONGITUDE>
-```
+The deprecated `/points/{latitude},{longitude}/stations` operation is not exposed. Resolve point metadata first, then use its gridpoint with `gridpoints stations` or query stations directly.

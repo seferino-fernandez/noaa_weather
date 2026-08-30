@@ -41,3 +41,5 @@ Get a specific Terminal Aerodrome Forecast (TAF) for a station by date and time.
 ```sh
 noaa-weather stations terminal-aerodrome-forecast --station-id <ID> --date <YYYY-MM-DD> --time <HHMM>
 ```
+
+Both TAF commands require the `xml` feature. Normal builds include them because the default `radio` feature enables `xml`. A `--no-default-features` CLI build omits both TAF commands and `quick-xml`; build with `--no-default-features --features xml` to retain TAF support without radio.

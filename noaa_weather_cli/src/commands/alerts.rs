@@ -111,15 +111,11 @@ pub enum AlertCommands {
         zone_id: String,
     },
 
-    /// List alerts (active or inactive) with various filters and pagination.
+    /// List alerts with various filters and pagination.
     ///
     /// Queries the NWS API for alerts, allowing filtering by time range,
     /// status, location, and other criteria.
     List {
-        /// Include active alerts only (if set, overrides start/end times).
-        #[arg(long)]
-        active: Option<bool>,
-
         /// Start time for query (ISO 8601 format, e.g., "2023-10-26T14:00:00Z").
         #[arg(long)]
         start: Option<String>,
@@ -330,7 +326,6 @@ pub async fn handle_command(
             Ok(())
         }
         AlertCommands::List {
-            active,
             start,
             end,
             status,
@@ -348,7 +343,6 @@ pub async fn handle_command(
             limit,
         } => {
             let params = GetAlertsParams {
-                active: *active,
                 start: start.clone(),
                 end: end.clone(),
                 status: status.clone(),

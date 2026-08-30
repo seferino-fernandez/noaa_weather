@@ -2,6 +2,8 @@
 
 [NOAA Gridpoints Documentation](https://weather-gov.github.io/api/gridpoints)
 
+Forecast commands automatically request NOAA's quantitative temperature and wind values; there is no caller-supplied `--feature-flags` option.
+
 ## Gridpoint
 
 ```sh

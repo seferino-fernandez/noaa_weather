@@ -9,7 +9,8 @@ mod utils;
 #[cfg(feature = "radio")]
 use commands::radio;
 use commands::{
-    Commands, alerts, aviation, gridpoints, offices, points, products, radar, stations, zones,
+    Commands, alerts, aviation, glossary, gridpoints, offices, points, products, radar, stations,
+    zones,
 };
 
 #[derive(Parser, Debug, Clone)]
@@ -35,7 +36,7 @@ struct Cli {
 #[tokio::main]
 async fn main() {
     if let Err(error) = try_main().await {
-        eprintln!("noaa-weather: {error}");
+        eprintln!("noaa-weather: {error:#}");
         std::process::exit(1);
     }
 }
@@ -52,6 +53,7 @@ async fn try_main() -> Result<()> {
         Commands::Gridpoints { command } => {
             gridpoints::handle_command(command, cli.clone(), &config).await?;
         }
+        Commands::Glossary => glossary::handle_command(cli.clone(), &config).await?,
         Commands::Offices { command } => {
             offices::handle_command(command, cli.clone(), &config).await?;
         }

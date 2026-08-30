@@ -39,10 +39,6 @@ pub struct Zone {
         skip_serializing_if = "Option::is_none"
     )]
     pub awips_location_identifier: Option<String>,
-    #[serde(rename = "cwa", skip_serializing_if = "Option::is_none")]
-    pub cwa: Option<Vec<models::NwsForecastOfficeId>>,
-    #[serde(rename = "forecastOffices", skip_serializing_if = "Option::is_none")]
-    pub forecast_offices: Option<Vec<String>>,
     #[serde(rename = "timeZone", skip_serializing_if = "Option::is_none")]
     pub time_zone: Option<Vec<String>>,
     #[serde(
@@ -75,12 +71,30 @@ impl Zone {
             forecast_office: None,
             grid_identifier: None,
             awips_location_identifier: None,
-            cwa: None,
-            forecast_offices: None,
             time_zone: None,
             observation_stations: None,
             radar_station: None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Zone;
+
+    #[test]
+    fn ignores_removed_office_keys_while_preserving_current_office() {
+        let zone: Zone = serde_json::from_str(
+            r#"{"forecastOffice":"https://api.weather.gov/offices/PSR","cwa":["PSR"],"forecastOffices":["https://api.weather.gov/offices/PSR"]}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            zone.forecast_office.as_deref(),
+            Some("https://api.weather.gov/offices/PSR")
+        );
+        let serialized = serde_json::to_value(zone).unwrap();
+        assert!(serialized.get("cwa").is_none());
+        assert!(serialized.get("forecastOffices").is_none());
     }
 }
 #[derive(

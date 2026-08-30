@@ -2,104 +2,297 @@
 //!
 //! Each submodule corresponds to a family of endpoints on
 //! [`api.weather.gov`](https://api.weather.gov). All async functions accept a
-//! [`Configuration`](configuration::Configuration) as their first argument and return
-//! `Result<T, Error<E>>` where `E` is an endpoint-specific error enum.
-//!
-//! # Modules
-//!
-//! | Module | Endpoints |
-//! |--------|-----------|
-//! | [`alerts`] | Active and historical weather alerts |
-//! | [`aviation`] | SIGMETs and Center Weather Advisories |
-//! | [`gridpoints`] | Gridpoint forecasts and station lists |
-//! | [`offices`] | NWS forecast office info and headlines |
-//! | [`points`] | Point metadata and nearest stations |
-//! | [`products`] | NWS text products (forecasts, discussions) |
-//! | [`radar`] | Radar servers, stations, and data queues |
-//! | [`stations`] | Observation stations, observations, and TAFs |
-//! | [`zones`] | Forecast zones and zone-level forecasts |
-//!
-//! The [`radio`] module is available with the **`radio`** feature and provides
-//! NOAA Weather Radio broadcast content in SSML format.
+//! [`Configuration`](configuration::Configuration) as their first argument and
+//! return a model or the shared [`Error`] type.
 
-use std::{error, fmt};
+use std::{borrow::Cow, error, fmt};
 
-pub(crate) const API_KEY_HEADER: &str = "X-Api-Key";
+use bytes::Bytes;
+use mime::Mime;
+use reqwest::StatusCode;
+use url::Url;
 
-/// The raw body and status code of a non-success API response.
-///
-/// Returned inside [`Error::ResponseError`] when the server replies with a
-/// 4xx or 5xx status. The `entity` field attempts to deserialize the body
-/// into the endpoint-specific error type `T`.
+/// The body and response metadata returned for a non-success HTTP status.
 #[derive(Debug, Clone)]
-pub struct ResponseContent<T> {
-    /// The raw response body as a string.
-    pub content: String,
-    /// The deserialized error payload, if parsing succeeded.
-    pub entity: Option<T>,
-    /// The HTTP status code of the response.
-    pub status: reqwest::StatusCode,
+pub struct ResponseContent {
+    bytes: Bytes,
+    status: StatusCode,
+    url: Url,
+    problem_detail: Option<crate::models::ProblemDetail>,
+    content_type: Option<Mime>,
 }
 
-/// Errors returned by API functions.
-///
-/// The type parameter `T` is an endpoint-specific enum (e.g.,
-/// [`alerts::ActiveAlertsError`]) that captures structured error payloads from
-/// the NWS API.
-#[derive(Debug)]
-pub enum Error<T> {
-    /// An I/O error occurred.
-    Io(std::io::Error),
-    /// The server returned a non-success HTTP status.
-    ResponseError(Box<ResponseContent<T>>),
-    /// The HTTP request itself failed (network, TLS, timeout, etc.).
-    Reqwest(reqwest::Error),
-    /// The JSON response body could not be deserialized.
-    Serde(serde_json::Error),
-    /// The XML response body could not be deserialized.
-    Xml(quick_xml::DeError),
+impl ResponseContent {
+    /// Returns the response body without copying it.
+    #[must_use]
+    pub fn bytes(&self) -> &Bytes {
+        &self.bytes
+    }
+
+    /// Returns the response body as a byte slice.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        self.bytes.as_ref()
+    }
+
+    /// Returns the response body decoded as UTF-8, replacing invalid sequences.
+    #[must_use]
+    pub fn text(&self) -> Cow<'_, str> {
+        String::from_utf8_lossy(&self.bytes)
+    }
+
+    /// Returns the HTTP status code.
+    #[must_use]
+    pub const fn status(&self) -> StatusCode {
+        self.status
+    }
+
+    /// Returns the final response URL after redirects.
+    #[must_use]
+    pub const fn url(&self) -> &Url {
+        &self.url
+    }
+
+    /// Returns the parsed response content type, if the header was valid.
+    #[must_use]
+    pub const fn content_type(&self) -> Option<&Mime> {
+        self.content_type.as_ref()
+    }
+
+    /// Returns the parsed NWS problem detail, when the body contained one.
+    #[must_use]
+    pub const fn problem_detail(&self) -> Option<&crate::models::ProblemDetail> {
+        self.problem_detail.as_ref()
+    }
 }
 
-impl<T> fmt::Display for Error<T> {
+/// An undecoded binary response and its metadata.
+#[derive(Debug, Clone)]
+pub struct BinaryPayload {
+    bytes: Bytes,
+    content_type: Mime,
+    final_url: Url,
+}
+
+impl BinaryPayload {
+    /// Returns the payload as a byte slice.
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        self.bytes.as_ref()
+    }
+
+    /// Returns the reference-counted payload bytes.
+    #[must_use]
+    pub const fn bytes(&self) -> &Bytes {
+        &self.bytes
+    }
+
+    /// Consumes the payload and returns its reference-counted bytes.
+    #[must_use]
+    pub fn into_bytes(self) -> Bytes {
+        self.bytes
+    }
+
+    /// Returns the response content type.
+    #[must_use]
+    pub const fn content_type(&self) -> &Mime {
+        &self.content_type
+    }
+
+    /// Returns the final response URL after redirects.
+    #[must_use]
+    pub const fn final_url(&self) -> &Url {
+        &self.final_url
+    }
+
+    /// Returns the payload length in bytes.
+    #[must_use]
+    pub const fn len(&self) -> usize {
+        self.bytes.len()
+    }
+
+    /// Returns whether the payload is empty.
+    #[must_use]
+    pub const fn is_empty(&self) -> bool {
+        self.bytes.is_empty()
+    }
+}
+
+impl AsRef<[u8]> for BinaryPayload {
+    fn as_ref(&self) -> &[u8] {
+        self.as_bytes()
+    }
+}
+
+/// A successful response violated the endpoint's media-type contract.
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum ProtocolError {
+    /// The response omitted its `Content-Type` header.
+    MissingContentType {
+        /// Media type expected by the endpoint.
+        expected: &'static str,
+        /// Final response URL after redirects.
+        url: Url,
+    },
+    /// The response contained a syntactically invalid `Content-Type` header.
+    MalformedContentType {
+        /// Media type expected by the endpoint.
+        expected: &'static str,
+        /// Unparsed header value.
+        actual: String,
+        /// Final response URL after redirects.
+        url: Url,
+    },
+    /// The response media type was valid but incompatible with the endpoint.
+    IncompatibleContentType {
+        /// Media type expected by the endpoint.
+        expected: &'static str,
+        /// Parsed response media type.
+        actual: Mime,
+        /// Final response URL after redirects.
+        url: Url,
+    },
+}
+
+impl ProtocolError {
+    /// Returns the endpoint's expected media-type description.
+    #[must_use]
+    pub const fn expected(&self) -> &'static str {
+        match self {
+            Self::MissingContentType { expected, .. }
+            | Self::MalformedContentType { expected, .. }
+            | Self::IncompatibleContentType { expected, .. } => expected,
+        }
+    }
+
+    /// Returns the received content type, if one was present.
+    #[must_use]
+    pub fn actual(&self) -> Option<&str> {
+        match self {
+            Self::MissingContentType { .. } => None,
+            Self::MalformedContentType { actual, .. } => Some(actual),
+            Self::IncompatibleContentType { actual, .. } => Some(actual.as_ref()),
+        }
+    }
+
+    /// Returns the final response URL after redirects.
+    #[must_use]
+    pub const fn url(&self) -> &Url {
+        match self {
+            Self::MissingContentType { url, .. }
+            | Self::MalformedContentType { url, .. }
+            | Self::IncompatibleContentType { url, .. } => url,
+        }
+    }
+}
+
+impl fmt::Display for ProtocolError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let error_message = match self {
-            Self::Reqwest(reqwest_error) => reqwest_error.to_string(),
-            Self::Serde(serde_error) => serde_error.to_string(),
-            Self::Io(io_error) => io_error.to_string(),
-            Self::Xml(xml_error) => xml_error.to_string(),
-            Self::ResponseError(response_error) => response_error.content.clone(),
-        };
-        write!(formatter, "{error_message}")
+        match self {
+            Self::MissingContentType { expected, url } => write!(
+                formatter,
+                "expected {expected} response from {url}, but Content-Type was missing"
+            ),
+            Self::MalformedContentType {
+                expected,
+                actual,
+                url,
+            } => write!(
+                formatter,
+                "expected {expected} response from {url}, received malformed Content-Type {actual:?}"
+            ),
+            Self::IncompatibleContentType {
+                expected,
+                actual,
+                url,
+            } => write!(
+                formatter,
+                "expected {expected} response from {url}, received incompatible Content-Type {actual}"
+            ),
+        }
     }
 }
 
-impl<T: fmt::Debug> error::Error for Error<T> {
+impl error::Error for ProtocolError {}
+
+/// Errors returned by NOAA API functions.
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum Error {
+    /// The HTTP request failed before a response body was available.
+    Transport(reqwest::Error),
+    /// A JSON success body could not be decoded.
+    Json(serde_json::Error),
+    /// An XML success body could not be decoded.
+    #[cfg(feature = "xml")]
+    Xml(quick_xml::DeError),
+    /// The server returned a non-success HTTP status.
+    Response(Box<ResponseContent>),
+    /// A successful response violated the endpoint's media-type contract.
+    Protocol(Box<ProtocolError>),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Transport(source) => write!(formatter, "HTTP transport error: {source}"),
+            Self::Json(source) => write!(formatter, "JSON decode error: {source}"),
+            #[cfg(feature = "xml")]
+            Self::Xml(source) => write!(formatter, "XML decode error: {source}"),
+            Self::Response(response) => write!(
+                formatter,
+                "HTTP {} response from {}: {}",
+                response.status(),
+                response.url(),
+                response.text()
+            ),
+            Self::Protocol(source) => source.fmt(formatter),
+        }
+    }
+}
+
+impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
-        Some(match self {
-            Self::Reqwest(reqwest_error) => reqwest_error,
-            Self::Serde(serde_error) => serde_error,
-            Self::Io(io_error) => io_error,
-            Self::Xml(xml_error) => xml_error,
-            Self::ResponseError(_) => return None,
-        })
+        match self {
+            Self::Transport(source) => Some(source),
+            Self::Json(source) => Some(source),
+            #[cfg(feature = "xml")]
+            Self::Xml(source) => Some(source),
+            Self::Response(_) => None,
+            Self::Protocol(source) => Some(source.as_ref()),
+        }
     }
 }
 
-impl<T> From<reqwest::Error> for Error<T> {
-    fn from(reqwest_error: reqwest::Error) -> Self {
-        Self::Reqwest(reqwest_error)
+impl From<reqwest::Error> for Error {
+    fn from(source: reqwest::Error) -> Self {
+        Self::Transport(source)
     }
 }
 
-impl<T> From<serde_json::Error> for Error<T> {
-    fn from(serde_error: serde_json::Error) -> Self {
-        Self::Serde(serde_error)
+impl From<serde_json::Error> for Error {
+    fn from(source: serde_json::Error) -> Self {
+        Self::Json(source)
     }
 }
 
-impl<T> From<std::io::Error> for Error<T> {
-    fn from(io_error: std::io::Error) -> Self {
-        Self::Io(io_error)
+impl From<ProtocolError> for Error {
+    fn from(source: ProtocolError) -> Self {
+        Self::Protocol(Box::new(source))
+    }
+}
+
+impl From<ResponseContent> for Error {
+    fn from(response: ResponseContent) -> Self {
+        Self::Response(Box::new(response))
+    }
+}
+
+#[cfg(feature = "xml")]
+impl From<quick_xml::DeError> for Error {
+    fn from(source: quick_xml::DeError) -> Self {
+        Self::Xml(source)
     }
 }
 
@@ -108,33 +301,12 @@ pub fn urlencode<T: AsRef<str>>(s: T) -> String {
     ::url::form_urlencoded::byte_serialize(s.as_ref().as_bytes()).collect()
 }
 
-/// A content type supported by this client.
-#[derive(Debug)]
-enum ContentType {
-    Json,
-    Text,
-    Unsupported(String),
-    Xml,
-}
-
-impl From<&str> for ContentType {
-    fn from(content_type: &str) -> Self {
-        if content_type.starts_with("application") && content_type.contains("json") {
-            Self::Json
-        } else if content_type.starts_with("text") && content_type.contains("plain") {
-            Self::Text
-        } else if content_type.starts_with("application") && content_type.contains("xml") {
-            Self::Xml
-        } else {
-            Self::Unsupported(content_type.to_owned())
-        }
-    }
-}
-
 pub mod alerts;
 pub mod aviation;
 pub mod configuration;
+pub mod glossary;
 pub mod gridpoints;
+mod http;
 pub mod offices;
 pub mod points;
 pub mod products;
@@ -143,3 +315,14 @@ pub mod radar;
 pub mod radio;
 pub mod stations;
 pub mod zones;
+
+#[cfg(test)]
+mod tests {
+    use super::Error;
+
+    #[test]
+    fn error_remains_compact() {
+        let size = std::mem::size_of::<Error>();
+        assert!(size <= 48, "Error occupied {size} bytes");
+    }
+}

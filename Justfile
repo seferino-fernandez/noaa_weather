@@ -58,3 +58,10 @@ example-alerts:
 
 # Run all examples
 examples: example-basic example-alerts
+
+# Run the pull request validation acceptance gate
+verify:
+    cargo fmt --all --check
+    cargo clippy --all-targets -- -D warnings
+    cargo nextest --verbose run
+    cargo build --release

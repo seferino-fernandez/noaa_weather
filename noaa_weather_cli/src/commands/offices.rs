@@ -1,21 +1,22 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Context as _, Result, anyhow, bail};
 use clap::{Args, Subcommand};
+use noaa_weather_client::apis::BinaryPayload;
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::offices as offices_api;
-use noaa_weather_client::models::NwsForecastOfficeId;
+use noaa_weather_client::models::NwsOfficeId;
 
 use crate::utils::format::write_output;
 use crate::{Cli, tables};
 
-/// Arguments requiring a NWS forecast office ID.
+/// Arguments requiring a NWS office ID.
 #[derive(Args, Debug, Clone)]
 pub struct OfficeIdArgs {
-    /// NWS forecast office ID (three-letter identifier, e.g., PSR, BOX, TOP).
-    #[arg(long, value_enum)]
-    id: NwsForecastOfficeId,
+    /// NWS office ID (three-letter identifier, e.g., PSR, WRH, NWS).
+    #[arg(long)]
+    id: NwsOfficeId,
 }
 
-/// Access metadata and headlines for NWS forecast offices.
+/// Access metadata and headlines for NWS offices.
 #[derive(Subcommand, Debug, Clone)]
 pub enum OfficeCommands {
     /// Get metadata for a specific NWS forecast office.
@@ -38,6 +39,42 @@ pub enum OfficeCommands {
         #[arg(long)]
         headline_id: String,
     },
+    /// Get metadata for the active office briefing, if one exists.
+    Briefing(OfficeIdArgs),
+    /// Download a briefing PDF by document ID.
+    BriefingDownload {
+        #[clap(flatten)]
+        office_args: OfficeIdArgs,
+        /// Briefing document identifier from `offices briefing`.
+        #[arg(long)]
+        document_id: String,
+    },
+    /// Download the latest briefing PDF.
+    BriefingDownloadLatest(OfficeIdArgs),
+    /// Get metadata for active office weather stories.
+    WeatherStories(OfficeIdArgs),
+    /// Download a weather-story image by story ID.
+    WeatherStoryImage {
+        #[clap(flatten)]
+        office_args: OfficeIdArgs,
+        /// Weather-story identifier from `offices weather-stories`.
+        #[arg(long)]
+        story_id: String,
+    },
+}
+
+fn binary_output_path<'a>(cli: &'a Cli, operation: &str) -> Result<&'a str> {
+    if cli.json {
+        bail!("{operation} produces binary data; --json cannot be used");
+    }
+    cli.output
+        .as_deref()
+        .ok_or_else(|| anyhow!("{operation} requires --output <PATH>"))
+}
+
+fn write_binary(path: &str, payload: &BinaryPayload, operation: &str) -> Result<()> {
+    std::fs::write(path, payload.as_bytes())
+        .with_context(|| format!("{operation}: writing binary output to {path}"))
 }
 
 /// Handles the execution of office-related subcommands.
@@ -107,6 +144,67 @@ pub async fn handle_command(
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())
+        }
+        OfficeCommands::Briefing(args) => {
+            let result = offices_api::get_forecast_office_briefing(config, &args.id)
+                .await
+                .context("getting NWS forecast office briefing")?;
+            let content = if cli.json {
+                serde_json::to_string_pretty(&result)?
+            } else {
+                tables::offices::create_office_briefing_table(&result).to_string()
+            };
+            write_output(cli.output.as_deref(), &content)
+        }
+        OfficeCommands::BriefingDownload {
+            office_args,
+            document_id,
+        } => {
+            let operation = "downloading NWS forecast office briefing document";
+            let output = binary_output_path(&cli, operation)?;
+            let result = offices_api::get_forecast_office_briefing_document(
+                config,
+                &office_args.id,
+                document_id,
+            )
+            .await
+            .with_context(|| operation)?;
+            write_binary(output, &result, operation)
+        }
+        OfficeCommands::BriefingDownloadLatest(args) => {
+            let operation = "downloading latest NWS forecast office briefing document";
+            let output = binary_output_path(&cli, operation)?;
+            let result =
+                offices_api::get_latest_forecast_office_briefing_document(config, &args.id)
+                    .await
+                    .with_context(|| operation)?;
+            write_binary(output, &result, operation)
+        }
+        OfficeCommands::WeatherStories(args) => {
+            let result = offices_api::get_forecast_office_weather_stories(config, &args.id)
+                .await
+                .context("getting NWS forecast office weather stories")?;
+            let content = if cli.json {
+                serde_json::to_string_pretty(&result)?
+            } else {
+                tables::offices::create_office_weather_stories_table(&result).to_string()
+            };
+            write_output(cli.output.as_deref(), &content)
+        }
+        OfficeCommands::WeatherStoryImage {
+            office_args,
+            story_id,
+        } => {
+            let operation = "downloading NWS forecast office weather-story image";
+            let output = binary_output_path(&cli, operation)?;
+            let result = offices_api::get_forecast_office_weather_story_image(
+                config,
+                &office_args.id,
+                story_id,
+            )
+            .await
+            .with_context(|| operation)?;
+            write_binary(output, &result, operation)
         }
     }
 }
