@@ -101,12 +101,6 @@ pub mod gridpoint_hourly_forecast_json_ld;
 pub use self::gridpoint_hourly_forecast_json_ld::GridpointHourlyForecastJsonLd;
 pub mod gridpoint_hourly_forecast_period;
 pub use self::gridpoint_hourly_forecast_period::GridpointHourlyForecastPeriod;
-pub mod gridpoint_forecast_period_temperature;
-pub use self::gridpoint_forecast_period_temperature::GridpointForecastPeriodTemperature;
-pub mod gridpoint_forecast_period_wind_gust;
-pub use self::gridpoint_forecast_period_wind_gust::GridpointForecastPeriodWindGust;
-pub mod gridpoint_forecast_period_wind_speed;
-pub use self::gridpoint_forecast_period_wind_speed::GridpointForecastPeriodWindSpeed;
 pub mod gridpoint_forecast_units;
 pub use self::gridpoint_forecast_units::GridpointForecastUnits;
 pub mod gridpoint_geo_json;
@@ -127,6 +121,8 @@ pub mod gridpoint_weather_values_inner;
 pub use self::gridpoint_weather_values_inner::GridpointWeatherValuesInner;
 pub mod gridpoint_weather_values_inner_value_inner;
 pub use self::gridpoint_weather_values_inner_value_inner::GridpointWeatherValuesInnerValueInner;
+pub mod glossary;
+pub use self::glossary::{GlossaryResponse, GlossaryTerm};
 pub mod iso8601_interval;
 pub use self::iso8601_interval::Iso8601Interval;
 pub mod json_ld_context;
@@ -148,7 +144,7 @@ pub use self::nws_forecast_office_id::NwsForecastOfficeId;
 pub mod nws_national_hqid;
 pub use self::nws_national_hqid::NwsNationalHqid;
 pub mod nws_office_id;
-pub use self::nws_office_id::NwsOfficeId;
+pub use self::nws_office_id::{NwsOfficeId, ParseNwsOfficeIdError};
 pub mod nws_regional_hqid;
 pub use self::nws_regional_hqid::NwsRegionalHqid;
 pub mod nws_unit_code;
@@ -185,6 +181,11 @@ pub mod office_headline;
 pub use self::office_headline::OfficeHeadline;
 pub mod office_headline_collection;
 pub use self::office_headline_collection::OfficeHeadlineCollection;
+pub mod office_documents;
+pub use self::office_documents::{
+    NwsConnectDocumentMetadata, OfficeBriefing, OfficeBriefingResponse, OfficeWeatherStory,
+    OfficeWeatherStoryCollection,
+};
 pub mod pagination_info;
 pub use self::pagination_info::PaginationInfo;
 pub mod point;
@@ -221,6 +222,11 @@ pub mod radar_station;
 pub use self::radar_station::{RadarStation, RadarStationFeature};
 pub mod radar_stations_response;
 pub use self::radar_stations_response::RadarStationsResponse;
+pub mod radar_spgds;
+pub use self::radar_spgds::{
+    RadarSpgdsDiskStatus, RadarSpgdsEntry, RadarSpgdsGatewayStatus, RadarSpgdsLdmStatus,
+    RadarSpgdsResponse, RadarSpgdsStatus, RadarSpgdsThroughput, RadarSpgdsUptime,
+};
 pub mod region_code;
 pub use self::region_code::RegionCode;
 pub mod region_type;
@@ -277,3 +283,7 @@ pub use self::zone_state::ZoneState;
 pub mod radio_broadcast;
 #[cfg(feature = "radio")]
 pub use self::radio_broadcast::*;
+#[cfg(feature = "radio")]
+pub mod radio_transmitter;
+#[cfg(feature = "radio")]
+pub use self::radio_transmitter::{RadioTransmitter, RadioTransmitterCollection};

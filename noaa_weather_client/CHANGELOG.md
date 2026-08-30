@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Target NOAA Weather API specification 3.11.0.
+- Add typed glossary support with `get_glossary`, `GlossaryResponse`, and `GlossaryTerm`.
+- Add five office briefing and weather-story operations, typed document metadata, and zero-copy `BinaryPayload` responses for PDFs and images.
+- Add `get_radar_spgds` and tolerant typed SPGDS telemetry models.
+- Add radio transmitter list, detail, and county-zone operations with typed transmitter and pagination models behind the default `radio` feature.
+- Preserve absent, explicit `null`, and string values independently in `Alert::note`.
+
+### Changed
+
+- **Breaking:** Replace generic endpoint-specific errors with one compact, non-generic `Error`; HTTP response and protocol details are boxed and retain raw `Bytes`, URL, media type, and typed NOAA problem details.
+- **Breaking:** Forecast `temperature`, `wind_speed`, and `wind_gust` fields now use `QuantitativeValue` models. Forecast requests always send `forecast_temperature_qv,forecast_wind_speed_qv`; callers no longer supply feature flags.
+- **Breaking:** Remove station `Feature-Flags` arguments from gridpoint stations, station list/detail, and forecast-zone stations functions.
+- **Breaking:** Constrain radar queue hosts to `rds` or `tds` and accept the NOAA 3.11 queue limit range of 1 through 50,000.
+- Accept the full NOAA `NwsOfficeId` union on all eight office operations, including regional and national headquarters as well as forecast offices.
+- **Breaking:** Change the client default feature set from empty in 1.3 to `radio`. Normal defaults include radio, both Terminal Aerodrome Forecast APIs, and XML parsing.
+- Split optional XML support into the `xml` feature. `--no-default-features` omits radio, both TAF APIs, and `quick-xml`; enabling only `xml` retains both TAF APIs without radio.
+- Validate successful JSON, XML, PDF, and image response media types before decoding or returning them.
+
+### Removed
+
+- **Breaking:** Remove all endpoint-specific error enums and generic `Error<E>` return types.
+- **Breaking:** Remove the deprecated `get_point_stations` operation. Resolve a point to its gridpoint and use `get_gridpoint_stations`, or query station endpoints directly.
+- **Breaking:** Remove the deprecated `active` query from the general alerts query. The dedicated `/alerts/active` functions remain supported.
+- **Breaking:** Remove deprecated forecast `temperature_unit` and `icon`, observation `icon`, and zone `cwa` and `forecast_offices` fields.
+- **Breaking:** Remove the old forecast temperature, wind-speed, and wind-gust union model types.
+
+### Deprecated upstream
+
+- NOAA 3.11 still marks five operations as deprecated: the three icon operations, satellite thumbnails, and point stations.
+- NOAA 3.11 also marks the alerts `active` query and seven schema properties as deprecated. The quantitative temperature/wind legacy forms and namespaced units are described as deprecated in prose rather than with the OpenAPI `deprecated` keyword.
+
 ## [1.3.0](https://github.com/seferino-fernandez/noaa_weather/compare/v1.2.0...v1.3.0)
 
 _22 August 2026_

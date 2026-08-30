@@ -22,9 +22,30 @@ pub struct StationRadioArgs {
     pub call_sign: String,
 }
 
+/// Arguments for listing NOAA Weather Radio transmitters.
+#[derive(Args, Debug, Clone)]
+pub struct RadioTransmittersArgs {
+    /// Pagination cursor returned by a previous request.
+    #[arg(long)]
+    cursor: Option<String>,
+}
+
+/// Arguments for a county-zone transmitter lookup.
+#[derive(Args, Debug, Clone)]
+pub struct RadioZoneArgs {
+    /// NWS county zone identifier (for example, AZC013).
+    zone_id: String,
+}
+
 /// Access NOAA Weather Radio broadcast information.
 #[derive(Subcommand, Debug, Clone)]
 pub enum RadioCommands {
+    /// List NOAA Weather Radio transmitters.
+    Transmitters(RadioTransmittersArgs),
+    /// Get metadata for one NOAA Weather Radio transmitter.
+    Transmitter(StationRadioArgs),
+    /// List transmitters serving an NWS county zone.
+    Zone(RadioZoneArgs),
     /// Get the NOAA Weather Radio broadcast for a geographic point.
     ///
     /// Example: `noaa-weather radio point 33.4484 -- -112.0740`
@@ -77,6 +98,46 @@ pub async fn handle_command(
             };
             write_output(cli.output.as_deref(), &content)?;
             Ok(())
+        }
+        RadioCommands::Transmitters(args) => {
+            let result = radio_api::get_radio_transmitters(config, args.cursor.as_deref())
+                .await
+                .map_err(|error| anyhow!("listing radio transmitters: {error}"))?;
+            let content = if cli.json {
+                serde_json::to_string_pretty(&result)?
+            } else {
+                tables::radio::create_radio_transmitters_table(&result).to_string()
+            };
+            write_output(cli.output.as_deref(), &content)
+        }
+        RadioCommands::Transmitter(args) => {
+            let result = radio_api::get_radio_transmitter(config, &args.call_sign)
+                .await
+                .map_err(|error| {
+                    anyhow!("getting radio transmitter {}: {error}", args.call_sign)
+                })?;
+            let content = if cli.json {
+                serde_json::to_string_pretty(&result)?
+            } else {
+                tables::radio::create_radio_transmitter_table(&result).to_string()
+            };
+            write_output(cli.output.as_deref(), &content)
+        }
+        RadioCommands::Zone(args) => {
+            let result = radio_api::get_radio_transmitters_for_county_zone(config, &args.zone_id)
+                .await
+                .map_err(|error| {
+                    anyhow!(
+                        "listing radio transmitters for county zone {}: {error}",
+                        args.zone_id
+                    )
+                })?;
+            let content = if cli.json {
+                serde_json::to_string_pretty(&result)?
+            } else {
+                tables::radio::create_radio_transmitters_table(&result).to_string()
+            };
+            write_output(cli.output.as_deref(), &content)
         }
     }
 }

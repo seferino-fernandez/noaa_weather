@@ -1,5 +1,7 @@
 # Alerts
 
+The deprecated `active` query flag on the general alerts endpoint is not exposed. Use the dedicated active-alert commands below.
+
 ## List Active Alerts
 
 ```sh

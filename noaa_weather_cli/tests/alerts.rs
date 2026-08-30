@@ -29,6 +29,20 @@ fn test_alerts_command_list_status_success() {
 }
 
 #[test]
+fn test_alerts_command_list_rejects_removed_active_option() {
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.args(["alerts", "list", "--active", "true"]);
+    let output = cmd.output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(
+        stderr.contains("unexpected argument '--active'"),
+        "{stderr}"
+    );
+}
+
+#[test]
 fn test_alerts_command_failure_invalid_command() {
     let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("alerts");

@@ -3,14 +3,12 @@
 //! This example demonstrates how to:
 //! - Get point metadata for coordinates
 //! - Fetch active weather alerts
-//! - Get current weather observations
-//! - Retrieve forecasts
 //!
 //! Run with: just example-basic
 //! Or: cargo run --example basic_usage --manifest-path noaa_weather_client/Cargo.toml
 
 use noaa_weather_client::apis::configuration::Configuration;
-use noaa_weather_client::apis::{alerts, points, stations};
+use noaa_weather_client::apis::{alerts, points};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -67,51 +65,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Err(error) => {
             eprintln!("  Error getting alerts: {}", error);
-        }
-    }
-
-    // 3. Get stations near the point
-    println!("\n[3] Getting nearby weather stations...");
-    match points::get_point_stations(&config, latitude, longitude).await {
-        Ok(stations_data) => {
-            println!("  Found {} nearby stations", stations_data.features.len());
-
-            // Try to get observation from the first station
-            if let Some(first_station) = stations_data.features.first()
-                && let Some(station_id) = &first_station.properties.station_identifier
-            {
-                println!("  Getting latest observation from station: {}", station_id);
-
-                match stations::get_latest_observations(&config, station_id, None).await {
-                    Ok(observation) => {
-                        let props = &observation.properties;
-                        println!(
-                            "    Station: {}",
-                            props.station_name.as_deref().unwrap_or("Unknown")
-                        );
-
-                        if let Some(temp) = &props.temperature
-                            && let Some(temp_value) = temp.value
-                        {
-                            println!("    Temperature: {:.1} C", temp_value);
-                        }
-
-                        if let Some(desc) = &props.text_description {
-                            println!("    Conditions: {}", desc);
-                        }
-
-                        if let Some(timestamp) = &props.timestamp {
-                            println!("    Observed: {}", timestamp);
-                        }
-                    }
-                    Err(error) => {
-                        eprintln!("    Error getting observation: {}", error);
-                    }
-                }
-            }
-        }
-        Err(error) => {
-            eprintln!("  Error getting stations: {}", error);
         }
     }
 

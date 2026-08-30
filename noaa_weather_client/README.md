@@ -1,240 +1,202 @@
 # NOAA Weather Client Library
 
-A comprehensive Rust client library for the [NOAA Weather API](https://www.weather.gov/documentation/services-web-api). This crate provides type-safe access to weather forecasts, alerts, observations, radar data, and aviation weather products from the National Weather Service.
+An asynchronous, typed Rust client for version 3.11.0 of the [NOAA Weather API](https://www.weather.gov/documentation/services-web-api). The default feature set exposes 64 public `get_*` endpoint functions for forecasts, alerts, observations, offices, radar, aviation, text products, zones, glossary terms, and NOAA Weather Radio.
 
-## Features
+This project uses NOAA/NWS data but is not an official NOAA/NWS library.
 
-- **Complete API Coverage** - All NOAA Weather API endpoints
-- **Weather Alerts** - Active alerts, warnings, and watches
-- **Gridpoint Forecasts** - Detailed 12-hour and hourly forecasts
-- **Radar Data** - Real-time radar information
-- **Aviation Weather** - SIGMETs, AIRMETs, and Center Weather Advisories
-- **NWS Offices** - Office information and products
-- **Point Data** - Weather data for any coordinates
-- **NOAA Weather Radio** - Broadcast transcripts (opt-in via `radio` feature)
-- **NWS Text Products** - Area Forecast Discussions, watches, and more
-- **Async/Await** - Built on `tokio` and `reqwest`
-- **Type Safety** - Comprehensive data models with serde
-
-## Quick Start
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-noaa_weather_client = "1.1.0"
-```
-
-To enable NOAA Weather Radio support (requires the `quick-xml` dependency):
-
-```toml
-[dependencies]
-noaa_weather_client = { version = "1.1.0", features = ["radio"] }
-```
-
-### Running Examples
-
-You can run the provided examples to see the library in action:
+## Install
 
 ```bash
-# Using Just (recommended)
-just example-basic     # Run basic usage example
-just example-alerts    # Run weather alerts example
-just examples          # Run all examples
-
-# Or using Cargo directly
-cargo run --example basic_usage --manifest-path noaa_weather_client/Cargo.toml
-cargo run --example weather_alerts --manifest-path noaa_weather_client/Cargo.toml
+cargo add noaa_weather_client
 ```
 
-### Basic Example
+The 1.3 client had an empty default feature set. This release changes the client default to `radio`, which also enables XML support for broadcast transcripts and Terminal Aerodrome Forecasts (TAFs). For a smaller JSON-only build:
+
+```bash
+cargo add noaa_weather_client --no-default-features
+```
+
+The complete feature matrix is:
+
+- Default: `radio` enables transmitter metadata, broadcasts, both TAF APIs, and `xml`/`quick-xml`.
+- `default-features = false`: omits radio, both TAF APIs, and `quick-xml`.
+- `default-features = false, features = ["xml"]`: retains both TAF APIs and `quick-xml` without radio.
+
+For TAF support without radio:
+
+```bash
+cargo add noaa_weather_client --no-default-features --features xml
+```
+
+## Quick start
 
 ```rust,no_run
-use noaa_weather_client::apis::configuration::Configuration;
-use noaa_weather_client::apis::{points, alerts};
+use noaa_weather_client::apis::{alerts, configuration::Configuration, points};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Configuration::default();
 
-    // Get point metadata for coordinates (latitude, longitude)
     let point = points::get_point(&config, 39.7456, -97.0892).await?;
     println!("Forecast office: {:?}", point.properties.forecast_office);
 
-    // Get active weather alerts using struct parameters
-    let alert_params = alerts::ActiveAlertsParams::default();
-    let alerts = alerts::get_active_alerts(&config, alert_params).await?;
-    println!("Active alerts: {}", alerts.features.len());
+    let active = alerts::get_active_alerts(
+        &config,
+        alerts::ActiveAlertsParams::default(),
+    )
+    .await?;
+    println!("Active alerts: {}", active.features.len());
 
     Ok(())
 }
 ```
 
-### Weather Alerts
+## Forecast values in 3.11
 
-```rust,ignore
-use noaa_weather_client::apis::{configuration::Configuration, alerts};
-use noaa_weather_client::models::{AreaCode, AlertSeverity};
+Textual forecasts always request NOAA's quantitative temperature and wind formats. Callers no longer pass feature flags, and `temperature`, `wind_speed`, and `wind_gust` use `QuantitativeValue` models.
 
-let config = Configuration::default();
-
-// Get all active alerts
-let alert_params = alerts::ActiveAlertsParams::default();
-let active_alerts = alerts::get_active_alerts(&config, alert_params).await?;
-
-// Get alerts for a specific area (state/territory) with filters
-let ca_alerts = alerts::get_active_alerts_for_area(&config, &AreaCode::CA).await?;
-
-// Get alerts for a specific zone
-let zone_alerts = alerts::get_active_alerts_for_zone(&config, "CAZ006").await?;
-
-// Get severe weather alerts only
-let severe_params = alerts::ActiveAlertsParams {
-    severity: Some(vec![AlertSeverity::Severe, AlertSeverity::Extreme]),
-    ..Default::default()
-};
-let severe_alerts = alerts::get_active_alerts(&config, severe_params).await?;
-```
-
-### Weather Observations
-
-```rust,ignore
-use noaa_weather_client::apis::{configuration::Configuration, stations};
-
-let config = Configuration::default();
-
-// Get latest observation for a station
-let observation = stations::get_latest_observations(&config, "KJFK", None).await?;
-println!("Temperature: {:?}", observation.properties.temperature);
-
-// Get station metadata
-let station = stations::get_observation_station(&config, "KJFK", None).await?;
-println!("Station name: {:?}", station.properties.name);
-```
-
-### Forecasts
-
-```rust,ignore
+```rust,no_run
 use noaa_weather_client::apis::{configuration::Configuration, gridpoints};
-use noaa_weather_client::models::NwsForecastOfficeId;
+use noaa_weather_client::models::{GridpointForecastUnits, NwsForecastOfficeId};
 
+# async fn example() -> Result<(), noaa_weather_client::apis::Error> {
 let config = Configuration::default();
-
-// Get forecast for specific gridpoint
 let forecast = gridpoints::get_gridpoint_forecast(
     &config,
-    NwsForecastOfficeId::TOP,
+    NwsForecastOfficeId::Top,
     31,
     80,
-    None, // feature_flags
-    None  // units
-).await?;
+    Some(GridpointForecastUnits::Us),
+)
+.await?;
+# let _ = forecast;
+# Ok(())
+# }
+```
 
-// Get hourly forecast
-let hourly = gridpoints::get_gridpoint_forecast_hourly(
+## New 3.11 data families
+
+```rust,no_run
+use noaa_weather_client::apis::{configuration::Configuration, glossary, offices, radar};
+use noaa_weather_client::models::{NwsForecastOfficeId, NwsOfficeId};
+
+# async fn example() -> Result<(), noaa_weather_client::apis::Error> {
+let config = Configuration::default();
+
+let terms = glossary::get_glossary(&config).await?;
+let briefing = offices::get_forecast_office_briefing(
     &config,
-    NwsForecastOfficeId::TOP,
-    31,
-    80,
-    None, // feature_flags
-    None  // units
-).await?;
+    &NwsOfficeId::NwsForecastOfficeId(NwsForecastOfficeId::Psr),
+)
+.await?;
+let spgds = radar::get_radar_spgds(&config, None).await?;
+# let _ = (terms, briefing, spgds);
+# Ok(())
+# }
 ```
 
-## Configuration
+With the default `radio` feature, transmitter metadata is also typed:
 
-The `Configuration` struct provides default settings that work out of the box:
+```rust,no_run
+# #[cfg(feature = "radio")]
+use noaa_weather_client::apis::{configuration::Configuration, radio};
 
-```rust,ignore
-use noaa_weather_client::apis::configuration::Configuration;
-
-// Use default configuration
+# #[cfg(feature = "radio")]
+# async fn example() -> Result<(), noaa_weather_client::apis::Error> {
 let config = Configuration::default();
-
-// Or customize the client
-let config = Configuration {
-    base_path: "https://api.weather.gov".to_owned(),
-    user_agent: Some("my-app/1.0".to_owned()),
-    api_key: None,
-    client: reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
-        .build()?,
-};
+let transmitters = radio::get_radio_transmitters(&config, None).await?;
+let station = radio::get_radio_transmitter(&config, "KEC94").await?;
+# let _ = (transmitters, station);
+# Ok(())
+# }
 ```
 
-## Error Handling
+## Binary office media
 
-All API functions return `Result<T, Error<E>>` where `E` is the specific error type for that endpoint:
+Briefing documents and weather-story images return `BinaryPayload`. It retains reference-counted `Bytes`, the validated media type, and the final URL after redirects without decoding the body as text.
 
-```rust,ignore
-use noaa_weather_client::apis::{configuration::Configuration, points};
+```rust,no_run
+use noaa_weather_client::apis::{configuration::Configuration, offices};
+use noaa_weather_client::models::{NwsForecastOfficeId, NwsOfficeId};
 
+# async fn example() -> Result<(), Box<dyn std::error::Error>> {
 let config = Configuration::default();
+let pdf = offices::get_latest_forecast_office_briefing_document(
+    &config,
+    &NwsOfficeId::NwsForecastOfficeId(NwsForecastOfficeId::Psr),
+)
+.await?;
+tokio::fs::write("briefing.pdf", pdf.as_bytes()).await?;
+# Ok(())
+# }
+```
 
+The configured `reqwest::Client` controls redirect behavior. A client that does not follow the latest-document redirect receives `Error::Response` for the 302 response.
+
+## Error handling
+
+Every endpoint returns the same compact, non-generic `Error` type. HTTP response and protocol details are boxed so the common result type stays small. `ResponseContent` retains status, URL, raw `Bytes`, content type, and a parsed NOAA `ProblemDetail` when available.
+
+```rust,no_run
+use noaa_weather_client::apis::{Error, configuration::Configuration, points};
+
+# async fn example() {
+let config = Configuration::default();
 match points::get_point(&config, 0.0, 0.0).await {
-    Ok(point_data) => println!("Success: {:?}", point_data),
-    Err(error) => {
-        eprintln!("Error: {}", error);
-        // Handle specific error types
-        match error {
-            noaa_weather_client::apis::Error::ResponseError(response) => {
-                eprintln!("HTTP {}: {}", response.status, response.content);
-            }
-            _ => eprintln!("Other error: {}", error),
+    Ok(point) => println!("{point:?}"),
+    Err(Error::Response(response)) => {
+        eprintln!("HTTP {} from {}", response.status(), response.url());
+        if let Some(problem) = response.problem_detail() {
+            eprintln!("{}: {}", problem.title, problem.detail);
         }
     }
+    Err(error) => eprintln!("{error}"),
 }
+# }
 ```
 
-## API Coverage
+## API coverage
 
-This client covers all major NOAA Weather API endpoints:
+| Module | Selected functions |
+| --- | --- |
+| `alerts` | `get_active_alerts`, `get_alerts`, `get_alert` |
+| `aviation` | `get_sigmets`, `get_center_weather_advisories` |
+| `glossary` | `get_glossary` |
+| `gridpoints` | `get_gridpoint_forecast`, `get_gridpoint_forecast_hourly` |
+| `offices` | `get_forecast_office_briefing`, `get_forecast_office_weather_stories` |
+| `points` | `get_point` |
+| `products` | `get_products_query`, `get_latest_product_by_type_and_location` |
+| `radar` | `get_radar_stations`, `get_radar_data_queue`, `get_radar_spgds` |
+| `radio`* | `get_radio_transmitters`, `get_radio_transmitter`, `get_area_radio` |
+| `stations` | `get_observation_station`, `get_latest_observations` |
+| `zones` | `get_zone`, `get_zone_forecast`, `get_stations_by_zone` |
 
-| Module       | Description                 | Key Functions                                                                        |
-| ------------ | --------------------------- | ------------------------------------------------------------------------------------ |
-| `alerts`     | Weather alerts and warnings | `get_active_alerts`, `get_alert`                                                     |
-| `points`     | Point metadata and stations | `get_point`, `get_point_stations`                                                    |
-| `gridpoints` | Detailed forecasts          | `get_gridpoint_forecast`, `get_gridpoint_forecast_hourly`                            |
-| `stations`   | Weather stations            | `get_observation_station`, `get_latest_observations`                                 |
-| `zones`      | Forecast zones              | `get_zone`, `get_zone_forecast`                                                      |
-| `offices`    | NWS offices                 | `get_office`, `get_office_headlines`                                                 |
-| `radar`      | Radar data                  | `get_radar_stations`, `get_radar_servers`                                            |
-| `aviation`   | Aviation weather            | `get_sigmets`, `get_center_weather_advisories`                                       |
-| `products`   | Text products               | `get_product_types`, `get_products_query`, `get_latest_product_by_type_and_location` |
-| `radio`\*    | Weather Radio broadcasts    | `get_point_radio`, `get_area_radio`                                                  |
+\* Requires the `radio` feature.
 
-\* Requires the `radio` feature flag.
+The deprecated `/points/{latitude},{longitude}/stations` operation is intentionally not exposed. Use point metadata to obtain the gridpoint, then call `gridpoints::get_gridpoint_stations`, or query the station endpoints directly.
 
-## Authentication
+All eight `/offices/{officeId}` functions accept `NwsOfficeId`, covering forecast offices, regional headquarters (`ARH`, `CRH`, `ERH`, `PRH`, `SRH`, `WRH`), and national headquarters (`NWS`).
 
-The NOAA Weather API does not require authentication, but NOAA recommends a unique User-Agent to identify your application. An optional API key can be provided via the `api_key` field on `Configuration`, which is sent as an `X-Api-Key` header.
+## Configuration and authentication
 
-```rust,ignore
+`Configuration::default()` uses `https://api.weather.gov`. Set a distinctive User-Agent with contact information for production applications:
+
+```rust,no_run
+use noaa_weather_client::apis::configuration::Configuration;
+
 let config = Configuration {
-    api_key: Some("your-api-key".to_owned()),
+    user_agent: Some("my-weather-app/2.0 (weather@example.com)".to_owned()),
     ..Default::default()
 };
 ```
 
-From the [NOAA Weather API Documentation](https://www.weather.gov/documentation/services-web-api):
+The API is free and does not normally require a key. `Configuration::api_key`, when set, currently sends `X-Api-Key`. Both checked-in NOAA specs name the security-scheme header `API-Key` while their description and one response header use `X-Api-Key`; see the [migration report](../notes/noaa-v3.11.0-migration.md#api-key-header-discrepancy) before relying on this experimental mechanism.
 
-> A User Agent is required to identify your application.
-> This string can be anything, and the more unique to your application the less likely it will be affected by a security event.
-> If you include contact information (website or email), we can contact you if your string is associated to a security event.
-> This will be replaced with an API key in the future.
->
-> User-Agent: (myweatherapp.com, <contact@myweatherapp.com>)
+## Migration and resources
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](../LICENSE.md) file for details.
-
-## Disclaimer
-
-This project uses data published by NOAA/NWS but is otherwise unaffiliated with the National Weather Service and is not an official NWS library.
-
-## Resources
-
-- [NOAA Weather API Documentation](https://www.weather.gov/documentation/services-web-api)
-- [NOAA Weather API GitHub](https://github.com/weather-gov/api)
+- [3.6.0 to 3.11.0 migration report](../notes/noaa-v3.11.0-migration.md)
+- [NOAA Weather API documentation](https://www.weather.gov/documentation/services-web-api)
+- [NOAA Weather API source](https://github.com/weather-gov/api)
 - [National Weather Service](https://www.weather.gov/)
+
+Licensed under the [MIT License](../LICENSE.md).

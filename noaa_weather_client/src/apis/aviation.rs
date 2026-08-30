@@ -3,82 +3,8 @@
 //! Covers the `/aviation` endpoints for in-flight weather hazard reports
 //! issued by Air Traffic Service Units and Center Weather Service Units.
 
-use super::{API_KEY_HEADER, ContentType, Error, configuration};
-use crate::apis::ResponseContent;
+use super::{Error, configuration, http};
 use crate::models;
-use reqwest;
-use serde::de::Error as _;
-use serde::{Deserialize, Serialize};
-
-/// Errors that can occur when calling the [`get_center_weather_advisories_by_date_and_sequence`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum CenterWeatherAdvisoryError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_center_weather_advisories`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum CenterWeatherAdvisoryCollectionError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_center_weather_service_unit`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum CenterWeatherServiceUnitError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_sigmet`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum SigmetError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_sigmets`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum SigmetQueryError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_sigmets_by_air_traffic_service_unit`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum SigmetsByAtsuError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_sigmets_by_air_traffic_service_unit_and_date`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum SigmetsByAtsuAndDateError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
 
 /// Returns a specific Center Weather Advisory (CWA) identified by CWSU, date, and sequence number.
 ///
@@ -97,66 +23,23 @@ pub enum SigmetsByAtsuAndDateError {
 ///
 /// # Errors
 ///
-/// Returns an [`Error<CenterWeatherAdvisoryError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_center_weather_advisories_by_date_and_sequence(
     configuration: &configuration::Configuration,
     center_weather_service_unit_id: models::NwsCenterWeatherServiceUnitId,
     date: String,
     sequence: i32,
-) -> Result<models::CenterWeatherAdvisoryGeoJson, Error<CenterWeatherAdvisoryError>> {
+) -> Result<models::CenterWeatherAdvisoryGeoJson, Error> {
     let uri_str = format!(
-        "{}/aviation/cwsus/{center_weather_service_unit_id}/cwas/{date}/{sequence}",
-        configuration.base_path,
+        "/aviation/cwsus/{center_weather_service_unit_id}/cwas/{date}/{sequence}",
         center_weather_service_unit_id = center_weather_service_unit_id,
         date = date,
         sequence = sequence
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `CenterWeatherAdvisoryGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `CenterWeatherAdvisoryGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `CenterWeatherAdvisoryGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<CenterWeatherAdvisoryError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a collection of current Center Weather Advisories (CWAs) for a specific Center Weather Service Unit (CWSU).
@@ -174,66 +57,19 @@ pub async fn get_center_weather_advisories_by_date_and_sequence(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<CenterWeatherAdvisoryCollectionError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_center_weather_advisories(
     configuration: &configuration::Configuration,
     center_weather_service_unit_id: models::NwsCenterWeatherServiceUnitId,
-) -> Result<
-    models::CenterWeatherAdvisoryCollectionGeoJson,
-    Error<CenterWeatherAdvisoryCollectionError>,
-> {
+) -> Result<models::CenterWeatherAdvisoryCollectionGeoJson, Error> {
     let uri_str = format!(
-        "{}/aviation/cwsus/{center_weather_service_unit_id}/cwas",
-        configuration.base_path,
+        "/aviation/cwsus/{center_weather_service_unit_id}/cwas",
         center_weather_service_unit_id = center_weather_service_unit_id
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `CenterWeatherAdvisoryCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `CenterWeatherAdvisoryCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `CenterWeatherAdvisoryCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<CenterWeatherAdvisoryCollectionError> =
-            serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns metadata about a specific Center Weather Service Unit (CWSU).
@@ -251,62 +87,19 @@ pub async fn get_center_weather_advisories(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<CenterWeatherServiceUnitError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_center_weather_service_unit(
     configuration: &configuration::Configuration,
     center_weather_service_unit_id: models::NwsCenterWeatherServiceUnitId,
-) -> Result<models::CwsuOffice, Error<CenterWeatherServiceUnitError>> {
+) -> Result<models::CwsuOffice, Error> {
     let uri_str = format!(
-        "{}/aviation/cwsus/{center_weather_service_unit_id}",
-        configuration.base_path,
+        "/aviation/cwsus/{center_weather_service_unit_id}",
         center_weather_service_unit_id = center_weather_service_unit_id
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `Office`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `Office`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `Office`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<CenterWeatherServiceUnitError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a specific SIGMET or AIRMET product.
@@ -326,65 +119,22 @@ pub async fn get_center_weather_service_unit(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<SigmetError>`] if the request fails or the response cannot be parsed.
+/// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_sigmet(
     configuration: &configuration::Configuration,
     air_traffic_service_unit: &str,
     date: String,
     time: &str,
-) -> Result<models::SigmetGeoJson, Error<SigmetError>> {
+) -> Result<models::SigmetGeoJson, Error> {
     let uri_str = format!(
-        "{}/aviation/sigmets/{air_traffic_service_unit}/{date}/{time}",
-        configuration.base_path,
+        "/aviation/sigmets/{air_traffic_service_unit}/{date}/{time}",
         air_traffic_service_unit = crate::apis::urlencode(air_traffic_service_unit),
         date = date,
         time = crate::apis::urlencode(time)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `SigmetGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `SigmetGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `SigmetGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<SigmetError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a collection of SIGMET/AIRMET products based on query parameters.
@@ -406,7 +156,7 @@ pub async fn get_sigmet(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<SigmetQueryError>`] if the request fails or the response cannot be parsed.
+/// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_sigmets(
     configuration: &configuration::Configuration,
     start: Option<String>,
@@ -414,9 +164,9 @@ pub async fn get_sigmets(
     date: Option<String>,
     air_traffic_service_unit: Option<&str>,
     sequence: Option<&str>,
-) -> Result<models::SigmetCollectionGeoJson, Error<SigmetQueryError>> {
-    let uri_str = format!("{}/aviation/sigmets", configuration.base_path);
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::SigmetCollectionGeoJson, Error> {
+    let uri_str = "/aviation/sigmets".to_owned();
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = start {
         req_builder = req_builder.query(&[("start", &param_value)]);
@@ -433,49 +183,8 @@ pub async fn get_sigmets(
     if let Some(param_value) = sequence {
         req_builder = req_builder.query(&[("sequence", &param_value)]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `SigmetCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `SigmetCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `SigmetCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<SigmetQueryError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a collection of SIGMET/AIRMET products for a specific Air Traffic Service Unit (ATSU).
@@ -493,61 +202,18 @@ pub async fn get_sigmets(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<SigmetsByAtsuError>`] if the request fails or the response cannot be parsed.
+/// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_sigmets_by_air_traffic_service_unit(
     configuration: &configuration::Configuration,
     air_traffic_service_unit: &str,
-) -> Result<models::SigmetCollectionGeoJson, Error<SigmetsByAtsuError>> {
+) -> Result<models::SigmetCollectionGeoJson, Error> {
     let uri_str = format!(
-        "{}/aviation/sigmets/{air_traffic_service_unit}",
-        configuration.base_path,
+        "/aviation/sigmets/{air_traffic_service_unit}",
         air_traffic_service_unit = crate::apis::urlencode(air_traffic_service_unit)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `SigmetCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `SigmetCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `SigmetCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<SigmetsByAtsuError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a collection of SIGMET/AIRMET products for a specific Air Traffic Service Unit (ATSU) on a specific date.
@@ -566,61 +232,18 @@ pub async fn get_sigmets_by_air_traffic_service_unit(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<SigmetsByAtsuAndDateError>`] if the request fails or the response cannot be parsed.
+/// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_sigmets_by_air_traffic_service_unit_and_date(
     configuration: &configuration::Configuration,
     air_traffic_service_unit: &str,
     date: String,
-) -> Result<models::SigmetCollectionGeoJson, Error<SigmetsByAtsuAndDateError>> {
+) -> Result<models::SigmetCollectionGeoJson, Error> {
     let uri_str = format!(
-        "{}/aviation/sigmets/{air_traffic_service_unit}/{date}",
-        configuration.base_path,
+        "/aviation/sigmets/{air_traffic_service_unit}/{date}",
         air_traffic_service_unit = crate::apis::urlencode(air_traffic_service_unit),
         date = date
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `SigmetCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `SigmetCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `SigmetCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<SigmetsByAtsuAndDateError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }

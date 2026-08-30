@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use clap::{Args, Subcommand};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::radar as radar_api;
@@ -29,8 +29,18 @@ pub enum RadarCommand {
     StationAlarms(RadarStationAlarmsArgs),
     /// Get a list of radar stations, optionally filtered by type or host.
     Stations(RadarStationsArgs),
+    /// Get SPGDS host telemetry, optionally filtered by publication interval.
+    Spgds(RadarSpgdsArgs),
     /// Get metadata for a specific radar wind profiler station.
     WindProfiler(RadarWindProfilerArgs),
+}
+
+/// Arguments for the `spgds` subcommand.
+#[derive(Args, Debug, Clone)]
+pub struct RadarSpgdsArgs {
+    /// Publication interval accepted by the NWS API.
+    #[arg(long)]
+    published: Option<String>,
 }
 
 /// Arguments for the `profiler` subcommand.
@@ -62,10 +72,10 @@ pub struct RadarDataQueueArgs {
     #[arg(long, required = true, value_enum)]
     host: RadarQueueHost,
 
-    /// Optional: Limit the number of queue entries returned.
+    /// Optional: Limit the number of queue entries returned (1 through 50,000).
     /// A limit is required or the API will return an error.
     /// Default is 10.
-    #[arg(long)]
+    #[arg(long, value_parser = clap::value_parser!(i32).range(1..=50_000))]
     limit: Option<i32>,
 
     /// Optional: Filter by creation time range (ISO 8601 interval).
@@ -289,6 +299,21 @@ pub async fn handle_command(
                 )?;
             } else {
                 let table = tables::radar::create_radar_stations_table(&result);
+                write_output(cli.output.as_deref(), &table.to_string())?;
+            }
+            Ok(())
+        }
+        RadarCommand::Spgds(args) => {
+            let result = radar_api::get_radar_spgds(config, args.published.as_deref())
+                .await
+                .context("getting radar SPGDS telemetry")?;
+            if cli.json {
+                write_output(
+                    cli.output.as_deref(),
+                    &serde_json::to_string_pretty(&result)?,
+                )?;
+            } else {
+                let table = tables::radar::create_radar_spgds_table(&result);
                 write_output(cli.output.as_deref(), &table.to_string())?;
             }
             Ok(())

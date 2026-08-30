@@ -3,89 +3,15 @@
 //! Covers the `/radar` endpoints for metadata about NEXRAD radar stations,
 //! distribution servers, and data queue status.
 
-use super::{API_KEY_HEADER, ContentType, Error, configuration};
-use crate::apis::ResponseContent;
+use super::{Error, configuration, http};
 use crate::models::{self, RadarQueueHost};
-use reqwest;
-use serde::de::Error as _;
-use serde::{Deserialize, Serialize};
-
-/// Errors that can occur when calling the [`get_radar_wind_profiler`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum RadarWindProfilerError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_radar_data_queue`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum RadarDataQueueError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_radar_server`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum RadarServerError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_radar_servers`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum RadarServersError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_radar_station`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum RadarStationError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_radar_station_alarms`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum RadarStationAlarmsError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_radar_stations`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum RadarStationsError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
 
 /// Parameters for the [`get_radar_data_queue`] function.
 ///
 /// This struct encapsulates the optional query parameters for filtering radar data queue entries.
 #[derive(Debug, Clone, Default)]
 pub struct RadarDataQueueQueryParams<'a> {
-    /// Limit the number of results returned.
+    /// Limit the number of results returned; the API accepts values from 1 through 50,000.
     pub limit: Option<i32>,
     /// Filter by arrival time range (ISO 8601 format, e.g., "start/end", "start/", "/end").
     pub arrived: Option<&'a str>,
@@ -123,20 +49,16 @@ pub struct RadarDataQueueQueryParams<'a> {
 ///
 /// # Errors
 ///
-/// Returns an [`Error<RadarProfilerError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_radar_wind_profiler(
     configuration: &configuration::Configuration,
     id: &str,
     time: Option<&str>,
     interval: Option<&str>,
-) -> Result<serde_json::Value, Error<RadarWindProfilerError>> {
-    let uri_str = format!(
-        "{}/radar/profilers/{id}",
-        configuration.base_path,
-        id = crate::apis::urlencode(id)
-    );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<serde_json::Value, Error> {
+    let uri_str = format!("/radar/profilers/{id}", id = crate::apis::urlencode(id));
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = time {
         req_builder = req_builder.query(&[("time", &param_value.to_owned())]);
@@ -144,49 +66,8 @@ pub async fn get_radar_wind_profiler(
     if let Some(param_value) = interval {
         req_builder = req_builder.query(&[("interval", &param_value.to_owned())]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `serde_json::Value`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `serde_json::Value`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<RadarWindProfilerError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns metadata about a given radar queue on a specific host.
@@ -206,19 +87,15 @@ pub async fn get_radar_wind_profiler(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<RadarQueueError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_radar_data_queue(
     configuration: &configuration::Configuration,
     host: &RadarQueueHost,
     params: RadarDataQueueQueryParams<'_>,
-) -> Result<models::RadarQueuesResponse, Error<RadarDataQueueError>> {
-    let uri_str = format!(
-        "{}/radar/queues/{host}",
-        configuration.base_path,
-        host = host
-    );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::RadarQueuesResponse, Error> {
+    let uri_str = format!("/radar/queues/{host}", host = host);
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = params.limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
@@ -244,49 +121,8 @@ pub async fn get_radar_data_queue(
     if let Some(param_value) = params.resolution {
         req_builder = req_builder.query(&[("resolution", &param_value.to_owned())]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `RadarQueuesResponse`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `RadarQueuesResponse`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `RadarQueuesResponse`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<RadarDataQueueError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns metadata about a given radar server.
@@ -305,66 +141,21 @@ pub async fn get_radar_data_queue(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<RadarServerError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_radar_server(
     configuration: &configuration::Configuration,
     id: &str,
     reporting_host: Option<&str>,
-) -> Result<models::RadarServer, Error<RadarServerError>> {
-    let uri_str = format!(
-        "{}/radar/servers/{id}",
-        configuration.base_path,
-        id = crate::apis::urlencode(id)
-    );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::RadarServer, Error> {
+    let uri_str = format!("/radar/servers/{id}", id = crate::apis::urlencode(id));
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = reporting_host {
         req_builder = req_builder.query(&[("reportingHost", &param_value.to_owned())]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `RadarServer`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `RadarServer`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `RadarServer`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<RadarServerError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of radar servers.
@@ -382,61 +173,20 @@ pub async fn get_radar_server(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<RadarServersError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_radar_servers(
     configuration: &configuration::Configuration,
     reporting_host: Option<&str>,
-) -> Result<models::RadarServersResponse, Error<RadarServersError>> {
-    let uri_str = format!("{}/radar/servers", configuration.base_path);
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::RadarServersResponse, Error> {
+    let uri_str = "/radar/servers".to_owned();
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = reporting_host {
         req_builder = req_builder.query(&[("reportingHost", &param_value.to_owned())]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `RadarServersResponse`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `RadarServersResponse`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `RadarServersResponse"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<RadarServersError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns metadata about a given radar station.
@@ -456,20 +206,16 @@ pub async fn get_radar_servers(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<RadarStationError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_radar_station(
     configuration: &configuration::Configuration,
     id: &str,
     reporting_host: Option<&str>,
     host: Option<&RadarQueueHost>,
-) -> Result<models::RadarStationFeature, Error<RadarStationError>> {
-    let uri_str = format!(
-        "{}/radar/stations/{id}",
-        configuration.base_path,
-        id = crate::apis::urlencode(id)
-    );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::RadarStationFeature, Error> {
+    let uri_str = format!("/radar/stations/{id}", id = crate::apis::urlencode(id));
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = reporting_host {
         req_builder = req_builder.query(&[("reportingHost", &param_value.to_owned())]);
@@ -477,49 +223,8 @@ pub async fn get_radar_station(
     if let Some(param_value) = host {
         req_builder = req_builder.query(&[("host", &param_value.to_string())]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `RadarStationFeature`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `RadarStationFeature`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `RadarStationFeature`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<RadarStationError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns alarm metadata for a given radar station.
@@ -537,62 +242,19 @@ pub async fn get_radar_station(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<RadarStationAlarmsError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_radar_station_alarms(
     configuration: &configuration::Configuration,
     station_id: &str,
-) -> Result<models::RadarStationAlarmsResponse, Error<RadarStationAlarmsError>> {
+) -> Result<models::RadarStationAlarmsResponse, Error> {
     let uri_str = format!(
-        "{}/radar/stations/{stationId}/alarms",
-        configuration.base_path,
+        "/radar/stations/{stationId}/alarms",
         stationId = crate::apis::urlencode(station_id)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `RadarStationAlarmsResponse`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `RadarStationAlarmsResponse`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `RadarStationAlarmsResponse`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<RadarStationAlarmsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of radar stations, optionally filtered.
@@ -612,16 +274,16 @@ pub async fn get_radar_station_alarms(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<RadarStationsError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_radar_stations(
     configuration: &configuration::Configuration,
     station_type: Option<Vec<String>>,
     reporting_host: Option<&str>,
     host: Option<&RadarQueueHost>,
-) -> Result<models::RadarStationsResponse, Error<RadarStationsError>> {
-    let uri_str = format!("{}/radar/stations", configuration.base_path);
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::RadarStationsResponse, Error> {
+    let uri_str = "/radar/stations".to_owned();
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = station_type {
         req_builder = match "csv" {
@@ -647,47 +309,148 @@ pub async fn get_radar_stations(
     if let Some(param_value) = host {
         req_builder = req_builder.query(&[("host", &param_value.to_string())]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+
+    req_builder.json().await
+}
+
+/// Returns radar SPGDS telemetry.
+///
+/// Corresponds to the `/radar/spgds` endpoint.
+///
+/// # Parameters
+///
+/// * `configuration`: The API client configuration.
+/// * `published`: Optional publication time interval in ISO 8601 format.
+///
+/// # Returns
+///
+/// A `Result` containing a [`models::RadarSpgdsResponse`] on success.
+///
+/// # Errors
+///
+/// Returns an [`Error`] if the request fails or the response cannot be parsed.
+pub async fn get_radar_spgds(
+    configuration: &configuration::Configuration,
+    published: Option<&str>,
+) -> Result<models::RadarSpgdsResponse, Error> {
+    let mut req_builder =
+        http::get(configuration, "/radar/spgds").header("Accept", "application/ld+json");
+
+    if let Some(param_value) = published {
+        req_builder = req_builder.query(&[("published", &param_value.to_owned())]);
     }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
+
+    req_builder.json().await
+}
+
+#[cfg(test)]
+mod tests {
+    use wiremock::{
+        Mock, MockServer, ResponseTemplate,
+        matchers::{header, method, path},
+    };
+
+    use super::get_radar_spgds;
+    use crate::{Error, apis::configuration::Configuration};
+
+    fn configuration(server: &MockServer) -> Configuration {
+        Configuration::new(None, Some(server.uri()), None, None)
     }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
+    #[tokio::test]
+    async fn requests_json_ld_without_query_and_decodes_tolerant_spgds_telemetry() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/radar/spgds"))
+            .and(header("Accept", "application/ld+json"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                r#"{
+                    "@context": {},
+                    "@graph": [{
+                        "@type": "SPGDS",
+                        "id": 7,
+                        "timestamp": true,
+                        "dataflow": {"state": 1, "unknown": []},
+                        "ldm": {"conns": 47.5},
+                        "throughput": {"in": false, "out": "42"},
+                        "spg": {"TXYZ": {"swimDataState": 0, "ldmPingState": true}},
+                        "unknown": {"nested": "ignored"}
+                    }]
+                }"#,
+                "application/ld+json",
+            ))
+            .expect(1)
+            .mount(&server)
+            .await;
 
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
+        let response = get_radar_spgds(&configuration(&server), None)
+            .await
+            .unwrap();
 
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `RadarStationsResponse`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `RadarStationsResponse`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `RadarStationsResponse`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<RadarStationsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
+        assert_eq!(response.spgds.len(), 1);
+        let entry = &response.spgds[0];
+        assert_eq!(entry.r#type.as_deref(), Some("SPGDS"));
+        assert_eq!(entry.id.as_deref(), Some("7"));
+        assert_eq!(entry.timestamp.as_deref(), Some("true"));
+        assert_eq!(entry.dataflow.as_ref().unwrap().state.as_deref(), Some("1"));
+        assert_eq!(entry.ldm.as_ref().unwrap().conns.as_deref(), Some("47.5"));
+        assert_eq!(
+            entry.throughput.as_ref().unwrap().inbound.as_deref(),
+            Some("false")
+        );
+        assert_eq!(entry.spg["TXYZ"].swim_data_state.as_deref(), Some("0"));
+        assert_eq!(entry.spg["TXYZ"].ldm_ping_state.as_deref(), Some("true"));
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.query(), None);
+    }
+
+    #[tokio::test]
+    async fn sends_published_interval_once_with_exact_percent_encoding() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/radar/spgds"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_raw(r#"{"@graph":[]}"#, "application/ld+json"),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+        let published = "2026-01-01T00:00:00+00:00/2026-01-01T01:30:00+00:00";
+
+        let response = get_radar_spgds(&configuration(&server), Some(published))
+            .await
+            .unwrap();
+
+        assert!(response.spgds.is_empty());
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(
+            requests[0].url.query(),
+            Some("published=2026-01-01T00%3A00%3A00%2B00%3A00%2F2026-01-01T01%3A30%3A00%2B00%3A00")
+        );
+    }
+
+    #[tokio::test]
+    async fn retains_typed_problem_detail_for_non_success_response() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/radar/spgds"))
+            .respond_with(ResponseTemplate::new(503).set_body_raw(
+                r#"{"type":"https://api.weather.gov/problems/unavailable","title":"Unavailable","status":503,"detail":"Try later","instance":"urn:test","correlationId":"test-correlation"}"#,
+                "application/problem+json",
+            ))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let error = get_radar_spgds(&configuration(&server), None)
+            .await
+            .unwrap_err();
+        let Error::Response(response) = error else {
+            panic!("expected response error");
+        };
+        let problem = response.problem_detail().expect("typed problem detail");
+        assert_eq!(problem.title, "Unavailable");
+        assert_eq!(problem.status, 503.0);
     }
 }

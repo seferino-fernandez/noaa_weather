@@ -76,6 +76,14 @@ pub struct Alert {
     /// The text describing the subject event of the alert message.
     #[serde(rename = "description", skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// Additional narrative information about the alert.
+    #[serde(
+        rename = "note",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub note: Option<Option<String>>,
     /// The text describing the recommended action to be taken by recipients of the alert message.
     #[serde(
         rename = "instruction",
@@ -132,6 +140,7 @@ impl Alert {
             sender_name: None,
             headline: None,
             description: None,
+            note: None,
             instruction: None,
             response: None,
             parameters: None,
@@ -141,6 +150,22 @@ impl Alert {
             web: None,
             event_code: None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Alert;
+
+    #[test]
+    fn note_preserves_absent_null_and_string_forms() {
+        let absent: Alert = serde_json::from_str("{}").unwrap();
+        let null: Alert = serde_json::from_str(r#"{"note":null}"#).unwrap();
+        let string: Alert = serde_json::from_str(r#"{"note":"Shelter in place."}"#).unwrap();
+
+        assert_eq!(absent.note, None);
+        assert_eq!(null.note, Some(None));
+        assert_eq!(string.note, Some(Some("Shelter in place.".to_owned())));
     }
 }
 

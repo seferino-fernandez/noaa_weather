@@ -3,92 +3,8 @@
 //! Covers the `/alerts` family of endpoints. Use [`ActiveAlertsParams`] and
 //! [`GetAlertsParams`] to filter by severity, urgency, area, and more.
 
-use super::{API_KEY_HEADER, ContentType, Error, configuration};
-use crate::apis::ResponseContent;
+use super::{Error, configuration, http};
 use crate::models::{self, AreaCode};
-use reqwest;
-use serde::de::Error as _;
-use serde::{Deserialize, Serialize};
-
-/// Errors that can occur when calling the [`get_active_alerts`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ActiveAlertsError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_active_alerts_for_area`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ActiveAlertsAreaError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_active_alerts_count`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ActiveAlertsCountError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_active_alerts_for_marine_region`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ActiveRegionError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_active_alerts_for_zone`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ActiveAlertsZoneError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_alerts`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum GetAlertsError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_alert`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum GetAlertError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_alert_types`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum GetAlertTypesError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
 
 /// Parameters for the [`get_active_alerts`] function.
 ///
@@ -126,8 +42,6 @@ pub struct ActiveAlertsParams<'a> {
 /// This struct encapsulates the query parameters for retrieving alerts, including filtering options and pagination.
 #[derive(Debug, Clone, Default)]
 pub struct GetAlertsParams<'a> {
-    /// Filter by active status (true or false).
-    pub active: Option<bool>,
     /// Start time for the query period (ISO 8601 format).
     pub start: Option<String>,
     /// End time for the query period (ISO 8601 format).
@@ -178,14 +92,14 @@ pub struct GetAlertsParams<'a> {
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ActiveAlertsError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_active_alerts(
     configuration: &configuration::Configuration,
     params: ActiveAlertsParams<'_>,
-) -> Result<models::AlertCollectionGeoJson, Error<ActiveAlertsError>> {
-    let uri_str = format!("{}/alerts/active", configuration.base_path);
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::AlertCollectionGeoJson, Error> {
+    let uri_str = "/alerts/active".to_owned();
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = &params.status {
         req_builder = match "csv" {
@@ -373,47 +287,8 @@ pub async fn get_active_alerts(
             )]),
         };
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        match content_type {
-            ContentType::Json => resp.json().await.map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `AlertCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `AlertCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `AlertCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ActiveAlertsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns active alerts for the given area (state or marine area).
@@ -432,62 +307,16 @@ pub async fn get_active_alerts(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ActiveAlertsAreaError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_active_alerts_for_area(
     configuration: &configuration::Configuration,
     area: &AreaCode,
-) -> Result<models::AlertCollectionGeoJson, Error<ActiveAlertsAreaError>> {
-    let uri_str = format!(
-        "{}/alerts/active/area/{area}",
-        configuration.base_path,
-        area = area
-    );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::AlertCollectionGeoJson, Error> {
+    let uri_str = format!("/alerts/active/area/{area}", area = area);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `AlertCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `AlertCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `AlertCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ActiveAlertsAreaError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns info on the number of active alerts, optionally summarized by area, region, and zone.
@@ -505,57 +334,15 @@ pub async fn get_active_alerts_for_area(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ActiveAlertsCountError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_active_alerts_count(
     configuration: &configuration::Configuration,
-) -> Result<models::ActiveAlertsCountResponse, Error<ActiveAlertsCountError>> {
-    let uri_str = format!("{}/alerts/active/count", configuration.base_path);
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::ActiveAlertsCountResponse, Error> {
+    let uri_str = "/alerts/active/count".to_owned();
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `AlertsActiveCount200Response`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `AlertsActiveCount200Response`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `AlertsActiveCount200Response`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ActiveAlertsCountError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns active alerts for the given marine region.
@@ -574,62 +361,16 @@ pub async fn get_active_alerts_count(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ActiveRegionError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_active_alerts_for_marine_region(
     configuration: &configuration::Configuration,
     region: models::MarineRegionCode,
-) -> Result<models::AlertCollectionGeoJson, Error<ActiveRegionError>> {
-    let uri_str = format!(
-        "{}/alerts/active/region/{region}",
-        configuration.base_path,
-        region = region
-    );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::AlertCollectionGeoJson, Error> {
+    let uri_str = format!("/alerts/active/region/{region}", region = region);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `AlertCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `AlertCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `AlertCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ActiveRegionError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns active alerts for the given NWS public zone or county.
@@ -648,62 +389,19 @@ pub async fn get_active_alerts_for_marine_region(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ActiveAlertsZoneError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_active_alerts_for_zone(
     configuration: &configuration::Configuration,
     zone_id: &str,
-) -> Result<models::AlertCollectionGeoJson, Error<ActiveAlertsZoneError>> {
+) -> Result<models::AlertCollectionGeoJson, Error> {
     let uri_str = format!(
-        "{}/alerts/active/zone/{zoneId}",
-        configuration.base_path,
+        "/alerts/active/zone/{zoneId}",
         zoneId = crate::apis::urlencode(zone_id)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `AlertCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `AlertCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `AlertCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ActiveAlertsZoneError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns all alerts matching the given parameters, including past alerts.
@@ -723,18 +421,15 @@ pub async fn get_active_alerts_for_zone(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<GetAlertsError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_alerts(
     configuration: &configuration::Configuration,
     params: GetAlertsParams<'_>,
-) -> Result<models::AlertCollectionGeoJson, Error<GetAlertsError>> {
-    let uri_str = format!("{}/alerts", configuration.base_path);
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::AlertCollectionGeoJson, Error> {
+    let uri_str = "/alerts".to_owned();
+    let mut req_builder = http::get(configuration, &uri_str);
 
-    if let Some(param_value) = &params.active {
-        req_builder = req_builder.query(&[("active", &param_value.clone())]);
-    }
     if let Some(param_value) = &params.start {
         req_builder = req_builder.query(&[("start", &param_value.clone())]);
     }
@@ -933,49 +628,8 @@ pub async fn get_alerts(
     if let Some(param_value) = &params.cursor {
         req_builder = req_builder.query(&[("cursor", &(*param_value).to_owned())]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `AlertCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `AlertCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `AlertCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<GetAlertsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns an alert by the alert ID.
@@ -994,62 +648,16 @@ pub async fn get_alerts(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<GetAlertError>`] if the request fails, the alert ID is not found,
+/// Returns an [`Error`] if the request fails, the alert ID is not found,
 /// or the response cannot be parsed.
 pub async fn get_alert(
     configuration: &configuration::Configuration,
     id: &str,
-) -> Result<models::AlertGeoJson, Error<GetAlertError>> {
-    let uri_str = format!(
-        "{}/alerts/{id}",
-        configuration.base_path,
-        id = crate::apis::urlencode(id)
-    );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::AlertGeoJson, Error> {
+    let uri_str = format!("/alerts/{id}", id = crate::apis::urlencode(id));
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `AlertGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `AlertGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `AlertGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<GetAlertError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of alert types recognized by the NWS API.
@@ -1067,55 +675,49 @@ pub async fn get_alert(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<GetAlertTypesError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_alert_types(
     configuration: &configuration::Configuration,
-) -> Result<models::AlertTypesResponse, Error<GetAlertTypesError>> {
-    let uri_str = format!("{}/alerts/types", configuration.base_path);
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::AlertTypesResponse, Error> {
+    let uri_str = "/alerts/types".to_owned();
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
+    req_builder.json().await
+}
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
+#[cfg(test)]
+mod tests {
+    use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
+    use super::{GetAlertsParams, get_alerts};
+    use crate::apis::configuration::Configuration;
 
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `AlertsTypes200Response`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `AlertsTypes200Response`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `AlertsTypes200Response`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<GetAlertTypesError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
+    #[tokio::test]
+    async fn ordinary_alert_query_never_sends_removed_active_parameter() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                r#"{"type":"FeatureCollection","features":[]}"#,
+                "application/geo+json",
+            ))
+            .mount(&server)
+            .await;
+        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+
+        get_alerts(
+            &configuration,
+            GetAlertsParams {
+                start: Some("2026-08-30T00:00:00Z".to_owned()),
+                ..GetAlertsParams::default()
+            },
+        )
+        .await
+        .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        let query = requests[0].url.query().unwrap();
+        assert!(query.starts_with("start="));
+        assert!(!query.contains("active"));
     }
 }

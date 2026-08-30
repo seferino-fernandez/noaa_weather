@@ -1,63 +1,42 @@
 # Radar
 
-Get radar profiler data for a station.
+## SPGDS telemetry
+
+Get radar SPGDS telemetry, optionally restricted by an ISO 8601 publication interval:
 
 ```sh
-noaa-weather radar profiler <station_id>
+noaa-weather radar spgds [--published <INTERVAL>]
 ```
 
-Get radar queue data for a host.
+## Data queues
+
+Get queue data for `rds` or `tds`. The limit must be between 1 and 50,000 and defaults to 10.
 
 ```sh
-noaa-weather radar queue <host>
+noaa-weather radar data-queue --host <rds|tds> [--limit <LIMIT>]
 ```
 
-Get radar server data for an ID.
+Additional queue filters include `--arrived`, `--created`, `--published`, `--station`, `--type`, `--feed`, and `--resolution`.
+
+## Servers
 
 ```sh
-noaa-weather radar server <id>
+noaa-weather radar server --id <ID> [--reporting-host <HOST>]
+noaa-weather radar servers [--reporting-host <HOST>]
 ```
 
-Get all radar servers.
+## Stations and alarms
 
 ```sh
-noaa-weather radar servers
+noaa-weather radar station --station-id <ID> [--reporting-host <HOST>] [--host <rds|tds>]
+noaa-weather radar station-alarms --station-id <ID>
+noaa-weather radar stations [--station-type <TYPE>...] [--reporting-host <HOST>] [--host <rds|tds>]
 ```
 
-Get radar station data for a station ID.
+## Wind profilers
 
 ```sh
-noaa-weather radar station <station_id>
+noaa-weather radar wind-profiler --id <ID> [--time <TIME>] [--interval <DURATION>]
 ```
 
-Get radar station alarms for a station ID.
-
-```sh
-noaa-weather radar station-alarms <station_id>
-```
-
-Get all radar stations.
-
-```sh
-noaa-weather radar stations
-```
-
-Get all radar stations with a specific station type.
-
-```sh
-noaa-weather radar stations --stationType <type>
-```
-
-## Radar Profiler
-
-Currently unable to make a valid request to the radar profiler API.
-
-## Radar Queues
-
-Valid Radar Queue Hosts:
-`tds` is a THREDDs Data Server
-`rds` is a Remote Data Server that's used to ingest data from private/civilian weather stations
-
-When retrieving radar queue data, there is too much data to return so the API returns a 503 error.
-The workaround is to specify more filters to reduce the data amount returned.
-See [Radar Host issue here](https://github.com/weather-gov/api/discussions/756)
+Structured radar results render as tables by default and support the global `--json` option.

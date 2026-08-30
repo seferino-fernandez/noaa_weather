@@ -4,32 +4,8 @@
 //! returns the forecast office, grid coordinates, and zone identifiers for
 //! any lat/lon pair — the starting point for most forecast workflows.
 
-use super::{API_KEY_HEADER, ContentType, Error, configuration};
-use crate::apis::ResponseContent;
+use super::{Error, configuration, http};
 use crate::models;
-use reqwest;
-use serde::de::Error as _;
-use serde::{Deserialize, Serialize};
-
-/// Errors that can occur when calling the [`get_point`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum PointError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_point_stations`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum PointStationsError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
 
 /// Returns metadata about a specific latitude/longitude point.
 ///
@@ -50,137 +26,19 @@ pub enum PointStationsError {
 ///
 /// # Errors
 ///
-/// Returns an [`Error<PointError>`] if the request fails (e.g., invalid coordinates,
+/// Returns an [`Error`] if the request fails (e.g., invalid coordinates,
 /// point outside CONUS) or the response cannot be parsed.
 pub async fn get_point(
     configuration: &configuration::Configuration,
     latitude: f64,
     longitude: f64,
-) -> Result<models::PointGeoJson, Error<PointError>> {
+) -> Result<models::PointGeoJson, Error> {
     let uri_str = format!(
-        "{}/points/{latitude},{longitude}",
-        configuration.base_path,
+        "/points/{latitude},{longitude}",
         latitude = latitude,
         longitude = longitude
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `PointGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `PointGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `PointGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<PointError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
-}
-
-/// Returns a list of observation stations potentially relevant to a given latitude/longitude point.
-///
-/// Corresponds to the `/points/{latitude},{longitude}/stations` endpoint.
-///
-/// # Parameters
-///
-/// * `configuration`: The API client configuration.
-/// * `latitude`: The latitude of the point (e.g., 39.7456).
-/// * `longitude`: The longitude of the point (e.g., -97.0892).
-///
-/// # Returns
-///
-/// A `Result` containing an [`models::ObservationStationCollectionGeoJson`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error<PointStationsError>`] if the request fails or the response cannot be parsed.
-pub async fn get_point_stations(
-    configuration: &configuration::Configuration,
-    latitude: f64,
-    longitude: f64,
-) -> Result<models::ObservationStationCollectionGeoJson, Error<PointStationsError>> {
-    let uri_str = format!(
-        "{}/points/{latitude},{longitude}/stations",
-        configuration.base_path,
-        latitude = latitude,
-        longitude = longitude
-    );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
-
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `ObservationStationCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `ObservationStationCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `ObservationStationCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<PointStationsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }

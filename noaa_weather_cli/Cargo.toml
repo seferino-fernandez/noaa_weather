@@ -27,8 +27,9 @@ comfy-table.workspace = true
 jiff.workspace = true
 
 [features]
-default = ["radio"]
+default = ["radio", "xml"]
 radio = ["noaa_weather_client/radio"]
+xml = ["noaa_weather_client/xml"]
 
 [dev-dependencies]
 assert_cmd.workspace = true

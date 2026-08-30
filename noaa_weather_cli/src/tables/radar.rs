@@ -4,9 +4,55 @@ use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Attribute, Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::radar_server::RadarServerNetworkInterfaceStats;
 use noaa_weather_client::models::{
-    RadarQueuesResponse, RadarServer, RadarServersResponse, RadarStationAlarmsResponse,
-    RadarStationFeature, RadarStationsResponse,
+    RadarQueuesResponse, RadarServer, RadarServersResponse, RadarSpgdsResponse,
+    RadarStationAlarmsResponse, RadarStationFeature, RadarStationsResponse,
 };
+
+/// Creates a concise summary of SPGDS host telemetry.
+pub fn create_radar_spgds_table(response: &RadarSpgdsResponse) -> Table {
+    let mut table = Table::new();
+    table.load_style(UTF8_FULL_CONDENSED);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
+    table.set_header([
+        "ID",
+        "Timestamp",
+        "Data Flow",
+        "Connections",
+        "Disk",
+        "Gateways",
+    ]);
+
+    for entry in &response.spgds {
+        table.add_row(vec![
+            Cell::new(entry.id.as_deref().unwrap_or("N/A")),
+            Cell::new(entry.timestamp.as_deref().unwrap_or("N/A")),
+            Cell::new(
+                entry
+                    .dataflow
+                    .as_ref()
+                    .and_then(|status| status.state.as_deref())
+                    .unwrap_or("N/A"),
+            ),
+            Cell::new(
+                entry
+                    .ldm
+                    .as_ref()
+                    .and_then(|status| status.conns.as_deref())
+                    .unwrap_or("N/A"),
+            ),
+            Cell::new(
+                entry
+                    .second_hd
+                    .as_ref()
+                    .and_then(|status| status.state.as_deref())
+                    .unwrap_or("N/A"),
+            ),
+            Cell::new(entry.spg.len()),
+        ]);
+    }
+
+    table
+}
 
 use crate::utils::format::{
     format_bytes_to_human_readable, format_datetime_human_readable, format_optional_bool_as_yes_no,

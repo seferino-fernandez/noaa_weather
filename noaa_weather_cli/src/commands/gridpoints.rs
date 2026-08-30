@@ -121,7 +121,6 @@ pub async fn handle_command(
                 location.forecast_office_id,
                 location.x,
                 location.y,
-                None,
                 *units,
             )
             .await
@@ -143,7 +142,6 @@ pub async fn handle_command(
                 location.forecast_office_id,
                 location.x,
                 location.y,
-                None,
                 *units,
             )
             .await
@@ -166,7 +164,6 @@ pub async fn handle_command(
                 location.x,
                 location.y,
                 *limit,
-                None,
             )
             .await
             .map_err(|error| anyhow!("getting gridpoint stations: {}", error))?;
