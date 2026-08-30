@@ -91,17 +91,12 @@ pub async fn get_zone(
     id: &str,
     effective: Option<String>,
 ) -> Result<models::ZoneGeoJson, Error> {
-    let uri_str = format!("/zones/{type}/{id}",
-        type=r#type,
-        id=crate::apis::urlencode(id)
-    );
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = effective {
-        req_builder = req_builder.query(&[("effective", &param_value)]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/zones")
+        .path_segment(r#type)
+        .path_segment(id)
+        .query_scalar("effective", effective)
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns the current zone forecast for a given zone
@@ -126,13 +121,12 @@ pub async fn get_current_zone_forecast(
     r#type: &str,
     id: &str,
 ) -> Result<models::ZoneForecastGeoJson, Error> {
-    let uri_str = format!("/zones/{type}/{id}/forecast",
-        type=crate::apis::urlencode(r#type),
-        id=crate::apis::urlencode(id)
-    );
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/zones")
+        .path_segment(r#type)
+        .path_segment(id)
+        .literal_path("forecast")
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns a list of zones
@@ -157,89 +151,17 @@ pub async fn get_zones(
     configuration: &configuration::Configuration,
     params: GetZonesParams<'_>,
 ) -> Result<models::ZoneCollectionGeoJson, Error> {
-    let uri_str = "/zones".to_owned();
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    // Apply parameters from the struct
-    if let Some(param_value) = params.id {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|param| ("id".to_owned(), param.clone()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[("id", &param_value.join(","))]),
-        };
-    }
-    if let Some(param_value) = params.area {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|param| ("area".to_owned(), param.to_string()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[(
-                "area",
-                &param_value
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            )]),
-        };
-    }
-    if let Some(param_value) = params.region {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|param| ("region".to_owned(), param.to_string()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[(
-                "region",
-                &param_value
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            )]),
-        };
-    }
-    if let Some(param_value) = params.r#type {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|param| ("type".to_owned(), param.to_string()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[(
-                "type",
-                &param_value
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            )]),
-        };
-    }
-    if let Some(param_value) = params.point {
-        req_builder = req_builder.query(&[("point", &param_value.to_owned())]);
-    }
-    if let Some(param_value) = params.include_geometry {
-        req_builder = req_builder.query(&[("include_geometry", &param_value.to_string())]);
-    }
-    if let Some(param_value) = params.limit {
-        req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
-    }
-    if let Some(param_value) = params.effective {
-        req_builder = req_builder.query(&[("effective", &param_value)]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/zones")
+        .query_csv("id", params.id)
+        .query_csv("area", params.area)
+        .query_csv("region", params.region)
+        .query_csv("type", params.r#type)
+        .query_scalar("point", params.point)
+        .query_scalar("include_geometry", params.include_geometry)
+        .query_scalar("limit", params.limit)
+        .query_scalar("effective", params.effective)
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns a list of zones of a given type
@@ -266,96 +188,18 @@ pub async fn get_zones_by_type(
     r#type: models::NwsZoneType,
     params: GetZonesByTypeParams<'_>,
 ) -> Result<models::ZoneCollectionGeoJson, Error> {
-    let uri_str = format!("/zones/{type}", type = r#type);
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    // Apply parameters from the struct
-    if let Some(param_value) = params.id {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|param| ("id".to_owned(), param.clone()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[(
-                "id",
-                &param_value
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            )]),
-        };
-    }
-    if let Some(param_value) = params.area {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|param| ("area".to_owned(), param.to_string()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[(
-                "area",
-                &param_value
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            )]),
-        };
-    }
-    if let Some(param_value) = params.region {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|param| ("region".to_owned(), param.to_string()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[(
-                "region",
-                &param_value
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            )]),
-        };
-    }
-    if let Some(param_value) = params.type_filter {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|param| ("type".to_owned(), param.to_string()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[(
-                "type",
-                &param_value
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            )]),
-        };
-    }
-    if let Some(param_value) = params.point {
-        req_builder = req_builder.query(&[("point", &param_value.to_owned())]);
-    }
-    if let Some(param_value) = params.include_geometry {
-        req_builder = req_builder.query(&[("include_geometry", &param_value.to_string())]);
-    }
-    if let Some(param_value) = params.limit {
-        req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
-    }
-    if let Some(param_value) = params.effective {
-        req_builder = req_builder.query(&[("effective", &param_value)]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/zones")
+        .path_segment(r#type)
+        .query_csv("id", params.id)
+        .query_csv("area", params.area)
+        .query_csv("region", params.region)
+        .query_csv("type", params.type_filter)
+        .query_scalar("point", params.point)
+        .query_scalar("include_geometry", params.include_geometry)
+        .query_scalar("limit", params.limit)
+        .query_scalar("effective", params.effective)
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns a list of observations for a given zone
@@ -385,23 +229,14 @@ pub async fn get_zone_observations(
     end: Option<String>,
     limit: Option<i32>,
 ) -> Result<models::ObservationCollectionGeoJson, Error> {
-    let uri_str = format!(
-        "/zones/forecast/{id}/observations",
-        id = crate::apis::urlencode(id)
-    );
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = start {
-        req_builder = req_builder.query(&[("start", &param_value)]);
-    }
-    if let Some(param_value) = end {
-        req_builder = req_builder.query(&[("end", &param_value)]);
-    }
-    if let Some(param_value) = limit {
-        req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/zones/forecast")
+        .path_segment(id)
+        .literal_path("observations")
+        .query_scalar("start", start)
+        .query_scalar("end", end)
+        .query_scalar("limit", limit)
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns a list of observation stations for a given zone
@@ -428,27 +263,158 @@ pub async fn get_stations_by_zone(
     limit: Option<i32>,
     cursor: Option<&str>,
 ) -> Result<models::ObservationStationCollectionGeoJson, Error> {
-    let uri_str = format!(
-        "/zones/forecast/{id}/stations",
-        id = crate::apis::urlencode(id)
-    );
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = limit {
-        req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
-    }
-    if let Some(param_value) = cursor {
-        req_builder = req_builder.query(&[("cursor", &param_value.to_owned())]);
-    }
-    req_builder.json().await
+    http::request(configuration, "/zones/forecast")
+        .path_segment(id)
+        .literal_path("stations")
+        .query_scalar("limit", limit)
+        .query_scalar("cursor", cursor)
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 #[cfg(test)]
 mod tests {
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 
-    use super::get_stations_by_zone;
-    use crate::apis::configuration::Configuration;
+    use super::{
+        GetZonesByTypeParams, GetZonesParams, get_current_zone_forecast, get_stations_by_zone,
+        get_zone, get_zone_observations, get_zones, get_zones_by_type,
+    };
+    use crate::{
+        apis::configuration::Configuration,
+        models::{AreaCode, NwsZoneType},
+    };
+
+    const FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{}}"#;
+
+    fn configuration(server: &MockServer) -> Configuration {
+        Configuration::new(None, Some(server.uri()), None, None)
+    }
+
+    async fn mount_geo_json(server: &MockServer, body: &'static str) {
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(body, "application/geo+json"))
+            .mount(server)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn current_forecast_encodes_dynamic_segments_and_requests_geo_json() {
+        let server = MockServer::start().await;
+        mount_geo_json(&server, FEATURE).await;
+
+        get_current_zone_forecast(&configuration(&server), "public zone/type", "AZ Z/540")
+            .await
+            .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(
+            requests[0].url.path(),
+            "/zones/public%20zone%2Ftype/AZ%20Z%2F540/forecast"
+        );
+        assert_eq!(requests[0].headers["accept"], "application/geo+json");
+    }
+
+    #[tokio::test]
+    async fn zone_metadata_encodes_id_and_preserves_empty_effective() {
+        let server = MockServer::start().await;
+        mount_geo_json(&server, FEATURE).await;
+
+        get_zone(
+            &configuration(&server),
+            NwsZoneType::Forecast,
+            "AZ Z/540",
+            Some(String::new()),
+        )
+        .await
+        .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.path(), "/zones/forecast/AZ%20Z%2F540");
+        assert_eq!(requests[0].url.query(), Some("effective="));
+    }
+
+    #[tokio::test]
+    async fn zones_preserve_csv_and_scalar_empty_and_omission_contracts() {
+        let server = MockServer::start().await;
+        mount_geo_json(&server, r#"{"type":"FeatureCollection","features":[]}"#).await;
+
+        get_zones(
+            &configuration(&server),
+            GetZonesParams {
+                id: Some(vec!["AZ Z/1".to_owned(), "AZZ2".to_owned()]),
+                area: Some(Vec::<AreaCode>::new()),
+                region: None,
+                r#type: Some(vec![NwsZoneType::Forecast, NwsZoneType::Public]),
+                point: Some(""),
+                include_geometry: Some(false),
+                limit: None,
+                effective: Some("2026 / now".to_owned()),
+            },
+        )
+        .await
+        .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(
+            requests[0].url.query(),
+            Some(
+                "id=AZ+Z%2F1%2CAZZ2&area=&type=forecast%2Cpublic&point=&include_geometry=false&effective=2026+%2F+now"
+            )
+        );
+        assert_eq!(requests[0].headers["accept"], "application/geo+json");
+    }
+
+    #[tokio::test]
+    async fn zones_by_type_preserve_literal_path_and_type_filter_name() {
+        let server = MockServer::start().await;
+        mount_geo_json(&server, r#"{"type":"FeatureCollection","features":[]}"#).await;
+
+        get_zones_by_type(
+            &configuration(&server),
+            NwsZoneType::Public,
+            GetZonesByTypeParams {
+                id: Some(Vec::new()),
+                type_filter: Some(vec![NwsZoneType::Fire, NwsZoneType::County]),
+                limit: Some(0),
+                ..GetZonesByTypeParams::default()
+            },
+        )
+        .await
+        .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.path(), "/zones/public");
+        assert_eq!(
+            requests[0].url.query(),
+            Some("id=&type=fire%2Ccounty&limit=0")
+        );
+        assert_eq!(requests[0].headers["accept"], "application/geo+json");
+    }
+
+    #[tokio::test]
+    async fn zone_observations_keep_forecast_literal_and_query_contract() {
+        let server = MockServer::start().await;
+        mount_geo_json(&server, r#"{"type":"FeatureCollection","features":[]}"#).await;
+
+        get_zone_observations(
+            &configuration(&server),
+            "AZ Z/540",
+            Some(String::new()),
+            None,
+            Some(12),
+        )
+        .await
+        .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(
+            requests[0].url.path(),
+            "/zones/forecast/AZ%20Z%2F540/observations"
+        );
+        assert_eq!(requests[0].url.query(), Some("start=&limit=12"));
+        assert_eq!(requests[0].headers["accept"], "application/geo+json");
+    }
 
     #[tokio::test]
     async fn zone_stations_preserves_query_and_omits_feature_flags() {
@@ -460,14 +426,17 @@ mod tests {
             ))
             .mount(&server)
             .await;
-        let configuration = Configuration::new(None, Some(server.uri()), None, None);
-
-        get_stations_by_zone(&configuration, "AZZ540", Some(15), Some("next"))
+        get_stations_by_zone(&configuration(&server), "AZ Z/540", Some(15), Some(""))
             .await
             .unwrap();
 
         let requests = server.received_requests().await.unwrap();
-        assert_eq!(requests[0].url.query(), Some("limit=15&cursor=next"));
+        assert_eq!(
+            requests[0].url.path(),
+            "/zones/forecast/AZ%20Z%2F540/stations"
+        );
+        assert_eq!(requests[0].url.query(), Some("limit=15&cursor="));
+        assert_eq!(requests[0].headers["accept"], "application/geo+json");
         assert!(!requests[0].headers.contains_key("feature-flags"));
     }
 }

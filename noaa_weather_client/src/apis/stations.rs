@@ -27,10 +27,10 @@ pub async fn get_observation_station(
     configuration: &configuration::Configuration,
     id: &str,
 ) -> Result<models::ObservationStationGeoJson, Error> {
-    let uri_str = format!("/stations/{id}", id = crate::apis::urlencode(id));
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/stations")
+        .path_segment(id)
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns a list of observation stations.
@@ -62,52 +62,13 @@ pub async fn get_observation_stations(
     limit: Option<i32>,
     cursor: Option<&str>,
 ) -> Result<models::ObservationStationCollectionGeoJson, Error> {
-    let uri_str = "/stations".to_owned();
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = id {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|param| ("id".to_owned(), param.clone()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[(
-                "id",
-                &param_value
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            )]),
-        };
-    }
-    if let Some(param_value) = state {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|param| ("state".to_owned(), param.to_string()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[(
-                "state",
-                &param_value
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            )]),
-        };
-    }
-    if let Some(param_value) = limit {
-        req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
-    }
-    if let Some(param_value) = cursor {
-        req_builder = req_builder.query(&[("cursor", &param_value.to_owned())]);
-    }
-    req_builder.json().await
+    http::request(configuration, "/stations")
+        .query_csv("id", id)
+        .query_csv("state", state)
+        .query_scalar("limit", limit)
+        .query_scalar("cursor", cursor)
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns the latest observation for a station
@@ -134,17 +95,12 @@ pub async fn get_latest_observations(
     station_id: &str,
     require_quality_controlled: Option<bool>,
 ) -> Result<models::ObservationGeoJson, Error> {
-    let uri_str = format!(
-        "/stations/{stationId}/observations/latest",
-        stationId = crate::apis::urlencode(station_id)
-    );
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = require_quality_controlled {
-        req_builder = req_builder.query(&[("require_qc", &param_value.to_string())]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/stations")
+        .path_segment(station_id)
+        .literal_path("observations/latest")
+        .query_scalar("require_qc", require_quality_controlled)
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns a list of observations for a given station
@@ -176,26 +132,15 @@ pub async fn get_observations(
     limit: Option<i32>,
     cursor: Option<&str>,
 ) -> Result<models::ObservationCollectionGeoJson, Error> {
-    let uri_str = format!(
-        "/stations/{stationId}/observations",
-        stationId = crate::apis::urlencode(station_id)
-    );
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = start {
-        req_builder = req_builder.query(&[("start", &param_value.to_string())]);
-    }
-    if let Some(param_value) = end {
-        req_builder = req_builder.query(&[("end", &param_value.to_string())]);
-    }
-    if let Some(param_value) = limit {
-        req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
-    }
-    if let Some(param_value) = cursor {
-        req_builder = req_builder.query(&[("cursor", &param_value.to_owned())]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/stations")
+        .path_segment(station_id)
+        .literal_path("observations")
+        .query_scalar("start", start)
+        .query_scalar("end", end)
+        .query_scalar("limit", limit)
+        .query_scalar("cursor", cursor)
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns a single observation.
@@ -221,14 +166,12 @@ pub async fn get_observation_by_time(
     station_id: &str,
     time: String,
 ) -> Result<models::ObservationGeoJson, Error> {
-    let uri_str = format!(
-        "/stations/{stationId}/observations/{time}",
-        stationId = crate::apis::urlencode(station_id),
-        time = time
-    );
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/stations")
+        .path_segment(station_id)
+        .literal_path("observations")
+        .path_segment(time)
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns a single Terminal Aerodrome Forecast (TAF).
@@ -257,15 +200,13 @@ pub async fn get_terminal_aerodrome_forecast(
     date: String,
     time: &str,
 ) -> Result<models::TerminalAerodromeForecast, Error> {
-    let uri_str = format!(
-        "/stations/{stationId}/tafs/{date}/{time}",
-        stationId = crate::apis::urlencode(station_id),
-        date = date,
-        time = crate::apis::urlencode(time)
-    );
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.xml().await
+    http::request(configuration, "/stations")
+        .path_segment(station_id)
+        .literal_path("tafs")
+        .path_segment(date)
+        .path_segment(time)
+        .xml(http::XmlMedia::Iwxxm)
+        .await
 }
 
 /// Returns metadata for Terminal Aerodrome Forecasts for the specified airport station.
@@ -288,20 +229,21 @@ pub async fn get_terminal_aerodrome_forecasts(
     configuration: &configuration::Configuration,
     station_id: &str,
 ) -> Result<models::TerminalAerodromeForecastsResponse, Error> {
-    let uri_str = format!(
-        "/stations/{stationId}/tafs",
-        stationId = crate::apis::urlencode(station_id)
-    );
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/stations")
+        .path_segment(station_id)
+        .literal_path("tafs")
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 #[cfg(test)]
 mod tests {
-    use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+    use wiremock::{
+        Mock, MockServer, ResponseTemplate,
+        matchers::{method, path},
+    };
 
-    use super::{get_observation_station, get_observation_stations};
+    use super::{get_observation_by_time, get_observation_station, get_observation_stations};
     use crate::apis::configuration::Configuration;
 
     fn configuration(server: &MockServer) -> Configuration {
@@ -322,7 +264,7 @@ mod tests {
         get_observation_stations(
             &configuration(&server),
             Some(vec!["KPHX".to_owned(), "KIWA".to_owned()]),
-            None,
+            Some(vec!["AZ".parse().unwrap(), "CA".parse().unwrap()]),
             Some(20),
             Some("next-page"),
         )
@@ -332,7 +274,11 @@ mod tests {
         let requests = server.received_requests().await.unwrap();
         assert_eq!(
             requests[0].url.query(),
-            Some("id=KPHX%2CKIWA&limit=20&cursor=next-page")
+            Some("id=KPHX%2CKIWA&state=AZ%2CCA&limit=20&cursor=next-page")
+        );
+        assert_eq!(
+            requests[0].headers["accept"].to_str().unwrap(),
+            "application/geo+json"
         );
         assert!(!requests[0].headers.contains_key("feature-flags"));
     }
@@ -348,10 +294,149 @@ mod tests {
             .mount(&server)
             .await;
 
-        get_observation_station(&configuration(&server), "KPHX")
+        get_observation_station(&configuration(&server), "K/PHX%")
             .await
             .unwrap();
         let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.path(), "/stations/K%2FPHX%25");
+        assert_eq!(
+            requests[0].headers["accept"].to_str().unwrap(),
+            "application/geo+json"
+        );
         assert!(!requests[0].headers.contains_key("feature-flags"));
+    }
+
+    #[tokio::test]
+    async fn observation_path_encodes_station_and_time_as_distinct_segments() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(500))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let result = get_observation_by_time(
+            &configuration(&server),
+            "K/PHX%",
+            "2026-08-30T12:34:56Z/path%".to_owned(),
+        )
+        .await;
+
+        assert!(result.is_err());
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(
+            requests[0].url.path(),
+            "/stations/K%2FPHX%25/observations/2026-08-30T12:34:56Z%2Fpath%25"
+        );
+    }
+
+    #[tokio::test]
+    async fn remaining_station_routes_preserve_queries_and_media_contracts() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/stations/KPHX/observations/latest"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                r#"{"type":"Feature","geometry":null,"properties":{}}"#,
+                "application/geo+json",
+            ))
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path("/stations/KPHX/observations"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                r#"{"type":"FeatureCollection","features":[]}"#,
+                "application/geo+json",
+            ))
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path("/stations/KPHX/tafs"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_raw(r#"{"@graph":[]}"#, "application/ld+json"),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        super::get_latest_observations(&configuration(&server), "KPHX", Some(false))
+            .await
+            .unwrap();
+        super::get_observations(
+            &configuration(&server),
+            "KPHX",
+            Some("2026-08-30T00:00:00Z".to_owned()),
+            None,
+            Some(0),
+            Some("next page"),
+        )
+        .await
+        .unwrap();
+        super::get_terminal_aerodrome_forecasts(&configuration(&server), "KPHX")
+            .await
+            .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        let contracts = requests
+            .iter()
+            .map(|request| {
+                (
+                    request.url.path().to_owned(),
+                    request.url.query().map(str::to_owned),
+                    request.headers["accept"].to_str().unwrap().to_owned(),
+                )
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            contracts,
+            [
+                (
+                    "/stations/KPHX/observations/latest".to_owned(),
+                    Some("require_qc=false".to_owned()),
+                    "application/geo+json".to_owned(),
+                ),
+                (
+                    "/stations/KPHX/observations".to_owned(),
+                    Some("start=2026-08-30T00%3A00%3A00Z&limit=0&cursor=next+page".to_owned(),),
+                    "application/geo+json".to_owned(),
+                ),
+                (
+                    "/stations/KPHX/tafs".to_owned(),
+                    None,
+                    "application/ld+json".to_owned(),
+                ),
+            ]
+        );
+    }
+
+    #[cfg(feature = "xml")]
+    #[tokio::test]
+    async fn taf_document_encodes_dynamic_segments_and_requests_iwxxm() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(500))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let result = super::get_terminal_aerodrome_forecast(
+            &configuration(&server),
+            "K/PHX%",
+            "2026/08%30".to_owned(),
+            "12/34%",
+        )
+        .await;
+
+        assert!(result.is_err());
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(
+            requests[0].url.path(),
+            "/stations/K%2FPHX%25/tafs/2026%2F08%2530/12%2F34%25"
+        );
+        assert_eq!(
+            requests[0].headers["accept"].to_str().unwrap(),
+            "application/vnd.wmo.iwxxm+xml"
+        );
     }
 }

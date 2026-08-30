@@ -26,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking:** Change the client default feature set from empty in 1.3 to `radio`. Normal defaults include radio, both Terminal Aerodrome Forecast APIs, and XML parsing.
 - Split optional XML support into the `xml` feature. `--no-default-features` omits radio, both TAF APIs, and `quick-xml`; enabling only `xml` retains both TAF APIs without radio.
 - Validate successful JSON, XML, PDF, and image response media types before decoding or returning them.
+- Centralize path, scalar, comma-separated query, feature-header, media negotiation, transport, validation, and decoding mechanics in the private request module while preserving every public endpoint signature.
+- Request the exact GeoJSON, JSON-LD, IWXXM, SSML, PDF, or image representation required by each typed result.
+
+### Fixed
+
+- Encode dynamic path segments with path semantics, so spaces use `%20` and reserved separators cannot alter NOAA endpoint paths. The public `urlencode` helper retains its historical form/query behavior.
 
 ### Removed
 

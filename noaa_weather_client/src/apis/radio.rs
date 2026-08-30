@@ -49,10 +49,11 @@ pub async fn get_point_radio(
     latitude: f64,
     longitude: f64,
 ) -> Result<models::RadioBroadcast, Error> {
-    let uri_str = format!("/points/{latitude},{longitude}/radio");
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.xml().await
+    http::request(configuration, "/points")
+        .path_segment(format_args!("{latitude},{longitude}"))
+        .literal_path("radio")
+        .xml(http::XmlMedia::Ssml)
+        .await
 }
 
 /// Returns the NOAA Weather Radio broadcast for a given transmitter call sign.
@@ -78,13 +79,11 @@ pub async fn get_area_radio(
     configuration: &configuration::Configuration,
     call_sign: &str,
 ) -> Result<models::RadioBroadcast, Error> {
-    let uri_str = format!(
-        "/radio/{call_sign}/broadcast",
-        call_sign = crate::apis::urlencode(call_sign)
-    );
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.xml().await
+    http::request(configuration, "/radio")
+        .path_segment(call_sign)
+        .literal_path("broadcast")
+        .xml(http::XmlMedia::Ssml)
+        .await
 }
 
 /// Returns a page of NOAA Weather Radio transmitters.
@@ -108,14 +107,10 @@ pub async fn get_radio_transmitters(
     configuration: &configuration::Configuration,
     cursor: Option<&str>,
 ) -> Result<models::RadioTransmitterCollection, Error> {
-    let mut req_builder =
-        http::get(configuration, "/radio").header("Accept", "application/ld+json");
-
-    if let Some(cursor) = cursor {
-        req_builder = req_builder.query(&[("cursor", cursor)]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/radio")
+        .query_scalar("cursor", cursor)
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns metadata for a NOAA Weather Radio transmitter.
@@ -138,14 +133,9 @@ pub async fn get_radio_transmitter(
     configuration: &configuration::Configuration,
     call_sign: &str,
 ) -> Result<models::RadioTransmitter, Error> {
-    let uri_str = format!(
-        "/radio/{call_sign}",
-        call_sign = crate::apis::urlencode(call_sign)
-    );
-
-    http::get(configuration, &uri_str)
-        .header("Accept", "application/ld+json")
-        .json()
+    http::request(configuration, "/radio")
+        .path_segment(call_sign)
+        .json(http::JsonMedia::JsonLd)
         .await
 }
 
@@ -169,14 +159,10 @@ pub async fn get_radio_transmitters_for_county_zone(
     configuration: &configuration::Configuration,
     zone_id: &str,
 ) -> Result<models::RadioTransmitterCollection, Error> {
-    let uri_str = format!(
-        "/zones/county/{zone_id}/radio",
-        zone_id = crate::apis::urlencode(zone_id)
-    );
-
-    http::get(configuration, &uri_str)
-        .header("Accept", "application/ld+json")
-        .json()
+    http::request(configuration, "/zones/county")
+        .path_segment(zone_id)
+        .literal_path("radio")
+        .json(http::JsonMedia::JsonLd)
         .await
 }
 
@@ -188,9 +174,10 @@ mod tests {
     };
 
     use super::{
-        get_radio_transmitter, get_radio_transmitters, get_radio_transmitters_for_county_zone,
+        get_area_radio, get_point_radio, get_radio_transmitter, get_radio_transmitters,
+        get_radio_transmitters_for_county_zone,
     };
-    use crate::apis::configuration::Configuration;
+    use crate::{Error, apis::configuration::Configuration};
 
     const TRANSMITTERS: &str = r#"{
         "@graph": [{
@@ -203,9 +190,72 @@ mod tests {
         }],
         "pagination": {"next": "https://api.weather.gov/radio?cursor=next-page"}
     }"#;
+    const RADIO_BROADCAST: &str = r#"<speak version="1.1" xml:lang="en-US"></speak>"#;
 
     fn configuration(server: &MockServer) -> Configuration {
         Configuration::new(None, Some(server.uri()), None, None)
+    }
+
+    #[tokio::test]
+    async fn transmitter_broadcast_encodes_call_sign_and_requests_ssml() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/radio/K%20E%2F%25%3F/broadcast"))
+            .and(header("Accept", "application/ssml+xml"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_raw(RADIO_BROADCAST, "application/ssml+xml"),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let broadcast = get_area_radio(&configuration(&server), "K E/%?")
+            .await
+            .unwrap();
+        assert_eq!(broadcast.version, "1.1");
+        assert_eq!(broadcast.lang, "en-US");
+    }
+
+    #[tokio::test]
+    async fn point_broadcast_encodes_one_coordinate_segment_and_requests_ssml() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/points/33.4484,-112.074/radio"))
+            .and(header("Accept", "application/ssml+xml"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_raw(RADIO_BROADCAST, "application/ssml+xml"),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let broadcast = get_point_radio(&configuration(&server), 33.4484, -112.074)
+            .await
+            .unwrap();
+        assert_eq!(broadcast.version, "1.1");
+        assert_eq!(broadcast.lang, "en-US");
+    }
+
+    #[tokio::test]
+    async fn transmitter_broadcast_rejects_generic_xml() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/radio/KEC94/broadcast"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_raw(RADIO_BROADCAST, "application/xml"),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let Error::Protocol(error) = get_area_radio(&configuration(&server), "KEC94")
+            .await
+            .unwrap_err()
+        else {
+            panic!("expected protocol error");
+        };
+        assert_eq!(error.expected(), "application/ssml+xml");
+        assert_eq!(error.actual(), Some("application/xml"));
     }
 
     #[tokio::test]
@@ -258,10 +308,32 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn transmitter_list_rejects_generic_json() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/radio"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_raw(r#"{"@graph":[]}"#, "application/json"),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let Error::Protocol(error) = get_radio_transmitters(&configuration(&server), None)
+            .await
+            .unwrap_err()
+        else {
+            panic!("expected protocol error");
+        };
+        assert_eq!(error.expected(), "application/ld+json");
+        assert_eq!(error.actual(), Some("application/json"));
+    }
+
+    #[tokio::test]
     async fn transmitter_detail_percent_encodes_call_sign_and_returns_an_object() {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
-            .and(path("/radio/K%2FA%3F"))
+            .and(path("/radio/K%20A%2F%25%3F"))
             .and(header("Accept", "application/ld+json"))
             .respond_with(ResponseTemplate::new(200).set_body_raw(
                 r#"{
@@ -278,7 +350,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let transmitter = get_radio_transmitter(&configuration(&server), "K/A?")
+        let transmitter = get_radio_transmitter(&configuration(&server), "K A/%?")
             .await
             .unwrap();
 
@@ -292,7 +364,7 @@ mod tests {
     async fn county_zone_transmitters_use_the_county_path_without_pagination() {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
-            .and(path("/zones/county/AZC%2F013%3F/radio"))
+            .and(path("/zones/county/AZC%20013%2F%25%3F/radio"))
             .and(header("Accept", "application/ld+json"))
             .respond_with(
                 ResponseTemplate::new(200)
@@ -303,7 +375,7 @@ mod tests {
             .await;
 
         let transmitters =
-            get_radio_transmitters_for_county_zone(&configuration(&server), "AZC/013?")
+            get_radio_transmitters_for_county_zone(&configuration(&server), "AZC 013/%?")
                 .await
                 .unwrap();
 

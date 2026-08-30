@@ -49,13 +49,11 @@ pub async fn get_products_by_location(
     configuration: &configuration::Configuration,
     location_id: &models::NwsForecastOfficeId,
 ) -> Result<models::TextProductTypeCollection, Error> {
-    let uri_str = format!(
-        "/products/locations/{locationId}/types",
-        locationId = location_id
-    );
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/products/locations")
+        .path_segment(location_id)
+        .literal_path("types")
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns a specific NWS text product by its unique product ID.
@@ -79,13 +77,10 @@ pub async fn get_product(
     configuration: &configuration::Configuration,
     product_id: &str,
 ) -> Result<models::TextProduct, Error> {
-    let uri_str = format!(
-        "/products/{productId}",
-        productId = crate::apis::urlencode(product_id)
-    );
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/products")
+        .path_segment(product_id)
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns a list of valid NWS text product issuance locations.
@@ -108,10 +103,9 @@ pub async fn get_product(
 pub async fn get_product_locations(
     configuration: &configuration::Configuration,
 ) -> Result<models::TextProductLocationCollection, Error> {
-    let uri_str = "/products/locations".to_owned();
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/products/locations")
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns a list of valid NWS text product types and their codes.
@@ -134,10 +128,9 @@ pub async fn get_product_locations(
 pub async fn get_product_types(
     configuration: &configuration::Configuration,
 ) -> Result<models::TextProductTypeCollection, Error> {
-    let uri_str = "/products/types".to_owned();
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/products/types")
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns a list of text products based on specified query parameters.
@@ -162,92 +155,16 @@ pub async fn get_products_query(
     configuration: &configuration::Configuration,
     params: ProductsQueryParams,
 ) -> Result<models::TextProductCollection, Error> {
-    let uri_str = "/products".to_owned();
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = params.location_ids {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|p| ("location".to_owned(), p.to_string()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[(
-                "location",
-                &param_value
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            )]),
-        };
-    }
-    if let Some(param_value) = params.start_time {
-        req_builder = req_builder.query(&[("start", &param_value)]);
-    }
-    if let Some(param_value) = params.end_time {
-        req_builder = req_builder.query(&[("end", &param_value)]);
-    }
-    if let Some(param_value) = params.office_ids {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|p| ("office".to_owned(), p.to_string()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[(
-                "office",
-                &param_value
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            )]),
-        };
-    }
-    if let Some(param_value) = params.wmo_ids {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|p| ("wmoid".to_owned(), p.to_string()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[(
-                "wmoid",
-                &param_value
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            )]),
-        };
-    }
-    if let Some(param_value) = params.product_type_codes {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|p| ("type".to_owned(), p.to_string()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[(
-                "type",
-                &param_value
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            )]),
-        };
-    }
-    if let Some(param_value) = params.limit {
-        req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/products")
+        .query_csv("location", params.location_ids)
+        .query_scalar("start", params.start_time)
+        .query_scalar("end", params.end_time)
+        .query_csv("office", params.office_ids)
+        .query_csv("wmoid", params.wmo_ids)
+        .query_csv("type", params.product_type_codes)
+        .query_scalar("limit", params.limit)
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns a list of text products of a specific type.
@@ -271,13 +188,10 @@ pub async fn get_products_by_type(
     configuration: &configuration::Configuration,
     type_id: &str,
 ) -> Result<models::TextProductCollection, Error> {
-    let uri_str = format!(
-        "/products/types/{typeId}",
-        typeId = crate::apis::urlencode(type_id)
-    );
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/products/types")
+        .path_segment(type_id)
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns a list of text products of a specific type for a specific issuance location.
@@ -303,14 +217,12 @@ pub async fn get_products_by_type_and_location(
     type_id: &str,
     location_id: &models::NwsForecastOfficeId,
 ) -> Result<models::TextProductCollection, Error> {
-    let uri_str = format!(
-        "/products/types/{typeId}/locations/{locationId}",
-        typeId = type_id,
-        locationId = location_id
-    );
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/products/types")
+        .path_segment(type_id)
+        .literal_path("locations")
+        .path_segment(location_id)
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns a list of valid text product issuance locations for a given product type.
@@ -334,13 +246,11 @@ pub async fn get_product_issuance_locations_by_type(
     configuration: &configuration::Configuration,
     type_id: &str,
 ) -> Result<models::TextProductLocationCollection, Error> {
-    let uri_str = format!(
-        "/products/types/{typeId}/locations",
-        typeId = crate::apis::urlencode(type_id)
-    );
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/products/types")
+        .path_segment(type_id)
+        .literal_path("locations")
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns the latest text product of a specific type for a specific issuance location.
@@ -366,12 +276,178 @@ pub async fn get_latest_product_by_type_and_location(
     type_id: &str,
     location_id: &str,
 ) -> Result<models::TextProduct, Error> {
-    let uri_str = format!(
-        "/products/types/{type_id}/locations/{location_id}/latest",
-        type_id = crate::apis::urlencode(type_id),
-        location_id = crate::apis::urlencode(location_id)
-    );
-    let req_builder = http::get(configuration, &uri_str);
+    http::request(configuration, "/products/types")
+        .path_segment(type_id)
+        .literal_path("locations")
+        .path_segment(location_id)
+        .literal_path("latest")
+        .json(http::JsonMedia::JsonLd)
+        .await
+}
 
-    req_builder.json().await
+#[cfg(test)]
+mod tests {
+    use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+
+    use super::{
+        ProductsQueryParams, get_latest_product_by_type_and_location, get_product,
+        get_product_issuance_locations_by_type, get_product_locations, get_product_types,
+        get_products_by_location, get_products_by_type, get_products_by_type_and_location,
+        get_products_query,
+    };
+    use crate::{apis::configuration::Configuration, models::NwsForecastOfficeId};
+
+    #[tokio::test]
+    async fn products_by_type_and_location_encodes_dynamic_segments_and_requests_json_ld() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw("{}", "application/ld+json"))
+            .expect(1)
+            .mount(&server)
+            .await;
+        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+
+        get_products_by_type_and_location(
+            &configuration,
+            "space slash/percent%",
+            &NwsForecastOfficeId::Lwx,
+        )
+        .await
+        .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(
+            requests[0].url.path(),
+            "/products/types/space%20slash%2Fpercent%25/locations/LWX"
+        );
+        assert_eq!(
+            requests[0].headers["accept"].to_str().unwrap(),
+            "application/ld+json"
+        );
+    }
+
+    #[tokio::test]
+    async fn products_query_preserves_csv_scalar_empty_and_omitted_values() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw("{}", "application/ld+json"))
+            .expect(1)
+            .mount(&server)
+            .await;
+        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+
+        get_products_query(
+            &configuration,
+            ProductsQueryParams {
+                location_ids: Some(vec![NwsForecastOfficeId::Lwx, NwsForecastOfficeId::Pqr]),
+                start_time: Some(String::new()),
+                end_time: None,
+                office_ids: Some(vec![]),
+                wmo_ids: Some(vec!["TTAA 00".to_owned(), "TT/BB%".to_owned()]),
+                product_type_codes: None,
+                limit: Some(0),
+            },
+        )
+        .await
+        .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.path(), "/products");
+        assert_eq!(
+            requests[0].url.query(),
+            Some("location=LWX%2CPQR&start=&office=&wmoid=TTAA+00%2CTT%2FBB%25&limit=0")
+        );
+        let query_pairs = requests[0].url.query_pairs().collect::<Vec<_>>();
+        for name in ["location", "start", "office", "wmoid", "limit"] {
+            assert_eq!(
+                query_pairs.iter().filter(|(key, _)| key == name).count(),
+                1,
+                "{name} must appear once"
+            );
+        }
+        assert!(query_pairs.iter().all(|(key, _)| key != "end"));
+        assert!(query_pairs.iter().all(|(key, _)| key != "type"));
+        assert_eq!(
+            requests[0].headers["accept"].to_str().unwrap(),
+            "application/ld+json"
+        );
+    }
+
+    #[tokio::test]
+    async fn remaining_products_routes_encode_segments_and_request_json_ld() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw("{}", "application/ld+json"))
+            .expect(7)
+            .mount(&server)
+            .await;
+        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+
+        get_products_by_location(&configuration, &NwsForecastOfficeId::Lwx)
+            .await
+            .unwrap();
+        get_product(&configuration, "space slash/percent%")
+            .await
+            .unwrap();
+        get_product_locations(&configuration).await.unwrap();
+        get_product_types(&configuration).await.unwrap();
+        get_products_by_type(&configuration, "type slash/%")
+            .await
+            .unwrap();
+        get_product_issuance_locations_by_type(&configuration, "issue slash/%")
+            .await
+            .unwrap();
+        get_latest_product_by_type_and_location(
+            &configuration,
+            "latest type/%",
+            "latest location/%",
+        )
+        .await
+        .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        let routes_and_media = requests
+            .iter()
+            .map(|request| {
+                (
+                    request.url.path().to_owned(),
+                    request.headers["accept"].to_str().unwrap().to_owned(),
+                )
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            routes_and_media,
+            [
+                (
+                    "/products/locations/LWX/types".to_owned(),
+                    "application/ld+json".to_owned(),
+                ),
+                (
+                    "/products/space%20slash%2Fpercent%25".to_owned(),
+                    "application/ld+json".to_owned(),
+                ),
+                (
+                    "/products/locations".to_owned(),
+                    "application/ld+json".to_owned(),
+                ),
+                (
+                    "/products/types".to_owned(),
+                    "application/ld+json".to_owned(),
+                ),
+                (
+                    "/products/types/type%20slash%2F%25".to_owned(),
+                    "application/ld+json".to_owned(),
+                ),
+                (
+                    "/products/types/issue%20slash%2F%25/locations".to_owned(),
+                    "application/ld+json".to_owned(),
+                ),
+                (
+                    "/products/types/latest%20type%2F%25/locations/latest%20location%2F%25/latest"
+                        .to_owned(),
+                    "application/ld+json".to_owned(),
+                ),
+            ]
+        );
+    }
 }

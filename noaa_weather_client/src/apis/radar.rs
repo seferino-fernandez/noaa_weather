@@ -57,17 +57,12 @@ pub async fn get_radar_wind_profiler(
     time: Option<&str>,
     interval: Option<&str>,
 ) -> Result<serde_json::Value, Error> {
-    let uri_str = format!("/radar/profilers/{id}", id = crate::apis::urlencode(id));
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = time {
-        req_builder = req_builder.query(&[("time", &param_value.to_owned())]);
-    }
-    if let Some(param_value) = interval {
-        req_builder = req_builder.query(&[("interval", &param_value.to_owned())]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/radar/profilers")
+        .path_segment(id)
+        .query_scalar("time", time)
+        .query_scalar("interval", interval)
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns metadata about a given radar queue on a specific host.
@@ -94,35 +89,18 @@ pub async fn get_radar_data_queue(
     host: &RadarQueueHost,
     params: RadarDataQueueQueryParams<'_>,
 ) -> Result<models::RadarQueuesResponse, Error> {
-    let uri_str = format!("/radar/queues/{host}", host = host);
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = params.limit {
-        req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
-    }
-    if let Some(param_value) = params.arrived {
-        req_builder = req_builder.query(&[("arrived", &param_value.to_owned())]);
-    }
-    if let Some(param_value) = params.created {
-        req_builder = req_builder.query(&[("created", &param_value.to_owned())]);
-    }
-    if let Some(param_value) = params.published {
-        req_builder = req_builder.query(&[("published", &param_value.to_owned())]);
-    }
-    if let Some(param_value) = params.station {
-        req_builder = req_builder.query(&[("station", &param_value.to_owned())]);
-    }
-    if let Some(param_value) = params.r#type {
-        req_builder = req_builder.query(&[("type", &param_value.to_owned())]);
-    }
-    if let Some(param_value) = params.feed {
-        req_builder = req_builder.query(&[("feed", &param_value.to_owned())]);
-    }
-    if let Some(param_value) = params.resolution {
-        req_builder = req_builder.query(&[("resolution", &param_value.to_owned())]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/radar/queues")
+        .path_segment(host)
+        .query_scalar("limit", params.limit)
+        .query_scalar("arrived", params.arrived)
+        .query_scalar("created", params.created)
+        .query_scalar("published", params.published)
+        .query_scalar("station", params.station)
+        .query_scalar("type", params.r#type)
+        .query_scalar("feed", params.feed)
+        .query_scalar("resolution", params.resolution)
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns metadata about a given radar server.
@@ -148,14 +126,11 @@ pub async fn get_radar_server(
     id: &str,
     reporting_host: Option<&str>,
 ) -> Result<models::RadarServer, Error> {
-    let uri_str = format!("/radar/servers/{id}", id = crate::apis::urlencode(id));
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = reporting_host {
-        req_builder = req_builder.query(&[("reportingHost", &param_value.to_owned())]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/radar/servers")
+        .path_segment(id)
+        .query_scalar("reportingHost", reporting_host)
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns a list of radar servers.
@@ -179,14 +154,10 @@ pub async fn get_radar_servers(
     configuration: &configuration::Configuration,
     reporting_host: Option<&str>,
 ) -> Result<models::RadarServersResponse, Error> {
-    let uri_str = "/radar/servers".to_owned();
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = reporting_host {
-        req_builder = req_builder.query(&[("reportingHost", &param_value.to_owned())]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/radar/servers")
+        .query_scalar("reportingHost", reporting_host)
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns metadata about a given radar station.
@@ -214,17 +185,12 @@ pub async fn get_radar_station(
     reporting_host: Option<&str>,
     host: Option<&RadarQueueHost>,
 ) -> Result<models::RadarStationFeature, Error> {
-    let uri_str = format!("/radar/stations/{id}", id = crate::apis::urlencode(id));
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = reporting_host {
-        req_builder = req_builder.query(&[("reportingHost", &param_value.to_owned())]);
-    }
-    if let Some(param_value) = host {
-        req_builder = req_builder.query(&[("host", &param_value.to_string())]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/radar/stations")
+        .path_segment(id)
+        .query_scalar("reportingHost", reporting_host)
+        .query_scalar("host", host)
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns alarm metadata for a given radar station.
@@ -248,13 +214,11 @@ pub async fn get_radar_station_alarms(
     configuration: &configuration::Configuration,
     station_id: &str,
 ) -> Result<models::RadarStationAlarmsResponse, Error> {
-    let uri_str = format!(
-        "/radar/stations/{stationId}/alarms",
-        stationId = crate::apis::urlencode(station_id)
-    );
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/radar/stations")
+        .path_segment(station_id)
+        .literal_path("alarms")
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns a list of radar stations, optionally filtered.
@@ -282,35 +246,12 @@ pub async fn get_radar_stations(
     reporting_host: Option<&str>,
     host: Option<&RadarQueueHost>,
 ) -> Result<models::RadarStationsResponse, Error> {
-    let uri_str = "/radar/stations".to_owned();
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = station_type {
-        req_builder = match "csv" {
-            "multi" => req_builder.query(
-                &param_value
-                    .iter()
-                    .map(|param| ("stationType".to_owned(), param.to_owned()))
-                    .collect::<Vec<(std::string::String, std::string::String)>>(),
-            ),
-            _ => req_builder.query(&[(
-                "stationType",
-                &param_value
-                    .iter()
-                    .map(std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            )]),
-        };
-    }
-    if let Some(param_value) = reporting_host {
-        req_builder = req_builder.query(&[("reportingHost", &param_value.to_owned())]);
-    }
-    if let Some(param_value) = host {
-        req_builder = req_builder.query(&[("host", &param_value.to_string())]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/radar/stations")
+        .query_csv("stationType", station_type)
+        .query_scalar("reportingHost", reporting_host)
+        .query_scalar("host", host)
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns radar SPGDS telemetry.
@@ -333,14 +274,10 @@ pub async fn get_radar_spgds(
     configuration: &configuration::Configuration,
     published: Option<&str>,
 ) -> Result<models::RadarSpgdsResponse, Error> {
-    let mut req_builder =
-        http::get(configuration, "/radar/spgds").header("Accept", "application/ld+json");
-
-    if let Some(param_value) = published {
-        req_builder = req_builder.query(&[("published", &param_value.to_owned())]);
-    }
-
-    req_builder.json().await
+    http::request(configuration, "/radar/spgds")
+        .query_scalar("published", published)
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 #[cfg(test)]
@@ -350,11 +287,73 @@ mod tests {
         matchers::{header, method, path},
     };
 
-    use super::get_radar_spgds;
-    use crate::{Error, apis::configuration::Configuration};
+    use super::{get_radar_server, get_radar_spgds, get_radar_stations};
+    use crate::{Error, apis::configuration::Configuration, models::RadarQueueHost};
 
     fn configuration(server: &MockServer) -> Configuration {
         Configuration::new(None, Some(server.uri()), None, None)
+    }
+
+    #[tokio::test]
+    async fn station_types_are_one_csv_query_and_station_collection_is_geo_json() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/radar/stations"))
+            .and(header("Accept", "application/geo+json"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                r#"{"type":"FeatureCollection","features":[]}"#,
+                "application/geo+json",
+            ))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        get_radar_stations(
+            &configuration(&server),
+            Some(vec!["WSR-88D".to_owned(), "TD/WR".to_owned()]),
+            Some("report/host"),
+            Some(&RadarQueueHost::Rds),
+        )
+        .await
+        .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(
+            requests[0].url.query(),
+            Some("stationType=WSR-88D%2CTD%2FWR&reportingHost=report%2Fhost&host=rds")
+        );
+        assert_eq!(
+            requests[0]
+                .url
+                .query_pairs()
+                .filter(|(name, _)| name == "stationType")
+                .count(),
+            1
+        );
+    }
+
+    #[tokio::test]
+    async fn server_id_is_an_encoded_json_ld_path_segment_with_scalar_reporting_host() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/radar/servers/ldm%2Fone%20host"))
+            .and(header("Accept", "application/ld+json"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_raw(r#"{"id":"ldm/one host"}"#, "application/ld+json"),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let response =
+            get_radar_server(&configuration(&server), "ldm/one host", Some("report/host"))
+                .await
+                .unwrap();
+
+        assert_eq!(response.id.as_deref(), Some("ldm/one host"));
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.query(), Some("reportingHost=report%2Fhost"));
     }
 
     #[tokio::test]
