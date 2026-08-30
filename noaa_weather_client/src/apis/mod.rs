@@ -296,7 +296,11 @@ impl From<quick_xml::DeError> for Error {
     }
 }
 
-/// Percent-encodes a string for use in URL path segments or query parameters.
+/// Encodes one `application/x-www-form-urlencoded` name or value.
+///
+/// This preserves the helper's historical form/query behavior, including
+/// encoding spaces as `+`. It is not a path-segment encoder; path spaces must
+/// be encoded as `%20` instead.
 pub fn urlencode<T: AsRef<str>>(s: T) -> String {
     ::url::form_urlencoded::byte_serialize(s.as_ref().as_bytes()).collect()
 }
@@ -318,11 +322,16 @@ pub mod zones;
 
 #[cfg(test)]
 mod tests {
-    use super::Error;
+    use super::{Error, urlencode};
 
     #[test]
     fn error_remains_compact() {
         let size = std::mem::size_of::<Error>();
         assert!(size <= 48, "Error occupied {size} bytes");
+    }
+
+    #[test]
+    fn urlencode_preserves_public_form_encoding_behavior() {
+        assert_eq!(urlencode("space slash/%"), "space+slash%2F%25");
     }
 }

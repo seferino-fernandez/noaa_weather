@@ -4,8 +4,21 @@
 //! returns the forecast office, grid coordinates, and zone identifiers for
 //! any lat/lon pair — the starting point for most forecast workflows.
 
+use std::fmt;
+
 use super::{Error, configuration, http};
 use crate::models;
+
+struct Coordinates {
+    latitude: f64,
+    longitude: f64,
+}
+
+impl fmt::Display for Coordinates {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(formatter, "{},{}", self.latitude, self.longitude)
+    }
+}
 
 /// Returns metadata about a specific latitude/longitude point.
 ///
@@ -33,12 +46,40 @@ pub async fn get_point(
     latitude: f64,
     longitude: f64,
 ) -> Result<models::PointGeoJson, Error> {
-    let uri_str = format!(
-        "/points/{latitude},{longitude}",
-        latitude = latitude,
-        longitude = longitude
-    );
-    let req_builder = http::get(configuration, &uri_str);
+    http::request(configuration, "/points")
+        .path_segment(Coordinates {
+            latitude,
+            longitude,
+        })
+        .json(http::JsonMedia::GeoJson)
+        .await
+}
 
-    req_builder.json().await
+#[cfg(test)]
+mod tests {
+    use wiremock::{
+        Mock, MockServer, ResponseTemplate,
+        matchers::{header, method, path},
+    };
+
+    use super::get_point;
+    use crate::apis::configuration::Configuration;
+
+    #[tokio::test]
+    async fn typed_coordinates_are_one_geo_json_path_segment() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/points/39.7456,-97.0892"))
+            .and(header("Accept", "application/geo+json"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                r#"{"type":"Feature","geometry":null,"properties":{}}"#,
+                "application/geo+json",
+            ))
+            .expect(1)
+            .mount(&server)
+            .await;
+        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+
+        get_point(&configuration, 39.7456, -97.0892).await.unwrap();
+    }
 }

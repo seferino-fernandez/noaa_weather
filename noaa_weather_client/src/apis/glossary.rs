@@ -11,9 +11,8 @@ use crate::models::GlossaryResponse;
 pub async fn get_glossary(
     configuration: &configuration::Configuration,
 ) -> Result<GlossaryResponse, Error> {
-    http::get(configuration, "/glossary")
-        .header("Accept", "application/ld+json")
-        .json()
+    http::request(configuration, "/glossary")
+        .json(http::JsonMedia::JsonLd)
         .await
 }
 
@@ -51,6 +50,26 @@ mod tests {
             response.glossary[0].definition.as_deref(),
             Some("Precipitation that evaporates before reaching the ground.")
         );
+    }
+
+    #[tokio::test]
+    async fn rejects_generic_json() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/glossary"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_raw(r#"{"glossary":[]}"#, "application/json"),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let Error::Protocol(error) = get_glossary(&configuration(&server)).await.unwrap_err()
+        else {
+            panic!("expected protocol error");
+        };
+        assert_eq!(error.expected(), "application/ld+json");
+        assert_eq!(error.actual(), Some("application/json"));
     }
 
     #[tokio::test]

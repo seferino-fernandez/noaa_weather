@@ -27,10 +27,10 @@ pub async fn get_forecast_office(
     configuration: &configuration::Configuration,
     id: &models::NwsOfficeId,
 ) -> Result<models::Office, Error> {
-    let uri_str = format!("/offices/{id}", id = id);
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/offices")
+        .path_segment(id)
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns a specific news headline for a given NWS office.
@@ -56,14 +56,12 @@ pub async fn get_forecast_office_headline(
     id: &models::NwsOfficeId,
     headline_id: &str,
 ) -> Result<models::OfficeHeadline, Error> {
-    let uri_str = format!(
-        "/offices/{id}/headlines/{headlineId}",
-        id = id,
-        headlineId = crate::apis::urlencode(headline_id)
-    );
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/offices")
+        .path_segment(id)
+        .literal_path("headlines")
+        .path_segment(headline_id)
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns a collection of recent news headlines for a given NWS office.
@@ -87,10 +85,11 @@ pub async fn get_forecast_office_headlines(
     configuration: &configuration::Configuration,
     id: &models::NwsOfficeId,
 ) -> Result<models::OfficeHeadlineCollection, Error> {
-    let uri_str = format!("/offices/{id}/headlines", id = id);
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/offices")
+        .path_segment(id)
+        .literal_path("headlines")
+        .json(http::JsonMedia::JsonLd)
+        .await
 }
 
 /// Returns the active briefing metadata for a specific NWS office.
@@ -109,11 +108,10 @@ pub async fn get_forecast_office_briefing(
     configuration: &configuration::Configuration,
     id: &models::NwsOfficeId,
 ) -> Result<models::OfficeBriefingResponse, Error> {
-    let uri_str = format!("/offices/{id}/briefing", id = id);
-
-    http::get(configuration, &uri_str)
-        .header("Accept", "application/ld+json")
-        .json()
+    http::request(configuration, "/offices")
+        .path_segment(id)
+        .literal_path("briefing")
+        .json(http::JsonMedia::JsonLd)
         .await
 }
 
@@ -136,10 +134,11 @@ pub async fn get_latest_forecast_office_briefing_document(
     configuration: &configuration::Configuration,
     id: &models::NwsOfficeId,
 ) -> Result<BinaryPayload, Error> {
-    let uri_str = format!("/offices/{id}/briefing/download/latest", id = id);
-
-    http::get(configuration, &uri_str)
-        .header("Accept", "application/pdf")
+    http::request(configuration, "/offices")
+        .path_segment(id)
+        .literal_path("briefing")
+        .literal_path("download")
+        .literal_path("latest")
         .binary(http::BinaryMedia::Pdf)
         .await
 }
@@ -162,14 +161,11 @@ pub async fn get_forecast_office_briefing_document(
     id: &models::NwsOfficeId,
     briefing_id: &str,
 ) -> Result<BinaryPayload, Error> {
-    let uri_str = format!(
-        "/offices/{id}/briefing/download/{briefing_id}",
-        id = id,
-        briefing_id = crate::apis::urlencode(briefing_id)
-    );
-
-    http::get(configuration, &uri_str)
-        .header("Accept", "application/pdf")
+    http::request(configuration, "/offices")
+        .path_segment(id)
+        .literal_path("briefing")
+        .literal_path("download")
+        .path_segment(briefing_id)
         .binary(http::BinaryMedia::Pdf)
         .await
 }
@@ -190,11 +186,10 @@ pub async fn get_forecast_office_weather_stories(
     configuration: &configuration::Configuration,
     id: &models::NwsOfficeId,
 ) -> Result<models::OfficeWeatherStoryCollection, Error> {
-    let uri_str = format!("/offices/{id}/weatherstories", id = id);
-
-    http::get(configuration, &uri_str)
-        .header("Accept", "application/ld+json")
-        .json()
+    http::request(configuration, "/offices")
+        .path_segment(id)
+        .literal_path("weatherstories")
+        .json(http::JsonMedia::JsonLd)
         .await
 }
 
@@ -216,14 +211,11 @@ pub async fn get_forecast_office_weather_story_image(
     id: &models::NwsOfficeId,
     image_id: &str,
 ) -> Result<BinaryPayload, Error> {
-    let uri_str = format!(
-        "/offices/{id}/weatherstories/download/{image_id}",
-        id = id,
-        image_id = crate::apis::urlencode(image_id)
-    );
-
-    http::get(configuration, &uri_str)
-        .header("Accept", "image/*")
+    http::request(configuration, "/offices")
+        .path_segment(id)
+        .literal_path("weatherstories")
+        .literal_path("download")
+        .path_segment(image_id)
         .binary(http::BinaryMedia::Image)
         .await
 }
@@ -238,6 +230,7 @@ mod tests {
 
     use super::{
         get_forecast_office, get_forecast_office_briefing, get_forecast_office_briefing_document,
+        get_forecast_office_headline, get_forecast_office_headlines,
         get_forecast_office_weather_stories, get_forecast_office_weather_story_image,
         get_latest_forecast_office_briefing_document,
     };
@@ -264,6 +257,7 @@ mod tests {
             let server = MockServer::start().await;
             Mock::given(method("GET"))
                 .and(path(expected_path))
+                .and(header("Accept", "application/ld+json"))
                 .respond_with(ResponseTemplate::new(200).set_body_raw(
                     format!(r#"{{"id":"https://api.weather.gov{expected_path}"}}"#),
                     "application/ld+json",
@@ -280,6 +274,61 @@ mod tests {
                 Some(format!("https://api.weather.gov{expected_path}").as_str())
             );
         }
+    }
+
+    #[tokio::test]
+    async fn office_metadata_rejects_generic_json() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/offices/PSR"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw("{}", "application/json"))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let Error::Protocol(error) = get_forecast_office(&configuration(&server), &psr())
+            .await
+            .unwrap_err()
+        else {
+            panic!("expected protocol error");
+        };
+        assert_eq!(error.expected(), "application/ld+json");
+        assert_eq!(error.actual(), Some("application/json"));
+    }
+
+    #[tokio::test]
+    async fn office_headline_encodes_its_dynamic_segment_and_requests_json_ld() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/offices/PSR/headlines/headline%20%2F%25%3F"))
+            .and(header("Accept", "application/ld+json"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw("{}", "application/ld+json"))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        get_forecast_office_headline(&configuration(&server), &psr(), "headline /%?")
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn office_headlines_request_json_ld() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/offices/PSR/headlines"))
+            .and(header("Accept", "application/ld+json"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_raw(r#"{"@context":[],"@graph":[]}"#, "application/ld+json"),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        get_forecast_office_headlines(&configuration(&server), &psr())
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
@@ -345,6 +394,28 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn briefing_rejects_generic_json() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/offices/PSR/briefing"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_raw(r#"{"briefing":null}"#, "application/json"),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let Error::Protocol(error) = get_forecast_office_briefing(&configuration(&server), &psr())
+            .await
+            .unwrap_err()
+        else {
+            panic!("expected protocol error");
+        };
+        assert_eq!(error.expected(), "application/ld+json");
+        assert_eq!(error.actual(), Some("application/json"));
+    }
+
+    #[tokio::test]
     async fn weather_stories_accept_bare_and_wrapped_responses() {
         let bare_server = MockServer::start().await;
         Mock::given(method("GET"))
@@ -390,10 +461,31 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn weather_stories_reject_generic_json() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/offices/PSR/weatherstories"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw("[]", "application/json"))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let Error::Protocol(error) =
+            get_forecast_office_weather_stories(&configuration(&server), &psr())
+                .await
+                .unwrap_err()
+        else {
+            panic!("expected protocol error");
+        };
+        assert_eq!(error.expected(), "application/ld+json");
+        assert_eq!(error.actual(), Some("application/json"));
+    }
+
+    #[tokio::test]
     async fn briefing_documents_encode_ids_and_preserve_pdf_payload_metadata() {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
-            .and(path("/offices/PSR/briefing/download/briefing%2F2026"))
+            .and(path("/offices/PSR/briefing/download/briefing%202026%2F%25"))
             .and(header("Accept", "application/pdf"))
             .respond_with(
                 ResponseTemplate::new(200)
@@ -404,15 +496,18 @@ mod tests {
             .mount(&server)
             .await;
 
-        let payload =
-            get_forecast_office_briefing_document(&configuration(&server), &psr(), "briefing/2026")
-                .await
-                .unwrap();
+        let payload = get_forecast_office_briefing_document(
+            &configuration(&server),
+            &psr(),
+            "briefing 2026/%",
+        )
+        .await
+        .unwrap();
         assert_eq!(payload.as_bytes(), b"%PDF-briefing");
         assert_eq!(payload.content_type().essence_str(), "application/pdf");
         assert_eq!(
             payload.final_url().path(),
-            "/offices/PSR/briefing/download/briefing%2F2026"
+            "/offices/PSR/briefing/download/briefing%202026%2F%25"
         );
     }
 
@@ -481,7 +576,9 @@ mod tests {
     async fn weather_story_images_encode_ids_and_preserve_image_payload_metadata() {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
-            .and(path("/offices/PSR/weatherstories/download/image%2F2026"))
+            .and(path(
+                "/offices/PSR/weatherstories/download/image%202026%2F%25",
+            ))
             .and(header("Accept", "image/*"))
             .respond_with(
                 ResponseTemplate::new(200)
@@ -492,15 +589,18 @@ mod tests {
             .mount(&server)
             .await;
 
-        let payload =
-            get_forecast_office_weather_story_image(&configuration(&server), &psr(), "image/2026")
-                .await
-                .unwrap();
+        let payload = get_forecast_office_weather_story_image(
+            &configuration(&server),
+            &psr(),
+            "image 2026/%",
+        )
+        .await
+        .unwrap();
         assert_eq!(payload.as_bytes(), b"image-bytes");
         assert_eq!(payload.content_type().essence_str(), "image/avif");
         assert_eq!(
             payload.final_url().path(),
-            "/offices/PSR/weatherstories/download/image%2F2026"
+            "/offices/PSR/weatherstories/download/image%202026%2F%25"
         );
     }
 }

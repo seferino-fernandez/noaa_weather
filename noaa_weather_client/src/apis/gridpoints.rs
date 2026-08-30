@@ -4,8 +4,21 @@
 //! (from [`super::points::get_point`]) to obtain the forecast office and grid
 //! coordinates needed by these functions.
 
+use std::fmt;
+
 use super::{Error, configuration, http};
 use crate::models;
+
+struct GridCoordinates {
+    x: i32,
+    y: i32,
+}
+
+impl fmt::Display for GridCoordinates {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(formatter, "{},{}", self.x, self.y)
+    }
+}
 
 /// Returns raw numerical forecast data for a 2.5km grid area.
 ///
@@ -34,15 +47,11 @@ pub async fn get_gridpoint(
     x: i32,
     y: i32,
 ) -> Result<models::GridpointGeoJson, Error> {
-    let uri_str = format!(
-        "/gridpoints/{forecast_office_id}/{x},{y}",
-        forecast_office_id = forecast_office_id,
-        x = x,
-        y = y
-    );
-    let req_builder = http::get(configuration, &uri_str);
-
-    req_builder.json().await
+    http::request(configuration, "/gridpoints")
+        .path_segment(forecast_office_id)
+        .path_segment(GridCoordinates { x, y })
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns a textual forecast for a 2.5km grid area.
@@ -74,23 +83,17 @@ pub async fn get_gridpoint_forecast(
     y: i32,
     units: Option<models::GridpointForecastUnits>,
 ) -> Result<models::Gridpoint12hForecastGeoJson, Error> {
-    let uri_str = format!(
-        "/gridpoints/{forecast_office_id}/{x},{y}/forecast",
-        forecast_office_id = forecast_office_id,
-        x = x,
-        y = y
-    );
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = units {
-        req_builder = req_builder.query(&[("units", &param_value.to_string())]);
-    }
-    req_builder = req_builder.header(
-        "Feature-Flags",
-        "forecast_temperature_qv,forecast_wind_speed_qv",
-    );
-
-    req_builder.json().await
+    http::request(configuration, "/gridpoints")
+        .path_segment(forecast_office_id)
+        .path_segment(GridCoordinates { x, y })
+        .literal_path("forecast")
+        .query_scalar("units", units)
+        .feature_flags([
+            http::FeatureFlag::ForecastTemperatureQuantitativeValue,
+            http::FeatureFlag::ForecastWindSpeedQuantitativeValue,
+        ])
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns a textual hourly forecast for a 2.5km grid area.
@@ -122,23 +125,17 @@ pub async fn get_gridpoint_forecast_hourly(
     y: i32,
     units: Option<models::GridpointForecastUnits>,
 ) -> Result<models::GridpointHourlyForecastGeoJson, Error> {
-    let uri_str = format!(
-        "/gridpoints/{forecast_office_id}/{x},{y}/forecast/hourly",
-        forecast_office_id = forecast_office_id,
-        x = x,
-        y = y
-    );
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = units {
-        req_builder = req_builder.query(&[("units", &param_value.to_string())]);
-    }
-    req_builder = req_builder.header(
-        "Feature-Flags",
-        "forecast_temperature_qv,forecast_wind_speed_qv",
-    );
-
-    req_builder.json().await
+    http::request(configuration, "/gridpoints")
+        .path_segment(forecast_office_id)
+        .path_segment(GridCoordinates { x, y })
+        .literal_path("forecast/hourly")
+        .query_scalar("units", units)
+        .feature_flags([
+            http::FeatureFlag::ForecastTemperatureQuantitativeValue,
+            http::FeatureFlag::ForecastWindSpeedQuantitativeValue,
+        ])
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 /// Returns a list of observation stations usable for a given 2.5km grid area.
@@ -169,25 +166,23 @@ pub async fn get_gridpoint_stations(
     y: i32,
     limit: Option<i32>,
 ) -> Result<models::ObservationStationCollectionGeoJson, Error> {
-    let uri_str = format!(
-        "/gridpoints/{forecast_office_id}/{x},{y}/stations",
-        forecast_office_id = forecast_office_id,
-        x = x,
-        y = y
-    );
-    let mut req_builder = http::get(configuration, &uri_str);
-
-    if let Some(param_value) = limit {
-        req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
-    }
-    req_builder.json().await
+    http::request(configuration, "/gridpoints")
+        .path_segment(forecast_office_id)
+        .path_segment(GridCoordinates { x, y })
+        .literal_path("stations")
+        .query_scalar("limit", limit)
+        .json(http::JsonMedia::GeoJson)
+        .await
 }
 
 #[cfg(test)]
 mod tests {
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 
-    use super::{get_gridpoint_forecast, get_gridpoint_forecast_hourly, get_gridpoint_stations};
+    use super::{
+        get_gridpoint, get_gridpoint_forecast, get_gridpoint_forecast_hourly,
+        get_gridpoint_stations,
+    };
     use crate::{
         apis::configuration::Configuration,
         models::{GridpointForecastUnits, NwsForecastOfficeId},
@@ -209,6 +204,27 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn gridpoint_path_preserves_typed_office_and_coordinate_pair_meaning() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(500))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let result =
+            get_gridpoint(&configuration(&server), NwsForecastOfficeId::Psr, -159, 100).await;
+
+        assert!(result.is_err());
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.path(), "/gridpoints/PSR/-159,100");
+        assert_eq!(
+            requests[0].headers["accept"].to_str().unwrap(),
+            "application/geo+json"
+        );
+    }
+
+    #[tokio::test]
     async fn forecast_always_sends_quantitative_flags_and_units_query() {
         let server = MockServer::start().await;
         mount_json(&server, FORECAST).await;
@@ -223,7 +239,12 @@ mod tests {
         .unwrap();
 
         let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.path(), "/gridpoints/PSR/159,100/forecast");
         assert_eq!(requests[0].headers["feature-flags"], REQUIRED_FLAGS);
+        assert_eq!(
+            requests[0].headers["accept"].to_str().unwrap(),
+            "application/geo+json"
+        );
         assert_eq!(requests[0].url.query(), Some("units=si"));
     }
 
@@ -242,7 +263,15 @@ mod tests {
         .unwrap();
 
         let requests = server.received_requests().await.unwrap();
+        assert_eq!(
+            requests[0].url.path(),
+            "/gridpoints/PSR/159,100/forecast/hourly"
+        );
         assert_eq!(requests[0].headers["feature-flags"], REQUIRED_FLAGS);
+        assert_eq!(
+            requests[0].headers["accept"].to_str().unwrap(),
+            "application/geo+json"
+        );
         assert_eq!(requests[0].url.query(), None);
     }
 
@@ -261,7 +290,12 @@ mod tests {
         .unwrap();
 
         let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.path(), "/gridpoints/PSR/159,100/stations");
         assert_eq!(requests[0].url.query(), Some("limit=25"));
+        assert_eq!(
+            requests[0].headers["accept"].to_str().unwrap(),
+            "application/geo+json"
+        );
         assert!(!requests[0].headers.contains_key("feature-flags"));
     }
 }
