@@ -6,3 +6,4 @@ pub mod models;
 pub mod utils;
 
 pub use apis::configuration::Configuration;
+pub use apis::{BinaryPayload, Error, ProtocolError, ResponseContent};

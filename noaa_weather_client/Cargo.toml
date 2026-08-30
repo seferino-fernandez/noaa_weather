@@ -16,7 +16,9 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 
 [dependencies]
-quick-xml = { workspace = true, features = ["serde", "serialize"] }
+bytes.workspace = true
+mime.workspace = true
+quick-xml = { workspace = true, features = ["serde", "serialize"], optional = true }
 reqwest = { workspace = true, features = ["json", "multipart", "query"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
@@ -24,8 +26,9 @@ serde_with.workspace = true
 url.workspace = true
 
 [features]
-default = []
-radio = []
+default = ["radio"]
+radio = ["xml"]
+xml = ["dep:quick-xml"]
 
 [dev-dependencies]
 wiremock.workspace = true

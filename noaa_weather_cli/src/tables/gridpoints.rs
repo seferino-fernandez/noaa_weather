@@ -2,8 +2,8 @@ use crate::utils::format::{format_datetime_human_readable, format_dewpoint};
 use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::{
-    Gridpoint12hForecastGeoJson, GridpointForecastPeriodTemperature, GridpointGeoJson,
-    GridpointHourlyForecastGeoJson,
+    Gridpoint12hForecastGeoJson, GridpointGeoJson, GridpointHourlyForecastGeoJson,
+    QuantitativeValue,
 };
 
 macro_rules! add_row_if_some {
@@ -60,41 +60,21 @@ pub fn create_forecast_table(forecast_data: &Gridpoint12hForecastGeoJson) -> Tab
     table.set_header(vec!["Period", "Time", "Temp", "Wind", "Forecast"]);
 
     let props = &forecast_data.properties;
-    let default_unit = props.units.map(|unit| unit.to_string());
-
     if let Some(periods) = &props.periods {
         for period in periods {
             let temp_str = period.temperature.as_ref().map_or_else(
                 || "N/A".to_owned(),
-                |gridpoint_forecast_period_temperature| {
-                    format_temperature(
-                        gridpoint_forecast_period_temperature,
-                        period
-                            .temperature_unit
-                            .map(|gridpoint_forecast_period_temperature_unit| {
-                                gridpoint_forecast_period_temperature_unit.to_string()
-                            })
-                            .as_deref()
-                            .or(default_unit.as_deref()),
-                    )
-                },
+                |temperature| format_quantitative_value(temperature),
             );
 
-            let wind_str = format!(
-                "{} {}",
-                period
-                    .wind_speed
-                    .as_ref()
-                    .map(|gridpoint_forecast_period_wind_speed| {
-                        gridpoint_forecast_period_wind_speed.to_string()
-                    })
-                    .unwrap_or_else(|| "N/A".to_owned()),
+            let wind_str = format_wind(
+                period.wind_speed.as_deref(),
+                period.wind_gust.as_ref().and_then(Option::as_deref),
                 period
                     .wind_direction
-                    .map(|gridpoint_forecast_period_wind_direction| {
-                        gridpoint_forecast_period_wind_direction.unwrap_or_default()
-                    })
-                    .unwrap_or_default()
+                    .and_then(|direction| direction)
+                    .map(|direction| direction.to_string())
+                    .as_deref(),
             );
 
             let start_time_formatted = format_datetime_human_readable(period.start_time.as_deref());
@@ -129,24 +109,11 @@ pub fn create_hourly_forecast_table(forecast_data: &GridpointHourlyForecastGeoJs
     ]);
 
     let props = &forecast_data.properties;
-    let default_unit = props.units.map(|unit| unit.to_string());
-
     if let Some(periods) = &props.periods {
         for period in periods {
             let temp_str = period.temperature.as_ref().map_or_else(
                 || "N/A".to_owned(),
-                |gridpoint_forecast_period_temperature| {
-                    format_temperature(
-                        gridpoint_forecast_period_temperature,
-                        period
-                            .temperature_unit
-                            .map(|gridpoint_forecast_period_temperature_unit| {
-                                gridpoint_forecast_period_temperature_unit.to_string()
-                            })
-                            .as_deref()
-                            .or(default_unit.as_deref()),
-                    )
-                },
+                |temperature| format_quantitative_value(temperature),
             );
 
             let dewpoint_str = period
@@ -183,23 +150,14 @@ pub fn create_hourly_forecast_table(forecast_data: &GridpointHourlyForecastGeoJs
                 },
             );
 
-            let wind_str = format!(
-                "{} {}",
-                period
-                    .wind_speed
-                    .as_ref()
-                    .map(|gridpoint_forecast_period_wind_speed| {
-                        gridpoint_forecast_period_wind_speed.to_string()
-                    })
-                    .unwrap_or_else(|| "N/A".to_owned()),
+            let wind_str = format_wind(
+                period.wind_speed.as_deref(),
+                period.wind_gust.as_ref().and_then(Option::as_deref),
                 period
                     .wind_direction
-                    .map(|gridpoint_forecast_period_wind_direction| {
-                        gridpoint_forecast_period_wind_direction
-                            .unwrap_or_default()
-                            .to_string()
-                    })
-                    .unwrap_or_else(String::new)
+                    .and_then(|direction| direction)
+                    .map(|direction| direction.to_string())
+                    .as_deref(),
             );
             let time_formatted = format_datetime_human_readable(period.start_time.as_deref());
 
@@ -224,23 +182,72 @@ pub fn create_hourly_forecast_table(forecast_data: &GridpointHourlyForecastGeoJs
     table
 }
 
-// Helper to format temperature (which can be QuantitativeValue or Integer)
-fn format_temperature(temp: &GridpointForecastPeriodTemperature, unit: Option<&str>) -> String {
-    match temp {
-        GridpointForecastPeriodTemperature::QuantitativeValue(qv) => {
-            let value_str = qv
-                .value
-                .flatten()
-                .map_or_else(|| "N/A".to_owned(), |value| format!("{value:.0}"));
-            let unit_str = qv.unit_code.as_deref().unwrap_or(unit.unwrap_or("?"));
-            format!(
-                "{}\u{b0}{}",
-                value_str,
-                unit_str.split(':').next_back().unwrap_or(unit_str)
-            )
+fn format_quantitative_value(value: &QuantitativeValue) -> String {
+    let Some(number) = value.value.flatten() else {
+        return "N/A".to_owned();
+    };
+    let number = if number.fract() == 0.0 {
+        format!("{number:.0}")
+    } else {
+        number.to_string()
+    };
+    match value.unit_code.as_deref() {
+        Some(unit) => format!(
+            "{number} {}",
+            unit.rsplit([':', '/']).next().unwrap_or(unit)
+        ),
+        None => number,
+    }
+}
+
+fn format_wind(
+    speed: Option<&QuantitativeValue>,
+    gust: Option<&QuantitativeValue>,
+    direction: Option<&str>,
+) -> String {
+    let mut parts = vec![speed.map_or_else(|| "N/A".to_owned(), format_quantitative_value)];
+    if let Some(direction) = direction {
+        parts.push(direction.to_owned());
+    }
+    if let Some(gust) = gust {
+        parts.push(format!("gust {}", format_quantitative_value(gust)));
+    }
+    parts.join(" ")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{format_quantitative_value, format_wind};
+    use noaa_weather_client::models::QuantitativeValue;
+
+    fn measurement(value: f64, unit: &str) -> QuantitativeValue {
+        QuantitativeValue {
+            value: Some(Some(value)),
+            unit_code: Some(unit.to_owned()),
+            ..QuantitativeValue::default()
         }
-        GridpointForecastPeriodTemperature::Integer(i) => {
-            format!("{}\u{b0}{}", i, unit.unwrap_or("?"))
-        }
+    }
+
+    #[test]
+    fn formats_quantitative_temperature_without_debug_output() {
+        assert_eq!(
+            format_quantitative_value(&measurement(72.0, "wmoUnit:degF")),
+            "72 degF"
+        );
+    }
+
+    #[test]
+    fn formats_quantitative_speed_and_gust_units() {
+        assert_eq!(
+            format_wind(
+                Some(&measurement(12.0, "wmoUnit:km_h-1")),
+                Some(&measurement(
+                    20.5,
+                    "https://codes.wmo.int/common/unit/km_h-1"
+                )),
+                Some("NW"),
+            ),
+            "12 km_h-1 NW gust 20.5 km_h-1"
+        );
     }
 }

@@ -52,6 +52,7 @@ fn test_latest_observation_command_success() {
     cmd.assert().success();
 }
 
+#[cfg(feature = "xml")]
 #[test]
 fn test_stations_tafs_success() {
     let mut cmd = Command::new(cargo_bin!("noaa-weather"));
@@ -63,6 +64,7 @@ fn test_stations_tafs_success() {
 }
 
 #[ignore = "Ignore this test for now since the data needs to be updated dynamically"]
+#[cfg(feature = "xml")]
 #[test]
 fn test_stations_taf_success() {
     let mut cmd = Command::new(cargo_bin!("noaa-weather"));
@@ -75,4 +77,48 @@ fn test_stations_taf_success() {
     cmd.arg("--time");
     cmd.arg("1800");
     cmd.assert().success();
+}
+
+#[cfg(not(feature = "xml"))]
+#[test]
+fn terminal_aerodrome_forecasts_is_rejected_without_xml() {
+    let output = Command::new(cargo_bin!("noaa-weather"))
+        .args([
+            "stations",
+            "terminal-aerodrome-forecasts",
+            "--station-id",
+            "KPHX",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(
+        String::from_utf8_lossy(&output.stderr)
+            .contains("unrecognized subcommand 'terminal-aerodrome-forecasts'")
+    );
+}
+
+#[cfg(not(feature = "xml"))]
+#[test]
+fn terminal_aerodrome_forecast_is_rejected_without_xml() {
+    let output = Command::new(cargo_bin!("noaa-weather"))
+        .args([
+            "stations",
+            "terminal-aerodrome-forecast",
+            "--station-id",
+            "KPHX",
+            "--date",
+            "2026-08-30",
+            "--time",
+            "1800",
+        ])
+        .output()
+        .unwrap();
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(
+        String::from_utf8_lossy(&output.stderr)
+            .contains("unrecognized subcommand 'terminal-aerodrome-forecast'")
+    );
 }

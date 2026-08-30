@@ -80,6 +80,7 @@ pub enum StationCommands {
     /// Get the metadata for Terminal Aerodrome Forecasts (TAFs) for an airport station.
     ///
     /// Example: `noaa-weather stations terminal-aerodrome-forecasts --station-id KPHX`
+    #[cfg(feature = "xml")]
     TerminalAerodromeForecasts {
         /// Airport Station ID (typically ICAO identifier, e.g., KPHX, KLAX).
         #[arg(long)]
@@ -88,6 +89,7 @@ pub enum StationCommands {
     /// Get a specific Terminal Aerodrome Forecast (TAF) by date and time.
     ///
     /// Example: `noaa-weather stations terminal-aerodrome-forecast --station-id KPHX --date 2025-05-03 --time 1800`
+    #[cfg(feature = "xml")]
     TerminalAerodromeForecast {
         /// Airport Station ID (e.g., KPHX).
         #[arg(long)]
@@ -119,7 +121,7 @@ pub async fn handle_command(
 ) -> Result<()> {
     match command {
         StationCommands::Metadata { id } => {
-            let result = station_api::get_observation_station(config, id, None)
+            let result = station_api::get_observation_station(config, id)
                 .await
                 .map_err(|error| anyhow!("Error getting station metadata: {error}"))?;
             if cli.json {
@@ -157,7 +159,6 @@ pub async fn handle_command(
                 id.clone(),
                 states_parsed,
                 *limit,
-                None,
                 None,
             )
             .await
@@ -237,6 +238,7 @@ pub async fn handle_command(
             }
             Ok(())
         }
+        #[cfg(feature = "xml")]
         StationCommands::TerminalAerodromeForecasts { station_id } => {
             let result = station_api::get_terminal_aerodrome_forecasts(config, station_id)
                 .await
@@ -252,6 +254,7 @@ pub async fn handle_command(
             }
             Ok(())
         }
+        #[cfg(feature = "xml")]
         StationCommands::TerminalAerodromeForecast {
             station_id,
             date,

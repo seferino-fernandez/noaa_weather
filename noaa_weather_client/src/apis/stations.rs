@@ -3,82 +3,8 @@
 //! Covers the `/stations` endpoints for station metadata, latest and
 //! historical surface observations, and Terminal Aerodrome Forecasts.
 
-use super::{API_KEY_HEADER, ContentType, Error, configuration};
-use crate::apis::ResponseContent;
+use super::{Error, configuration, http};
 use crate::models;
-use reqwest;
-use serde::de::Error as _;
-use serde::{Deserialize, Serialize};
-
-/// Errors that can occur when calling the [`get_observation_station`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ObsStationError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_observation_stations`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ObsStationsError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_latest_observations`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum StationObservationLatestError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_observations`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum StationObservationListError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_observation_by_time`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum StationObservationTimeError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_terminal_aerodrome_forecast`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum TafError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_terminal_aerodrome_forecasts`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum TafsError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
 
 /// Returns metadata about a given observation station
 ///
@@ -88,7 +14,6 @@ pub enum TafsError {
 ///
 /// * `configuration`: The API client configuration.
 /// * `id`: The ID of the observation station (e.g., "KPHX", "KDEN").
-/// * `feature_flags`: Optional list of feature flags to enable experimental API features.
 ///
 /// # Returns
 ///
@@ -96,66 +21,16 @@ pub enum TafsError {
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ObsStationError>`] if the request fails (e.g., station not found)
+/// Returns an [`Error`] if the request fails (e.g., station not found)
 /// or the response cannot be parsed.
 pub async fn get_observation_station(
     configuration: &configuration::Configuration,
     id: &str,
-    feature_flags: Option<Vec<String>>,
-) -> Result<models::ObservationStationGeoJson, Error<ObsStationError>> {
-    let uri_str = format!(
-        "{}/stations/{id}",
-        configuration.base_path,
-        id = crate::apis::urlencode(id)
-    );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::ObservationStationGeoJson, Error> {
+    let uri_str = format!("/stations/{id}", id = crate::apis::urlencode(id));
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(param_value) = feature_flags {
-        req_builder = req_builder.header("Feature-Flags", param_value.join(","));
-    }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `ObservationStationGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `ObservationStationGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `ObservationStationGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ObsStationError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of observation stations.
@@ -171,7 +46,6 @@ pub async fn get_observation_station(
 /// * `state`: Optional list of state/territory abbreviations ([`models::AreaCode`]) to filter by.
 /// * `limit`: Optional limit on the number of stations returned.
 /// * `cursor`: Optional pagination cursor for fetching subsequent results.
-/// * `feature_flags`: Optional list of feature flags to enable experimental API features.
 ///
 /// # Returns
 ///
@@ -179,7 +53,7 @@ pub async fn get_observation_station(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ObsStationsError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_observation_stations(
     configuration: &configuration::Configuration,
@@ -187,10 +61,9 @@ pub async fn get_observation_stations(
     state: Option<Vec<models::AreaCode>>,
     limit: Option<i32>,
     cursor: Option<&str>,
-    feature_flags: Option<Vec<String>>,
-) -> Result<models::ObservationStationCollectionGeoJson, Error<ObsStationsError>> {
-    let uri_str = format!("{}/stations", configuration.base_path);
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::ObservationStationCollectionGeoJson, Error> {
+    let uri_str = "/stations".to_owned();
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = id {
         req_builder = match "csv" {
@@ -234,52 +107,7 @@ pub async fn get_observation_stations(
     if let Some(param_value) = cursor {
         req_builder = req_builder.query(&[("cursor", &param_value.to_owned())]);
     }
-    if let Some(param_value) = feature_flags {
-        req_builder = req_builder.header("Feature-Flags", param_value.join(","));
-    }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `ObservationStationCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `ObservationStationCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `ObservationStationCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ObsStationsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns the latest observation for a station
@@ -299,64 +127,24 @@ pub async fn get_observation_stations(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<StationObservationLatestError>`] if the request fails, no observation is available,
+/// Returns an [`Error`] if the request fails, no observation is available,
 /// or the response cannot be parsed.
 pub async fn get_latest_observations(
     configuration: &configuration::Configuration,
     station_id: &str,
     require_quality_controlled: Option<bool>,
-) -> Result<models::ObservationGeoJson, Error<StationObservationLatestError>> {
+) -> Result<models::ObservationGeoJson, Error> {
     let uri_str = format!(
-        "{}/stations/{stationId}/observations/latest",
-        configuration.base_path,
+        "/stations/{stationId}/observations/latest",
         stationId = crate::apis::urlencode(station_id)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = require_quality_controlled {
         req_builder = req_builder.query(&[("require_qc", &param_value.to_string())]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `ObservationGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `ObservationGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `ObservationGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<StationObservationLatestError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of observations for a given station
@@ -378,7 +166,7 @@ pub async fn get_latest_observations(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<StationObservationListError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_observations(
     configuration: &configuration::Configuration,
@@ -387,13 +175,12 @@ pub async fn get_observations(
     end: Option<String>,
     limit: Option<i32>,
     cursor: Option<&str>,
-) -> Result<models::ObservationCollectionGeoJson, Error<StationObservationListError>> {
+) -> Result<models::ObservationCollectionGeoJson, Error> {
     let uri_str = format!(
-        "{}/stations/{stationId}/observations",
-        configuration.base_path,
+        "/stations/{stationId}/observations",
         stationId = crate::apis::urlencode(station_id)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = start {
         req_builder = req_builder.query(&[("start", &param_value.to_string())]);
@@ -407,49 +194,8 @@ pub async fn get_observations(
     if let Some(param_value) = cursor {
         req_builder = req_builder.query(&[("cursor", &param_value.to_owned())]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `ObservationCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `ObservationCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `ObservationCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<StationObservationListError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a single observation.
@@ -468,64 +214,21 @@ pub async fn get_observations(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<StationObservationTimeError>`] if the request fails (e.g., no observation
+/// Returns an [`Error`] if the request fails (e.g., no observation
 /// found for the exact time) or the response cannot be parsed.
 pub async fn get_observation_by_time(
     configuration: &configuration::Configuration,
     station_id: &str,
     time: String,
-) -> Result<models::ObservationGeoJson, Error<StationObservationTimeError>> {
+) -> Result<models::ObservationGeoJson, Error> {
     let uri_str = format!(
-        "{}/stations/{stationId}/observations/{time}",
-        configuration.base_path,
+        "/stations/{stationId}/observations/{time}",
         stationId = crate::apis::urlencode(station_id),
         time = time
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `ObservationGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `ObservationGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `ObservationGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<StationObservationTimeError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a single Terminal Aerodrome Forecast (TAF).
@@ -546,68 +249,23 @@ pub async fn get_observation_by_time(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<TafError>`] if the request fails or the response cannot be parsed.
+/// Returns an [`Error`] if the request fails or the response cannot be parsed.
+#[cfg(feature = "xml")]
 pub async fn get_terminal_aerodrome_forecast(
     configuration: &configuration::Configuration,
     station_id: &str,
     date: String,
     time: &str,
-) -> Result<models::TerminalAerodromeForecast, Error<TafError>> {
+) -> Result<models::TerminalAerodromeForecast, Error> {
     let uri_str = format!(
-        "{}/stations/{stationId}/tafs/{date}/{time}",
-        configuration.base_path,
+        "/stations/{stationId}/tafs/{date}/{time}",
         stationId = crate::apis::urlencode(station_id),
         date = date,
         time = crate::apis::urlencode(time)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `TerminalAerodromeForecast`",
-            ))),
-            ContentType::Xml => {
-                let mut deserializer = quick_xml::de::Deserializer::from_str(&content);
-                let taf = models::TerminalAerodromeForecast::deserialize(&mut deserializer)
-                    .map_err(Error::Xml)?;
-                Ok(taf)
-            }
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `TerminalAerodromeForecast`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<TafError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.xml().await
 }
 
 /// Returns metadata for Terminal Aerodrome Forecasts for the specified airport station.
@@ -625,59 +283,75 @@ pub async fn get_terminal_aerodrome_forecast(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<TafsError>`] if the request fails or the response cannot be parsed.
+/// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_terminal_aerodrome_forecasts(
     configuration: &configuration::Configuration,
     station_id: &str,
-) -> Result<models::TerminalAerodromeForecastsResponse, Error<TafsError>> {
+) -> Result<models::TerminalAerodromeForecastsResponse, Error> {
     let uri_str = format!(
-        "{}/stations/{stationId}/tafs",
-        configuration.base_path,
+        "/stations/{stationId}/tafs",
         stationId = crate::apis::urlencode(station_id)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    req_builder.json().await
+}
+
+#[cfg(test)]
+mod tests {
+    use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+
+    use super::{get_observation_station, get_observation_stations};
+    use crate::apis::configuration::Configuration;
+
+    fn configuration(server: &MockServer) -> Configuration {
+        Configuration::new(None, Some(server.uri()), None, None)
     }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
+
+    #[tokio::test]
+    async fn station_requests_omit_feature_flags_and_preserve_queries() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                r#"{"type":"FeatureCollection","features":[]}"#,
+                "application/geo+json",
+            ))
+            .mount(&server)
+            .await;
+
+        get_observation_stations(
+            &configuration(&server),
+            Some(vec!["KPHX".to_owned(), "KIWA".to_owned()]),
+            None,
+            Some(20),
+            Some("next-page"),
+        )
+        .await
+        .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(
+            requests[0].url.query(),
+            Some("id=KPHX%2CKIWA&limit=20&cursor=next-page")
+        );
+        assert!(!requests[0].headers.contains_key("feature-flags"));
     }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
+    #[tokio::test]
+    async fn single_station_request_omits_feature_flags() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                r#"{"type":"Feature","geometry":null,"properties":{}}"#,
+                "application/geo+json",
+            ))
+            .mount(&server)
+            .await;
 
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `TerminalAerodromeForecastsResponse`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `TerminalAerodromeForecastsResponse`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `TerminalAerodromeForecastsResponse`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<TafsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
+        get_observation_station(&configuration(&server), "KPHX")
+            .await
+            .unwrap();
+        let requests = server.received_requests().await.unwrap();
+        assert!(!requests[0].headers.contains_key("feature-flags"));
     }
 }

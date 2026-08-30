@@ -25,10 +25,7 @@ pub struct Gridpoint12hForecastPeriod {
     #[serde(rename = "isDaytime", skip_serializing_if = "Option::is_none")]
     pub is_daytime: Option<bool>,
     #[serde(rename = "temperature", skip_serializing_if = "Option::is_none")]
-    pub temperature: Option<Box<models::GridpointForecastPeriodTemperature>>,
-    /// The unit of the temperature value (Fahrenheit or Celsius). This property is deprecated. Future versions will indicate the unit within the quantitative value object for the temperature property. To make use of the future standard format now, set the "forecast_temperature_qv" feature flag on the request.
-    #[serde(rename = "temperatureUnit", skip_serializing_if = "Option::is_none")]
-    pub temperature_unit: Option<TemperatureUnit>,
+    pub temperature: Option<Box<models::QuantitativeValue>>,
     /// If not null, indicates a non-diurnal temperature trend for the period (either rising temperature overnight, or falling temperature during the day)
     #[serde_as(as = "Option<NoneAsEmptyString>")]
     pub temperature_trend: Option<Option<TemperatureTrend>>,
@@ -38,21 +35,18 @@ pub struct Gridpoint12hForecastPeriod {
     )]
     pub probability_of_precipitation: Option<Box<models::QuantitativeValue>>,
     #[serde(rename = "windSpeed", skip_serializing_if = "Option::is_none")]
-    pub wind_speed: Option<Box<models::GridpointForecastPeriodWindSpeed>>,
+    pub wind_speed: Option<Box<models::QuantitativeValue>>,
     #[serde(
         rename = "windGust",
         default,
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
-    pub wind_gust: Option<Option<Box<models::GridpointForecastPeriodWindGust>>>,
+    pub wind_gust: Option<Option<Box<models::QuantitativeValue>>>,
     /// The prevailing direction of the wind for the period, using a 16-point compass.
     #[serde_as(as = "Option<NoneAsEmptyString>")]
     #[serde(rename(deserialize = "windDirection"))]
     pub wind_direction: Option<Option<WindDirection>>,
-    /// A link to an icon representing the forecast summary.
-    #[serde(rename = "icon", skip_serializing_if = "Option::is_none")]
-    pub icon: Option<String>,
     /// A brief textual forecast summary for the period.
     #[serde(rename = "shortForecast", skip_serializing_if = "Option::is_none")]
     pub short_forecast: Option<String>,
@@ -71,36 +65,16 @@ impl Gridpoint12hForecastPeriod {
             end_time: None,
             is_daytime: None,
             temperature: None,
-            temperature_unit: None,
             temperature_trend: None,
             probability_of_precipitation: None,
             wind_speed: None,
             wind_gust: None,
             wind_direction: None,
-            icon: None,
             short_forecast: None,
             detailed_forecast: None,
         }
     }
 }
-/// The unit of the temperature value (Fahrenheit or Celsius). This property is deprecated. Future versions will indicate the unit within the quantitative value object for the temperature property. To make use of the future standard format now, set the "forecast_temperature_qv" feature flag on the request.
-#[derive(
-    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
-)]
-pub enum TemperatureUnit {
-    #[serde(rename = "F")]
-    #[default]
-    F,
-    #[serde(rename = "C")]
-    C,
-}
-
-impl Display for TemperatureUnit {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{self:?}")
-    }
-}
-
 /// If not null, indicates a non-diurnal temperature trend for the period (either rising temperature overnight, or falling temperature during the day)
 #[derive(
     Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
@@ -202,5 +176,37 @@ impl FromStr for WindDirection {
             "nnw" => Ok(WindDirection::Nnw),
             _ => Err(format!("Invalid wind direction: {string}")),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Gridpoint12hForecastPeriod;
+
+    #[test]
+    fn quantitative_forecast_ignores_removed_temperature_unit_and_icon() {
+        let period: Gridpoint12hForecastPeriod = serde_json::from_str(
+            r#"{
+                "temperature":{"value":72,"unitCode":"wmoUnit:degF"},
+                "temperatureUnit":"F",
+                "windSpeed":{"value":10,"unitCode":"wmoUnit:mi_h-1"},
+                "windGust":{"value":18,"unitCode":"wmoUnit:mi_h-1"},
+                "icon":"https://example.test/legacy.png"
+            }"#,
+        )
+        .unwrap();
+
+        assert_eq!(period.temperature.as_ref().unwrap().value, Some(Some(72.0)));
+        assert_eq!(
+            period.wind_speed.as_ref().unwrap().unit_code.as_deref(),
+            Some("wmoUnit:mi_h-1")
+        );
+        assert_eq!(
+            period.wind_gust.as_ref().unwrap().as_ref().unwrap().value,
+            Some(Some(18.0))
+        );
+        let serialized = serde_json::to_value(period).unwrap();
+        assert!(serialized.get("temperatureUnit").is_none());
+        assert!(serialized.get("icon").is_none());
     }
 }

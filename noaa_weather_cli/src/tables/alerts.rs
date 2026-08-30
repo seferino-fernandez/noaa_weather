@@ -229,6 +229,9 @@ pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> comfy_table::Tabl
     );
 
     details.push(format!("Affected Zones: {formatted_affected_zones}"));
+    if let Some(Some(note)) = &alert.note {
+        details.push(format!("Note: {note}"));
+    }
     let description = alert
         .description
         .clone()

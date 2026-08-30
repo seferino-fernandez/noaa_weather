@@ -4,52 +4,8 @@
 //! (from [`super::points::get_point`]) to obtain the forecast office and grid
 //! coordinates needed by these functions.
 
-use super::{API_KEY_HEADER, ContentType, Error, configuration};
-use crate::apis::ResponseContent;
+use super::{Error, configuration, http};
 use crate::models;
-use reqwest;
-use serde::de::Error as _;
-use serde::{Deserialize, Serialize};
-
-/// Errors that can occur when calling the [`get_gridpoint`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum GridpointError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_gridpoint_forecast`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum GridpointForecastError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_gridpoint_forecast_hourly`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum GridpointForecastHourlyError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_gridpoint_stations`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum GridpointStationsError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
 
 /// Returns raw numerical forecast data for a 2.5km grid area.
 ///
@@ -70,66 +26,23 @@ pub enum GridpointStationsError {
 ///
 /// # Errors
 ///
-/// Returns an [`Error<GridpointError>`] if the request fails (e.g., invalid grid coordinates)
+/// Returns an [`Error`] if the request fails (e.g., invalid grid coordinates)
 /// or the response cannot be parsed.
 pub async fn get_gridpoint(
     configuration: &configuration::Configuration,
     forecast_office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
-) -> Result<models::GridpointGeoJson, Error<GridpointError>> {
+) -> Result<models::GridpointGeoJson, Error> {
     let uri_str = format!(
-        "{}/gridpoints/{forecast_office_id}/{x},{y}",
-        configuration.base_path,
+        "/gridpoints/{forecast_office_id}/{x},{y}",
         forecast_office_id = forecast_office_id,
         x = x,
         y = y
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `GridpointGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `GridpointGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `GridpointGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<GridpointError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a textual forecast for a 2.5km grid area.
@@ -143,7 +56,6 @@ pub async fn get_gridpoint(
 /// * `forecast_office_id`: The ID of the NWS forecast office.
 /// * `x`: The grid X coordinate.
 /// * `y`: The grid Y coordinate.
-/// * `feature_flags`: Optional list of feature flags to enable experimental API features.
 /// * `units`: Optional units for the forecast (us or si).
 ///
 /// # Returns
@@ -153,74 +65,32 @@ pub async fn get_gridpoint(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<GridpointForecastError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_gridpoint_forecast(
     configuration: &configuration::Configuration,
     forecast_office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
-    feature_flags: Option<Vec<String>>,
     units: Option<models::GridpointForecastUnits>,
-) -> Result<models::Gridpoint12hForecastGeoJson, Error<GridpointForecastError>> {
+) -> Result<models::Gridpoint12hForecastGeoJson, Error> {
     let uri_str = format!(
-        "{}/gridpoints/{forecast_office_id}/{x},{y}/forecast",
-        configuration.base_path,
+        "/gridpoints/{forecast_office_id}/{x},{y}/forecast",
         forecast_office_id = forecast_office_id,
         x = x,
         y = y
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = units {
         req_builder = req_builder.query(&[("units", &param_value.to_string())]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-    if let Some(param_value) = feature_flags {
-        req_builder = req_builder.header("Feature-Flags", param_value.join(","));
-    }
+    req_builder = req_builder.header(
+        "Feature-Flags",
+        "forecast_temperature_qv,forecast_wind_speed_qv",
+    );
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `Gridpoint12hForecastGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `Gridpoint12hForecastGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `Gridpoint12hForecastGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<GridpointForecastError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a textual hourly forecast for a 2.5km grid area.
@@ -234,7 +104,6 @@ pub async fn get_gridpoint_forecast(
 /// * `forecast_office_id`: The ID of the NWS forecast office.
 /// * `x`: The grid X coordinate.
 /// * `y`: The grid Y coordinate.
-/// * `feature_flags`: Optional list of feature flags to enable experimental API features.
 /// * `units`: Optional units for the forecast (us or si).
 ///
 /// # Returns
@@ -244,74 +113,32 @@ pub async fn get_gridpoint_forecast(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<GridpointForecastHourlyError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_gridpoint_forecast_hourly(
     configuration: &configuration::Configuration,
     forecast_office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
-    feature_flags: Option<Vec<String>>,
     units: Option<models::GridpointForecastUnits>,
-) -> Result<models::GridpointHourlyForecastGeoJson, Error<GridpointForecastHourlyError>> {
+) -> Result<models::GridpointHourlyForecastGeoJson, Error> {
     let uri_str = format!(
-        "{}/gridpoints/{forecast_office_id}/{x},{y}/forecast/hourly",
-        configuration.base_path,
+        "/gridpoints/{forecast_office_id}/{x},{y}/forecast/hourly",
         forecast_office_id = forecast_office_id,
         x = x,
         y = y
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = units {
         req_builder = req_builder.query(&[("units", &param_value.to_string())]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-    if let Some(param_value) = feature_flags {
-        req_builder = req_builder.header("Feature-Flags", param_value.join(","));
-    }
+    req_builder = req_builder.header(
+        "Feature-Flags",
+        "forecast_temperature_qv,forecast_wind_speed_qv",
+    );
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `GridpointHourlyForecastGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `GridpointHourlyForecastGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `GridpointHourlyForecastGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<GridpointForecastHourlyError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of observation stations usable for a given 2.5km grid area.
@@ -326,7 +153,6 @@ pub async fn get_gridpoint_forecast_hourly(
 /// * `x`: The grid X coordinate.
 /// * `y`: The grid Y coordinate.
 /// * `limit`: Optional limit on the number of stations returned.
-/// * `feature_flags`: Optional list of feature flags to enable experimental API features.
 ///
 /// # Returns
 ///
@@ -334,7 +160,7 @@ pub async fn get_gridpoint_forecast_hourly(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<GridpointStationsError>`] if the request fails or the response
+/// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_gridpoint_stations(
     configuration: &configuration::Configuration,
@@ -342,64 +168,100 @@ pub async fn get_gridpoint_stations(
     x: i32,
     y: i32,
     limit: Option<i32>,
-    feature_flags: Option<Vec<String>>,
-) -> Result<models::ObservationStationCollectionGeoJson, Error<GridpointStationsError>> {
+) -> Result<models::ObservationStationCollectionGeoJson, Error> {
     let uri_str = format!(
-        "{}/gridpoints/{forecast_office_id}/{x},{y}/stations",
-        configuration.base_path,
+        "/gridpoints/{forecast_office_id}/{x},{y}/stations",
         forecast_office_id = forecast_office_id,
         x = x,
         y = y
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-    if let Some(param_value) = feature_flags {
-        req_builder = req_builder.header("Feature-Flags", param_value.join(","));
+    req_builder.json().await
+}
+
+#[cfg(test)]
+mod tests {
+    use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+
+    use super::{get_gridpoint_forecast, get_gridpoint_forecast_hourly, get_gridpoint_stations};
+    use crate::{
+        apis::configuration::Configuration,
+        models::{GridpointForecastUnits, NwsForecastOfficeId},
+    };
+
+    const FORECAST: &str = r#"{"type":"Feature","geometry":null,"properties":{}}"#;
+    const STATIONS: &str = r#"{"type":"FeatureCollection","features":[]}"#;
+    const REQUIRED_FLAGS: &str = "forecast_temperature_qv,forecast_wind_speed_qv";
+
+    fn configuration(server: &MockServer) -> Configuration {
+        Configuration::new(None, Some(server.uri()), None, None)
     }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
+    async fn mount_json(server: &MockServer, body: &'static str) {
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(body, "application/geo+json"))
+            .mount(server)
+            .await;
+    }
 
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
+    #[tokio::test]
+    async fn forecast_always_sends_quantitative_flags_and_units_query() {
+        let server = MockServer::start().await;
+        mount_json(&server, FORECAST).await;
+        get_gridpoint_forecast(
+            &configuration(&server),
+            NwsForecastOfficeId::Psr,
+            159,
+            100,
+            Some(GridpointForecastUnits::Si),
+        )
+        .await
+        .unwrap();
 
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `ObservationStationCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `ObservationStationCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `ObservationStationCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<GridpointStationsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].headers["feature-flags"], REQUIRED_FLAGS);
+        assert_eq!(requests[0].url.query(), Some("units=si"));
+    }
+
+    #[tokio::test]
+    async fn hourly_forecast_always_sends_quantitative_flags() {
+        let server = MockServer::start().await;
+        mount_json(&server, FORECAST).await;
+        get_gridpoint_forecast_hourly(
+            &configuration(&server),
+            NwsForecastOfficeId::Psr,
+            159,
+            100,
+            None,
+        )
+        .await
+        .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].headers["feature-flags"], REQUIRED_FLAGS);
+        assert_eq!(requests[0].url.query(), None);
+    }
+
+    #[tokio::test]
+    async fn gridpoint_stations_preserves_limit_and_omits_feature_flags() {
+        let server = MockServer::start().await;
+        mount_json(&server, STATIONS).await;
+        get_gridpoint_stations(
+            &configuration(&server),
+            NwsForecastOfficeId::Psr,
+            159,
+            100,
+            Some(25),
+        )
+        .await
+        .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.query(), Some("limit=25"));
+        assert!(!requests[0].headers.contains_key("feature-flags"));
     }
 }

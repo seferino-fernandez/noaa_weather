@@ -1,5 +1,6 @@
 pub mod alerts;
 pub mod aviation;
+pub mod glossary;
 pub mod gridpoints;
 pub mod offices;
 pub mod points;
@@ -24,12 +25,14 @@ pub enum Commands {
         #[command(subcommand)]
         command: Box<gridpoints::GridpointCommands>,
     },
+    /// Get the NWS glossary of weather terms.
+    Glossary,
     /// Get NWS office information
     Offices {
         #[command(subcommand)]
         command: Box<offices::OfficeCommands>,
     },
-    /// Get point metadata or stations
+    /// Get metadata for a geographic point
     Points {
         #[command(subcommand)]
         command: Box<points::PointCommands>,

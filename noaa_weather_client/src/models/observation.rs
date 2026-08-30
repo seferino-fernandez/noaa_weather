@@ -33,13 +33,6 @@ pub struct Observation {
     pub raw_message: Option<String>,
     #[serde(rename = "textDescription", skip_serializing_if = "Option::is_none")]
     pub text_description: Option<String>,
-    #[serde(
-        rename = "icon",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub icon: Option<Option<String>>,
     #[serde(rename = "presentWeather", skip_serializing_if = "Option::is_none")]
     pub present_weather: Option<Vec<models::MetarPhenomenon>>,
     #[serde(rename = "temperature", skip_serializing_if = "Option::is_none")]
@@ -112,7 +105,6 @@ impl Observation {
             timestamp: None,
             raw_message: None,
             text_description: None,
-            icon: None,
             present_weather: None,
             temperature: None,
             dewpoint: None,
@@ -132,6 +124,26 @@ impl Observation {
             heat_index: None,
             cloud_layers: None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Observation;
+
+    #[test]
+    fn ignores_removed_icon_key_while_preserving_observation_fields() {
+        let observation: Observation = serde_json::from_str(
+            r#"{"stationId":"KPHX","icon":"https://example.test/legacy.png"}"#,
+        )
+        .unwrap();
+        assert_eq!(observation.station_id.as_deref(), Some("KPHX"));
+        assert!(
+            serde_json::to_value(observation)
+                .unwrap()
+                .get("icon")
+                .is_none()
+        );
     }
 }
 #[derive(

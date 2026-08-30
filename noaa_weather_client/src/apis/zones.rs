@@ -3,72 +3,8 @@
 //! Covers the `/zones` endpoints for listing zones by type, retrieving
 //! zone metadata, current zone forecasts, and zone observation data.
 
-use super::{API_KEY_HEADER, ContentType, Error, configuration};
-use crate::apis::ResponseContent;
+use super::{Error, configuration, http};
 use crate::models;
-use reqwest;
-use serde::de::Error as _;
-use serde::{Deserialize, Serialize};
-
-/// Errors that can occur when calling the [`get_zone`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ZoneError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_current_zone_forecast`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ZoneForecastError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_zones`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ZoneListError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_zones_by_type`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ZoneListTypeError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_zone_observations`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ZoneObsError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
-
-/// Errors that can occur when calling the [`get_stations_by_zone`] function.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ZoneStationsError {
-    /// Standard NWS API problem detail response.
-    DefaultResponse(models::ProblemDetail),
-    /// An unexpected error occurred (e.g., invalid JSON returned by the API).
-    UnknownValue(serde_json::Value),
-}
 
 /// Parameters for the [`get_zones`] function.
 #[derive(Clone, Debug, Default)]
@@ -148,66 +84,24 @@ impl GetZonesByTypeParams<'_> {
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ZoneError>`] if the request fails (e.g., zone not found) or the response cannot be parsed.
+/// Returns an [`Error`] if the request fails (e.g., zone not found) or the response cannot be parsed.
 pub async fn get_zone(
     configuration: &configuration::Configuration,
     r#type: models::NwsZoneType,
     id: &str,
     effective: Option<String>,
-) -> Result<models::ZoneGeoJson, Error<ZoneError>> {
-    let uri_str = format!("{}/zones/{type}/{id}",
-        configuration.base_path,
+) -> Result<models::ZoneGeoJson, Error> {
+    let uri_str = format!("/zones/{type}/{id}",
         type=r#type,
         id=crate::apis::urlencode(id)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = effective {
         req_builder = req_builder.query(&[("effective", &param_value)]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `ZoneGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `ZoneGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `ZoneGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ZoneError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns the current zone forecast for a given zone
@@ -226,62 +120,19 @@ pub async fn get_zone(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ZoneForecastError>`] if the request fails or the response cannot be parsed.
+/// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_current_zone_forecast(
     configuration: &configuration::Configuration,
     r#type: &str,
     id: &str,
-) -> Result<models::ZoneForecastGeoJson, Error<ZoneForecastError>> {
-    let uri_str = format!("{}/zones/{type}/{id}/forecast",
-        configuration.base_path,
+) -> Result<models::ZoneForecastGeoJson, Error> {
+    let uri_str = format!("/zones/{type}/{id}/forecast",
         type=crate::apis::urlencode(r#type),
         id=crate::apis::urlencode(id)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let req_builder = http::get(configuration, &uri_str);
 
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `ZoneForecastGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `ZoneForecastGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `ZoneForecastGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ZoneForecastError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of zones
@@ -301,13 +152,13 @@ pub async fn get_current_zone_forecast(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ZoneListError>`] if the request fails or the response cannot be parsed.
+/// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_zones(
     configuration: &configuration::Configuration,
     params: GetZonesParams<'_>,
-) -> Result<models::ZoneCollectionGeoJson, Error<ZoneListError>> {
-    let uri_str = format!("{}/zones", configuration.base_path);
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::ZoneCollectionGeoJson, Error> {
+    let uri_str = "/zones".to_owned();
+    let mut req_builder = http::get(configuration, &uri_str);
 
     // Apply parameters from the struct
     if let Some(param_value) = params.id {
@@ -387,49 +238,8 @@ pub async fn get_zones(
     if let Some(param_value) = params.effective {
         req_builder = req_builder.query(&[("effective", &param_value)]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `ZoneCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `ZoneCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `ZoneCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ZoneListError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of zones of a given type
@@ -450,14 +260,14 @@ pub async fn get_zones(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ZoneListTypeError>`] if the request fails or the response cannot be parsed.
+/// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_zones_by_type(
     configuration: &configuration::Configuration,
     r#type: models::NwsZoneType,
     params: GetZonesByTypeParams<'_>,
-) -> Result<models::ZoneCollectionGeoJson, Error<ZoneListTypeError>> {
-    let uri_str = format!("{}/zones/{type}", configuration.base_path, type = r#type);
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+) -> Result<models::ZoneCollectionGeoJson, Error> {
+    let uri_str = format!("/zones/{type}", type = r#type);
+    let mut req_builder = http::get(configuration, &uri_str);
 
     // Apply parameters from the struct
     if let Some(param_value) = params.id {
@@ -544,49 +354,8 @@ pub async fn get_zones_by_type(
     if let Some(param_value) = params.effective {
         req_builder = req_builder.query(&[("effective", &param_value)]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `ZoneCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `ZoneCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `ZoneCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ZoneListTypeError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of observations for a given zone
@@ -608,20 +377,19 @@ pub async fn get_zones_by_type(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ZoneObsError>`] if the request fails or the response cannot be parsed.
+/// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_zone_observations(
     configuration: &configuration::Configuration,
     id: &str,
     start: Option<String>,
     end: Option<String>,
     limit: Option<i32>,
-) -> Result<models::ObservationCollectionGeoJson, Error<ZoneObsError>> {
+) -> Result<models::ObservationCollectionGeoJson, Error> {
     let uri_str = format!(
-        "{}/zones/forecast/{id}/observations",
-        configuration.base_path,
+        "/zones/forecast/{id}/observations",
         id = crate::apis::urlencode(id)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = start {
         req_builder = req_builder.query(&[("start", &param_value)]);
@@ -632,49 +400,8 @@ pub async fn get_zone_observations(
     if let Some(param_value) = limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
     }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `ObservationCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `ObservationCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `ObservationCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ZoneObsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
-    }
+    req_builder.json().await
 }
 
 /// Returns a list of observation stations for a given zone
@@ -687,7 +414,6 @@ pub async fn get_zone_observations(
 /// * `id`: The ID of the forecast zone (e.g., "AZZ540").
 /// * `limit`: Optional limit on the number of stations returned.
 /// * `cursor`: Optional pagination cursor for paginated results.
-/// * `feature_flags`: Optional list of feature flags to enable experimental API features.
 ///
 /// # Returns
 ///
@@ -695,20 +421,18 @@ pub async fn get_zone_observations(
 ///
 /// # Errors
 ///
-/// Returns an [`Error<ZoneStationsError>`] if the request fails or the response cannot be parsed.
+/// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_stations_by_zone(
     configuration: &configuration::Configuration,
     id: &str,
     limit: Option<i32>,
     cursor: Option<&str>,
-    feature_flags: Option<Vec<String>>,
-) -> Result<models::ObservationStationCollectionGeoJson, Error<ZoneStationsError>> {
+) -> Result<models::ObservationStationCollectionGeoJson, Error> {
     let uri_str = format!(
-        "{}/zones/forecast/{id}/stations",
-        configuration.base_path,
+        "/zones/forecast/{id}/stations",
         id = crate::apis::urlencode(id)
     );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+    let mut req_builder = http::get(configuration, &uri_str);
 
     if let Some(param_value) = limit {
         req_builder = req_builder.query(&[("limit", &param_value.to_string())]);
@@ -716,50 +440,34 @@ pub async fn get_stations_by_zone(
     if let Some(param_value) = cursor {
         req_builder = req_builder.query(&[("cursor", &param_value.to_owned())]);
     }
-    if let Some(param_value) = feature_flags {
-        req_builder = req_builder.header("Feature-Flags", param_value.join(","));
-    }
-    if let Some(user_agent) = &configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(api_key) = &configuration.api_key {
-        req_builder = req_builder.header(API_KEY_HEADER, api_key.clone());
-    }
+    req_builder.json().await
+}
 
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
+#[cfg(test)]
+mod tests {
+    use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|header| header.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
+    use super::get_stations_by_zone;
+    use crate::apis::configuration::Configuration;
 
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => Err(Error::from(serde_json::Error::custom(
-                "Received `text/plain` content type response that cannot be converted to `ObservationStationCollectionGeoJson`",
-            ))),
-            ContentType::Xml => Err(Error::from(serde_json::Error::custom(
-                "Received `application/xml` content type response that cannot be converted to `ObservationStationCollectionGeoJson`",
-            ))),
-            ContentType::Unsupported(unknown_type) => {
-                Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `ObservationStationCollectionGeoJson`"
-                ))))
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<ZoneStationsError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(Box::new(ResponseContent {
-            content,
-            entity,
-            status,
-        })))
+    #[tokio::test]
+    async fn zone_stations_preserves_query_and_omits_feature_flags() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                r#"{"type":"FeatureCollection","features":[]}"#,
+                "application/geo+json",
+            ))
+            .mount(&server)
+            .await;
+        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+
+        get_stations_by_zone(&configuration, "AZZ540", Some(15), Some("next"))
+            .await
+            .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.query(), Some("limit=15&cursor=next"));
+        assert!(!requests[0].headers.contains_key("feature-flags"));
     }
 }

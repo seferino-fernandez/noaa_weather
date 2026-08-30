@@ -1,8 +1,79 @@
 use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Cell, CellAlignment, ContentArrangement, Table};
-use noaa_weather_client::models::{Office, OfficeHeadline, OfficeHeadlineCollection};
+use noaa_weather_client::models::{
+    NwsConnectDocumentMetadata, Office, OfficeBriefingResponse, OfficeHeadline,
+    OfficeHeadlineCollection, OfficeWeatherStory, OfficeWeatherStoryCollection,
+};
 
 use crate::utils::format::format_datetime_human_readable;
+
+fn value(value: Option<&str>) -> &str {
+    value.filter(|value| !value.is_empty()).unwrap_or("N/A")
+}
+
+fn add_document_row(table: &mut Table, document: &NwsConnectDocumentMetadata) {
+    table.add_row(vec![
+        Cell::new(value(document.id.as_deref())),
+        Cell::new(value(document.title.as_deref())),
+        Cell::new(value(document.description.as_deref())),
+        Cell::new(format_datetime_human_readable(
+            document.start_time.as_deref(),
+        )),
+        Cell::new(format_datetime_human_readable(document.end_time.as_deref())),
+        Cell::new(value(document.download.as_deref())),
+    ]);
+}
+
+fn document_table() -> Table {
+    let mut table = Table::new();
+    table.load_style(UTF8_FULL_CONDENSED);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
+    table.set_header(["ID", "Title", "Description", "Starts", "Ends", "Download"]);
+    table
+}
+
+/// Formats active office briefing metadata. An empty table means no active briefing.
+pub fn create_office_briefing_table(response: &OfficeBriefingResponse) -> Table {
+    let mut table = document_table();
+    if let Some(briefing) = &response.briefing {
+        add_document_row(&mut table, briefing);
+    }
+    table
+}
+
+/// Formats active office weather-story metadata.
+pub fn create_office_weather_stories_table(stories: &OfficeWeatherStoryCollection) -> Table {
+    let mut table = Table::new();
+    table.load_style(UTF8_FULL_CONDENSED);
+    table.set_content_arrangement(ContentArrangement::Dynamic);
+    table.set_header([
+        "ID",
+        "Title",
+        "Description",
+        "Alt Text",
+        "Order",
+        "Download",
+    ]);
+    for story in &stories.stories {
+        add_weather_story_row(&mut table, story);
+    }
+    table
+}
+
+fn add_weather_story_row(table: &mut Table, story: &OfficeWeatherStory) {
+    table.add_row(vec![
+        Cell::new(value(story.id.as_deref())),
+        Cell::new(value(story.title.as_deref())),
+        Cell::new(value(story.description.as_deref())),
+        Cell::new(value(story.alt_text.as_deref())),
+        Cell::new(
+            story
+                .order
+                .map_or_else(|| "N/A".to_owned(), |v| v.to_string()),
+        ),
+        Cell::new(value(story.download.as_deref())),
+    ]);
+}
 
 /// Formats an `Office`'s metadata into a `comfy_table::Table`.
 ///
