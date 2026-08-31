@@ -5,8 +5,7 @@ use noaa_weather_client::apis::stations as station_api;
 use noaa_weather_client::models::{AreaCode, StateTerritoryCode};
 use std::str::FromStr as _;
 
-use crate::utils::format::write_output;
-use crate::{Cli, tables};
+use crate::output::Output;
 
 /// Access data related to NWS observation stations.
 #[derive(Subcommand, Debug, Clone)]
@@ -111,29 +110,22 @@ pub enum StationCommands {
 /// # Arguments
 ///
 /// * `command` - The specific station subcommand and its arguments to execute.
-/// * `cli` - The CLI arguments.
+/// * `output` - The configured output policy.
 /// * `config` - The application configuration containing API details.
 ///
 pub async fn handle_command(
     command: &StationCommands,
-    cli: Cli,
+    output: &Output,
     config: &Configuration,
 ) -> Result<()> {
     match command {
         StationCommands::Metadata { id } => {
-            let result = station_api::get_observation_station(config, id)
+            output
+                .show(
+                    format!("getting station {id} metadata"),
+                    station_api::get_observation_station(config, id),
+                )
                 .await
-                .map_err(|error| anyhow!("Error getting station metadata: {error}"))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::stations::create_observation_station_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         StationCommands::List { id, state, limit } => {
             // Parse state strings into StateTerritoryCode enums, then wrap in AreaCode
@@ -154,47 +146,33 @@ pub async fn handle_command(
                 .transpose()
                 .map_err(|error| anyhow!("Invalid state code provided: {error}"))?;
 
-            let result = station_api::get_observation_stations(
-                config,
-                id.clone(),
-                states_parsed,
-                *limit,
-                None,
-            )
-            .await
-            .map_err(|error| anyhow!("Error listing stations: {error}"))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::stations::create_stations_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    "listing observation stations",
+                    station_api::get_observation_stations(
+                        config,
+                        id.clone(),
+                        states_parsed,
+                        *limit,
+                        None,
+                    ),
+                )
+                .await
         }
         StationCommands::LatestObservation {
             station_id,
             require_quality_controlled,
         } => {
-            let result = station_api::get_latest_observations(
-                config,
-                station_id,
-                Some(*require_quality_controlled),
-            )
-            .await
-            .map_err(|error| anyhow!("Error getting latest observation: {error}"))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::stations::create_stations_observation_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    format!("getting latest observation for station {station_id}"),
+                    station_api::get_latest_observations(
+                        config,
+                        station_id,
+                        Some(*require_quality_controlled),
+                    ),
+                )
+                .await
         }
         StationCommands::Observations {
             station_id,
@@ -202,57 +180,36 @@ pub async fn handle_command(
             end,
             limit,
         } => {
-            let result = station_api::get_observations(
-                config,
-                station_id,
-                start.clone(),
-                end.clone(),
-                *limit,
-                None,
-            )
-            .await
-            .map_err(|error| anyhow!("Error listing observations: {error}"))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::stations::create_stations_observations_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    format!("listing observations for station {station_id}"),
+                    station_api::get_observations(
+                        config,
+                        station_id,
+                        start.clone(),
+                        end.clone(),
+                        *limit,
+                        None,
+                    ),
+                )
+                .await
         }
         StationCommands::Observation { station_id, time } => {
-            let result = station_api::get_observation_by_time(config, station_id, time.clone())
+            output
+                .show(
+                    format!("getting observation for station {station_id} at {time}"),
+                    station_api::get_observation_by_time(config, station_id, time.clone()),
+                )
                 .await
-                .map_err(|error| anyhow!("Error getting observation by time: {error}"))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::stations::create_stations_observation_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         #[cfg(feature = "xml")]
         StationCommands::TerminalAerodromeForecasts { station_id } => {
-            let result = station_api::get_terminal_aerodrome_forecasts(config, station_id)
+            output
+                .show(
+                    format!("getting TAFs for station {station_id}"),
+                    station_api::get_terminal_aerodrome_forecasts(config, station_id),
+                )
                 .await
-                .map_err(|error| anyhow!("Error getting TAFs: {error}"))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::stations::create_stations_tafs_metadata_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         #[cfg(feature = "xml")]
         StationCommands::TerminalAerodromeForecast {
@@ -260,24 +217,17 @@ pub async fn handle_command(
             date,
             time,
         } => {
-            let result = station_api::get_terminal_aerodrome_forecast(
-                config,
-                station_id,
-                date.clone(),
-                time,
-            )
-            .await
-            .map_err(|error| anyhow!("Error getting specific TAF: {error}"))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::stations::create_stations_taf_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    format!("getting TAF for station {station_id} on {date} at {time}"),
+                    station_api::get_terminal_aerodrome_forecast(
+                        config,
+                        station_id,
+                        date.clone(),
+                        time,
+                    ),
+                )
+                .await
         }
     }
 }

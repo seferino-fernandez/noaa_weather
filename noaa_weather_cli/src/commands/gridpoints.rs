@@ -1,10 +1,10 @@
-use crate::utils::format::write_output;
-use crate::{Cli, tables};
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use clap::{Args, Subcommand};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::gridpoints as gridpoints_api;
 use noaa_weather_client::models::{GridpointForecastUnits, NwsForecastOfficeId};
+
+use crate::output::Output;
 
 /// Common arguments for identifying a specific NWS gridpoint.
 #[derive(Args, Debug, Clone)]
@@ -86,97 +86,69 @@ pub enum GridpointCommands {
 /// # Arguments
 ///
 /// * `command` - The specific gridpoint subcommand and its arguments to execute.
-/// * `cli` - The CLI arguments, including the `--json` flag and output path.
+/// * `output` - The configured output policy.
 /// * `config` - The application configuration containing API details.
 ///
 pub async fn handle_command(
     command: &GridpointCommands,
-    cli: Cli,
+    output: &Output,
     config: &Configuration,
 ) -> Result<()> {
     match command {
         GridpointCommands::Gridpoint { location } => {
-            let result = gridpoints_api::get_gridpoint(
-                config,
-                location.forecast_office_id,
-                location.x,
-                location.y,
-            )
-            .await
-            .map_err(|error| anyhow!("getting raw gridpoint data: {}", error))?;
-
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::gridpoints::create_gridpoint_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
+            output
+                .show(
+                    "getting raw gridpoint data",
+                    gridpoints_api::get_gridpoint(
+                        config,
+                        location.forecast_office_id,
+                        location.x,
+                        location.y,
+                    ),
+                )
+                .await?;
         }
         GridpointCommands::Forecast { location, units } => {
-            let result = gridpoints_api::get_gridpoint_forecast(
-                config,
-                location.forecast_office_id,
-                location.x,
-                location.y,
-                *units,
-            )
-            .await
-            .map_err(|error| anyhow!("getting gridpoint forecast: {}", error))?;
-
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::gridpoints::create_forecast_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
+            output
+                .show(
+                    "getting gridpoint forecast",
+                    gridpoints_api::get_gridpoint_forecast(
+                        config,
+                        location.forecast_office_id,
+                        location.x,
+                        location.y,
+                        *units,
+                    ),
+                )
+                .await?;
         }
         GridpointCommands::ForecastHourly { location, units } => {
-            let result = gridpoints_api::get_gridpoint_forecast_hourly(
-                config,
-                location.forecast_office_id,
-                location.x,
-                location.y,
-                *units,
-            )
-            .await
-            .map_err(|error| anyhow!("getting hourly gridpoint forecast: {}", error))?;
-
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::gridpoints::create_hourly_forecast_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
+            output
+                .show(
+                    "getting hourly gridpoint forecast",
+                    gridpoints_api::get_gridpoint_forecast_hourly(
+                        config,
+                        location.forecast_office_id,
+                        location.x,
+                        location.y,
+                        *units,
+                    ),
+                )
+                .await?;
         }
         GridpointCommands::Stations { location, limit } => {
-            let result = gridpoints_api::get_gridpoint_stations(
-                config,
-                location.forecast_office_id,
-                location.x,
-                location.y,
-                *limit,
-            )
-            .await
-            .map_err(|error| anyhow!("getting gridpoint stations: {}", error))?;
-
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::stations::create_stations_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
+            output
+                .show(
+                    "getting gridpoint stations",
+                    gridpoints_api::get_gridpoint_stations(
+                        config,
+                        location.forecast_office_id,
+                        location.x,
+                        location.y,
+                        *limit,
+                    ),
+                )
+                .await?;
         }
     }
     Ok(())

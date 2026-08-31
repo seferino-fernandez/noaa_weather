@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use clap::Subcommand;
 use noaa_weather_client::apis::alerts as alerts_api;
 use noaa_weather_client::apis::alerts::{ActiveAlertsParams, GetAlertsParams};
@@ -8,8 +8,7 @@ use noaa_weather_client::models::{
     MarineRegionCode, RegionType,
 };
 
-use crate::utils::format::write_output;
-use crate::{Cli, tables};
+use crate::output::Output;
 
 /// Subcommands for interacting with the NWS Alerts API.
 #[derive(Subcommand, Debug, Clone)]
@@ -204,12 +203,12 @@ pub enum AlertCommands {
 /// # Arguments
 ///
 /// * `command`: The specific alert subcommand to execute.
-/// * `cli`: The CLI arguments.
+/// * `output`: The configured output policy.
 /// * `config`: The API client configuration.
 ///
 pub async fn handle_command(
     command: &AlertCommands,
-    cli: Cli,
+    output: &Output,
     config: &Configuration,
 ) -> Result<()> {
     match command {
@@ -242,88 +241,44 @@ pub async fn handle_command(
                 certainty: certainty.clone(),
             };
 
-            let result = alerts_api::get_active_alerts(config, params)
+            output
+                .show(
+                    "fetching active alerts",
+                    alerts_api::get_active_alerts(config, params),
+                )
                 .await
-                .map_err(|error| anyhow!("Error fetching active alerts: {}", error))?;
-
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::alerts::create_alerts_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         AlertCommands::Area { area } => {
-            let result = alerts_api::get_active_alerts_for_area(config, area)
+            output
+                .show(
+                    format!("fetching active alerts for area {area}"),
+                    alerts_api::get_active_alerts_for_area(config, area),
+                )
                 .await
-                .map_err(|error| anyhow!("Error fetching alerts for area {}: {}", area, error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::alerts::create_alerts_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         AlertCommands::Count => {
-            let result = alerts_api::get_active_alerts_count(config)
+            output
+                .show(
+                    "fetching active alert count",
+                    alerts_api::get_active_alerts_count(config),
+                )
                 .await
-                .map_err(|error| anyhow!("Error fetching active alert count: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::alerts::create_alert_count_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         AlertCommands::MarineRegion { marine_region } => {
-            let result = alerts_api::get_active_alerts_for_marine_region(config, *marine_region)
+            output
+                .show(
+                    format!("fetching active alerts for marine region {marine_region}"),
+                    alerts_api::get_active_alerts_for_marine_region(config, *marine_region),
+                )
                 .await
-                .map_err(|error| {
-                    anyhow!(
-                        "Error fetching alerts for region {}: {}",
-                        marine_region,
-                        error
-                    )
-                })?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::alerts::create_alerts_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         AlertCommands::Zone { zone_id } => {
-            let result = alerts_api::get_active_alerts_for_zone(config, zone_id)
+            output
+                .show(
+                    format!("fetching active alerts for zone {zone_id}"),
+                    alerts_api::get_active_alerts_for_zone(config, zone_id),
+                )
                 .await
-                .map_err(|error| {
-                    anyhow!("Error fetching alerts for zone {}: {}", zone_id, error)
-                })?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::alerts::create_alerts_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         AlertCommands::List {
             start,
@@ -361,49 +316,22 @@ pub async fn handle_command(
                 cursor: None,
             };
 
-            let result = alerts_api::get_alerts(config, params)
+            output
+                .show("querying alerts", alerts_api::get_alerts(config, params))
                 .await
-                .map_err(|error| anyhow!("Error querying alerts: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::alerts::create_alerts_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         AlertCommands::Alert { id } => {
-            let result = alerts_api::get_alert(config, id)
+            output
+                .show(
+                    format!("getting alert {id}"),
+                    alerts_api::get_alert(config, id),
+                )
                 .await
-                .map_err(|error| anyhow!("Error getting alert {}: {}", id, error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::alerts::create_single_alert_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         AlertCommands::Types => {
-            let result = alerts_api::get_alert_types(config)
+            output
+                .show("fetching alert types", alerts_api::get_alert_types(config))
                 .await
-                .map_err(|error| anyhow!("Error fetching alert types: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::alerts::create_alert_types_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
     }
 }

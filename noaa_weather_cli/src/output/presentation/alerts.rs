@@ -5,6 +5,7 @@ use noaa_weather_client::models::{
     AlertTypesResponse,
 };
 
+use crate::output::{HumanDocument, HumanPresentation};
 use crate::utils::format::{
     format_datetime_human_readable, format_optional_number, get_zone_from_url,
 };
@@ -326,4 +327,28 @@ pub fn create_alert_types_table(types_data: &AlertTypesResponse) -> comfy_table:
         table.add_row(vec![Cell::new("No event types available.")]);
     }
     table
+}
+
+impl HumanPresentation for AlertCollectionGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_alerts_table(self))
+    }
+}
+
+impl HumanPresentation for AlertGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_single_alert_table(self))
+    }
+}
+
+impl HumanPresentation for ActiveAlertsCountResponse {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_alert_count_table(self))
+    }
+}
+
+impl HumanPresentation for AlertTypesResponse {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_alert_types_table(self))
+    }
 }

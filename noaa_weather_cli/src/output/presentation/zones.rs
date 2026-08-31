@@ -1,10 +1,12 @@
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{Attribute, Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::{
-    MetarPhenomenon, Observation, ObservationCloudLayersInner, ObservationGeoJson, Zone,
-    ZoneCollectionGeoJson, ZoneForecastGeoJson, ZoneGeoJson, ZoneState,
+    MetarPhenomenon, Observation, ObservationCloudLayersInner, ObservationCollectionGeoJson,
+    ObservationGeoJson, Zone, ZoneCollectionGeoJson, ZoneForecastGeoJson, ZoneGeoJson, ZoneState,
 };
+use serde::Serialize;
 
+use crate::output::{HumanDocument, HumanPresentation};
 use crate::utils::format::{
     format_datetime_human_readable, format_observation_wind, format_optional_value_unit,
     get_zone_from_url,
@@ -379,4 +381,32 @@ pub fn create_zone_observations_table(observations_features: &[ObservationGeoJso
     }
 
     table
+}
+
+impl HumanPresentation for ZoneCollectionGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_zones_table(self))
+    }
+}
+
+impl HumanPresentation for ZoneGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_zone_metadata_table(self))
+    }
+}
+
+impl HumanPresentation for ZoneForecastGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_zone_forecast_table(self))
+    }
+}
+
+#[derive(Serialize)]
+#[serde(transparent)]
+pub(crate) struct ZoneObservations(pub(crate) ObservationCollectionGeoJson);
+
+impl HumanPresentation for ZoneObservations {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_zone_observations_table(&self.0.features))
+    }
 }

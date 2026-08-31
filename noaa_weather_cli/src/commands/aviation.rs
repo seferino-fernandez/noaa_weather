@@ -1,10 +1,10 @@
-use crate::utils::format::write_output;
-use crate::{Cli, tables};
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use clap::{Args, Subcommand};
 use noaa_weather_client::apis::aviation as aviation_api;
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::models::NwsCenterWeatherServiceUnitId;
+
+use crate::output::Output;
 
 /// Arguments for fetching a specific Center Weather Advisory (CWA).
 #[derive(Args, Debug, Clone)]
@@ -112,102 +112,72 @@ pub enum AviationCommands {
 /// # Arguments
 ///
 /// * `command` - The specific aviation subcommand and its arguments to execute.
-/// * `cli` - The CLI arguments.
+/// * `output` - The configured output policy.
 /// * `config` - The application configuration containing API details.
 ///
 pub async fn handle_command(
     command: &AviationCommands,
-    cli: Cli,
+    output: &Output,
     config: &Configuration,
 ) -> Result<()> {
     match command {
         AviationCommands::Cwa(args) => {
-            let result = aviation_api::get_center_weather_advisories_by_date_and_sequence(
-                config,
-                args.cwsu_id,
-                args.date.clone(),
-                args.sequence,
-            )
-            .await
-            .map_err(|error| anyhow!("Error getting CWA: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::aviation::create_cwa_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    format!(
+                        "getting CWA {} for {} on {}",
+                        args.sequence, args.cwsu_id, args.date
+                    ),
+                    aviation_api::get_center_weather_advisories_by_date_and_sequence(
+                        config,
+                        args.cwsu_id,
+                        args.date.clone(),
+                        args.sequence,
+                    ),
+                )
+                .await
         }
         AviationCommands::Cwas(args) => {
-            let result = aviation_api::get_center_weather_advisories(config, args.cwsu_id)
+            output
+                .show(
+                    format!("getting CWAs for CWSU {}", args.cwsu_id),
+                    aviation_api::get_center_weather_advisories(config, args.cwsu_id),
+                )
                 .await
-                .map_err(|error| anyhow!("Error getting CWAs for CWSU: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::aviation::create_cwas_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         AviationCommands::Cwsu(args) => {
-            let result = aviation_api::get_center_weather_service_unit(config, args.cwsu_id)
+            output
+                .show(
+                    format!("getting CWSU {} metadata", args.cwsu_id),
+                    aviation_api::get_center_weather_service_unit(config, args.cwsu_id),
+                )
                 .await
-                .map_err(|error| anyhow!("Error getting CWSU metadata: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::aviation::create_cwsu_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         AviationCommands::Sigmet(args) => {
-            let _result =
-                aviation_api::get_sigmet(config, &args.atsu, args.date.clone(), &args.time)
-                    .await
-                    .map_err(|error| anyhow!("Error getting SIGMET: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&_result)?,
-                )?;
-            } else {
-                let table = tables::aviation::create_sigmet_table(&_result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    format!(
+                        "getting SIGMET from {} for {} at {}",
+                        args.atsu, args.date, args.time
+                    ),
+                    aviation_api::get_sigmet(config, &args.atsu, args.date.clone(), &args.time),
+                )
+                .await
         }
         AviationCommands::Sigmets(args) => {
-            let _result = aviation_api::get_sigmets(
-                config,
-                args.start.clone(),
-                args.end.clone(),
-                args.date.clone(),
-                args.atsu.as_deref(),
-                args.sequence.as_deref(),
-            )
-            .await
-            .map_err(|error| anyhow!("Error querying SIGMETs: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&_result)?,
-                )?;
-            } else {
-                let table = tables::aviation::create_sigmets_table(&_result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    "querying SIGMETs",
+                    aviation_api::get_sigmets(
+                        config,
+                        args.start.clone(),
+                        args.end.clone(),
+                        args.date.clone(),
+                        args.atsu.as_deref(),
+                        args.sequence.as_deref(),
+                    ),
+                )
+                .await
         }
     }
 }

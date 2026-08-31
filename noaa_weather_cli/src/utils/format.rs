@@ -1,22 +1,8 @@
-use anyhow::Result;
 use jiff::Timestamp;
 use jiff::tz::TimeZone;
 use noaa_weather_client::models::{UnitCodeType, ValueUnit};
-use std::fs::File;
-use std::io::Write as _;
 
 use crate::utils::temperature::{celsius_to_fahrenheit, fahrenheit_to_celsius};
-
-/// Write output to either stdout or a file
-pub fn write_output(output_path: Option<&str>, content: &str) -> Result<()> {
-    if let Some(path) = output_path {
-        let mut file = File::create(path)?;
-        file.write_all(content.as_bytes())?;
-    } else {
-        println!("{content}");
-    }
-    Ok(())
-}
 
 /// Extracts the part of a URL-like string after the last `/`.
 ///

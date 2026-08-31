@@ -8,6 +8,8 @@ use noaa_weather_client::models::{
     RadarStationAlarmsResponse, RadarStationFeature, RadarStationsResponse,
 };
 
+use crate::output::{HumanDocument, HumanPresentation};
+
 /// Creates a concise summary of SPGDS host telemetry.
 pub fn create_radar_spgds_table(response: &RadarSpgdsResponse) -> Table {
     let mut table = Table::new();
@@ -887,4 +889,46 @@ pub fn create_radar_servers_table(radar_servers_response: &RadarServersResponse)
     }
 
     table
+}
+
+impl HumanPresentation for RadarSpgdsResponse {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_radar_spgds_table(self))
+    }
+}
+
+impl HumanPresentation for RadarStationFeature {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_radar_station_feature_table(self))
+    }
+}
+
+impl HumanPresentation for RadarStationsResponse {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_radar_stations_table(self))
+    }
+}
+
+impl HumanPresentation for RadarStationAlarmsResponse {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_radar_station_alarms_table(self))
+    }
+}
+
+impl HumanPresentation for RadarQueuesResponse {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_radar_data_queue_table(self))
+    }
+}
+
+impl HumanPresentation for RadarServer {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_radar_server_table(self))
+    }
+}
+
+impl HumanPresentation for RadarServersResponse {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_radar_servers_table(self))
+    }
 }

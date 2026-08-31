@@ -1,10 +1,12 @@
-use crate::utils::format::{format_datetime_human_readable, format_dewpoint};
 use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::{
     Gridpoint12hForecastGeoJson, GridpointGeoJson, GridpointHourlyForecastGeoJson,
     QuantitativeValue,
 };
+
+use crate::output::{HumanDocument, HumanPresentation};
+use crate::utils::format::{format_datetime_human_readable, format_dewpoint};
 
 macro_rules! add_row_if_some {
     ($table:ident, $label:expr, $value:expr) => {
@@ -213,6 +215,24 @@ fn format_wind(
         parts.push(format!("gust {}", format_quantitative_value(gust)));
     }
     parts.join(" ")
+}
+
+impl HumanPresentation for GridpointGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_gridpoint_table(self))
+    }
+}
+
+impl HumanPresentation for Gridpoint12hForecastGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_forecast_table(self))
+    }
+}
+
+impl HumanPresentation for GridpointHourlyForecastGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_hourly_forecast_table(self))
+    }
 }
 
 #[cfg(test)]

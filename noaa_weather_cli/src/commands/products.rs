@@ -1,12 +1,11 @@
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use clap::{Args, Subcommand};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::products as products_api;
 use noaa_weather_client::apis::products::ProductsQueryParams;
 use noaa_weather_client::models::NwsForecastOfficeId;
 
-use crate::utils::format::write_output;
-use crate::{Cli, tables};
+use crate::output::Output;
 
 /// Arguments for commands requiring a product issuance location ID.
 #[derive(Args, Debug, Clone)]
@@ -156,74 +155,46 @@ pub enum ProductCommands {
 /// # Arguments
 ///
 /// * `command` - The specific product subcommand and its arguments to execute.
-/// * `cli` - The CLI arguments.
+/// * `output` - The configured output policy.
 /// * `config` - The application configuration containing API details.
 ///
 pub async fn handle_command(
     command: &ProductCommands,
-    cli: Cli,
+    output: &Output,
     config: &Configuration,
 ) -> Result<()> {
     match command {
         ProductCommands::LocationProducts(args) => {
-            let result = products_api::get_products_by_location(config, &args.location_id)
+            output
+                .show(
+                    "getting products for a location",
+                    products_api::get_products_by_location(config, &args.location_id),
+                )
                 .await
-                .map_err(|error| anyhow!("getting location products: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::products::create_product_types_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         ProductCommands::Metadata(args) => {
-            let result = products_api::get_product(config, &args.id)
+            output
+                .show(
+                    format!("getting product {}", args.id),
+                    products_api::get_product(config, &args.id),
+                )
                 .await
-                .map_err(|error| anyhow!("getting product: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::products::create_product_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         ProductCommands::Locations => {
-            let result = products_api::get_product_locations(config)
+            output
+                .show(
+                    "getting product locations",
+                    products_api::get_product_locations(config),
+                )
                 .await
-                .map_err(|error| anyhow!("getting product locations: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::products::create_products_locations_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         ProductCommands::Types => {
-            let result = products_api::get_product_types(config)
+            output
+                .show(
+                    "getting product types",
+                    products_api::get_product_types(config),
+                )
                 .await
-                .map_err(|error| anyhow!("getting product types: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::products::create_product_types_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         ProductCommands::ProductsList(args) => {
             let params = ProductsQueryParams {
@@ -235,88 +206,58 @@ pub async fn handle_command(
                 product_type_codes: args.product_type_codes.clone(),
                 limit: Some(args.limit),
             };
-            let result = products_api::get_products_query(config, params)
+            output
+                .show(
+                    "querying products",
+                    products_api::get_products_query(config, params),
+                )
                 .await
-                .map_err(|error| anyhow!("querying products: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::products::create_products_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         ProductCommands::ProductsType(args) => {
-            let result = products_api::get_products_by_type(config, &args.type_id)
+            output
+                .show(
+                    format!("getting products of type {}", args.type_id),
+                    products_api::get_products_by_type(config, &args.type_id),
+                )
                 .await
-                .map_err(|error| anyhow!("getting products by type: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::products::create_products_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
         ProductCommands::ProductsTypeLocation(args) => {
-            let result = products_api::get_products_by_type_and_location(
-                config,
-                &args.type_id,
-                &args.location_id,
-            )
-            .await
-            .map_err(|error| anyhow!("getting products by type and location: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::products::create_products_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    format!(
+                        "getting products of type {} for location {}",
+                        args.type_id, args.location_id
+                    ),
+                    products_api::get_products_by_type_and_location(
+                        config,
+                        &args.type_id,
+                        &args.location_id,
+                    ),
+                )
+                .await
         }
         ProductCommands::ProductsTypeLocations(args) => {
-            let result =
-                products_api::get_product_issuance_locations_by_type(config, &args.type_id)
-                    .await
-                    .map_err(|error| anyhow!("getting locations for product type: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::products::create_products_locations_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    format!("getting locations for product type {}", args.type_id),
+                    products_api::get_product_issuance_locations_by_type(config, &args.type_id),
+                )
+                .await
         }
         ProductCommands::Latest(args) => {
-            let result = products_api::get_latest_product_by_type_and_location(
-                config,
-                &args.type_id,
-                &args.location_id,
-            )
-            .await
-            .map_err(|error| anyhow!("getting latest product: {}", error))?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::products::create_product_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    format!(
+                        "getting latest product of type {} for location {}",
+                        args.type_id, args.location_id
+                    ),
+                    products_api::get_latest_product_by_type_and_location(
+                        config,
+                        &args.type_id,
+                        &args.location_id,
+                    ),
+                )
+                .await
         }
     }
 }

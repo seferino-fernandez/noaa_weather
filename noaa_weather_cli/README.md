@@ -19,15 +19,18 @@ cargo install --path noaa_weather_cli
 
 ## Output contract
 
-Structured commands render concise tables by default. Use the global `--json` flag for pretty JSON or `--output <PATH>` to write structured output to a file:
+Structured commands render concise tables by default. Use the global `--json` flag for pretty JSON or `--output <PATH>` to write output to a file. Use `--output -` to select standard output explicitly:
 
 ```bash
 noaa-weather glossary
 noaa-weather glossary --json
 noaa-weather stations latest-observation --station-id KJFK --output observation.txt
+noaa-weather alerts active --area AZ --json --output -
 ```
 
-Office PDF and image downloads are deliberately different: `--output <PATH>` is required, `--json` is rejected, and binary bytes are never emitted to standard output.
+Text and JSON files replace their destination atomically only after a successful request and rendering pass. Textual output always ends in exactly one newline.
+
+Office PDF and image downloads are deliberately different: `--output <PATH>` is required, `--json` and `--output -` are rejected, empty responses are not saved, and binary bytes are never emitted to standard output.
 
 ## Command groups
 

@@ -2,6 +2,8 @@ use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Attribute, Cell, ContentArrangement, Table};
 use noaa_weather_client::models::{RadioBroadcast, RadioTransmitter, RadioTransmitterCollection};
 
+use crate::output::{HumanDocument, HumanPresentation};
+
 fn add_transmitter_row(table: &mut Table, transmitter: &RadioTransmitter) {
     table.add_row(vec![
         Cell::new(transmitter.call_sign.as_deref().unwrap_or("N/A")),
@@ -87,4 +89,22 @@ pub fn format_radio_broadcast(broadcast: &RadioBroadcast) -> String {
     }
 
     output
+}
+
+impl HumanPresentation for RadioBroadcast {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::Text(format_radio_broadcast(self))
+    }
+}
+
+impl HumanPresentation for RadioTransmitterCollection {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_radio_transmitters_table(self))
+    }
+}
+
+impl HumanPresentation for RadioTransmitter {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_radio_transmitter_table(self))
+    }
 }

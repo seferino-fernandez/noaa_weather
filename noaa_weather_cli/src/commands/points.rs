@@ -1,11 +1,9 @@
-use crate::utils::format::write_output;
-
 use anyhow::Result;
 use clap::{Args, Subcommand};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::points as points_api;
 
-use crate::{Cli, tables};
+use crate::output::Output;
 
 /// Arguments requiring a specific geographical point.
 #[derive(Args, Debug, Clone)]
@@ -35,30 +33,22 @@ pub enum PointCommands {
 /// # Arguments
 ///
 /// * `command` - The specific point subcommand and its arguments to execute.
-/// * `cli` - The CLI arguments, including the `--json` flag.
+/// * `output` - The configured output policy.
 /// * `config` - The application configuration containing API details.
 ///
 pub async fn handle_command(
     command: &PointCommands,
-    cli: Cli,
+    output: &Output,
     config: &Configuration,
 ) -> Result<()> {
     match command {
         PointCommands::Metadata(args) => {
-            let result = points_api::get_point(config, args.latitude, args.longitude)
+            output
+                .show(
+                    "getting point metadata",
+                    points_api::get_point(config, args.latitude, args.longitude),
+                )
                 .await
-                .map_err(|e| anyhow::anyhow!("Error getting point metadata: {}", e))?;
-
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::points::create_point_metadata_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
     }
 }

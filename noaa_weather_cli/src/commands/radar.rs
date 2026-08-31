@@ -1,12 +1,11 @@
-use anyhow::{Context as _, Result};
+use anyhow::Result;
 use clap::{Args, Subcommand};
 use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::apis::radar as radar_api;
 use noaa_weather_client::apis::radar::RadarDataQueueQueryParams;
 use noaa_weather_client::models::RadarQueueHost;
 
-use crate::utils::format::write_output;
-use crate::{Cli, tables};
+use crate::output::Output;
 
 const DEFAULT_RADAR_DATA_QUEUE_LIMIT: i32 = 10;
 
@@ -176,28 +175,27 @@ pub struct RadarStationsArgs {
 /// # Arguments
 ///
 /// * `command` - The specific radar subcommand and its arguments to execute.
-/// * `cli` - The CLI arguments.
+/// * `output` - The configured output policy.
 /// * `config` - The application configuration containing API details.
 ///
 pub async fn handle_command(
     command: &RadarCommand,
-    cli: Cli,
+    output: &Output,
     config: &Configuration,
 ) -> Result<()> {
     match command {
         RadarCommand::WindProfiler(args) => {
-            let result = radar_api::get_radar_wind_profiler(
-                config,
-                &args.id,
-                args.time.as_deref(),
-                args.interval.as_deref(),
-            )
-            .await?;
-            write_output(
-                cli.output.as_deref(),
-                &serde_json::to_string_pretty(&result)?,
-            )?;
-            Ok(())
+            output
+                .raw_json(
+                    format!("getting radar wind-profiler data for {}", args.id),
+                    radar_api::get_radar_wind_profiler(
+                        config,
+                        &args.id,
+                        args.time.as_deref(),
+                        args.interval.as_deref(),
+                    ),
+                )
+                .await
         }
         RadarCommand::DataQueue(args) => {
             let limit = args.limit.unwrap_or(DEFAULT_RADAR_DATA_QUEUE_LIMIT);
@@ -211,112 +209,70 @@ pub async fn handle_command(
                 feed: args.feed.as_deref(),
                 resolution: args.resolution,
             };
-            let result = radar_api::get_radar_data_queue(config, &args.host, params).await?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::radar::create_radar_data_queue_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    format!("getting radar data queue for host {}", args.host),
+                    radar_api::get_radar_data_queue(config, &args.host, params),
+                )
+                .await
         }
         RadarCommand::Server(args) => {
-            let result =
-                radar_api::get_radar_server(config, &args.id, args.reporting_host.as_deref())
-                    .await?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::radar::create_radar_server_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    format!("getting radar server {}", args.id),
+                    radar_api::get_radar_server(config, &args.id, args.reporting_host.as_deref()),
+                )
+                .await
         }
         RadarCommand::Servers(args) => {
-            let result =
-                radar_api::get_radar_servers(config, args.reporting_host.as_deref()).await?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::radar::create_radar_servers_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    "listing radar servers",
+                    radar_api::get_radar_servers(config, args.reporting_host.as_deref()),
+                )
+                .await
         }
         RadarCommand::Station(args) => {
-            let result = radar_api::get_radar_station(
-                config,
-                &args.station_id,
-                args.reporting_host.as_deref(),
-                args.host.as_ref(),
-            )
-            .await?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::radar::create_radar_station_feature_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    format!("getting radar station {}", args.station_id),
+                    radar_api::get_radar_station(
+                        config,
+                        &args.station_id,
+                        args.reporting_host.as_deref(),
+                        args.host.as_ref(),
+                    ),
+                )
+                .await
         }
         RadarCommand::StationAlarms(args) => {
-            let result = radar_api::get_radar_station_alarms(config, &args.station_id).await?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::radar::create_radar_station_alarms_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    format!("getting alarms for radar station {}", args.station_id),
+                    radar_api::get_radar_station_alarms(config, &args.station_id),
+                )
+                .await
         }
         RadarCommand::Stations(args) => {
-            let result = radar_api::get_radar_stations(
-                config,
-                args.station_type.clone(),
-                args.reporting_host.as_deref(),
-                args.host.as_ref(),
-            )
-            .await?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::radar::create_radar_stations_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
+            output
+                .show(
+                    "listing radar stations",
+                    radar_api::get_radar_stations(
+                        config,
+                        args.station_type.clone(),
+                        args.reporting_host.as_deref(),
+                        args.host.as_ref(),
+                    ),
+                )
+                .await
         }
         RadarCommand::Spgds(args) => {
-            let result = radar_api::get_radar_spgds(config, args.published.as_deref())
+            output
+                .show(
+                    "getting radar SPGDS telemetry",
+                    radar_api::get_radar_spgds(config, args.published.as_deref()),
+                )
                 .await
-                .context("getting radar SPGDS telemetry")?;
-            if cli.json {
-                write_output(
-                    cli.output.as_deref(),
-                    &serde_json::to_string_pretty(&result)?,
-                )?;
-            } else {
-                let table = tables::radar::create_radar_spgds_table(&result);
-                write_output(cli.output.as_deref(), &table.to_string())?;
-            }
-            Ok(())
         }
     }
 }

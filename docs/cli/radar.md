@@ -39,4 +39,4 @@ noaa-weather radar stations [--station-type <TYPE>...] [--reporting-host <HOST>]
 noaa-weather radar wind-profiler --id <ID> [--time <TIME>] [--interval <DURATION>]
 ```
 
-Structured radar results render as tables by default and support the global `--json` option.
+Typed radar results render as tables by default and support the global `--json` option. Wind-profiler data has no stable typed response model, so that command always emits pretty JSON; `--json` is accepted but redundant there.

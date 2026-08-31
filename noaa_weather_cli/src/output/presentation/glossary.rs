@@ -2,6 +2,8 @@ use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Attribute, Cell, ContentArrangement, Table};
 use noaa_weather_client::models::GlossaryResponse;
 
+use crate::output::{HumanDocument, HumanPresentation};
+
 /// Creates a concise table of NWS glossary terms and definitions.
 pub fn create_glossary_table(glossary: &GlossaryResponse) -> Table {
     let mut table = Table::new();
@@ -20,4 +22,10 @@ pub fn create_glossary_table(glossary: &GlossaryResponse) -> Table {
     }
 
     table
+}
+
+impl HumanPresentation for GlossaryResponse {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_glossary_table(self))
+    }
 }

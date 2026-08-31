@@ -2,8 +2,10 @@ use anyhow::Result;
 use clap::Parser;
 use noaa_weather_client::apis::configuration::Configuration;
 
+use output::{Output, OutputArgs};
+
 mod commands;
-mod tables;
+mod output;
 mod utils;
 
 #[cfg(feature = "radio")]
@@ -13,7 +15,7 @@ use commands::{
     zones,
 };
 
-#[derive(Parser, Debug, Clone)]
+#[derive(Parser, Debug)]
 #[command(
     author,
     version,
@@ -24,13 +26,8 @@ struct Cli {
     #[command(subcommand)]
     command: Commands,
 
-    /// Output in JSON format
-    #[arg(long, global = true)]
-    json: bool,
-
-    /// Output file path
-    #[arg(short, long, global = true)]
-    output: Option<String>,
+    #[command(flatten)]
+    output: OutputArgs,
 }
 
 #[tokio::main]
@@ -42,38 +39,38 @@ async fn main() {
 }
 
 async fn try_main() -> Result<()> {
-    let cli = Cli::parse();
-
+    let Cli { command, output } = Cli::parse();
+    let output = Output::configured(output);
     let config = Configuration::default();
 
-    match &cli.command {
+    match &command {
         Commands::Alerts { command } => {
-            alerts::handle_command(command, cli.clone(), &config).await?;
+            alerts::handle_command(command, &output, &config).await?;
         }
         Commands::Gridpoints { command } => {
-            gridpoints::handle_command(command, cli.clone(), &config).await?;
+            gridpoints::handle_command(command, &output, &config).await?;
         }
-        Commands::Glossary => glossary::handle_command(cli.clone(), &config).await?,
+        Commands::Glossary => glossary::handle_command(&output, &config).await?,
         Commands::Offices { command } => {
-            offices::handle_command(command, cli.clone(), &config).await?;
+            offices::handle_command(command, &output, &config).await?;
         }
         Commands::Points { command } => {
-            points::handle_command(command, cli.clone(), &config).await?;
+            points::handle_command(command, &output, &config).await?;
         }
-        Commands::Radar { command } => radar::handle_command(command, cli.clone(), &config).await?,
+        Commands::Radar { command } => radar::handle_command(command, &output, &config).await?,
         Commands::Stations { command } => {
-            stations::handle_command(command, cli.clone(), &config).await?;
+            stations::handle_command(command, &output, &config).await?;
         }
-        Commands::Zones { command } => zones::handle_command(command, cli.clone(), &config).await?,
+        Commands::Zones { command } => zones::handle_command(command, &output, &config).await?,
         Commands::Aviation { command } => {
-            aviation::handle_command(command, cli.clone(), &config).await?;
+            aviation::handle_command(command, &output, &config).await?;
         }
         Commands::Products { command } => {
-            products::handle_command(command, cli.clone(), &config).await?;
+            products::handle_command(command, &output, &config).await?;
         }
         #[cfg(feature = "radio")]
         Commands::Radio { command } => {
-            radio::handle_command(command, cli.clone(), &config).await?;
+            radio::handle_command(command, &output, &config).await?;
         }
     }
 

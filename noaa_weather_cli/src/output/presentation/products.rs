@@ -4,6 +4,7 @@ use noaa_weather_client::models::{
     TextProduct, TextProductCollection, TextProductLocationCollection, TextProductTypeCollection,
 };
 
+use crate::output::{HumanDocument, HumanPresentation};
 use crate::utils::format::format_datetime_human_readable;
 
 /// Formats a `TextProduct` into a `comfy_table::Table`.
@@ -156,4 +157,28 @@ pub fn create_products_locations_table(product_locations: &TextProductLocationCo
     }
 
     table
+}
+
+impl HumanPresentation for TextProduct {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_product_table(self))
+    }
+}
+
+impl HumanPresentation for TextProductCollection {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_products_table(self))
+    }
+}
+
+impl HumanPresentation for TextProductLocationCollection {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_products_locations_table(self))
+    }
+}
+
+impl HumanPresentation for TextProductTypeCollection {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_product_types_table(self))
+    }
 }

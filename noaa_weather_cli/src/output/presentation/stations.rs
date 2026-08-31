@@ -5,6 +5,7 @@ use noaa_weather_client::models::{
     ObservationStationCollectionGeoJson, ObservationStationGeoJson,
 };
 
+use crate::output::{HumanDocument, HumanPresentation};
 use crate::utils::format::{
     format_datetime_human_readable, format_optional_value_unit, get_zone_from_url,
 };
@@ -866,4 +867,42 @@ fn create_station_row(observation_station: &ObservationStationGeoJson) -> Vec<St
         point_str,
         zones,
     ]
+}
+
+impl HumanPresentation for ObservationStationCollectionGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_stations_table(self))
+    }
+}
+
+impl HumanPresentation for ObservationStationGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_observation_station_table(self))
+    }
+}
+
+impl HumanPresentation for ObservationGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_stations_observation_table(self))
+    }
+}
+
+impl HumanPresentation for ObservationCollectionGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_stations_observations_table(self))
+    }
+}
+
+#[cfg(feature = "xml")]
+impl HumanPresentation for noaa_weather_client::models::TerminalAerodromeForecastsResponse {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_stations_tafs_metadata_table(self))
+    }
+}
+
+#[cfg(feature = "xml")]
+impl HumanPresentation for noaa_weather_client::models::TerminalAerodromeForecast {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_stations_taf_table(self))
+    }
 }

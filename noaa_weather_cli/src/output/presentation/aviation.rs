@@ -7,6 +7,7 @@ use noaa_weather_client::models::{
     SigmetCollectionGeoJson, SigmetGeoJson,
 };
 
+use crate::output::{HumanDocument, HumanPresentation};
 use crate::utils::format::format_datetime_human_readable;
 
 /// Formats a CWSU office's details into a `comfy_table::Table`.
@@ -424,4 +425,34 @@ pub fn create_sigmets_table(sigmets: &SigmetCollectionGeoJson) -> Table {
         ]);
     }
     table
+}
+
+impl HumanPresentation for CwsuOffice {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_cwsu_table(self))
+    }
+}
+
+impl HumanPresentation for CenterWeatherAdvisoryGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_cwa_table(self))
+    }
+}
+
+impl HumanPresentation for CenterWeatherAdvisoryCollectionGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_cwas_table(self))
+    }
+}
+
+impl HumanPresentation for SigmetGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_sigmet_table(self))
+    }
+}
+
+impl HumanPresentation for SigmetCollectionGeoJson {
+    fn human_presentation(&self) -> HumanDocument {
+        HumanDocument::table(create_sigmets_table(self))
+    }
 }

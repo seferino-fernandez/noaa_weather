@@ -1,8 +1,8 @@
 # NOAA Weather CLI Documentation
 
-`noaa-weather` targets NOAA Weather API 3.11.0. Structured commands render concise tables by default. Add the global `--json` flag for pretty JSON, or `--output <PATH>` to write structured output to a file.
+`noaa-weather` targets NOAA Weather API 3.11.0. Structured commands render concise tables by default. Add the global `--json` flag for pretty JSON, use `--output <PATH>` to write output to an atomically replaced file, or use `--output -` to select standard output explicitly. Text and JSON output always ends in exactly one newline.
 
-Office briefing PDFs and weather-story images are binary. Their download commands require `--output <PATH>`, reject `--json`, and never write binary bytes to standard output.
+Office briefing PDFs and weather-story images are binary. Their download commands require `--output <PATH>`, reject `--json` and `--output -`, reject empty responses, and never write binary bytes to standard output.
 
 ## Command guides
 
