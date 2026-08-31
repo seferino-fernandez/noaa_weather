@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0](https://github.com/seferino-fernandez/noaa_weather/compare/v1.3.0...v1.4.0)
+_31 August 2026_
+
+### Added
+
+* Support NOAA 3.11
+
+### Other
+
+* Deepen the existing request seam so operation modules retain NOAA meaning while its implementation absorbs repeated request-contract mechanics.
+
 ### Added
 
 - Target NOAA Weather API specification 3.11.0.
