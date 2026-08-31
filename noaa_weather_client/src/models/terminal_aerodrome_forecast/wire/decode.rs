@@ -40,12 +40,12 @@ impl<'input> Xml<'input> {
             .map_err(TafDecodeError::xml)?;
         let vocabulary = match namespace {
             ResolveResult::Bound(namespace)
-                if namespace.as_ref() == b"http://def.wmo.int/collect/2014" =>
+                if namespace.as_ref() == "http://def.wmo.int/collect/2014" =>
             {
                 Vocabulary::Collect
             }
             ResolveResult::Bound(namespace)
-                if namespace.as_ref() == b"http://icao.int/iwxxm/2021-2" =>
+                if namespace.as_ref() == "http://icao.int/iwxxm/2021-2" =>
             {
                 Vocabulary::Iwxxm
             }
@@ -63,12 +63,12 @@ impl<'input> Xml<'input> {
         self.resolved_event().map(|(_, event)| event)
     }
 
-    fn attribute(&self, element: &BytesStart<'_>, name: &[u8]) -> Result<Option<String>> {
+    fn attribute(&self, element: &BytesStart<'_>, name: &str) -> Result<Option<String>> {
         for attribute in element.attributes().with_checks(false) {
             let attribute = attribute.map_err(TafDecodeError::xml)?;
             if attribute.key.local_name().as_ref() == name {
                 return attribute
-                    .decoded_and_normalized_value(self.version, self.reader.decoder())
+                    .normalized_value(self.version)
                     .map(|value| Some(value.into_owned()))
                     .map_err(TafDecodeError::xml);
             }
@@ -79,7 +79,7 @@ impl<'input> Xml<'input> {
     fn required_attribute(
         &self,
         element: &BytesStart<'_>,
-        name: &[u8],
+        name: &str,
         path: &'static str,
     ) -> Result<String> {
         self.attribute(element, name)?
@@ -92,9 +92,7 @@ impl<'input> Xml<'input> {
             .reader
             .read_text(element.name())
             .map_err(TafDecodeError::xml)?;
-        let decoded = text
-            .xml_content(self.version)
-            .map_err(TafDecodeError::xml)?;
+        let decoded = text.xml_content(self.version);
         unescape(&decoded)
             .map(|value| value.into_owned())
             .map_err(TafDecodeError::xml)
@@ -116,7 +114,7 @@ pub(super) fn decode(bytes: &[u8]) -> Result<Bulletin> {
     loop {
         match xml.resolved_event()? {
             (Vocabulary::Iwxxm, Event::Start(element))
-                if element.local_name().as_ref() == b"TAF" =>
+                if element.local_name().as_ref() == "TAF" =>
             {
                 if taf.is_some() {
                     return Err(TafDecodeError::classified(
@@ -128,7 +126,7 @@ pub(super) fn decode(bytes: &[u8]) -> Result<Bulletin> {
                 taf = Some(parse_taf(&mut xml, &element)?);
             }
             (Vocabulary::Collect, Event::Start(element))
-                if element.local_name().as_ref() == b"bulletinIdentifier" =>
+                if element.local_name().as_ref() == "bulletinIdentifier" =>
             {
                 bulletin_identifier = Some(required_text(
                     &mut xml,
@@ -136,7 +134,7 @@ pub(super) fn decode(bytes: &[u8]) -> Result<Bulletin> {
                     "MeteorologicalBulletin.bulletinIdentifier",
                 )?);
             }
-            (_, Event::Start(element)) if element.local_name().as_ref() == b"TAF" => {
+            (_, Event::Start(element)) if element.local_name().as_ref() == "TAF" => {
                 return Err(TafDecodeError::classified(
                     TafDecodeErrorKind::InvalidValue,
                     "MeteorologicalBulletin.meteorologicalInformation.TAF",
@@ -160,21 +158,21 @@ pub(super) fn decode(bytes: &[u8]) -> Result<Bulletin> {
 }
 
 fn parse_taf(xml: &mut Xml<'_>, element: &BytesStart<'_>) -> Result<Taf> {
-    let report_status = xml.required_attribute(element, b"reportStatus", "TAF.reportStatus")?;
+    let report_status = xml.required_attribute(element, "reportStatus", "TAF.reportStatus")?;
     let permissible_usage =
-        xml.required_attribute(element, b"permissibleUsage", "TAF.permissibleUsage")?;
-    let permissible_usage_reason = xml.attribute(element, b"permissibleUsageReason")?;
+        xml.required_attribute(element, "permissibleUsage", "TAF.permissibleUsage")?;
+    let permissible_usage_reason = xml.attribute(element, "permissibleUsageReason")?;
     let permissible_usage_supplementary =
-        xml.attribute(element, b"permissibleUsageSupplementary")?;
-    let translated_bulletin_id = xml.attribute(element, b"translatedBulletinID")?;
+        xml.attribute(element, "permissibleUsageSupplementary")?;
+    let translated_bulletin_id = xml.attribute(element, "translatedBulletinID")?;
     let translated_bulletin_reception_time =
-        xml.attribute(element, b"translatedBulletinReceptionTime")?;
-    let translation_centre_designator = xml.attribute(element, b"translationCentreDesignator")?;
-    let translation_centre_name = xml.attribute(element, b"translationCentreName")?;
-    let translation_time = xml.attribute(element, b"translationTime")?;
-    let translation_failed_tac = xml.attribute(element, b"translationFailedTAC")?;
+        xml.attribute(element, "translatedBulletinReceptionTime")?;
+    let translation_centre_designator = xml.attribute(element, "translationCentreDesignator")?;
+    let translation_centre_name = xml.attribute(element, "translationCentreName")?;
+    let translation_time = xml.attribute(element, "translationTime")?;
+    let translation_failed_tac = xml.attribute(element, "translationFailedTAC")?;
     let is_cancel_report = xml
-        .attribute(element, b"isCancelReport")?
+        .attribute(element, "isCancelReport")?
         .map(|value| parse_boolean("TAF.isCancelReport", &value))
         .transpose()?
         .unwrap_or(false);
@@ -189,22 +187,22 @@ fn parse_taf(xml: &mut Xml<'_>, element: &BytesStart<'_>) -> Result<Taf> {
     loop {
         match xml.event()? {
             Event::Start(child) => match child.local_name().as_ref() {
-                b"issueTime" => issue_time = Some(parse_time_instant(xml, b"issueTime")?),
-                b"aerodrome" => aerodrome = Some(parse_aerodrome(xml)?),
-                b"validPeriod" => valid_period = Some(parse_time_period(xml, b"validPeriod")?),
-                b"cancelledReportValidPeriod" => {
+                "issueTime" => issue_time = Some(parse_time_instant(xml, "issueTime")?),
+                "aerodrome" => aerodrome = Some(parse_aerodrome(xml)?),
+                "validPeriod" => valid_period = Some(parse_time_period(xml, "validPeriod")?),
+                "cancelledReportValidPeriod" => {
                     cancelled_report_valid_period =
-                        Some(parse_time_period(xml, b"cancelledReportValidPeriod")?);
+                        Some(parse_time_period(xml, "cancelledReportValidPeriod")?);
                 }
-                b"baseForecast" => {
-                    base_forecast = Some(parse_forecast_property(xml, b"baseForecast")?);
+                "baseForecast" => {
+                    base_forecast = Some(parse_forecast_property(xml, "baseForecast")?);
                 }
-                b"changeForecast" => {
-                    change_forecasts.push(parse_forecast_property(xml, b"changeForecast")?);
+                "changeForecast" => {
+                    change_forecasts.push(parse_forecast_property(xml, "changeForecast")?);
                 }
                 _ => xml.skip(&child)?,
             },
-            Event::End(end) if end.local_name().as_ref() == b"TAF" => break,
+            Event::End(end) if end.local_name().as_ref() == "TAF" => break,
             Event::Eof => return Err(unexpected_eof("TAF")),
             _ => {}
         }
@@ -231,11 +229,11 @@ fn parse_taf(xml: &mut Xml<'_>, element: &BytesStart<'_>) -> Result<Taf> {
     })
 }
 
-fn parse_time_instant(xml: &mut Xml<'_>, wrapper: &[u8]) -> Result<TimeInstantProperty> {
+fn parse_time_instant(xml: &mut Xml<'_>, wrapper: &str) -> Result<TimeInstantProperty> {
     let mut position = None;
     loop {
         match xml.event()? {
-            Event::Start(element) if element.local_name().as_ref() == b"timePosition" => {
+            Event::Start(element) if element.local_name().as_ref() == "timePosition" => {
                 position = Some(required_text(xml, &element, "TAF.timePosition")?);
             }
             Event::End(end) if end.local_name().as_ref() == wrapper => break,
@@ -250,16 +248,16 @@ fn parse_time_instant(xml: &mut Xml<'_>, wrapper: &[u8]) -> Result<TimeInstantPr
     })
 }
 
-fn parse_time_period(xml: &mut Xml<'_>, wrapper: &[u8]) -> Result<TimePeriodProperty> {
+fn parse_time_period(xml: &mut Xml<'_>, wrapper: &str) -> Result<TimePeriodProperty> {
     let mut begin = None;
     let mut end_position = None;
     loop {
         match xml.event()? {
             Event::Start(element) => match element.local_name().as_ref() {
-                b"beginPosition" => {
+                "beginPosition" => {
                     begin = Some(required_text(xml, &element, "TAF.timePeriod.begin")?);
                 }
-                b"endPosition" => {
+                "endPosition" => {
                     end_position = Some(required_text(xml, &element, "TAF.timePeriod.end")?);
                 }
                 _ => {}
@@ -284,22 +282,22 @@ fn parse_aerodrome(xml: &mut Xml<'_>) -> Result<AerodromeProperty> {
     loop {
         match xml.event()? {
             Event::Start(element) => match element.local_name().as_ref() {
-                b"designator" => {
+                "designator" => {
                     designator = Some(required_text(xml, &element, "TAF.aerodrome.designator")?);
                 }
-                b"locationIndicatorICAO" => {
+                "locationIndicatorICAO" => {
                     icao_identifier = Some(required_text(
                         xml,
                         &element,
                         "TAF.aerodrome.icaoIdentifier",
                     )?);
                 }
-                b"pos" => {
+                "pos" => {
                     position = Some(required_text(xml, &element, "TAF.aerodrome.position")?);
                 }
                 _ => {}
             },
-            Event::End(end) if end.local_name().as_ref() == b"aerodrome" => break,
+            Event::End(end) if end.local_name().as_ref() == "aerodrome" => break,
             Event::Eof => return Err(unexpected_eof("aerodrome")),
             _ => {}
         }
@@ -322,12 +320,12 @@ fn parse_aerodrome(xml: &mut Xml<'_>) -> Result<AerodromeProperty> {
     })
 }
 
-fn parse_forecast_property(xml: &mut Xml<'_>, wrapper: &[u8]) -> Result<ForecastProperty> {
+fn parse_forecast_property(xml: &mut Xml<'_>, wrapper: &str) -> Result<ForecastProperty> {
     let mut forecast = None;
     loop {
         match xml.event()? {
             Event::Start(element)
-                if element.local_name().as_ref() == b"MeteorologicalAerodromeForecast" =>
+                if element.local_name().as_ref() == "MeteorologicalAerodromeForecast" =>
             {
                 forecast = Some(parse_forecast(xml, &element)?);
             }
@@ -347,11 +345,11 @@ fn parse_forecast(xml: &mut Xml<'_>, element: &BytesStart<'_>) -> Result<Forecas
         "TAF.forecastGroup.cloudAndVisibilityOK",
         &xml.required_attribute(
             element,
-            b"cloudAndVisibilityOK",
+            "cloudAndVisibilityOK",
             "TAF.forecastGroup.cloudAndVisibilityOK",
         )?,
     )?;
-    let change_indicator = xml.attribute(element, b"changeIndicator")?;
+    let change_indicator = xml.attribute(element, "changeIndicator")?;
     let mut phenomenon_time = None;
     let mut visibility = None;
     let mut visibility_operator = None;
@@ -363,39 +361,39 @@ fn parse_forecast(xml: &mut Xml<'_>, element: &BytesStart<'_>) -> Result<Forecas
     loop {
         match xml.event()? {
             Event::Start(child) => match child.local_name().as_ref() {
-                b"phenomenonTime" => {
-                    phenomenon_time = Some(parse_time_period(xml, b"phenomenonTime")?);
+                "phenomenonTime" => {
+                    phenomenon_time = Some(parse_time_period(xml, "phenomenonTime")?);
                 }
-                b"prevailingVisibility" => {
+                "prevailingVisibility" => {
                     visibility = Some(parse_measure(xml, &child)?);
                 }
-                b"prevailingVisibilityOperator" => {
+                "prevailingVisibilityOperator" => {
                     visibility_operator = Some(required_text(
                         xml,
                         &child,
                         "TAF.forecastGroup.visibilityOperator",
                     )?);
                 }
-                b"surfaceWind" => {
+                "surfaceWind" => {
                     surface_wind = Some(parse_surface_wind_property(xml, &child)?);
                 }
-                b"weather" => weather.push(parse_code_value(xml, &child)?),
-                b"cloud" => cloud = Some(parse_cloud_property(xml, &child)?),
-                b"temperature" => {
+                "weather" => weather.push(parse_code_value(xml, &child)?),
+                "cloud" => cloud = Some(parse_cloud_property(xml, &child)?),
+                "temperature" => {
                     temperature.push(parse_temperature_property(xml)?);
                 }
                 _ => xml.skip(&child)?,
             },
             Event::Empty(child) => match child.local_name().as_ref() {
-                b"prevailingVisibility" => visibility = Some(empty_measure(xml, &child)?),
-                b"surfaceWind" => {
+                "prevailingVisibility" => visibility = Some(empty_measure(xml, &child)?),
+                "surfaceWind" => {
                     surface_wind = Some(empty_surface_wind_property(xml, &child)?);
                 }
-                b"weather" => weather.push(empty_code_value(xml, &child)?),
-                b"cloud" => cloud = Some(empty_cloud_property(xml, &child)?),
+                "weather" => weather.push(empty_code_value(xml, &child)?),
+                "cloud" => cloud = Some(empty_cloud_property(xml, &child)?),
                 _ => {}
             },
-            Event::End(end) if end.local_name().as_ref() == b"MeteorologicalAerodromeForecast" => {
+            Event::End(end) if end.local_name().as_ref() == "MeteorologicalAerodromeForecast" => {
                 break;
             }
             Event::Eof => return Err(unexpected_eof("forecast group")),
@@ -419,16 +417,16 @@ fn parse_forecast(xml: &mut Xml<'_>, element: &BytesStart<'_>) -> Result<Forecas
 
 fn parse_measure(xml: &mut Xml<'_>, element: &BytesStart<'_>) -> Result<Measure> {
     Ok(Measure {
-        unit: xml.attribute(element, b"uom")?,
-        nil_reason: xml.attribute(element, b"nilReason")?,
+        unit: xml.attribute(element, "uom")?,
+        nil_reason: xml.attribute(element, "nilReason")?,
         value: nonempty(xml.text(element)?),
     })
 }
 
 fn empty_measure(xml: &Xml<'_>, element: &BytesStart<'_>) -> Result<Measure> {
     Ok(Measure {
-        unit: xml.attribute(element, b"uom")?,
-        nil_reason: xml.attribute(element, b"nilReason")?,
+        unit: xml.attribute(element, "uom")?,
+        nil_reason: xml.attribute(element, "nilReason")?,
         value: None,
     })
 }
@@ -441,8 +439,8 @@ fn parse_code_value(xml: &mut Xml<'_>, element: &BytesStart<'_>) -> Result<CodeV
 
 fn empty_code_value(xml: &Xml<'_>, element: &BytesStart<'_>) -> Result<CodeValue> {
     Ok(CodeValue {
-        href: xml.attribute(element, b"href")?,
-        nil_reason: xml.attribute(element, b"nilReason")?,
+        href: xml.attribute(element, "href")?,
+        nil_reason: xml.attribute(element, "nilReason")?,
     })
 }
 
@@ -450,16 +448,16 @@ fn parse_surface_wind_property(
     xml: &mut Xml<'_>,
     element: &BytesStart<'_>,
 ) -> Result<SurfaceWindProperty> {
-    let nil_reason = xml.attribute(element, b"nilReason")?;
+    let nil_reason = xml.attribute(element, "nilReason")?;
     let mut wind = None;
     loop {
         match xml.event()? {
             Event::Start(child)
-                if child.local_name().as_ref() == b"AerodromeSurfaceWindForecast" =>
+                if child.local_name().as_ref() == "AerodromeSurfaceWindForecast" =>
             {
                 wind = Some(parse_surface_wind(xml, &child)?);
             }
-            Event::End(end) if end.local_name().as_ref() == b"surfaceWind" => break,
+            Event::End(end) if end.local_name().as_ref() == "surfaceWind" => break,
             Event::Eof => return Err(unexpected_eof("surface wind")),
             _ => {}
         }
@@ -472,7 +470,7 @@ fn empty_surface_wind_property(
     element: &BytesStart<'_>,
 ) -> Result<SurfaceWindProperty> {
     Ok(SurfaceWindProperty {
-        nil_reason: xml.attribute(element, b"nilReason")?,
+        nil_reason: xml.attribute(element, "nilReason")?,
         wind: None,
     })
 }
@@ -482,7 +480,7 @@ fn parse_surface_wind(xml: &mut Xml<'_>, element: &BytesStart<'_>) -> Result<Sur
         "TAF.forecastGroup.wind.variableDirection",
         &xml.required_attribute(
             element,
-            b"variableWindDirection",
+            "variableWindDirection",
             "TAF.forecastGroup.wind.variableDirection",
         )?,
     )?;
@@ -494,17 +492,17 @@ fn parse_surface_wind(xml: &mut Xml<'_>, element: &BytesStart<'_>) -> Result<Sur
     loop {
         match xml.event()? {
             Event::Start(child) => match child.local_name().as_ref() {
-                b"meanWindDirection" => mean_direction = Some(parse_measure(xml, &child)?),
-                b"meanWindSpeed" => mean_speed = Some(parse_measure(xml, &child)?),
-                b"meanWindSpeedOperator" => {
+                "meanWindDirection" => mean_direction = Some(parse_measure(xml, &child)?),
+                "meanWindSpeed" => mean_speed = Some(parse_measure(xml, &child)?),
+                "meanWindSpeedOperator" => {
                     mean_speed_operator = Some(required_text(
                         xml,
                         &child,
                         "TAF.forecastGroup.wind.speedOperator",
                     )?);
                 }
-                b"windGustSpeed" => gust_speed = Some(parse_measure(xml, &child)?),
-                b"windGustSpeedOperator" => {
+                "windGustSpeed" => gust_speed = Some(parse_measure(xml, &child)?),
+                "windGustSpeedOperator" => {
                     gust_speed_operator = Some(required_text(
                         xml,
                         &child,
@@ -514,12 +512,12 @@ fn parse_surface_wind(xml: &mut Xml<'_>, element: &BytesStart<'_>) -> Result<Sur
                 _ => xml.skip(&child)?,
             },
             Event::Empty(child) => match child.local_name().as_ref() {
-                b"meanWindDirection" => mean_direction = Some(empty_measure(xml, &child)?),
-                b"meanWindSpeed" => mean_speed = Some(empty_measure(xml, &child)?),
-                b"windGustSpeed" => gust_speed = Some(empty_measure(xml, &child)?),
+                "meanWindDirection" => mean_direction = Some(empty_measure(xml, &child)?),
+                "meanWindSpeed" => mean_speed = Some(empty_measure(xml, &child)?),
+                "windGustSpeed" => gust_speed = Some(empty_measure(xml, &child)?),
                 _ => {}
             },
-            Event::End(end) if end.local_name().as_ref() == b"AerodromeSurfaceWindForecast" => {
+            Event::End(end) if end.local_name().as_ref() == "AerodromeSurfaceWindForecast" => {
                 break;
             }
             Event::Eof => return Err(unexpected_eof("surface-wind conditions")),
@@ -537,14 +535,14 @@ fn parse_surface_wind(xml: &mut Xml<'_>, element: &BytesStart<'_>) -> Result<Sur
 }
 
 fn parse_cloud_property(xml: &mut Xml<'_>, element: &BytesStart<'_>) -> Result<CloudProperty> {
-    let nil_reason = xml.attribute(element, b"nilReason")?;
+    let nil_reason = xml.attribute(element, "nilReason")?;
     let mut forecast = None;
     loop {
         match xml.event()? {
-            Event::Start(child) if child.local_name().as_ref() == b"AerodromeCloudForecast" => {
+            Event::Start(child) if child.local_name().as_ref() == "AerodromeCloudForecast" => {
                 forecast = Some(parse_cloud_forecast(xml)?);
             }
-            Event::End(end) if end.local_name().as_ref() == b"cloud" => break,
+            Event::End(end) if end.local_name().as_ref() == "cloud" => break,
             Event::Eof => return Err(unexpected_eof("cloud")),
             _ => {}
         }
@@ -557,7 +555,7 @@ fn parse_cloud_property(xml: &mut Xml<'_>, element: &BytesStart<'_>) -> Result<C
 
 fn empty_cloud_property(xml: &Xml<'_>, element: &BytesStart<'_>) -> Result<CloudProperty> {
     Ok(CloudProperty {
-        nil_reason: xml.attribute(element, b"nilReason")?,
+        nil_reason: xml.attribute(element, "nilReason")?,
         forecast: None,
     })
 }
@@ -568,16 +566,16 @@ fn parse_cloud_forecast(xml: &mut Xml<'_>) -> Result<CloudForecast> {
     loop {
         match xml.event()? {
             Event::Start(child) => match child.local_name().as_ref() {
-                b"verticalVisibility" => {
+                "verticalVisibility" => {
                     vertical_visibility = Some(parse_measure(xml, &child)?);
                 }
-                b"layer" => layer.push(parse_cloud_layer_property(xml)?),
+                "layer" => layer.push(parse_cloud_layer_property(xml)?),
                 _ => xml.skip(&child)?,
             },
-            Event::Empty(child) if child.local_name().as_ref() == b"verticalVisibility" => {
+            Event::Empty(child) if child.local_name().as_ref() == "verticalVisibility" => {
                 vertical_visibility = Some(empty_measure(xml, &child)?);
             }
-            Event::End(end) if end.local_name().as_ref() == b"AerodromeCloudForecast" => break,
+            Event::End(end) if end.local_name().as_ref() == "AerodromeCloudForecast" => break,
             Event::Eof => return Err(unexpected_eof("cloud forecast")),
             _ => {}
         }
@@ -592,10 +590,10 @@ fn parse_cloud_layer_property(xml: &mut Xml<'_>) -> Result<CloudLayerProperty> {
     let mut layer = None;
     loop {
         match xml.event()? {
-            Event::Start(child) if child.local_name().as_ref() == b"CloudLayer" => {
+            Event::Start(child) if child.local_name().as_ref() == "CloudLayer" => {
                 layer = Some(parse_cloud_layer(xml)?);
             }
-            Event::End(end) if end.local_name().as_ref() == b"layer" => break,
+            Event::End(end) if end.local_name().as_ref() == "layer" => break,
             Event::Eof => return Err(unexpected_eof("cloud layer property")),
             _ => {}
         }
@@ -612,18 +610,18 @@ fn parse_cloud_layer(xml: &mut Xml<'_>) -> Result<CloudLayer> {
     loop {
         match xml.event()? {
             Event::Start(child) => match child.local_name().as_ref() {
-                b"amount" => amount = Some(parse_code_value(xml, &child)?),
-                b"base" => base = Some(parse_measure(xml, &child)?),
-                b"cloudType" => cloud_type = Some(parse_code_value(xml, &child)?),
+                "amount" => amount = Some(parse_code_value(xml, &child)?),
+                "base" => base = Some(parse_measure(xml, &child)?),
+                "cloudType" => cloud_type = Some(parse_code_value(xml, &child)?),
                 _ => xml.skip(&child)?,
             },
             Event::Empty(child) => match child.local_name().as_ref() {
-                b"amount" => amount = Some(empty_code_value(xml, &child)?),
-                b"base" => base = Some(empty_measure(xml, &child)?),
-                b"cloudType" => cloud_type = Some(empty_code_value(xml, &child)?),
+                "amount" => amount = Some(empty_code_value(xml, &child)?),
+                "base" => base = Some(empty_measure(xml, &child)?),
+                "cloudType" => cloud_type = Some(empty_code_value(xml, &child)?),
                 _ => {}
             },
-            Event::End(end) if end.local_name().as_ref() == b"CloudLayer" => break,
+            Event::End(end) if end.local_name().as_ref() == "CloudLayer" => break,
             Event::Eof => return Err(unexpected_eof("cloud layer")),
             _ => {}
         }
@@ -641,11 +639,11 @@ fn parse_temperature_property(xml: &mut Xml<'_>) -> Result<TemperatureProperty> 
     loop {
         match xml.event()? {
             Event::Start(child)
-                if child.local_name().as_ref() == b"AerodromeAirTemperatureForecast" =>
+                if child.local_name().as_ref() == "AerodromeAirTemperatureForecast" =>
             {
                 forecast = Some(parse_air_temperature(xml)?);
             }
-            Event::End(end) if end.local_name().as_ref() == b"temperature" => break,
+            Event::End(end) if end.local_name().as_ref() == "temperature" => break,
             Event::Eof => return Err(unexpected_eof("temperature property")),
             _ => {}
         }
@@ -664,22 +662,22 @@ fn parse_air_temperature(xml: &mut Xml<'_>) -> Result<AirTemperatureForecast> {
     loop {
         match xml.event()? {
             Event::Start(child) => match child.local_name().as_ref() {
-                b"maximumAirTemperature" => maximum = Some(parse_measure(xml, &child)?),
-                b"maximumAirTemperatureTime" => {
-                    maximum_time = Some(parse_time_instant(xml, b"maximumAirTemperatureTime")?);
+                "maximumAirTemperature" => maximum = Some(parse_measure(xml, &child)?),
+                "maximumAirTemperatureTime" => {
+                    maximum_time = Some(parse_time_instant(xml, "maximumAirTemperatureTime")?);
                 }
-                b"minimumAirTemperature" => minimum = Some(parse_measure(xml, &child)?),
-                b"minimumAirTemperatureTime" => {
-                    minimum_time = Some(parse_time_instant(xml, b"minimumAirTemperatureTime")?);
+                "minimumAirTemperature" => minimum = Some(parse_measure(xml, &child)?),
+                "minimumAirTemperatureTime" => {
+                    minimum_time = Some(parse_time_instant(xml, "minimumAirTemperatureTime")?);
                 }
                 _ => xml.skip(&child)?,
             },
             Event::Empty(child) => match child.local_name().as_ref() {
-                b"maximumAirTemperature" => maximum = Some(empty_measure(xml, &child)?),
-                b"minimumAirTemperature" => minimum = Some(empty_measure(xml, &child)?),
+                "maximumAirTemperature" => maximum = Some(empty_measure(xml, &child)?),
+                "minimumAirTemperature" => minimum = Some(empty_measure(xml, &child)?),
                 _ => {}
             },
-            Event::End(end) if end.local_name().as_ref() == b"AerodromeAirTemperatureForecast" => {
+            Event::End(end) if end.local_name().as_ref() == "AerodromeAirTemperatureForecast" => {
                 break;
             }
             Event::Eof => return Err(unexpected_eof("air-temperature forecast")),

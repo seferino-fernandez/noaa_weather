@@ -5,14 +5,14 @@ members = ["noaa_weather_client", "noaa_weather_cli"]
 [workspace.dependencies]
 anyhow = "1.0.104"
 assert_cmd = "2.2.2"
-bytes = "1.11.1"
+bytes = "1.12.1"
 clap = "4.6.6"
 comfy-table = "8.0.0"
 jiff = { version = "0.2.35", features = ["serde"] }
 mime = "0.3.17"
 noaa_weather_client = { path = "noaa_weather_client", default-features = false }
 percent-encoding = "2.3.2"
-quick-xml = "0.41.0"
+quick-xml = "0.42.0"
 reqwest = "0.13.4"
 serde = "1.0.229"
 serde_json = "1.0.151"
