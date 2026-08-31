@@ -1,0 +1,216 @@
+<?xml version="1.0"?>
+<ns0:MeteorologicalBulletin xmlns:ns0="http://def.wmo.int/collect/2014" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns1="http://www.opengis.net/gml/3.2" xsi:schemaLocation="http://def.wmo.int/collect/2014 https://schemas.wmo.int/collect/1.2/collect.xsd" ns1:id="uuid.f6cd15f7-a5a0-4685-b074-4954ef14e8ac">
+  <ns0:meteorologicalInformation>
+    <TAF xmlns:aixm="http://www.aixm.aero/schema/5.1.1" xmlns="http://icao.int/iwxxm/2021-2" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://icao.int/iwxxm/2021-2 https://schemas.wmo.int/iwxxm/2021-2/iwxxm.xsd" reportStatus="NORMAL" permissibleUsage="OPERATIONAL" ns1:id="uuid.bc5e495f-3fb1-4048-b4bb-12cbb29f84a8">
+      <issueTime>
+        <ns1:TimeInstant ns1:id="uuid.31f062f4-c3c9-44e6-ba67-fbb4f29a366e">
+          <ns1:timePosition>2026-08-30T17:39:00Z</ns1:timePosition>
+        </ns1:TimeInstant>
+      </issueTime>
+      <aerodrome>
+        <aixm:AirportHeliport ns1:id="uuid.3871e812-b414-41ea-a199-32d22e8a2898">
+          <aixm:timeSlice>
+            <aixm:AirportHeliportTimeSlice ns1:id="uuid.b3a5aae6-d2ec-453a-9120-7cf7f43f6592">
+              <ns1:validTime/>
+              <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+              <aixm:designator>KFLG</aixm:designator>
+              <aixm:locationIndicatorICAO>KFLG</aixm:locationIndicatorICAO>
+              <aixm:ARP>
+                <aixm:ElevatedPoint srsDimension="2" srsName="http://www.opengis.net/def/crs/EPSG/0/4326" axisLabels="Lat Long" ns1:id="uuid.666d43eb-7a29-4932-9820-c7b85a7054b6">
+                  <ns1:pos>35.14 -111.67</ns1:pos>
+                </aixm:ElevatedPoint>
+              </aixm:ARP>
+            </aixm:AirportHeliportTimeSlice>
+          </aixm:timeSlice>
+        </aixm:AirportHeliport>
+      </aerodrome>
+      <validPeriod>
+        <ns1:TimePeriod ns1:id="uuid.782104a8-c4bd-473b-a865-57eae05bbece">
+          <ns1:beginPosition>2026-08-30T18:00:00Z</ns1:beginPosition>
+          <ns1:endPosition>2026-08-31T18:00:00Z</ns1:endPosition>
+        </ns1:TimePeriod>
+      </validPeriod>
+      <baseForecast>
+        <MeteorologicalAerodromeForecast cloudAndVisibilityOK="false" ns1:id="uuid.731374cc-6308-437a-91e9-732647c6a2c6">
+          <phenomenonTime>
+            <ns1:TimePeriod ns1:id="uuid.0021073c-7b54-46be-bafe-74f4da727711">
+              <ns1:beginPosition>2026-08-30T17:39:00Z</ns1:beginPosition>
+              <ns1:endPosition>2026-08-31T02:00:00Z</ns1:endPosition>
+            </ns1:TimePeriod>
+          </phenomenonTime>
+          <prevailingVisibility uom="m">10000</prevailingVisibility>
+          <prevailingVisibilityOperator>ABOVE</prevailingVisibilityOperator>
+          <surfaceWind>
+            <AerodromeSurfaceWindForecast variableWindDirection="false">
+              <meanWindDirection uom="deg">220</meanWindDirection>
+              <meanWindSpeed uom="[kn_i]">15</meanWindSpeed>
+              <windGustSpeed uom="[kn_i]">25</windGustSpeed>
+            </AerodromeSurfaceWindForecast>
+          </surfaceWind>
+          <cloud>
+            <AerodromeCloudForecast ns1:id="uuid.6fba2bfa-d531-4d13-a494-f8521bb52a66">
+              <layer>
+                <CloudLayer>
+                  <amount xlink:href="http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome/SCT"/>
+                  <base uom="[ft_i]">7000</base>
+                </CloudLayer>
+              </layer>
+              <layer>
+                <CloudLayer>
+                  <amount xlink:href="http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome/BKN"/>
+                  <base uom="[ft_i]">9000</base>
+                </CloudLayer>
+              </layer>
+            </AerodromeCloudForecast>
+          </cloud>
+        </MeteorologicalAerodromeForecast>
+      </baseForecast>
+      <changeForecast>
+        <MeteorologicalAerodromeForecast cloudAndVisibilityOK="false" changeIndicator="TEMPORARY_FLUCTUATIONS" ns1:id="uuid.17a934d0-fb94-4c85-94bd-b1ea2491c1fa">
+          <phenomenonTime>
+            <ns1:TimePeriod ns1:id="uuid.df304e99-17f1-44f1-b177-673b1fdb4991">
+              <ns1:beginPosition>2026-08-30T20:00:00Z</ns1:beginPosition>
+              <ns1:endPosition>2026-08-31T00:00:00Z</ns1:endPosition>
+            </ns1:TimePeriod>
+          </phenomenonTime>
+          <prevailingVisibility uom="m">8000</prevailingVisibility>
+          <surfaceWind>
+            <AerodromeSurfaceWindForecast variableWindDirection="true">
+              <meanWindSpeed uom="[kn_i]">15</meanWindSpeed>
+              <windGustSpeed uom="[kn_i]">25</windGustSpeed>
+            </AerodromeSurfaceWindForecast>
+          </surfaceWind>
+          <weather xlink:href="http://codes.wmo.int/306/4678/-TSRA"/>
+          <cloud>
+            <AerodromeCloudForecast ns1:id="uuid.673f0aa2-0754-445e-a368-a47b68e0754c">
+              <layer>
+                <CloudLayer>
+                  <amount xlink:href="http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome/BKN"/>
+                  <base uom="[ft_i]">5000</base>
+                  <cloudType xlink:href="http://codes.wmo.int/49-2/SigConvectiveCloudType/CB"/>
+                </CloudLayer>
+              </layer>
+            </AerodromeCloudForecast>
+          </cloud>
+        </MeteorologicalAerodromeForecast>
+      </changeForecast>
+      <changeForecast>
+        <MeteorologicalAerodromeForecast cloudAndVisibilityOK="false" changeIndicator="FROM" ns1:id="uuid.c20399c9-a96c-4419-ba96-cca211f4e519">
+          <phenomenonTime>
+            <ns1:TimePeriod ns1:id="uuid.8667410a-9e29-476d-af28-d8e3f319221a">
+              <ns1:beginPosition>2026-08-31T02:00:00Z</ns1:beginPosition>
+              <ns1:endPosition>2026-08-31T08:00:00Z</ns1:endPosition>
+            </ns1:TimePeriod>
+          </phenomenonTime>
+          <prevailingVisibility uom="m">10000</prevailingVisibility>
+          <prevailingVisibilityOperator>ABOVE</prevailingVisibilityOperator>
+          <surfaceWind>
+            <AerodromeSurfaceWindForecast variableWindDirection="true">
+              <meanWindSpeed uom="[kn_i]">6</meanWindSpeed>
+            </AerodromeSurfaceWindForecast>
+          </surfaceWind>
+          <weather xlink:href="http://codes.wmo.int/306/4678/VCTS"/>
+          <cloud>
+            <AerodromeCloudForecast ns1:id="uuid.3bf74467-f8c7-4631-9e03-e4b41ec777b0">
+              <layer>
+                <CloudLayer>
+                  <amount xlink:href="http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome/OVC"/>
+                  <base uom="[ft_i]">7000</base>
+                  <cloudType xlink:href="http://codes.wmo.int/49-2/SigConvectiveCloudType/CB"/>
+                </CloudLayer>
+              </layer>
+            </AerodromeCloudForecast>
+          </cloud>
+        </MeteorologicalAerodromeForecast>
+      </changeForecast>
+      <changeForecast>
+        <MeteorologicalAerodromeForecast cloudAndVisibilityOK="false" changeIndicator="PROBABILITY_30" ns1:id="uuid.583d710a-8ccc-4d72-b903-3450d2774d31">
+          <phenomenonTime>
+            <ns1:TimePeriod ns1:id="uuid.d3cc8c39-7772-4987-ac80-57e86c6280f6">
+              <ns1:beginPosition>2026-08-31T02:00:00Z</ns1:beginPosition>
+              <ns1:endPosition>2026-08-31T06:00:00Z</ns1:endPosition>
+            </ns1:TimePeriod>
+          </phenomenonTime>
+          <prevailingVisibility uom="m">8000</prevailingVisibility>
+          <surfaceWind>
+            <AerodromeSurfaceWindForecast variableWindDirection="true">
+              <meanWindSpeed uom="[kn_i]">15</meanWindSpeed>
+              <windGustSpeed uom="[kn_i]">25</windGustSpeed>
+            </AerodromeSurfaceWindForecast>
+          </surfaceWind>
+          <weather xlink:href="http://codes.wmo.int/306/4678/-TSRA"/>
+          <cloud>
+            <AerodromeCloudForecast ns1:id="uuid.492bf8b3-d30b-4f9b-9fb6-afb3c0870bd4">
+              <layer>
+                <CloudLayer>
+                  <amount xlink:href="http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome/OVC"/>
+                  <base uom="[ft_i]">6000</base>
+                  <cloudType xlink:href="http://codes.wmo.int/49-2/SigConvectiveCloudType/CB"/>
+                </CloudLayer>
+              </layer>
+            </AerodromeCloudForecast>
+          </cloud>
+        </MeteorologicalAerodromeForecast>
+      </changeForecast>
+      <changeForecast>
+        <MeteorologicalAerodromeForecast cloudAndVisibilityOK="false" changeIndicator="FROM" ns1:id="uuid.246ccbf1-b6bf-44ce-a4f6-1eb1cb9ea37e">
+          <phenomenonTime>
+            <ns1:TimePeriod ns1:id="uuid.d631876a-79da-4cd5-b064-926955c7b042">
+              <ns1:beginPosition>2026-08-31T08:00:00Z</ns1:beginPosition>
+              <ns1:endPosition>2026-08-31T18:00:00Z</ns1:endPosition>
+            </ns1:TimePeriod>
+          </phenomenonTime>
+          <prevailingVisibility uom="m">10000</prevailingVisibility>
+          <prevailingVisibilityOperator>ABOVE</prevailingVisibilityOperator>
+          <surfaceWind>
+            <AerodromeSurfaceWindForecast variableWindDirection="false">
+              <meanWindDirection uom="deg">200</meanWindDirection>
+              <meanWindSpeed uom="[kn_i]">12</meanWindSpeed>
+            </AerodromeSurfaceWindForecast>
+          </surfaceWind>
+          <weather xlink:href="http://codes.wmo.int/306/4678/-SHRA"/>
+          <cloud>
+            <AerodromeCloudForecast ns1:id="uuid.623dd4cb-0d33-429a-82a3-4f65f8b38ac5">
+              <layer>
+                <CloudLayer>
+                  <amount xlink:href="http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome/OVC"/>
+                  <base uom="[ft_i]">6000</base>
+                </CloudLayer>
+              </layer>
+            </AerodromeCloudForecast>
+          </cloud>
+        </MeteorologicalAerodromeForecast>
+      </changeForecast>
+      <changeForecast>
+        <MeteorologicalAerodromeForecast cloudAndVisibilityOK="false" changeIndicator="TEMPORARY_FLUCTUATIONS" ns1:id="uuid.be5c13b3-25cb-4b37-9faf-2e80ea3280a0">
+          <phenomenonTime>
+            <ns1:TimePeriod ns1:id="uuid.89a7724f-fb31-43de-b742-b4649350325b">
+              <ns1:beginPosition>2026-08-31T08:00:00Z</ns1:beginPosition>
+              <ns1:endPosition>2026-08-31T12:00:00Z</ns1:endPosition>
+            </ns1:TimePeriod>
+          </phenomenonTime>
+          <prevailingVisibility uom="m">6000</prevailingVisibility>
+          <surfaceWind>
+            <AerodromeSurfaceWindForecast variableWindDirection="true">
+              <meanWindSpeed uom="[kn_i]">15</meanWindSpeed>
+              <windGustSpeed uom="[kn_i]">25</windGustSpeed>
+            </AerodromeSurfaceWindForecast>
+          </surfaceWind>
+          <weather xlink:href="http://codes.wmo.int/306/4678/-TSRA"/>
+          <cloud>
+            <AerodromeCloudForecast ns1:id="uuid.972abed2-bd55-48c2-887f-ca2b133f3650">
+              <layer>
+                <CloudLayer>
+                  <amount xlink:href="http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome/OVC"/>
+                  <base uom="[ft_i]">4000</base>
+                  <cloudType xlink:href="http://codes.wmo.int/49-2/SigConvectiveCloudType/CB"/>
+                </CloudLayer>
+              </layer>
+            </AerodromeCloudForecast>
+          </cloud>
+        </MeteorologicalAerodromeForecast>
+      </changeForecast>
+    </TAF>
+  </ns0:meteorologicalInformation>
+  <ns0:bulletinIdentifier>A_LTUS45KFGZ301700_C_KFGZ_20260830173930.xml</ns0:bulletinIdentifier>
+</ns0:MeteorologicalBulletin>

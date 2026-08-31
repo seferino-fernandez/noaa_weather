@@ -197,16 +197,18 @@ pub async fn get_observation_by_time(
 pub async fn get_terminal_aerodrome_forecast(
     configuration: &configuration::Configuration,
     station_id: &str,
-    date: String,
+    date: &str,
     time: &str,
 ) -> Result<models::TerminalAerodromeForecast, Error> {
-    http::request(configuration, "/stations")
+    let bytes = http::request(configuration, "/stations")
         .path_segment(station_id)
         .literal_path("tafs")
         .path_segment(date)
         .path_segment(time)
-        .xml(http::XmlMedia::Iwxxm)
-        .await
+        .xml_bytes(http::XmlMedia::Iwxxm)
+        .await?;
+
+    models::terminal_aerodrome_forecast::decode_iwxxm(&bytes).map_err(Error::from)
 }
 
 /// Returns metadata for Terminal Aerodrome Forecasts for the specified airport station.
@@ -412,6 +414,621 @@ mod tests {
 
     #[cfg(feature = "xml")]
     #[tokio::test]
+    async fn taf_document_serializes_semantic_json_without_wire_artifacts() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/stations/KCXL/tafs/2026-08-30/1500"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                include_str!("../../tests/fixtures/taf/cancellation.xml"),
+                "application/vnd.wmo.iwxxm+xml",
+            ))
+            .mount(&server)
+            .await;
+
+        let forecast = super::get_terminal_aerodrome_forecast(
+            &configuration(&server),
+            "KCXL",
+            "2026-08-30",
+            "1500",
+        )
+        .await
+        .unwrap();
+        let json = serde_json::to_value(forecast).unwrap();
+
+        assert_eq!(
+            json,
+            serde_json::json!({
+                "bulletinIdentifier": "A_LTUS99KCXL301500_C_KCXL_20260830150000.xml",
+                "reportMetadata": {
+                    "status": { "kind": "amendment" },
+                    "permissibleUsage": { "kind": "operational" }
+                },
+                "issuedAt": "2026-08-30T15:00:00Z",
+                "aerodrome": {
+                    "designator": "KCXL",
+                    "icaoIdentifier": "KCXL"
+                },
+                "report": {
+                    "kind": "cancellation",
+                    "cancelledPeriod": {
+                        "start": "2026-08-30T12:00:00Z",
+                        "end": "2026-08-31T12:00:00Z"
+                    }
+                }
+            }),
+        );
+        let encoded = json.to_string();
+        for wire_artifact in ["ns0", "ns1", "xlink", "xmlns", "meteorologicalInformation"] {
+            assert!(
+                !encoded.contains(wire_artifact),
+                "found {wire_artifact} in {encoded}"
+            );
+        }
+    }
+
+    #[cfg(feature = "xml")]
+    #[tokio::test]
+    async fn taf_document_serializes_forecast_states_as_semantic_json() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/stations/KXYZ/tafs/2026-08-30/1200"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                include_str!("../../tests/fixtures/taf/semantic_edges.xml"),
+                "application/vnd.wmo.iwxxm+xml",
+            ))
+            .mount(&server)
+            .await;
+
+        let forecast = super::get_terminal_aerodrome_forecast(
+            &configuration(&server),
+            "KXYZ",
+            "2026-08-30",
+            "1200",
+        )
+        .await
+        .unwrap();
+        let json = serde_json::to_value(forecast).unwrap();
+
+        assert_eq!(
+            json.pointer("/report/groups/0/conditions/visibility/state"),
+            Some(&serde_json::json!("value")),
+        );
+        assert_eq!(
+            json.pointer("/report/groups/0/conditions/visibility/value/meters"),
+            Some(&serde_json::json!(800.0)),
+        );
+        assert_eq!(
+            json.pointer("/report/groups/2/conditions/visibility/state"),
+            Some(&serde_json::json!("unavailable")),
+        );
+        assert_eq!(
+            json.pointer("/report/groups/2/conditions/visibility/value/reason/kind"),
+            Some(&serde_json::json!("notObservable")),
+        );
+    }
+
+    #[cfg(feature = "xml")]
+    #[tokio::test]
+    async fn taf_document_errors_preserve_semantic_context_and_sources() {
+        use std::error::Error as _;
+
+        use crate::{apis::Error, models::terminal_aerodrome_forecast::TafDecodeErrorKind};
+
+        let fixture = include_str!("../../tests/fixtures/taf/kflg_normal.xml");
+        let cases = [
+            (
+                "KUNT",
+                fixture.replacen("uom=\"m\"", "uom=\"sm\"", 1),
+                TafDecodeErrorKind::UnsupportedUnit,
+                "TAF.forecastGroup.visibility",
+                false,
+            ),
+            (
+                "KNUM",
+                fixture.replacen(
+                    ">10000</prevailingVisibility>",
+                    ">not-a-number</prevailingVisibility>",
+                    1,
+                ),
+                TafDecodeErrorKind::InvalidNumber,
+                "TAF.forecastGroup.visibility",
+                true,
+            ),
+            (
+                "KCAV",
+                fixture.replacen(
+                    "cloudAndVisibilityOK=\"false\"",
+                    "cloudAndVisibilityOK=\"true\"",
+                    1,
+                ),
+                TafDecodeErrorKind::InvalidCombination,
+                "TAF.forecastGroup.cloudAndVisibilityOK",
+                false,
+            ),
+            (
+                "KXML",
+                fixture.replacen("</TAF>", "", 1),
+                TafDecodeErrorKind::MalformedXml,
+                "TAF",
+                true,
+            ),
+            (
+                "KNSP",
+                fixture.replacen(
+                    "xmlns=\"http://icao.int/iwxxm/2021-2\"",
+                    "xmlns=\"urn:unsupported:iwxxm\"",
+                    1,
+                ),
+                TafDecodeErrorKind::InvalidValue,
+                "MeteorologicalBulletin.meteorologicalInformation.TAF",
+                false,
+            ),
+            (
+                "KPER",
+                fixture.replacen(
+                    "2026-08-31T18:00:00Z</ns1:endPosition>",
+                    "2026-08-29T18:00:00Z</ns1:endPosition>",
+                    1,
+                ),
+                TafDecodeErrorKind::InvalidPeriod,
+                "TAF.validPeriod",
+                false,
+            ),
+            (
+                "KPOS",
+                fixture.replacen("35.14 -111.67", "95 -111.67", 1),
+                TafDecodeErrorKind::InvalidCoordinate,
+                "TAF.aerodrome.position",
+                false,
+            ),
+            (
+                "KUSE",
+                fixture.replacen(
+                    "permissibleUsage=\"OPERATIONAL\"",
+                    "permissibleUsage=\"OPERATIONAL\" permissibleUsageReason=\"TEST\"",
+                    1,
+                ),
+                TafDecodeErrorKind::InvalidCombination,
+                "TAF.permissibleUsageReason",
+                false,
+            ),
+            (
+                "KCVK",
+                fixture.replacen(" cloudAndVisibilityOK=\"false\"", "", 1),
+                TafDecodeErrorKind::MissingRequiredField,
+                "TAF.forecastGroup.cloudAndVisibilityOK",
+                false,
+            ),
+            (
+                "KVOP",
+                fixture.replacen(
+                    "<prevailingVisibility uom=\"m\">10000</prevailingVisibility>",
+                    "",
+                    1,
+                ),
+                TafDecodeErrorKind::InvalidCombination,
+                "TAF.forecastGroup.visibilityOperator",
+                false,
+            ),
+        ];
+        let server = MockServer::start().await;
+        for (station, body, _, _, _) in &cases {
+            Mock::given(method("GET"))
+                .and(path(format!("/stations/{station}/tafs/2026-08-30/2257")))
+                .respond_with(
+                    ResponseTemplate::new(200)
+                        .set_body_raw(body.clone(), "application/vnd.wmo.iwxxm+xml"),
+                )
+                .mount(&server)
+                .await;
+        }
+
+        for (station, _, expected_kind, expected_path, has_decode_source) in cases {
+            let error = super::get_terminal_aerodrome_forecast(
+                &configuration(&server),
+                station,
+                "2026-08-30",
+                "2257",
+            )
+            .await
+            .unwrap_err();
+            let Error::TerminalAerodromeForecast(decode) = &error else {
+                panic!("expected semantic TAF decode error, got {error}");
+            };
+
+            assert_eq!(decode.kind(), expected_kind);
+            assert_eq!(decode.path(), expected_path);
+            assert_eq!(decode.source().is_some(), has_decode_source);
+            assert!(error.source().is_some());
+            assert!(error.to_string().contains(expected_path));
+        }
+    }
+
+    #[cfg(feature = "xml")]
+    #[tokio::test]
+    async fn taf_document_distinguishes_cancellation_and_translation_failure() {
+        use jiff::Timestamp;
+
+        use crate::models::terminal_aerodrome_forecast::{
+            ForecastReport, MissingForecastReason, ReportStatus,
+        };
+
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/stations/KCXL/tafs/2026-08-30/1500"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                include_str!("../../tests/fixtures/taf/cancellation.xml"),
+                "application/vnd.wmo.iwxxm+xml",
+            ))
+            .mount(&server)
+            .await;
+        Mock::given(method("GET"))
+            .and(path("/stations/KERR/tafs/2026-08-30/1600"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                include_str!("../../tests/fixtures/taf/translation_failed.xml"),
+                "application/vnd.wmo.iwxxm+xml",
+            ))
+            .mount(&server)
+            .await;
+
+        let cancelled = super::get_terminal_aerodrome_forecast(
+            &configuration(&server),
+            "KCXL",
+            "2026-08-30",
+            "1500",
+        )
+        .await
+        .unwrap();
+        let ForecastReport::Cancellation { cancelled_period } = cancelled.report() else {
+            panic!("expected cancellation");
+        };
+        assert_eq!(
+            cancelled.report_metadata().status(),
+            &ReportStatus::Amendment
+        );
+        assert_eq!(
+            (cancelled_period.start(), cancelled_period.end()),
+            (
+                "2026-08-30T12:00:00Z".parse::<Timestamp>().unwrap(),
+                "2026-08-31T12:00:00Z".parse::<Timestamp>().unwrap(),
+            ),
+        );
+
+        let missing = super::get_terminal_aerodrome_forecast(
+            &configuration(&server),
+            "KERR",
+            "2026-08-30",
+            "1600",
+        )
+        .await
+        .unwrap();
+        assert_eq!(
+            missing.report(),
+            &ForecastReport::Missing {
+                reason: MissingForecastReason::TranslationFailed {
+                    tac: "TAF KERR malformed source".into(),
+                },
+            },
+        );
+        let translation = missing.report_metadata().translation().unwrap();
+        assert_eq!(
+            translation.source_bulletin_identifier(),
+            Some("FTUS99KERR301600")
+        );
+        assert_eq!(translation.centre_designator(), Some("KERR"));
+        assert_eq!(translation.centre_name(), Some("Fixture Translator"));
+        assert_eq!(
+            translation.source_bulletin_received_at(),
+            Some("2026-08-30T16:01:00Z".parse::<Timestamp>().unwrap()),
+        );
+        assert_eq!(
+            translation.translated_at(),
+            Some("2026-08-30T16:02:00Z".parse::<Timestamp>().unwrap()),
+        );
+    }
+
+    #[cfg(feature = "xml")]
+    #[tokio::test]
+    async fn taf_document_normalizes_temperature_vertical_visibility_and_nil_meaning() {
+        use jiff::Timestamp;
+
+        use crate::models::terminal_aerodrome_forecast::{
+            ForecastClouds, ForecastGroupKind, ForecastValue, ForecastVisibility, ForecastWeather,
+            ForecastWind, MissingReason,
+        };
+
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/stations/KXYZ/tafs/2026-08-30/1200"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                include_str!("../../tests/fixtures/taf/semantic_edges.xml"),
+                "application/vnd.wmo.iwxxm+xml",
+            ))
+            .mount(&server)
+            .await;
+
+        let forecast = super::get_terminal_aerodrome_forecast(
+            &configuration(&server),
+            "KXYZ",
+            "2026-08-30",
+            "1200",
+        )
+        .await
+        .unwrap();
+        let base = forecast.base_forecast().unwrap();
+        let temperatures = base.conditions().temperatures();
+
+        assert_eq!(base.conditions().weather(), &ForecastWeather::NoSignificant);
+        assert_eq!(
+            base.conditions().clouds(),
+            &ForecastClouds::VerticalVisibility {
+                feet: ForecastValue::Value(300.0),
+            },
+        );
+        assert_eq!(temperatures.len(), 1);
+        assert_eq!(temperatures[0].maximum().celsius(), 7.0);
+        assert_eq!(
+            temperatures[0].maximum().occurs_at(),
+            "2026-08-30T21:00:00Z".parse::<Timestamp>().unwrap(),
+        );
+        assert_eq!(temperatures[0].minimum().celsius(), -5.0);
+        assert_eq!(
+            temperatures[0].minimum().occurs_at(),
+            "2026-08-31T10:00:00Z".parse::<Timestamp>().unwrap(),
+        );
+
+        let changes = forecast.change_forecasts();
+        assert_eq!(
+            changes[0].conditions().weather(),
+            &ForecastWeather::NoSignificant
+        );
+        assert_eq!(
+            changes[0].conditions().clouds(),
+            &ForecastClouds::NoSignificant
+        );
+        assert_eq!(
+            changes[1].conditions().clouds(),
+            &ForecastClouds::VerticalVisibility {
+                feet: ForecastValue::Unavailable {
+                    reason: MissingReason::NotObservable,
+                },
+            },
+        );
+        assert_eq!(
+            changes[1].conditions().wind(),
+            &ForecastWind::Unavailable {
+                reason: MissingReason::NotObservable,
+            },
+        );
+        assert_eq!(
+            changes[1].conditions().visibility(),
+            &ForecastVisibility::Unavailable {
+                reason: MissingReason::NotObservable,
+            },
+        );
+        assert_eq!(
+            changes.iter().map(|group| group.kind()).collect::<Vec<_>>(),
+            [
+                &ForecastGroupKind::Becoming,
+                &ForecastGroupKind::From,
+                &ForecastGroupKind::Probability {
+                    percent: 40,
+                    temporary: false,
+                },
+                &ForecastGroupKind::Probability {
+                    percent: 30,
+                    temporary: true,
+                },
+                &ForecastGroupKind::Probability {
+                    percent: 40,
+                    temporary: true,
+                },
+            ],
+        );
+    }
+
+    #[cfg(feature = "xml")]
+    #[tokio::test]
+    async fn taf_document_preserves_weather_qualifiers_and_cloud_types() {
+        use crate::models::terminal_aerodrome_forecast::{
+            CloudAmount, CloudType, ForecastClouds, ForecastValue, ForecastWeather,
+            WeatherDescriptor, WeatherIntensity, WeatherPhenomenon,
+        };
+
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/stations/KFLG/tafs/2026-08-30/2257"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                include_str!("../../tests/fixtures/taf/kflg_normal.xml"),
+                "application/vnd.wmo.iwxxm+xml",
+            ))
+            .mount(&server)
+            .await;
+
+        let forecast = super::get_terminal_aerodrome_forecast(
+            &configuration(&server),
+            "KFLG",
+            "2026-08-30",
+            "2257",
+        )
+        .await
+        .unwrap();
+        let conditions = forecast.change_forecasts()[0].conditions();
+        let ForecastWeather::Phenomena { items } = conditions.weather() else {
+            panic!("expected significant weather");
+        };
+        let ForecastClouds::Layers { layers } = conditions.clouds() else {
+            panic!("expected cloud layers");
+        };
+
+        assert_eq!(
+            (
+                items[0].code(),
+                items[0].intensity(),
+                items[0].is_in_vicinity(),
+                items[0].descriptor(),
+                items[0].phenomena(),
+                layers[0].amount(),
+                layers[0].base_feet(),
+                layers[0].cloud_type(),
+            ),
+            (
+                "-TSRA",
+                WeatherIntensity::Light,
+                false,
+                Some(&WeatherDescriptor::Thunderstorm),
+                &[WeatherPhenomenon::Rain][..],
+                &ForecastValue::Value(CloudAmount::Broken),
+                &ForecastValue::Value(5_000.0),
+                Some(&ForecastValue::Value(CloudType::Cumulonimbus)),
+            ),
+        );
+    }
+
+    #[cfg(feature = "xml")]
+    #[tokio::test]
+    async fn taf_document_normalizes_period_visibility_and_wind() {
+        use crate::models::terminal_aerodrome_forecast::{Comparison, WindDirection};
+
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/stations/KFLG/tafs/2026-08-30/2257"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                include_str!("../../tests/fixtures/taf/kflg_normal.xml"),
+                "application/vnd.wmo.iwxxm+xml",
+            ))
+            .mount(&server)
+            .await;
+
+        let forecast = super::get_terminal_aerodrome_forecast(
+            &configuration(&server),
+            "KFLG",
+            "2026-08-30",
+            "2257",
+        )
+        .await
+        .unwrap();
+        let base = forecast.base_forecast().unwrap();
+        let visibility = base.conditions().visibility().value().unwrap();
+        let wind = base.conditions().wind().value().unwrap();
+
+        assert_eq!(
+            (
+                base.valid_period().start().to_string(),
+                base.valid_period().end().to_string(),
+                base.conditions().is_cavok(),
+                visibility.meters(),
+                visibility.comparison(),
+                wind.direction(),
+                wind.speed().knots(),
+                wind.speed().comparison(),
+                wind.gust().map(|gust| gust.knots()),
+            ),
+            (
+                "2026-08-30T17:39:00Z".to_owned(),
+                "2026-08-31T02:00:00Z".to_owned(),
+                false,
+                10_000.0,
+                &Comparison::Above,
+                WindDirection::Degrees(220.0),
+                15.0,
+                &Comparison::Exact,
+                Some(25.0),
+            ),
+        );
+    }
+
+    #[cfg(feature = "xml")]
+    #[tokio::test]
+    async fn taf_document_normalizes_report_metadata_times_and_position() {
+        use crate::models::terminal_aerodrome_forecast::{
+            ForecastReport, PermissibleUsage, ReportStatus,
+        };
+
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/stations/KFLG/tafs/2026-08-30/2257"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                include_str!("../../tests/fixtures/taf/kflg_normal.xml"),
+                "application/vnd.wmo.iwxxm+xml",
+            ))
+            .mount(&server)
+            .await;
+
+        let forecast = super::get_terminal_aerodrome_forecast(
+            &configuration(&server),
+            "KFLG",
+            "2026-08-30",
+            "2257",
+        )
+        .await
+        .unwrap();
+        let position = forecast.aerodrome().position().unwrap();
+        let ForecastReport::Forecast { valid_period, .. } = forecast.report() else {
+            panic!("expected an ordinary forecast report");
+        };
+
+        assert_eq!(
+            (
+                forecast.bulletin_identifier(),
+                forecast.report_metadata().status(),
+                forecast.report_metadata().permissible_usage(),
+                forecast.issued_at().to_string(),
+                position.latitude(),
+                position.longitude(),
+                valid_period.start().to_string(),
+                valid_period.end().to_string(),
+            ),
+            (
+                "A_LTUS45KFGZ301700_C_KFGZ_20260830173930.xml",
+                &ReportStatus::Normal,
+                &PermissibleUsage::Operational,
+                "2026-08-30T17:39:00Z".to_owned(),
+                35.14,
+                -111.67,
+                "2026-08-30T18:00:00Z".to_owned(),
+                "2026-08-31T18:00:00Z".to_owned(),
+            ),
+        );
+    }
+
+    #[cfg(feature = "xml")]
+    #[tokio::test]
+    async fn taf_document_normalizes_identity_and_forecast_groups() {
+        use crate::models::terminal_aerodrome_forecast::ForecastGroupKind;
+
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/stations/KFLG/tafs/2026-08-30/2257"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                include_str!("../../tests/fixtures/taf/kflg_normal.xml"),
+                "application/vnd.wmo.iwxxm+xml",
+            ))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let forecast = super::get_terminal_aerodrome_forecast(
+            &configuration(&server),
+            "KFLG",
+            "2026-08-30",
+            "2257",
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(
+            (
+                forecast.aerodrome().icao_identifier(),
+                forecast.groups().len(),
+                forecast.base_forecast().map(|group| group.kind()),
+            ),
+            ("KFLG", 6, Some(&ForecastGroupKind::Base)),
+        );
+    }
+
+    #[cfg(feature = "xml")]
+    #[tokio::test]
     async fn taf_document_encodes_dynamic_segments_and_requests_iwxxm() {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
@@ -423,7 +1040,7 @@ mod tests {
         let result = super::get_terminal_aerodrome_forecast(
             &configuration(&server),
             "K/PHX%",
-            "2026/08%30".to_owned(),
+            "2026/08%30",
             "12/34%",
         )
         .await;

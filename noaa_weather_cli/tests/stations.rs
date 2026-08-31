@@ -63,20 +63,56 @@ fn test_stations_tafs_success() {
     cmd.assert().success();
 }
 
-#[ignore = "Ignore this test for now since the data needs to be updated dynamically"]
 #[cfg(feature = "xml")]
 #[test]
 fn test_stations_taf_success() {
-    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
-    cmd.arg("stations");
-    cmd.arg("terminal-aerodrome-forecast");
-    cmd.arg("--station-id");
-    cmd.arg("KPHX");
-    cmd.arg("--date");
-    cmd.arg("2025-05-03");
-    cmd.arg("--time");
-    cmd.arg("1800");
-    cmd.assert().success();
+    let metadata = Command::new(cargo_bin!("noaa-weather"))
+        .args([
+            "stations",
+            "terminal-aerodrome-forecasts",
+            "--station-id",
+            "KPHX",
+            "--json",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        metadata.status.success(),
+        "{}",
+        String::from_utf8_lossy(&metadata.stderr)
+    );
+    let metadata: serde_json::Value = serde_json::from_slice(&metadata.stdout).unwrap();
+    let id = metadata["@graph"]
+        .as_array()
+        .and_then(|forecasts| forecasts.first())
+        .and_then(|forecast| forecast["id"].as_str())
+        .expect("NOAA returned at least one current KPHX TAF identifier");
+    let mut segments = id.trim_end_matches('/').rsplit('/');
+    let time = segments.next().expect("TAF identifier time segment");
+    let date = segments.next().expect("TAF identifier date segment");
+
+    let output = Command::new(cargo_bin!("noaa-weather"))
+        .args([
+            "stations",
+            "terminal-aerodrome-forecast",
+            "--station-id",
+            "KPHX",
+            "--date",
+            date,
+            "--time",
+            time,
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let table = String::from_utf8(output.stdout).unwrap();
+    assert!(table.contains("KPHX"));
+    assert!(table.contains("Report state"));
 }
 
 #[cfg(not(feature = "xml"))]

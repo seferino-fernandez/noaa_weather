@@ -227,6 +227,9 @@ pub enum Error {
     /// An XML success body could not be decoded.
     #[cfg(feature = "xml")]
     Xml(quick_xml::DeError),
+    /// An IWXXM TAF body could not be normalized into forecast meaning.
+    #[cfg(feature = "xml")]
+    TerminalAerodromeForecast(Box<crate::models::terminal_aerodrome_forecast::TafDecodeError>),
     /// The server returned a non-success HTTP status.
     Response(Box<ResponseContent>),
     /// A successful response violated the endpoint's media-type contract.
@@ -240,6 +243,10 @@ impl fmt::Display for Error {
             Self::Json(source) => write!(formatter, "JSON decode error: {source}"),
             #[cfg(feature = "xml")]
             Self::Xml(source) => write!(formatter, "XML decode error: {source}"),
+            #[cfg(feature = "xml")]
+            Self::TerminalAerodromeForecast(source) => {
+                write!(formatter, "TAF decode error: {source}")
+            }
             Self::Response(response) => write!(
                 formatter,
                 "HTTP {} response from {}: {}",
@@ -259,6 +266,8 @@ impl error::Error for Error {
             Self::Json(source) => Some(source),
             #[cfg(feature = "xml")]
             Self::Xml(source) => Some(source),
+            #[cfg(feature = "xml")]
+            Self::TerminalAerodromeForecast(source) => Some(source.as_ref()),
             Self::Response(_) => None,
             Self::Protocol(source) => Some(source.as_ref()),
         }
@@ -296,6 +305,13 @@ impl From<quick_xml::DeError> for Error {
     }
 }
 
+#[cfg(feature = "xml")]
+impl From<crate::models::terminal_aerodrome_forecast::TafDecodeError> for Error {
+    fn from(source: crate::models::terminal_aerodrome_forecast::TafDecodeError) -> Self {
+        Self::TerminalAerodromeForecast(Box::new(source))
+    }
+}
+
 /// Encodes one `application/x-www-form-urlencoded` name or value.
 ///
 /// This preserves the helper's historical form/query behavior, including
@@ -311,6 +327,8 @@ pub mod configuration;
 pub mod glossary;
 pub mod gridpoints;
 mod http;
+#[cfg(test)]
+pub(crate) use http::measure_allocations;
 pub mod offices;
 pub mod points;
 pub mod products;

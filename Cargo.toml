@@ -8,7 +8,7 @@ assert_cmd = "2.2.2"
 bytes = "1.11.1"
 clap = "4.6.6"
 comfy-table = "8.0.0"
-jiff = "0.2.35"
+jiff = { version = "0.2.35", features = ["serde"] }
 mime = "0.3.17"
 noaa_weather_client = { path = "noaa_weather_client", default-features = false }
 percent-encoding = "2.3.2"

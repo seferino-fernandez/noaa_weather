@@ -42,4 +42,8 @@ Get a specific Terminal Aerodrome Forecast (TAF) for a station by date and time.
 noaa-weather stations terminal-aerodrome-forecast --station-id <ID> --date <YYYY-MM-DD> --time <HHMM>
 ```
 
+The date and time are the final two path segments of an `id` returned by `terminal-aerodrome-forecasts`. The human table presents normalized forecast meaning: report state and validity, base/change semantics, CAVOK, wind, visibility, exact weather code plus description, cloud layers and convective types, vertical visibility, and temperature extrema. Omitted values in a change group display as unchanged; IWXXM nil reasons display as unavailable or no significant conditions instead of being collapsed into `N/A`.
+
+Use `--json` with either command for pretty JSON. A specific TAF serializes to the same semantic model used by the table, without IWXXM namespaces or XML wrapper fields.
+
 Both TAF commands require the `xml` feature. Normal builds include them because the default `radio` feature enables `xml`. A `--no-default-features` CLI build omits both TAF commands and `quick-xml`; build with `--no-default-features --features xml` to retain TAF support without radio.

@@ -128,11 +128,19 @@ impl ContractRequest<'_> {
     }
 
     /// Requests, validates, and decodes one XML media family.
-    #[cfg(feature = "xml")]
+    #[cfg(any(feature = "radio", test))]
     pub(crate) async fn xml<T: DeserializeOwned>(self, media: XmlMedia) -> Result<T, Error> {
         let response = self.send(media.accept()).await?;
         ensure_content_type(&response, media.expected(), |mime| media.matches(mime))?;
         quick_xml::de::from_reader(response.bytes.as_ref()).map_err(Error::from)
+    }
+
+    /// Requests and validates one XML media family without decoding it.
+    #[cfg(feature = "xml")]
+    pub(crate) async fn xml_bytes(self, media: XmlMedia) -> Result<Bytes, Error> {
+        let response = self.send(media.accept()).await?;
+        ensure_content_type(&response, media.expected(), |mime| media.matches(mime))?;
+        Ok(response.bytes)
     }
 
     /// Requests and validates one binary media family without decoding it.
@@ -461,17 +469,20 @@ fn protocol(error: ProtocolError) -> Error {
 }
 
 #[cfg(test)]
+pub(crate) use tests::measure_allocations;
+
+#[cfg(test)]
 mod tests {
     use std::{
         alloc::{GlobalAlloc, Layout, System},
+        cell::Cell,
         hint::black_box,
         str::FromStr as _,
-        sync::atomic::{AtomicBool, Ordering},
         time::Instant,
     };
 
     use reqwest::{Client, redirect::Policy};
-    use stats_alloc::{INSTRUMENTED_SYSTEM, Region};
+    use stats_alloc::{INSTRUMENTED_SYSTEM, Region, Stats};
     use wiremock::{
         Mock, MockServer, ResponseTemplate,
         matchers::{header, method, path},
@@ -487,7 +498,9 @@ mod tests {
         apis::{alerts, configuration::Configuration},
     };
 
-    static TRACK_ALLOCATIONS: AtomicBool = AtomicBool::new(false);
+    thread_local! {
+        static TRACK_ALLOCATIONS: Cell<bool> = const { Cell::new(false) };
+    }
 
     struct BenchmarkAllocator;
 
@@ -498,7 +511,7 @@ mod tests {
     // allocation phase. Timing uses the system allocator directly.
     unsafe impl GlobalAlloc for BenchmarkAllocator {
         unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-            if TRACK_ALLOCATIONS.load(Ordering::Relaxed) {
+            if tracking_allocations() {
                 // SAFETY: the layout is forwarded unchanged to a global allocator.
                 unsafe { INSTRUMENTED_SYSTEM.alloc(layout) }
             } else {
@@ -508,7 +521,7 @@ mod tests {
         }
 
         unsafe fn dealloc(&self, pointer: *mut u8, layout: Layout) {
-            if TRACK_ALLOCATIONS.load(Ordering::Relaxed) {
+            if tracking_allocations() {
                 // SAFETY: StatsAlloc only instruments the same System allocator
                 // used by the other branch, so toggling cannot change ownership.
                 unsafe { INSTRUMENTED_SYSTEM.dealloc(pointer, layout) }
@@ -519,7 +532,7 @@ mod tests {
         }
 
         unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
-            if TRACK_ALLOCATIONS.load(Ordering::Relaxed) {
+            if tracking_allocations() {
                 // SAFETY: the layout is forwarded unchanged to a global allocator.
                 unsafe { INSTRUMENTED_SYSTEM.alloc_zeroed(layout) }
             } else {
@@ -529,7 +542,7 @@ mod tests {
         }
 
         unsafe fn realloc(&self, pointer: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
-            if TRACK_ALLOCATIONS.load(Ordering::Relaxed) {
+            if tracking_allocations() {
                 // SAFETY: StatsAlloc wraps System, and all arguments are
                 // forwarded unchanged regardless of the tracking state.
                 unsafe { INSTRUMENTED_SYSTEM.realloc(pointer, layout, new_size) }
@@ -538,6 +551,29 @@ mod tests {
                 unsafe { System.realloc(pointer, layout, new_size) }
             }
         }
+    }
+
+    fn tracking_allocations() -> bool {
+        TRACK_ALLOCATIONS.try_with(Cell::get).unwrap_or(false)
+    }
+
+    struct AllocationTracking;
+
+    impl Drop for AllocationTracking {
+        fn drop(&mut self) {
+            TRACK_ALLOCATIONS.with(|tracking| tracking.set(false));
+        }
+    }
+
+    pub(crate) fn measure_allocations<T>(operation: impl FnOnce() -> T) -> (T, Stats) {
+        let region = Region::new(&INSTRUMENTED_SYSTEM);
+        TRACK_ALLOCATIONS.with(|tracking| {
+            assert!(!tracking.replace(true), "nested allocation measurement");
+        });
+        let guard = AllocationTracking;
+        let value = operation();
+        drop(guard);
+        (value, region.change())
     }
 
     const ALERT_TYPES: &str = r#"{"eventTypes":["Test Warning"]}"#;
@@ -1128,13 +1164,11 @@ mod tests {
     }
 
     fn allocation_operations(iterations: usize, build: impl Fn() -> reqwest::Request) -> usize {
-        let region = Region::new(&INSTRUMENTED_SYSTEM);
-        TRACK_ALLOCATIONS.store(true, Ordering::SeqCst);
-        for _ in 0..iterations {
-            black_box(build());
-        }
-        TRACK_ALLOCATIONS.store(false, Ordering::SeqCst);
-        let stats = region.change();
+        let (_, stats) = measure_allocations(|| {
+            for _ in 0..iterations {
+                black_box(build());
+            }
+        });
         stats.allocations + stats.reallocations
     }
 

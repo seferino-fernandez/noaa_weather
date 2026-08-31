@@ -8,6 +8,11 @@ use anyhow::Result;
 use comfy_table::Table;
 use serde::ser::Error as _;
 use serde::{Serialize, Serializer};
+#[cfg(feature = "xml")]
+use wiremock::{
+    Mock, MockServer, ResponseTemplate,
+    matchers::{method, path},
+};
 
 use super::binary::Sealed;
 use super::sink::{DestinationAdapter, MediaKind, SinkTransaction};
@@ -137,6 +142,92 @@ async fn json_is_pretty_and_has_one_trailing_newline() {
         String::from_utf8(bytes.borrow().clone()).unwrap(),
         "{\n  \"value\": \"forecast\"\n}\n"
     );
+}
+
+#[cfg(feature = "xml")]
+#[tokio::test]
+async fn normalized_taf_meaning_flows_through_the_human_output_seam() {
+    use noaa_weather_client::apis::{configuration::Configuration, stations};
+
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/stations/KXYZ/tafs/2026-08-30/1200"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            include_str!("../../../noaa_weather_client/tests/fixtures/taf/semantic_edges.xml"),
+            "application/vnd.wmo.iwxxm+xml",
+        ))
+        .mount(&server)
+        .await;
+    let configuration = Configuration::new(None, Some(server.uri()), None, None);
+    let (output, bytes) = memory_output(Format::Human);
+
+    output
+        .show(
+            "showing semantic TAF",
+            stations::get_terminal_aerodrome_forecast(&configuration, "KXYZ", "2026-08-30", "1200"),
+        )
+        .await
+        .unwrap();
+
+    let rendered = String::from_utf8(bytes.borrow().clone()).unwrap();
+    for expected in [
+        "KXYZ",
+        "INITIAL FORECAST",
+        "Vertical visibility 300 ft",
+        "Maximum 7 °C",
+        "minimum -5 °C",
+        "Unavailable (not observable)",
+        "No significant weather",
+        "No significant cloud",
+        "Unchanged from prevailing conditions",
+        "CHANGE — PROBABILITY 40% — TEMPORARY",
+    ] {
+        assert!(
+            rendered.contains(expected),
+            "missing {expected:?} in:\n{rendered}"
+        );
+    }
+    assert!(rendered.ends_with('\n'));
+    assert!(!rendered.ends_with("\n\n"));
+}
+
+#[cfg(feature = "xml")]
+#[tokio::test]
+async fn normalized_taf_json_flows_through_the_output_seam() {
+    use noaa_weather_client::apis::{configuration::Configuration, stations};
+
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/stations/KCXL/tafs/2026-08-30/1500"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            include_str!("../../../noaa_weather_client/tests/fixtures/taf/cancellation.xml"),
+            "application/vnd.wmo.iwxxm+xml",
+        ))
+        .mount(&server)
+        .await;
+    let configuration = Configuration::new(None, Some(server.uri()), None, None);
+    let (output, bytes) = memory_output(Format::Json);
+
+    output
+        .show(
+            "showing semantic TAF JSON",
+            stations::get_terminal_aerodrome_forecast(&configuration, "KCXL", "2026-08-30", "1500"),
+        )
+        .await
+        .unwrap();
+
+    let rendered = String::from_utf8(bytes.borrow().clone()).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&rendered).unwrap();
+    assert_eq!(json["aerodrome"]["icaoIdentifier"], "KCXL");
+    assert_eq!(json["report"]["kind"], "cancellation");
+    assert_eq!(
+        json["report"]["cancelledPeriod"]["start"],
+        "2026-08-30T12:00:00Z"
+    );
+    for wire_artifact in ["ns0", "ns1", "xlink", "xmlns", "meteorologicalInformation"] {
+        assert!(!rendered.contains(wire_artifact));
+    }
+    assert!(rendered.ends_with('\n'));
 }
 
 #[tokio::test]

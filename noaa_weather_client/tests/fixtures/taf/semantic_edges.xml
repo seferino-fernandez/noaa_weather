@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MeteorologicalBulletin xmlns="http://def.wmo.int/collect/2014"
+  xmlns:aixm="http://www.aixm.aero/schema/5.1.1"
+  xmlns:gml="http://www.opengis.net/gml/3.2"
+  xmlns:iwxxm="http://icao.int/iwxxm/2021-2"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+  <meteorologicalInformation>
+    <iwxxm:TAF reportStatus="NORMAL" permissibleUsage="NON-OPERATIONAL"
+      permissibleUsageReason="TEST" permissibleUsageSupplementary="semantic edge fixture"
+      translatedBulletinID="FTUS99KXYZ301200" translatedBulletinReceptionTime="2026-08-30T12:01:00Z"
+      translationCentreDesignator="KXYZ" translationCentreName="Fixture Centre"
+      translationTime="2026-08-30T12:02:00Z">
+      <iwxxm:issueTime>
+        <gml:TimeInstant><gml:timePosition>2026-08-30T12:00:00Z</gml:timePosition></gml:TimeInstant>
+      </iwxxm:issueTime>
+      <iwxxm:aerodrome>
+        <aixm:AirportHeliport>
+          <aixm:timeSlice>
+            <aixm:AirportHeliportTimeSlice>
+              <aixm:designator>KXYZ</aixm:designator>
+              <aixm:locationIndicatorICAO>KXYZ</aixm:locationIndicatorICAO>
+              <aixm:ARP><aixm:ElevatedPoint><gml:pos>33.4 -112.0</gml:pos></aixm:ElevatedPoint></aixm:ARP>
+            </aixm:AirportHeliportTimeSlice>
+          </aixm:timeSlice>
+        </aixm:AirportHeliport>
+      </iwxxm:aerodrome>
+      <iwxxm:validPeriod>
+        <gml:TimePeriod>
+          <gml:beginPosition>2026-08-30T12:00:00Z</gml:beginPosition>
+          <gml:endPosition>2026-08-31T12:00:00Z</gml:endPosition>
+        </gml:TimePeriod>
+      </iwxxm:validPeriod>
+      <iwxxm:baseForecast>
+        <iwxxm:MeteorologicalAerodromeForecast cloudAndVisibilityOK="false">
+          <iwxxm:phenomenonTime>
+            <gml:TimePeriod>
+              <gml:beginPosition>2026-08-30T12:00:00Z</gml:beginPosition>
+              <gml:endPosition>2026-08-31T12:00:00Z</gml:endPosition>
+            </gml:TimePeriod>
+          </iwxxm:phenomenonTime>
+          <iwxxm:prevailingVisibility uom="m">800</iwxxm:prevailingVisibility>
+          <iwxxm:surfaceWind>
+            <iwxxm:AerodromeSurfaceWindForecast variableWindDirection="true">
+              <iwxxm:meanWindSpeed uom="[kn_i]">4</iwxxm:meanWindSpeed>
+            </iwxxm:AerodromeSurfaceWindForecast>
+          </iwxxm:surfaceWind>
+          <iwxxm:weather nilReason="http://codes.wmo.int/common/nil/nothingOfOperationalSignificance"/>
+          <iwxxm:cloud>
+            <iwxxm:AerodromeCloudForecast>
+              <iwxxm:verticalVisibility uom="[ft_i]">300</iwxxm:verticalVisibility>
+            </iwxxm:AerodromeCloudForecast>
+          </iwxxm:cloud>
+          <iwxxm:temperature>
+            <iwxxm:AerodromeAirTemperatureForecast>
+              <iwxxm:maximumAirTemperature uom="Cel">7</iwxxm:maximumAirTemperature>
+              <iwxxm:maximumAirTemperatureTime>
+                <gml:TimeInstant><gml:timePosition>2026-08-30T21:00:00Z</gml:timePosition></gml:TimeInstant>
+              </iwxxm:maximumAirTemperatureTime>
+              <iwxxm:minimumAirTemperature uom="Cel">-5</iwxxm:minimumAirTemperature>
+              <iwxxm:minimumAirTemperatureTime>
+                <gml:TimeInstant><gml:timePosition>2026-08-31T10:00:00Z</gml:timePosition></gml:TimeInstant>
+              </iwxxm:minimumAirTemperatureTime>
+            </iwxxm:AerodromeAirTemperatureForecast>
+          </iwxxm:temperature>
+        </iwxxm:MeteorologicalAerodromeForecast>
+      </iwxxm:baseForecast>
+      <iwxxm:changeForecast>
+        <iwxxm:MeteorologicalAerodromeForecast cloudAndVisibilityOK="false" changeIndicator="BECOMING">
+          <iwxxm:phenomenonTime>
+            <gml:TimePeriod>
+              <gml:beginPosition>2026-08-30T18:00:00Z</gml:beginPosition>
+              <gml:endPosition>2026-08-30T20:00:00Z</gml:endPosition>
+            </gml:TimePeriod>
+          </iwxxm:phenomenonTime>
+          <iwxxm:weather nilReason="http://codes.wmo.int/common/nil/nothingOfOperationalSignificance"/>
+          <iwxxm:cloud nilReason="http://codes.wmo.int/common/nil/nothingOfOperationalSignificance"/>
+        </iwxxm:MeteorologicalAerodromeForecast>
+      </iwxxm:changeForecast>
+      <iwxxm:changeForecast>
+        <iwxxm:MeteorologicalAerodromeForecast cloudAndVisibilityOK="false" changeIndicator="FROM">
+          <iwxxm:phenomenonTime>
+            <gml:TimePeriod>
+              <gml:beginPosition>2026-08-31T06:00:00Z</gml:beginPosition>
+              <gml:endPosition>2026-08-31T12:00:00Z</gml:endPosition>
+            </gml:TimePeriod>
+          </iwxxm:phenomenonTime>
+          <iwxxm:prevailingVisibility nilReason="http://codes.wmo.int/common/nil/notObservable"/>
+          <iwxxm:surfaceWind nilReason="http://codes.wmo.int/common/nil/notObservable"/>
+          <iwxxm:cloud>
+            <iwxxm:AerodromeCloudForecast>
+              <iwxxm:verticalVisibility nilReason="http://codes.wmo.int/common/nil/notObservable"/>
+            </iwxxm:AerodromeCloudForecast>
+          </iwxxm:cloud>
+        </iwxxm:MeteorologicalAerodromeForecast>
+      </iwxxm:changeForecast>
+      <iwxxm:changeForecast>
+        <iwxxm:MeteorologicalAerodromeForecast cloudAndVisibilityOK="false" changeIndicator="PROBABILITY_40">
+          <iwxxm:phenomenonTime>
+            <gml:TimePeriod>
+              <gml:beginPosition>2026-08-30T20:00:00Z</gml:beginPosition>
+              <gml:endPosition>2026-08-30T22:00:00Z</gml:endPosition>
+            </gml:TimePeriod>
+          </iwxxm:phenomenonTime>
+        </iwxxm:MeteorologicalAerodromeForecast>
+      </iwxxm:changeForecast>
+      <iwxxm:changeForecast>
+        <iwxxm:MeteorologicalAerodromeForecast cloudAndVisibilityOK="false" changeIndicator="PROBABILITY_30_TEMPORARY_FLUCTUATIONS">
+          <iwxxm:phenomenonTime>
+            <gml:TimePeriod>
+              <gml:beginPosition>2026-08-30T22:00:00Z</gml:beginPosition>
+              <gml:endPosition>2026-08-31T00:00:00Z</gml:endPosition>
+            </gml:TimePeriod>
+          </iwxxm:phenomenonTime>
+        </iwxxm:MeteorologicalAerodromeForecast>
+      </iwxxm:changeForecast>
+      <iwxxm:changeForecast>
+        <iwxxm:MeteorologicalAerodromeForecast cloudAndVisibilityOK="false" changeIndicator="PROBABILITY_40_TEMPORARY_FLUCTUATIONS">
+          <iwxxm:phenomenonTime>
+            <gml:TimePeriod>
+              <gml:beginPosition>2026-08-31T00:00:00Z</gml:beginPosition>
+              <gml:endPosition>2026-08-31T02:00:00Z</gml:endPosition>
+            </gml:TimePeriod>
+          </iwxxm:phenomenonTime>
+        </iwxxm:MeteorologicalAerodromeForecast>
+      </iwxxm:changeForecast>
+    </iwxxm:TAF>
+  </meteorologicalInformation>
+  <bulletinIdentifier>A_LTUS99KXYZ301200_C_KXYZ_20260830120200.xml</bulletinIdentifier>
+</MeteorologicalBulletin>

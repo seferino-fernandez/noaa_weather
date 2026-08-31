@@ -58,6 +58,16 @@ cargo install --path noaa_weather_cli --no-default-features
 cargo install --path noaa_weather_cli --no-default-features --features xml
 ```
 
+Fetch the current TAF identifiers, then request one forecast by its date/time path segments:
+
+```bash
+noaa-weather stations terminal-aerodrome-forecasts --station-id KPHX
+noaa-weather stations terminal-aerodrome-forecast \
+  --station-id KPHX --date 2026-08-30 --time 2254
+```
+
+Human TAF output distinguishes CAVOK, unchanged, unavailable, no-significant, cancelled, and missing states. It includes exact weather codes with descriptions, normalized wind/visibility/cloud values, convective cloud types, and temperature extrema. Add `--json` for the same normalized forecast meaning as semantic JSON; IWXXM namespaces and wrapper elements are not exposed.
+
 ## NOAA 3.11 commands
 
 ```bash

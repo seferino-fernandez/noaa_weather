@@ -28,6 +28,42 @@ For TAF support without radio:
 cargo add noaa_weather_client --no-default-features --features xml
 ```
 
+## Semantic TAF forecasts
+
+`stations::get_terminal_aerodrome_forecast` decodes NOAA's IWXXM XML privately and returns forecast meaning rather than the XML element tree. The model provides typed timestamps, ordered base/change groups, canonical meters/knots/feet/Celsius values, exact weather codes plus parsed phenomena, cloud types, temperatures, and explicit forecast, cancellation, missing, CAVOK, unchanged, and unavailable states. Serializing the result produces semantic JSON without namespace or XML-wrapper fields.
+
+```rust,no_run
+use noaa_weather_client::apis::{configuration::Configuration, stations};
+use noaa_weather_client::models::terminal_aerodrome_forecast::{
+    ForecastReport, ForecastWeather,
+};
+
+# async fn example() -> Result<(), noaa_weather_client::apis::Error> {
+let config = Configuration::default();
+let taf = stations::get_terminal_aerodrome_forecast(
+    &config,
+    "KPHX",
+    "2026-08-30",
+    "2254",
+)
+.await?;
+
+if let ForecastReport::Forecast { valid_period, .. } = taf.report() {
+    println!("valid from {} to {}", valid_period.start(), valid_period.end());
+}
+if let Some(base) = taf.base_forecast() {
+    if let ForecastWeather::Phenomena { items } = base.conditions().weather() {
+        for weather in items {
+            println!("{}: {:?}", weather.code(), weather.phenomena());
+        }
+    }
+}
+# Ok(())
+# }
+```
+
+The IWXXM wire structs and decoder are implementation details. Consumers should use the accessors and non-exhaustive semantic enums under `models::terminal_aerodrome_forecast`.
+
 ## Quick start
 
 ```rust,no_run

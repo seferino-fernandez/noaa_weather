@@ -220,12 +220,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting TAF for station {station_id} on {date} at {time}"),
-                    station_api::get_terminal_aerodrome_forecast(
-                        config,
-                        station_id,
-                        date.clone(),
-                        time,
-                    ),
+                    station_api::get_terminal_aerodrome_forecast(config, station_id, date, time),
                 )
                 .await
         }

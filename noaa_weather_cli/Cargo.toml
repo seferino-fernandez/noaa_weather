@@ -35,3 +35,4 @@ xml = ["noaa_weather_client/xml"]
 
 [dev-dependencies]
 assert_cmd.workspace = true
+wiremock.workspace = true

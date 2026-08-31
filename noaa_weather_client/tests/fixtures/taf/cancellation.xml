@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MeteorologicalBulletin xmlns="http://def.wmo.int/collect/2014"
+  xmlns:aixm="http://www.aixm.aero/schema/5.1.1"
+  xmlns:gml="http://www.opengis.net/gml/3.2"
+  xmlns:iwxxm="http://icao.int/iwxxm/2021-2">
+  <meteorologicalInformation>
+    <iwxxm:TAF reportStatus="AMENDMENT" permissibleUsage="OPERATIONAL" isCancelReport="true">
+      <iwxxm:issueTime>
+        <gml:TimeInstant><gml:timePosition>2026-08-30T15:00:00Z</gml:timePosition></gml:TimeInstant>
+      </iwxxm:issueTime>
+      <iwxxm:aerodrome>
+        <aixm:AirportHeliport>
+          <aixm:timeSlice>
+            <aixm:AirportHeliportTimeSlice>
+              <aixm:designator>KCXL</aixm:designator>
+              <aixm:locationIndicatorICAO>KCXL</aixm:locationIndicatorICAO>
+            </aixm:AirportHeliportTimeSlice>
+          </aixm:timeSlice>
+        </aixm:AirportHeliport>
+      </iwxxm:aerodrome>
+      <iwxxm:cancelledReportValidPeriod>
+        <gml:TimePeriod>
+          <gml:beginPosition>2026-08-30T12:00:00Z</gml:beginPosition>
+          <gml:endPosition>2026-08-31T12:00:00Z</gml:endPosition>
+        </gml:TimePeriod>
+      </iwxxm:cancelledReportValidPeriod>
+    </iwxxm:TAF>
+  </meteorologicalInformation>
+  <bulletinIdentifier>A_LTUS99KCXL301500_C_KCXL_20260830150000.xml</bulletinIdentifier>
+</MeteorologicalBulletin>

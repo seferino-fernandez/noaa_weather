@@ -245,7 +245,9 @@ pub mod sigmet_geo_json;
 pub use self::sigmet_geo_json::SigmetGeoJson;
 pub mod state_territory_code;
 pub use self::state_territory_code::StateTerritoryCode;
+#[cfg(feature = "xml")]
 pub mod terminal_aerodrome_forecast;
+#[cfg(feature = "xml")]
 pub use self::terminal_aerodrome_forecast::TerminalAerodromeForecast;
 pub mod terminal_aerodrome_forecasts_response;
 pub use self::terminal_aerodrome_forecasts_response::TerminalAerodromeForecastsResponse;
