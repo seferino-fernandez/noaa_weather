@@ -204,6 +204,8 @@ pub mod quality_control;
 pub use self::quality_control::QualityControl;
 pub mod quantitative_value;
 pub use self::quantitative_value::QuantitativeValue;
+pub mod radar;
+pub use self::radar::{RadarNormalizationError, RadarServerTelemetry, RadarStationTelemetry};
 pub mod radar_queue;
 pub use self::radar_queue::RadarQueue;
 pub mod radar_queue_host;

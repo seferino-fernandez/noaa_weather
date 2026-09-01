@@ -1,4 +1,4 @@
-//! Human presentation implementations for typed NOAA responses.
+//! Default presentation implementations for typed NOAA responses.
 
 pub mod alerts;
 pub mod aviation;

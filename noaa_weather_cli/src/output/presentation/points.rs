@@ -2,7 +2,7 @@ use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Attribute, Cell, CellAlignment, Table};
 use noaa_weather_client::models::PointGeoJson;
 
-use crate::output::{HumanDocument, HumanPresentation};
+use crate::output::{DefaultPresentation, PresentationDocument};
 use crate::utils::format::get_zone_from_url;
 
 /// Formats point metadata into a `comfy_table::Table`.
@@ -67,8 +67,10 @@ pub fn create_point_metadata_table(point_data: &PointGeoJson) -> Table {
     table
 }
 
-impl HumanPresentation for PointGeoJson {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_point_metadata_table(self))
+impl DefaultPresentation for PointGeoJson {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_point_metadata_table(
+            self,
+        )))
     }
 }

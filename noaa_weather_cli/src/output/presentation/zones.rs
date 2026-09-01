@@ -6,7 +6,7 @@ use noaa_weather_client::models::{
 };
 use serde::Serialize;
 
-use crate::output::{HumanDocument, HumanPresentation};
+use crate::output::{DefaultPresentation, PresentationDocument};
 use crate::utils::format::{
     format_datetime_human_readable, format_observation_wind, format_optional_value_unit,
     get_zone_from_url,
@@ -383,21 +383,25 @@ pub fn create_zone_observations_table(observations_features: &[ObservationGeoJso
     table
 }
 
-impl HumanPresentation for ZoneCollectionGeoJson {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_zones_table(self))
+impl DefaultPresentation for ZoneCollectionGeoJson {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_zones_table(self)))
     }
 }
 
-impl HumanPresentation for ZoneGeoJson {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_zone_metadata_table(self))
+impl DefaultPresentation for ZoneGeoJson {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_zone_metadata_table(
+            self,
+        )))
     }
 }
 
-impl HumanPresentation for ZoneForecastGeoJson {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_zone_forecast_table(self))
+impl DefaultPresentation for ZoneForecastGeoJson {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_zone_forecast_table(
+            self,
+        )))
     }
 }
 
@@ -405,8 +409,10 @@ impl HumanPresentation for ZoneForecastGeoJson {
 #[serde(transparent)]
 pub(crate) struct ZoneObservations(pub(crate) ObservationCollectionGeoJson);
 
-impl HumanPresentation for ZoneObservations {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_zone_observations_table(&self.0.features))
+impl DefaultPresentation for ZoneObservations {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_zone_observations_table(
+            &self.0.features,
+        )))
     }
 }

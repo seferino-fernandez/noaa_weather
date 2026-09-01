@@ -64,6 +64,31 @@ if let Some(base) = taf.base_forecast() {
 
 The IWXXM wire structs and decoder are implementation details. Consumers should use the accessors and non-exhaustive semantic enums under `models::terminal_aerodrome_forecast`.
 
+## Normalized radar telemetry
+
+Radar station and server endpoints continue to return the raw, serializable NOAA models. Callers that need interpreted telemetry can convert an individual raw record into owned `RadarStationTelemetry` or `RadarServerTelemetry` values. Normalization validates timestamps, preserves missing, empty, and invalid states, summarizes ping target counts, and keeps measurements typed without imposing presentation strings or an invented overall health state.
+
+```rust,no_run
+use noaa_weather_client::apis::{configuration::Configuration, radar};
+use noaa_weather_client::models::RadarServerTelemetry;
+
+# async fn example() -> Result<(), Box<dyn std::error::Error>> {
+let config = Configuration::default();
+let raw = radar::get_radar_server(&config, "ldm1", None).await?;
+let telemetry = RadarServerTelemetry::try_from(&raw)?;
+
+println!("server: {}", telemetry.id().unwrap_or("unknown"));
+if let Some(targets) = telemetry.ping().and_then(|ping| ping.targets()) {
+    if let Some(clients) = targets.client() {
+        println!("client targets up: {}/{}", clients.up(), clients.total());
+    }
+}
+# Ok(())
+# }
+```
+
+The semantic types use private fields, accessors, and non-exhaustive structures so they can evolve. `RadarNormalizationError` identifies the station or server field whose meaning was invalid. Continue serializing the raw response when wire-compatible JSON is required; normalization is intentionally not the serialization interface.
+
 ## Quick start
 
 ```rust,no_run

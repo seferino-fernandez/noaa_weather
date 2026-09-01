@@ -128,7 +128,7 @@ impl ContractRequest<'_> {
     }
 
     /// Requests, validates, and decodes one XML media family.
-    #[cfg(any(feature = "radio", test))]
+    #[cfg(feature = "xml")]
     pub(crate) async fn xml<T: DeserializeOwned>(self, media: XmlMedia) -> Result<T, Error> {
         let response = self.send(media.accept()).await?;
         ensure_content_type(&response, media.expected(), |mime| media.matches(mime))?;
@@ -468,7 +468,7 @@ fn protocol(error: ProtocolError) -> Error {
     Error::Protocol(Box::new(error))
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "xml"))]
 pub(crate) use tests::measure_allocations;
 
 #[cfg(test)]

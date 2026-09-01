@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add owned, fallible radar station and server telemetry normalization while preserving the raw serialization models
+
+### Fixed
+
+- Report malformed radar timestamps as contextual default-presentation errors instead of panicking
+- Display the radar station maximum latency measurement instead of repeating its timestamp
+
 ## [1.3.0](https://github.com/seferino-fernandez/noaa_weather/compare/v1.2.0...v1.3.0)
 
 _22 August 2026_
