@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow};
 use clap::Subcommand;
-use noaa_weather_client::apis::configuration::Configuration;
+use noaa_weather_client::Client;
 use noaa_weather_client::apis::stations as station_api;
 use noaa_weather_client::models::{AreaCode, StateTerritoryCode};
 use std::str::FromStr as _;
@@ -111,19 +111,19 @@ pub enum StationCommands {
 ///
 /// * `command` - The specific station subcommand and its arguments to execute.
 /// * `output` - The configured output policy.
-/// * `config` - The application configuration containing API details.
+/// * `client` - The NOAA API client.
 ///
 pub async fn handle_command(
     command: &StationCommands,
     output: &Output,
-    config: &Configuration,
+    client: &Client,
 ) -> Result<()> {
     match command {
         StationCommands::Metadata { id } => {
             output
                 .show(
                     format!("getting station {id} metadata"),
-                    station_api::get_observation_station(config, id),
+                    station_api::get_observation_station(client, id),
                 )
                 .await
         }
@@ -150,7 +150,7 @@ pub async fn handle_command(
                 .show(
                     "listing observation stations",
                     station_api::get_observation_stations(
-                        config,
+                        client,
                         id.clone(),
                         states_parsed,
                         *limit,
@@ -167,7 +167,7 @@ pub async fn handle_command(
                 .show(
                     format!("getting latest observation for station {station_id}"),
                     station_api::get_latest_observations(
-                        config,
+                        client,
                         station_id,
                         Some(*require_quality_controlled),
                     ),
@@ -184,7 +184,7 @@ pub async fn handle_command(
                 .show(
                     format!("listing observations for station {station_id}"),
                     station_api::get_observations(
-                        config,
+                        client,
                         station_id,
                         start.clone(),
                         end.clone(),
@@ -198,7 +198,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting observation for station {station_id} at {time}"),
-                    station_api::get_observation_by_time(config, station_id, time.clone()),
+                    station_api::get_observation_by_time(client, station_id, time.clone()),
                 )
                 .await
         }
@@ -207,7 +207,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting TAFs for station {station_id}"),
-                    station_api::get_terminal_aerodrome_forecasts(config, station_id),
+                    station_api::get_terminal_aerodrome_forecasts(client, station_id),
                 )
                 .await
         }
@@ -220,7 +220,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting TAF for station {station_id} on {date} at {time}"),
-                    station_api::get_terminal_aerodrome_forecast(config, station_id, date, time),
+                    station_api::get_terminal_aerodrome_forecast(client, station_id, date, time),
                 )
                 .await
         }

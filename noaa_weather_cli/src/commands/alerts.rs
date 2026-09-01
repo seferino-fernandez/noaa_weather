@@ -1,8 +1,8 @@
 use anyhow::Result;
 use clap::Subcommand;
+use noaa_weather_client::Client;
 use noaa_weather_client::apis::alerts as alerts_api;
 use noaa_weather_client::apis::alerts::{ActiveAlertsParams, GetAlertsParams};
-use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::models::{
     AlertCertainty, AlertMessageType, AlertSeverity, AlertStatus, AlertUrgency, AreaCode,
     MarineRegionCode, RegionType,
@@ -196,7 +196,7 @@ pub enum AlertCommands {
 
 /// Handles the dispatch of alert-related subcommands.
 ///
-/// Takes a parsed `AlertCommands` enum variant and the API `Configuration`,
+/// Takes a parsed `AlertCommands` enum variant and the API [`Client`],
 /// calls the appropriate `noaa_weather_client` function, and returns the
 /// result as a `serde_json::Value`.
 ///
@@ -204,12 +204,12 @@ pub enum AlertCommands {
 ///
 /// * `command`: The specific alert subcommand to execute.
 /// * `output`: The configured output policy.
-/// * `config`: The API client configuration.
+/// * `client`: The NOAA API client.
 ///
 pub async fn handle_command(
     command: &AlertCommands,
     output: &Output,
-    config: &Configuration,
+    client: &Client,
 ) -> Result<()> {
     match command {
         AlertCommands::Active {
@@ -244,7 +244,7 @@ pub async fn handle_command(
             output
                 .show(
                     "fetching active alerts",
-                    alerts_api::get_active_alerts(config, params),
+                    alerts_api::get_active_alerts(client, params),
                 )
                 .await
         }
@@ -252,7 +252,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("fetching active alerts for area {area}"),
-                    alerts_api::get_active_alerts_for_area(config, area),
+                    alerts_api::get_active_alerts_for_area(client, area),
                 )
                 .await
         }
@@ -260,7 +260,7 @@ pub async fn handle_command(
             output
                 .show(
                     "fetching active alert count",
-                    alerts_api::get_active_alerts_count(config),
+                    alerts_api::get_active_alerts_count(client),
                 )
                 .await
         }
@@ -268,7 +268,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("fetching active alerts for marine region {marine_region}"),
-                    alerts_api::get_active_alerts_for_marine_region(config, *marine_region),
+                    alerts_api::get_active_alerts_for_marine_region(client, *marine_region),
                 )
                 .await
         }
@@ -276,7 +276,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("fetching active alerts for zone {zone_id}"),
-                    alerts_api::get_active_alerts_for_zone(config, zone_id),
+                    alerts_api::get_active_alerts_for_zone(client, zone_id),
                 )
                 .await
         }
@@ -317,20 +317,20 @@ pub async fn handle_command(
             };
 
             output
-                .show("querying alerts", alerts_api::get_alerts(config, params))
+                .show("querying alerts", alerts_api::get_alerts(client, params))
                 .await
         }
         AlertCommands::Alert { id } => {
             output
                 .show(
                     format!("getting alert {id}"),
-                    alerts_api::get_alert(config, id),
+                    alerts_api::get_alert(client, id),
                 )
                 .await
         }
         AlertCommands::Types => {
             output
-                .show("fetching alert types", alerts_api::get_alert_types(config))
+                .show("fetching alert types", alerts_api::get_alert_types(client))
                 .await
         }
     }

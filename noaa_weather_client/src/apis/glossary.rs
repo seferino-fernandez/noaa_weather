@@ -1,6 +1,7 @@
 //! NWS glossary terms.
 
-use super::{Error, configuration, http};
+use super::Error;
+use crate::client::{Client, http};
 use crate::models::GlossaryResponse;
 
 /// Returns the NWS glossary.
@@ -8,10 +9,8 @@ use crate::models::GlossaryResponse;
 /// # Errors
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
-pub async fn get_glossary(
-    configuration: &configuration::Configuration,
-) -> Result<GlossaryResponse, Error> {
-    http::request(configuration, "/glossary")
+pub async fn get_glossary(client: &Client) -> Result<GlossaryResponse, Error> {
+    http::request(client, "/glossary")
         .json(http::JsonMedia::JsonLd)
         .await
 }
@@ -24,11 +23,7 @@ mod tests {
     };
 
     use super::get_glossary;
-    use crate::{Error, apis::configuration::Configuration};
-
-    fn configuration(server: &MockServer) -> Configuration {
-        Configuration::new(None, Some(server.uri()), None, None)
-    }
+    use crate::{Error, client::test_support::client_for};
 
     #[tokio::test]
     async fn requests_json_ld_and_returns_typed_terms() {
@@ -44,7 +39,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let response = get_glossary(&configuration(&server)).await.unwrap();
+        let response = get_glossary(&client_for(&server)).await.unwrap();
         assert_eq!(response.glossary[0].term.as_deref(), Some("Virga"));
         assert_eq!(
             response.glossary[0].definition.as_deref(),
@@ -64,11 +59,10 @@ mod tests {
             .mount(&server)
             .await;
 
-        let Error::Protocol(error) = get_glossary(&configuration(&server)).await.unwrap_err()
-        else {
+        let Error::Protocol(error) = get_glossary(&client_for(&server)).await.unwrap_err() else {
             panic!("expected protocol error");
         };
-        assert_eq!(error.expected(), "application/ld+json");
+        assert_eq!(error.expected(), Some("application/ld+json"));
         assert_eq!(error.actual(), Some("application/json"));
     }
 
@@ -85,7 +79,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let error = get_glossary(&configuration(&server)).await.unwrap_err();
+        let error = get_glossary(&client_for(&server)).await.unwrap_err();
         let Error::Response(response) = error else {
             panic!("expected response error");
         };

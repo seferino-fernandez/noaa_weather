@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::apis::configuration::Configuration;
+use noaa_weather_client::Client;
 use noaa_weather_client::apis::gridpoints as gridpoints_api;
 use noaa_weather_client::models::{GridpointForecastUnits, NwsForecastOfficeId};
 
@@ -87,12 +87,12 @@ pub enum GridpointCommands {
 ///
 /// * `command` - The specific gridpoint subcommand and its arguments to execute.
 /// * `output` - The configured output policy.
-/// * `config` - The application configuration containing API details.
+/// * `client` - The NOAA API client.
 ///
 pub async fn handle_command(
     command: &GridpointCommands,
     output: &Output,
-    config: &Configuration,
+    client: &Client,
 ) -> Result<()> {
     match command {
         GridpointCommands::Gridpoint { location } => {
@@ -100,7 +100,7 @@ pub async fn handle_command(
                 .show(
                     "getting raw gridpoint data",
                     gridpoints_api::get_gridpoint(
-                        config,
+                        client,
                         location.forecast_office_id,
                         location.x,
                         location.y,
@@ -113,7 +113,7 @@ pub async fn handle_command(
                 .show(
                     "getting gridpoint forecast",
                     gridpoints_api::get_gridpoint_forecast(
-                        config,
+                        client,
                         location.forecast_office_id,
                         location.x,
                         location.y,
@@ -127,7 +127,7 @@ pub async fn handle_command(
                 .show(
                     "getting hourly gridpoint forecast",
                     gridpoints_api::get_gridpoint_forecast_hourly(
-                        config,
+                        client,
                         location.forecast_office_id,
                         location.x,
                         location.y,
@@ -141,7 +141,7 @@ pub async fn handle_command(
                 .show(
                     "getting gridpoint stations",
                     gridpoints_api::get_gridpoint_stations(
-                        config,
+                        client,
                         location.forecast_office_id,
                         location.x,
                         location.y,

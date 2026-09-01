@@ -3,7 +3,8 @@
 //! Covers the `/stations` endpoints for station metadata, latest and
 //! historical surface observations, and Terminal Aerodrome Forecasts.
 
-use super::{Error, configuration, http};
+use super::Error;
+use crate::client::{Client, http};
 use crate::models;
 
 /// Returns metadata about a given observation station
@@ -12,7 +13,7 @@ use crate::models;
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The ID of the observation station (e.g., "KPHX", "KDEN").
 ///
 /// # Returns
@@ -24,10 +25,10 @@ use crate::models;
 /// Returns an [`Error`] if the request fails (e.g., station not found)
 /// or the response cannot be parsed.
 pub async fn get_observation_station(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: &str,
 ) -> Result<models::ObservationStationGeoJson, Error> {
-    http::request(configuration, "/stations")
+    http::request(client, "/stations")
         .path_segment(id)
         .json(http::JsonMedia::GeoJson)
         .await
@@ -41,7 +42,7 @@ pub async fn get_observation_station(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: Optional list of station IDs to filter by.
 /// * `state`: Optional list of state/territory abbreviations ([`models::AreaCode`]) to filter by.
 /// * `limit`: Optional limit on the number of stations returned.
@@ -56,13 +57,13 @@ pub async fn get_observation_station(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_observation_stations(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: Option<Vec<String>>,
     state: Option<Vec<models::AreaCode>>,
     limit: Option<i32>,
     cursor: Option<&str>,
 ) -> Result<models::ObservationStationCollectionGeoJson, Error> {
-    http::request(configuration, "/stations")
+    http::request(client, "/stations")
         .query_csv("id", id)
         .query_csv("state", state)
         .query_scalar("limit", limit)
@@ -77,7 +78,7 @@ pub async fn get_observation_stations(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `station_id`: The ID of the observation station.
 /// * `require_quality_controlled`: Optional flag to require quality controlled data. Set to `false` by default.
 ///   Note that non-QC'd data is preliminary.
@@ -91,11 +92,11 @@ pub async fn get_observation_stations(
 /// Returns an [`Error`] if the request fails, no observation is available,
 /// or the response cannot be parsed.
 pub async fn get_latest_observations(
-    configuration: &configuration::Configuration,
+    client: &Client,
     station_id: &str,
     require_quality_controlled: Option<bool>,
 ) -> Result<models::ObservationGeoJson, Error> {
-    http::request(configuration, "/stations")
+    http::request(client, "/stations")
         .path_segment(station_id)
         .literal_path("observations/latest")
         .query_scalar("require_qc", require_quality_controlled)
@@ -109,7 +110,7 @@ pub async fn get_latest_observations(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `station_id`: The ID of the observation station.
 /// * `start`: Optional start time (ISO 8601 format or relative duration).
 /// * `end`: Optional end time (ISO 8601 format or relative duration).
@@ -125,14 +126,14 @@ pub async fn get_latest_observations(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_observations(
-    configuration: &configuration::Configuration,
+    client: &Client,
     station_id: &str,
     start: Option<String>,
     end: Option<String>,
     limit: Option<i32>,
     cursor: Option<&str>,
 ) -> Result<models::ObservationCollectionGeoJson, Error> {
-    http::request(configuration, "/stations")
+    http::request(client, "/stations")
         .path_segment(station_id)
         .literal_path("observations")
         .query_scalar("start", start)
@@ -149,7 +150,7 @@ pub async fn get_observations(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `station_id`: The ID of the observation station.
 /// * `time`: The specific ISO 8601 timestamp of the desired observation.
 ///
@@ -162,11 +163,11 @@ pub async fn get_observations(
 /// Returns an [`Error`] if the request fails (e.g., no observation
 /// found for the exact time) or the response cannot be parsed.
 pub async fn get_observation_by_time(
-    configuration: &configuration::Configuration,
+    client: &Client,
     station_id: &str,
     time: String,
 ) -> Result<models::ObservationGeoJson, Error> {
-    http::request(configuration, "/stations")
+    http::request(client, "/stations")
         .path_segment(station_id)
         .literal_path("observations")
         .path_segment(time)
@@ -181,7 +182,7 @@ pub async fn get_observation_by_time(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `station_id`: The ID of the airport station (typically ICAO identifier like "KPHX").
 /// * `date`: The date of the TAF in `YYYY-MM-DD` format.
 /// * `time`: The time of the TAF in `HHMM` format (UTC) Regex: `^([01][0-9]|2[0-3])[0-5][0-9]$`.
@@ -195,12 +196,12 @@ pub async fn get_observation_by_time(
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 #[cfg(feature = "xml")]
 pub async fn get_terminal_aerodrome_forecast(
-    configuration: &configuration::Configuration,
+    client: &Client,
     station_id: &str,
     date: &str,
     time: &str,
 ) -> Result<models::TerminalAerodromeForecast, Error> {
-    let bytes = http::request(configuration, "/stations")
+    let bytes = http::request(client, "/stations")
         .path_segment(station_id)
         .literal_path("tafs")
         .path_segment(date)
@@ -217,7 +218,7 @@ pub async fn get_terminal_aerodrome_forecast(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `station_id`: The ID of the airport station (typically ICAO identifier like "KPHX").
 ///
 /// # Returns
@@ -228,10 +229,10 @@ pub async fn get_terminal_aerodrome_forecast(
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_terminal_aerodrome_forecasts(
-    configuration: &configuration::Configuration,
+    client: &Client,
     station_id: &str,
 ) -> Result<models::TerminalAerodromeForecastsResponse, Error> {
-    http::request(configuration, "/stations")
+    http::request(client, "/stations")
         .path_segment(station_id)
         .literal_path("tafs")
         .json(http::JsonMedia::JsonLd)
@@ -246,11 +247,7 @@ mod tests {
     };
 
     use super::{get_observation_by_time, get_observation_station, get_observation_stations};
-    use crate::apis::configuration::Configuration;
-
-    fn configuration(server: &MockServer) -> Configuration {
-        Configuration::new(None, Some(server.uri()), None, None)
-    }
+    use crate::client::test_support::client_for;
 
     #[tokio::test]
     async fn station_requests_omit_feature_flags_and_preserve_queries() {
@@ -264,7 +261,7 @@ mod tests {
             .await;
 
         get_observation_stations(
-            &configuration(&server),
+            &client_for(&server),
             Some(vec!["KPHX".to_owned(), "KIWA".to_owned()]),
             Some(vec!["AZ".parse().unwrap(), "CA".parse().unwrap()]),
             Some(20),
@@ -296,7 +293,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        get_observation_station(&configuration(&server), "K/PHX%")
+        get_observation_station(&client_for(&server), "K/PHX%")
             .await
             .unwrap();
         let requests = server.received_requests().await.unwrap();
@@ -318,7 +315,7 @@ mod tests {
             .await;
 
         let result = get_observation_by_time(
-            &configuration(&server),
+            &client_for(&server),
             "K/PHX%",
             "2026-08-30T12:34:56Z/path%".to_owned(),
         )
@@ -362,11 +359,11 @@ mod tests {
             .mount(&server)
             .await;
 
-        super::get_latest_observations(&configuration(&server), "KPHX", Some(false))
+        super::get_latest_observations(&client_for(&server), "KPHX", Some(false))
             .await
             .unwrap();
         super::get_observations(
-            &configuration(&server),
+            &client_for(&server),
             "KPHX",
             Some("2026-08-30T00:00:00Z".to_owned()),
             None,
@@ -375,7 +372,7 @@ mod tests {
         )
         .await
         .unwrap();
-        super::get_terminal_aerodrome_forecasts(&configuration(&server), "KPHX")
+        super::get_terminal_aerodrome_forecasts(&client_for(&server), "KPHX")
             .await
             .unwrap();
 
@@ -426,7 +423,7 @@ mod tests {
             .await;
 
         let forecast = super::get_terminal_aerodrome_forecast(
-            &configuration(&server),
+            &client_for(&server),
             "KCXL",
             "2026-08-30",
             "1500",
@@ -480,7 +477,7 @@ mod tests {
             .await;
 
         let forecast = super::get_terminal_aerodrome_forecast(
-            &configuration(&server),
+            &client_for(&server),
             "KXYZ",
             "2026-08-30",
             "1200",
@@ -625,7 +622,7 @@ mod tests {
 
         for (station, _, expected_kind, expected_path, has_decode_source) in cases {
             let error = super::get_terminal_aerodrome_forecast(
-                &configuration(&server),
+                &client_for(&server),
                 station,
                 "2026-08-30",
                 "2257",
@@ -672,7 +669,7 @@ mod tests {
             .await;
 
         let cancelled = super::get_terminal_aerodrome_forecast(
-            &configuration(&server),
+            &client_for(&server),
             "KCXL",
             "2026-08-30",
             "1500",
@@ -695,7 +692,7 @@ mod tests {
         );
 
         let missing = super::get_terminal_aerodrome_forecast(
-            &configuration(&server),
+            &client_for(&server),
             "KERR",
             "2026-08-30",
             "1600",
@@ -748,7 +745,7 @@ mod tests {
             .await;
 
         let forecast = super::get_terminal_aerodrome_forecast(
-            &configuration(&server),
+            &client_for(&server),
             "KXYZ",
             "2026-08-30",
             "1200",
@@ -846,7 +843,7 @@ mod tests {
             .await;
 
         let forecast = super::get_terminal_aerodrome_forecast(
-            &configuration(&server),
+            &client_for(&server),
             "KFLG",
             "2026-08-30",
             "2257",
@@ -901,7 +898,7 @@ mod tests {
             .await;
 
         let forecast = super::get_terminal_aerodrome_forecast(
-            &configuration(&server),
+            &client_for(&server),
             "KFLG",
             "2026-08-30",
             "2257",
@@ -956,7 +953,7 @@ mod tests {
             .await;
 
         let forecast = super::get_terminal_aerodrome_forecast(
-            &configuration(&server),
+            &client_for(&server),
             "KFLG",
             "2026-08-30",
             "2257",
@@ -1009,7 +1006,7 @@ mod tests {
             .await;
 
         let forecast = super::get_terminal_aerodrome_forecast(
-            &configuration(&server),
+            &client_for(&server),
             "KFLG",
             "2026-08-30",
             "2257",
@@ -1038,7 +1035,7 @@ mod tests {
             .await;
 
         let result = super::get_terminal_aerodrome_forecast(
-            &configuration(&server),
+            &client_for(&server),
             "K/PHX%",
             "2026/08%30",
             "12/34%",

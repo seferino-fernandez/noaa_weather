@@ -3,7 +3,8 @@
 //! Covers the `/zones` endpoints for listing zones by type, retrieving
 //! zone metadata, current zone forecasts, and zone observation data.
 
-use super::{Error, configuration, http};
+use super::Error;
+use crate::client::{Client, http};
 use crate::models;
 
 /// Parameters for the [`get_zones`] function.
@@ -73,7 +74,7 @@ impl GetZonesByTypeParams<'_> {
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `r#type`: The type of NWS zone (e.g., Forecast, Public, Fire).
 /// * `id`: The ID of the zone (e.g., "AZZ540", "WVC001").
 /// * `effective`: Optional effective date/time (ISO 8601 string) for historical zone boundaries.
@@ -86,12 +87,12 @@ impl GetZonesByTypeParams<'_> {
 ///
 /// Returns an [`Error`] if the request fails (e.g., zone not found) or the response cannot be parsed.
 pub async fn get_zone(
-    configuration: &configuration::Configuration,
+    client: &Client,
     r#type: models::NwsZoneType,
     id: &str,
     effective: Option<String>,
 ) -> Result<models::ZoneGeoJson, Error> {
-    http::request(configuration, "/zones")
+    http::request(client, "/zones")
         .path_segment(r#type)
         .path_segment(id)
         .query_scalar("effective", effective)
@@ -105,7 +106,7 @@ pub async fn get_zone(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `r#type`: The type of NWS zone as a string slice (e.g., "forecast", "public").
 /// * `id`: The ID of the zone (e.g., "AZZ540", "WVC001").
 ///
@@ -117,11 +118,11 @@ pub async fn get_zone(
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_current_zone_forecast(
-    configuration: &configuration::Configuration,
+    client: &Client,
     r#type: &str,
     id: &str,
 ) -> Result<models::ZoneForecastGeoJson, Error> {
-    http::request(configuration, "/zones")
+    http::request(client, "/zones")
         .path_segment(r#type)
         .path_segment(id)
         .literal_path("forecast")
@@ -137,7 +138,7 @@ pub async fn get_current_zone_forecast(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `params`: A [`GetZonesParams`] struct containing query parameters.
 ///
 /// # Returns
@@ -148,10 +149,10 @@ pub async fn get_current_zone_forecast(
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_zones(
-    configuration: &configuration::Configuration,
+    client: &Client,
     params: GetZonesParams<'_>,
 ) -> Result<models::ZoneCollectionGeoJson, Error> {
-    http::request(configuration, "/zones")
+    http::request(client, "/zones")
         .query_csv("id", params.id)
         .query_csv("area", params.area)
         .query_csv("region", params.region)
@@ -172,7 +173,7 @@ pub async fn get_zones(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `r#type`: The primary type of NWS zone to retrieve (e.g., Forecast, Public).
 /// * `params`: A [`GetZonesByTypeParams`] struct containing additional query parameters.
 ///
@@ -184,11 +185,11 @@ pub async fn get_zones(
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_zones_by_type(
-    configuration: &configuration::Configuration,
+    client: &Client,
     r#type: models::NwsZoneType,
     params: GetZonesByTypeParams<'_>,
 ) -> Result<models::ZoneCollectionGeoJson, Error> {
-    http::request(configuration, "/zones")
+    http::request(client, "/zones")
         .path_segment(r#type)
         .query_csv("id", params.id)
         .query_csv("area", params.area)
@@ -209,7 +210,7 @@ pub async fn get_zones_by_type(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The ID of the forecast zone (e.g., "AZZ540").
 /// * `start`: Optional start time (ISO 8601 format or relative duration).
 /// * `end`: Optional end time (ISO 8601 format or relative duration).
@@ -223,13 +224,13 @@ pub async fn get_zones_by_type(
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_zone_observations(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: &str,
     start: Option<String>,
     end: Option<String>,
     limit: Option<i32>,
 ) -> Result<models::ObservationCollectionGeoJson, Error> {
-    http::request(configuration, "/zones/forecast")
+    http::request(client, "/zones/forecast")
         .path_segment(id)
         .literal_path("observations")
         .query_scalar("start", start)
@@ -245,7 +246,7 @@ pub async fn get_zone_observations(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The ID of the forecast zone (e.g., "AZZ540").
 /// * `limit`: Optional limit on the number of stations returned.
 /// * `cursor`: Optional pagination cursor for paginated results.
@@ -258,12 +259,12 @@ pub async fn get_zone_observations(
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_stations_by_zone(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: &str,
     limit: Option<i32>,
     cursor: Option<&str>,
 ) -> Result<models::ObservationStationCollectionGeoJson, Error> {
-    http::request(configuration, "/zones/forecast")
+    http::request(client, "/zones/forecast")
         .path_segment(id)
         .literal_path("stations")
         .query_scalar("limit", limit)
@@ -281,15 +282,11 @@ mod tests {
         get_zone, get_zone_observations, get_zones, get_zones_by_type,
     };
     use crate::{
-        apis::configuration::Configuration,
+        client::test_support::client_for,
         models::{AreaCode, NwsZoneType},
     };
 
     const FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{}}"#;
-
-    fn configuration(server: &MockServer) -> Configuration {
-        Configuration::new(None, Some(server.uri()), None, None)
-    }
 
     async fn mount_geo_json(server: &MockServer, body: &'static str) {
         Mock::given(method("GET"))
@@ -303,7 +300,7 @@ mod tests {
         let server = MockServer::start().await;
         mount_geo_json(&server, FEATURE).await;
 
-        get_current_zone_forecast(&configuration(&server), "public zone/type", "AZ Z/540")
+        get_current_zone_forecast(&client_for(&server), "public zone/type", "AZ Z/540")
             .await
             .unwrap();
 
@@ -321,7 +318,7 @@ mod tests {
         mount_geo_json(&server, FEATURE).await;
 
         get_zone(
-            &configuration(&server),
+            &client_for(&server),
             NwsZoneType::Forecast,
             "AZ Z/540",
             Some(String::new()),
@@ -340,7 +337,7 @@ mod tests {
         mount_geo_json(&server, r#"{"type":"FeatureCollection","features":[]}"#).await;
 
         get_zones(
-            &configuration(&server),
+            &client_for(&server),
             GetZonesParams {
                 id: Some(vec!["AZ Z/1".to_owned(), "AZZ2".to_owned()]),
                 area: Some(Vec::<AreaCode>::new()),
@@ -371,7 +368,7 @@ mod tests {
         mount_geo_json(&server, r#"{"type":"FeatureCollection","features":[]}"#).await;
 
         get_zones_by_type(
-            &configuration(&server),
+            &client_for(&server),
             NwsZoneType::Public,
             GetZonesByTypeParams {
                 id: Some(Vec::new()),
@@ -398,7 +395,7 @@ mod tests {
         mount_geo_json(&server, r#"{"type":"FeatureCollection","features":[]}"#).await;
 
         get_zone_observations(
-            &configuration(&server),
+            &client_for(&server),
             "AZ Z/540",
             Some(String::new()),
             None,
@@ -426,7 +423,7 @@ mod tests {
             ))
             .mount(&server)
             .await;
-        get_stations_by_zone(&configuration(&server), "AZ Z/540", Some(15), Some(""))
+        get_stations_by_zone(&client_for(&server), "AZ Z/540", Some(15), Some(""))
             .await
             .unwrap();
 

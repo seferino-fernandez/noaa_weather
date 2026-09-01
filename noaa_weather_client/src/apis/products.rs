@@ -3,7 +3,8 @@
 //! Covers the `/products` endpoints for querying, listing, and retrieving
 //! the full text of NWS-issued products by type, location, or issuance time.
 
-use super::{Error, configuration, http};
+use super::Error;
+use crate::client::{Client, http};
 use crate::models;
 
 /// Parameters for the [`get_products_query`] function.
@@ -33,7 +34,7 @@ pub struct ProductsQueryParams {
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `location_id`: The ID of the issuance location (e.g., "LWX", "PQR").
 ///
 /// # Returns
@@ -46,10 +47,10 @@ pub struct ProductsQueryParams {
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_products_by_location(
-    configuration: &configuration::Configuration,
+    client: &Client,
     location_id: &models::NwsForecastOfficeId,
 ) -> Result<models::TextProductTypeCollection, Error> {
-    http::request(configuration, "/products/locations")
+    http::request(client, "/products/locations")
         .path_segment(location_id)
         .literal_path("types")
         .json(http::JsonMedia::JsonLd)
@@ -62,7 +63,7 @@ pub async fn get_products_by_location(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `product_id`: The unique ID of the product.
 ///
 /// # Returns
@@ -73,11 +74,8 @@ pub async fn get_products_by_location(
 ///
 /// Returns an [`Error`] if the request fails (e.g., product not found)
 /// or the response cannot be parsed.
-pub async fn get_product(
-    configuration: &configuration::Configuration,
-    product_id: &str,
-) -> Result<models::TextProduct, Error> {
-    http::request(configuration, "/products")
+pub async fn get_product(client: &Client, product_id: &str) -> Result<models::TextProduct, Error> {
+    http::request(client, "/products")
         .path_segment(product_id)
         .json(http::JsonMedia::JsonLd)
         .await
@@ -89,7 +87,7 @@ pub async fn get_product(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 ///
 /// # Returns
 ///
@@ -101,9 +99,9 @@ pub async fn get_product(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_product_locations(
-    configuration: &configuration::Configuration,
+    client: &Client,
 ) -> Result<models::TextProductLocationCollection, Error> {
-    http::request(configuration, "/products/locations")
+    http::request(client, "/products/locations")
         .json(http::JsonMedia::JsonLd)
         .await
 }
@@ -114,7 +112,7 @@ pub async fn get_product_locations(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 ///
 /// # Returns
 ///
@@ -126,9 +124,9 @@ pub async fn get_product_locations(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_product_types(
-    configuration: &configuration::Configuration,
+    client: &Client,
 ) -> Result<models::TextProductTypeCollection, Error> {
-    http::request(configuration, "/products/types")
+    http::request(client, "/products/types")
         .json(http::JsonMedia::JsonLd)
         .await
 }
@@ -140,7 +138,7 @@ pub async fn get_product_types(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `params`: A [`ProductsQueryParams`] struct containing the query parameters.
 ///
 /// # Returns
@@ -152,10 +150,10 @@ pub async fn get_product_types(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_products_query(
-    configuration: &configuration::Configuration,
+    client: &Client,
     params: ProductsQueryParams,
 ) -> Result<models::TextProductCollection, Error> {
-    http::request(configuration, "/products")
+    http::request(client, "/products")
         .query_csv("location", params.location_ids)
         .query_scalar("start", params.start_time)
         .query_scalar("end", params.end_time)
@@ -173,7 +171,7 @@ pub async fn get_products_query(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `type_id`: The NWS product type code (e.g., "AFD", "HWO").
 ///
 /// # Returns
@@ -185,10 +183,10 @@ pub async fn get_products_query(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_products_by_type(
-    configuration: &configuration::Configuration,
+    client: &Client,
     type_id: &str,
 ) -> Result<models::TextProductCollection, Error> {
-    http::request(configuration, "/products/types")
+    http::request(client, "/products/types")
         .path_segment(type_id)
         .json(http::JsonMedia::JsonLd)
         .await
@@ -200,7 +198,7 @@ pub async fn get_products_by_type(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `type_id`: The NWS product type code.
 /// * `location_id`: The ID of the issuance location.
 ///
@@ -213,11 +211,11 @@ pub async fn get_products_by_type(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_products_by_type_and_location(
-    configuration: &configuration::Configuration,
+    client: &Client,
     type_id: &str,
     location_id: &models::NwsForecastOfficeId,
 ) -> Result<models::TextProductCollection, Error> {
-    http::request(configuration, "/products/types")
+    http::request(client, "/products/types")
         .path_segment(type_id)
         .literal_path("locations")
         .path_segment(location_id)
@@ -231,7 +229,7 @@ pub async fn get_products_by_type_and_location(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `type_id`: The NWS product type code.
 ///
 /// # Returns
@@ -243,10 +241,10 @@ pub async fn get_products_by_type_and_location(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_product_issuance_locations_by_type(
-    configuration: &configuration::Configuration,
+    client: &Client,
     type_id: &str,
 ) -> Result<models::TextProductLocationCollection, Error> {
-    http::request(configuration, "/products/types")
+    http::request(client, "/products/types")
         .path_segment(type_id)
         .literal_path("locations")
         .json(http::JsonMedia::JsonLd)
@@ -259,7 +257,7 @@ pub async fn get_product_issuance_locations_by_type(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `type_id`: The NWS product type code (e.g., "AFD", "HWO").
 /// * `location_id`: The ID of the issuance location (e.g., "LWX", "PQR").
 ///
@@ -272,11 +270,11 @@ pub async fn get_product_issuance_locations_by_type(
 /// Returns an [`Error`] if the request fails (e.g., no product
 /// found for the given type and location) or the response cannot be parsed.
 pub async fn get_latest_product_by_type_and_location(
-    configuration: &configuration::Configuration,
+    client: &Client,
     type_id: &str,
     location_id: &str,
 ) -> Result<models::TextProduct, Error> {
-    http::request(configuration, "/products/types")
+    http::request(client, "/products/types")
         .path_segment(type_id)
         .literal_path("locations")
         .path_segment(location_id)
@@ -295,7 +293,7 @@ mod tests {
         get_products_by_location, get_products_by_type, get_products_by_type_and_location,
         get_products_query,
     };
-    use crate::{apis::configuration::Configuration, models::NwsForecastOfficeId};
+    use crate::{client::test_support::client_for, models::NwsForecastOfficeId};
 
     #[tokio::test]
     async fn products_by_type_and_location_encodes_dynamic_segments_and_requests_json_ld() {
@@ -305,10 +303,10 @@ mod tests {
             .expect(1)
             .mount(&server)
             .await;
-        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+        let client = client_for(&server);
 
         get_products_by_type_and_location(
-            &configuration,
+            &client,
             "space slash/percent%",
             &NwsForecastOfficeId::Lwx,
         )
@@ -334,10 +332,10 @@ mod tests {
             .expect(1)
             .mount(&server)
             .await;
-        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+        let client = client_for(&server);
 
         get_products_query(
-            &configuration,
+            &client,
             ProductsQueryParams {
                 location_ids: Some(vec![NwsForecastOfficeId::Lwx, NwsForecastOfficeId::Pqr]),
                 start_time: Some(String::new()),
@@ -381,29 +379,21 @@ mod tests {
             .expect(7)
             .mount(&server)
             .await;
-        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+        let client = client_for(&server);
 
-        get_products_by_location(&configuration, &NwsForecastOfficeId::Lwx)
+        get_products_by_location(&client, &NwsForecastOfficeId::Lwx)
             .await
             .unwrap();
-        get_product(&configuration, "space slash/percent%")
+        get_product(&client, "space slash/percent%").await.unwrap();
+        get_product_locations(&client).await.unwrap();
+        get_product_types(&client).await.unwrap();
+        get_products_by_type(&client, "type slash/%").await.unwrap();
+        get_product_issuance_locations_by_type(&client, "issue slash/%")
             .await
             .unwrap();
-        get_product_locations(&configuration).await.unwrap();
-        get_product_types(&configuration).await.unwrap();
-        get_products_by_type(&configuration, "type slash/%")
+        get_latest_product_by_type_and_location(&client, "latest type/%", "latest location/%")
             .await
             .unwrap();
-        get_product_issuance_locations_by_type(&configuration, "issue slash/%")
-            .await
-            .unwrap();
-        get_latest_product_by_type_and_location(
-            &configuration,
-            "latest type/%",
-            "latest location/%",
-        )
-        .await
-        .unwrap();
 
         let requests = server.received_requests().await.unwrap();
         let routes_and_media = requests

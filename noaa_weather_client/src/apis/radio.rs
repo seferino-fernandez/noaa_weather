@@ -21,7 +21,8 @@
 //! whose structured paragraphs and sentences can be rendered as plain text via
 //! [`Sentence::full_text`](crate::models::Sentence::full_text).
 
-use super::{Error, configuration, http};
+use super::Error;
+use crate::client::{Client, http};
 use crate::models;
 
 /// Returns the NOAA Weather Radio broadcast for a geographic point.
@@ -32,7 +33,7 @@ use crate::models;
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `latitude`: The latitude of the point (e.g., 33.4484).
 /// * `longitude`: The longitude of the point (e.g., -112.0740).
 ///
@@ -45,11 +46,11 @@ use crate::models;
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_point_radio(
-    configuration: &configuration::Configuration,
+    client: &Client,
     latitude: f64,
     longitude: f64,
 ) -> Result<models::RadioBroadcast, Error> {
-    http::request(configuration, "/points")
+    http::request(client, "/points")
         .path_segment(format_args!("{latitude},{longitude}"))
         .literal_path("radio")
         .xml(http::XmlMedia::Ssml)
@@ -64,7 +65,7 @@ pub async fn get_point_radio(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `call_sign`: The transmitter call sign (e.g., "KEC94").
 ///
 /// # Returns
@@ -76,10 +77,10 @@ pub async fn get_point_radio(
 /// Returns an [`Error`] if the request fails (e.g., call sign not found)
 /// or the response cannot be parsed.
 pub async fn get_area_radio(
-    configuration: &configuration::Configuration,
+    client: &Client,
     call_sign: &str,
 ) -> Result<models::RadioBroadcast, Error> {
-    http::request(configuration, "/radio")
+    http::request(client, "/radio")
         .path_segment(call_sign)
         .literal_path("broadcast")
         .xml(http::XmlMedia::Ssml)
@@ -93,7 +94,7 @@ pub async fn get_area_radio(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `cursor`: An optional opaque pagination cursor.
 ///
 /// # Returns
@@ -104,10 +105,10 @@ pub async fn get_area_radio(
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_radio_transmitters(
-    configuration: &configuration::Configuration,
+    client: &Client,
     cursor: Option<&str>,
 ) -> Result<models::RadioTransmitterCollection, Error> {
-    http::request(configuration, "/radio")
+    http::request(client, "/radio")
         .query_scalar("cursor", cursor)
         .json(http::JsonMedia::JsonLd)
         .await
@@ -119,7 +120,7 @@ pub async fn get_radio_transmitters(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `call_sign`: The transmitter call sign.
 ///
 /// # Returns
@@ -130,10 +131,10 @@ pub async fn get_radio_transmitters(
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_radio_transmitter(
-    configuration: &configuration::Configuration,
+    client: &Client,
     call_sign: &str,
 ) -> Result<models::RadioTransmitter, Error> {
-    http::request(configuration, "/radio")
+    http::request(client, "/radio")
         .path_segment(call_sign)
         .json(http::JsonMedia::JsonLd)
         .await
@@ -145,7 +146,7 @@ pub async fn get_radio_transmitter(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `zone_id`: The county zone ID.
 ///
 /// # Returns
@@ -156,10 +157,10 @@ pub async fn get_radio_transmitter(
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_radio_transmitters_for_county_zone(
-    configuration: &configuration::Configuration,
+    client: &Client,
     zone_id: &str,
 ) -> Result<models::RadioTransmitterCollection, Error> {
-    http::request(configuration, "/zones/county")
+    http::request(client, "/zones/county")
         .path_segment(zone_id)
         .literal_path("radio")
         .json(http::JsonMedia::JsonLd)
@@ -177,7 +178,7 @@ mod tests {
         get_area_radio, get_point_radio, get_radio_transmitter, get_radio_transmitters,
         get_radio_transmitters_for_county_zone,
     };
-    use crate::{Error, apis::configuration::Configuration};
+    use crate::{Error, client::test_support::client_for};
 
     const TRANSMITTERS: &str = r#"{
         "@graph": [{
@@ -192,10 +193,6 @@ mod tests {
     }"#;
     const RADIO_BROADCAST: &str = r#"<speak version="1.1" xml:lang="en-US"></speak>"#;
 
-    fn configuration(server: &MockServer) -> Configuration {
-        Configuration::new(None, Some(server.uri()), None, None)
-    }
-
     #[tokio::test]
     async fn transmitter_broadcast_encodes_call_sign_and_requests_ssml() {
         let server = MockServer::start().await;
@@ -209,7 +206,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let broadcast = get_area_radio(&configuration(&server), "K E/%?")
+        let broadcast = get_area_radio(&client_for(&server), "K E/%?")
             .await
             .unwrap();
         assert_eq!(broadcast.version, "1.1");
@@ -229,7 +226,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let broadcast = get_point_radio(&configuration(&server), 33.4484, -112.074)
+        let broadcast = get_point_radio(&client_for(&server), 33.4484, -112.074)
             .await
             .unwrap();
         assert_eq!(broadcast.version, "1.1");
@@ -248,13 +245,13 @@ mod tests {
             .mount(&server)
             .await;
 
-        let Error::Protocol(error) = get_area_radio(&configuration(&server), "KEC94")
+        let Error::Protocol(error) = get_area_radio(&client_for(&server), "KEC94")
             .await
             .unwrap_err()
         else {
             panic!("expected protocol error");
         };
-        assert_eq!(error.expected(), "application/ssml+xml");
+        assert_eq!(error.expected(), Some("application/ssml+xml"));
         assert_eq!(error.actual(), Some("application/xml"));
     }
 
@@ -271,10 +268,10 @@ mod tests {
             .mount(&server)
             .await;
 
-        let first_page = get_radio_transmitters(&configuration(&server), None)
+        let first_page = get_radio_transmitters(&client_for(&server), None)
             .await
             .unwrap();
-        let second_page = get_radio_transmitters(&configuration(&server), Some("opaque+/=? value"))
+        let second_page = get_radio_transmitters(&client_for(&server), Some("opaque+/=? value"))
             .await
             .unwrap();
 
@@ -319,13 +316,13 @@ mod tests {
             .mount(&server)
             .await;
 
-        let Error::Protocol(error) = get_radio_transmitters(&configuration(&server), None)
+        let Error::Protocol(error) = get_radio_transmitters(&client_for(&server), None)
             .await
             .unwrap_err()
         else {
             panic!("expected protocol error");
         };
-        assert_eq!(error.expected(), "application/ld+json");
+        assert_eq!(error.expected(), Some("application/ld+json"));
         assert_eq!(error.actual(), Some("application/json"));
     }
 
@@ -350,7 +347,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let transmitter = get_radio_transmitter(&configuration(&server), "K A/%?")
+        let transmitter = get_radio_transmitter(&client_for(&server), "K A/%?")
             .await
             .unwrap();
 
@@ -375,7 +372,7 @@ mod tests {
             .await;
 
         let transmitters =
-            get_radio_transmitters_for_county_zone(&configuration(&server), "AZC 013/%?")
+            get_radio_transmitters_for_county_zone(&client_for(&server), "AZC 013/%?")
                 .await
                 .unwrap();
 

@@ -7,12 +7,15 @@
 //! Run with: just example-basic
 //! Or: cargo run --example basic_usage --manifest-path noaa_weather_client/Cargo.toml
 
-use noaa_weather_client::apis::configuration::Configuration;
+use noaa_weather_client::Client;
 use noaa_weather_client::apis::{alerts, points};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = Configuration::default();
+    let client = Client::builder(
+        "noaa-weather-examples/1.0 (+https://github.com/seferino-fernandez/noaa_weather)",
+    )
+    .build()?;
 
     println!("NOAA Weather Client - Basic Usage Example\n");
 
@@ -26,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 1. Get point metadata
     println!("\n[1] Getting point metadata...");
-    match points::get_point(&config, latitude, longitude).await {
+    match points::get_point(&client, latitude, longitude).await {
         Ok(point_data) => {
             let properties = &point_data.properties;
             println!("  Forecast Office: {:?}", properties.forecast_office);
@@ -47,7 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 2. Get active weather alerts (limited to first 3)
     println!("\n[2] Getting active weather alerts...");
     let alert_params = alerts::ActiveAlertsParams::default();
-    match alerts::get_active_alerts(&config, alert_params).await {
+    match alerts::get_active_alerts(&client, alert_params).await {
         Ok(alerts_data) => {
             println!("  Found {} active alerts", alerts_data.features.len());
             for (index, alert_feature) in alerts_data.features.iter().take(3).enumerate() {

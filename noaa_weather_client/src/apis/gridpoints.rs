@@ -6,7 +6,8 @@
 
 use std::fmt;
 
-use super::{Error, configuration, http};
+use super::Error;
+use crate::client::{Client, http};
 use crate::models;
 
 struct GridCoordinates {
@@ -27,7 +28,7 @@ impl fmt::Display for GridCoordinates {
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `forecast_office_id`: The ID of the NWS forecast office (e.g., TOP, LWX).
 /// * `x`: The grid X coordinate.
 /// * `y`: The grid Y coordinate.
@@ -42,12 +43,12 @@ impl fmt::Display for GridCoordinates {
 /// Returns an [`Error`] if the request fails (e.g., invalid grid coordinates)
 /// or the response cannot be parsed.
 pub async fn get_gridpoint(
-    configuration: &configuration::Configuration,
+    client: &Client,
     forecast_office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
 ) -> Result<models::GridpointGeoJson, Error> {
-    http::request(configuration, "/gridpoints")
+    http::request(client, "/gridpoints")
         .path_segment(forecast_office_id)
         .path_segment(GridCoordinates { x, y })
         .json(http::JsonMedia::GeoJson)
@@ -61,7 +62,7 @@ pub async fn get_gridpoint(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `forecast_office_id`: The ID of the NWS forecast office.
 /// * `x`: The grid X coordinate.
 /// * `y`: The grid Y coordinate.
@@ -77,13 +78,13 @@ pub async fn get_gridpoint(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_gridpoint_forecast(
-    configuration: &configuration::Configuration,
+    client: &Client,
     forecast_office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
     units: Option<models::GridpointForecastUnits>,
 ) -> Result<models::Gridpoint12hForecastGeoJson, Error> {
-    http::request(configuration, "/gridpoints")
+    http::request(client, "/gridpoints")
         .path_segment(forecast_office_id)
         .path_segment(GridCoordinates { x, y })
         .literal_path("forecast")
@@ -103,7 +104,7 @@ pub async fn get_gridpoint_forecast(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `forecast_office_id`: The ID of the NWS forecast office.
 /// * `x`: The grid X coordinate.
 /// * `y`: The grid Y coordinate.
@@ -119,13 +120,13 @@ pub async fn get_gridpoint_forecast(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_gridpoint_forecast_hourly(
-    configuration: &configuration::Configuration,
+    client: &Client,
     forecast_office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
     units: Option<models::GridpointForecastUnits>,
 ) -> Result<models::GridpointHourlyForecastGeoJson, Error> {
-    http::request(configuration, "/gridpoints")
+    http::request(client, "/gridpoints")
         .path_segment(forecast_office_id)
         .path_segment(GridCoordinates { x, y })
         .literal_path("forecast/hourly")
@@ -145,7 +146,7 @@ pub async fn get_gridpoint_forecast_hourly(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `forecast_office_id`: The ID of the NWS forecast office.
 /// * `x`: The grid X coordinate.
 /// * `y`: The grid Y coordinate.
@@ -160,13 +161,13 @@ pub async fn get_gridpoint_forecast_hourly(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_gridpoint_stations(
-    configuration: &configuration::Configuration,
+    client: &Client,
     forecast_office_id: models::NwsForecastOfficeId,
     x: i32,
     y: i32,
     limit: Option<i32>,
 ) -> Result<models::ObservationStationCollectionGeoJson, Error> {
-    http::request(configuration, "/gridpoints")
+    http::request(client, "/gridpoints")
         .path_segment(forecast_office_id)
         .path_segment(GridCoordinates { x, y })
         .literal_path("stations")
@@ -184,17 +185,13 @@ mod tests {
         get_gridpoint_stations,
     };
     use crate::{
-        apis::configuration::Configuration,
+        client::test_support::client_for,
         models::{GridpointForecastUnits, NwsForecastOfficeId},
     };
 
     const FORECAST: &str = r#"{"type":"Feature","geometry":null,"properties":{}}"#;
     const STATIONS: &str = r#"{"type":"FeatureCollection","features":[]}"#;
     const REQUIRED_FLAGS: &str = "forecast_temperature_qv,forecast_wind_speed_qv";
-
-    fn configuration(server: &MockServer) -> Configuration {
-        Configuration::new(None, Some(server.uri()), None, None)
-    }
 
     async fn mount_json(server: &MockServer, body: &'static str) {
         Mock::given(method("GET"))
@@ -212,8 +209,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let result =
-            get_gridpoint(&configuration(&server), NwsForecastOfficeId::Psr, -159, 100).await;
+        let result = get_gridpoint(&client_for(&server), NwsForecastOfficeId::Psr, -159, 100).await;
 
         assert!(result.is_err());
         let requests = server.received_requests().await.unwrap();
@@ -229,7 +225,7 @@ mod tests {
         let server = MockServer::start().await;
         mount_json(&server, FORECAST).await;
         get_gridpoint_forecast(
-            &configuration(&server),
+            &client_for(&server),
             NwsForecastOfficeId::Psr,
             159,
             100,
@@ -253,7 +249,7 @@ mod tests {
         let server = MockServer::start().await;
         mount_json(&server, FORECAST).await;
         get_gridpoint_forecast_hourly(
-            &configuration(&server),
+            &client_for(&server),
             NwsForecastOfficeId::Psr,
             159,
             100,
@@ -280,7 +276,7 @@ mod tests {
         let server = MockServer::start().await;
         mount_json(&server, STATIONS).await;
         get_gridpoint_stations(
-            &configuration(&server),
+            &client_for(&server),
             NwsForecastOfficeId::Psr,
             159,
             100,

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::apis::configuration::Configuration;
+use noaa_weather_client::Client;
 use noaa_weather_client::apis::radio as radio_api;
 
 use crate::output::Output;
@@ -66,12 +66,12 @@ pub enum RadioCommands {
 ///
 /// * `command` - The specific radio subcommand and its arguments to execute.
 /// * `output` - The configured output policy.
-/// * `config` - The application configuration containing API details.
+/// * `client` - The NOAA API client.
 ///
 pub async fn handle_command(
     command: &RadioCommands,
     output: &Output,
-    config: &Configuration,
+    client: &Client,
 ) -> Result<()> {
     match command {
         RadioCommands::Point(args) => {
@@ -81,7 +81,7 @@ pub async fn handle_command(
                         "getting radio broadcast for point {},{}",
                         args.latitude, args.longitude
                     ),
-                    radio_api::get_point_radio(config, args.latitude, args.longitude),
+                    radio_api::get_point_radio(client, args.latitude, args.longitude),
                 )
                 .await
         }
@@ -89,7 +89,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting radio broadcast for station {}", args.call_sign),
-                    radio_api::get_area_radio(config, &args.call_sign),
+                    radio_api::get_area_radio(client, &args.call_sign),
                 )
                 .await
         }
@@ -97,7 +97,7 @@ pub async fn handle_command(
             output
                 .show(
                     "listing radio transmitters",
-                    radio_api::get_radio_transmitters(config, args.cursor.as_deref()),
+                    radio_api::get_radio_transmitters(client, args.cursor.as_deref()),
                 )
                 .await
         }
@@ -105,7 +105,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting radio transmitter {}", args.call_sign),
-                    radio_api::get_radio_transmitter(config, &args.call_sign),
+                    radio_api::get_radio_transmitter(client, &args.call_sign),
                 )
                 .await
         }
@@ -116,7 +116,7 @@ pub async fn handle_command(
                         "listing radio transmitters for county zone {}",
                         args.zone_id
                     ),
-                    radio_api::get_radio_transmitters_for_county_zone(config, &args.zone_id),
+                    radio_api::get_radio_transmitters_for_county_zone(client, &args.zone_id),
                 )
                 .await
         }

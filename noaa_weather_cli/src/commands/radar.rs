@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::apis::configuration::Configuration;
+use noaa_weather_client::Client;
 use noaa_weather_client::apis::radar as radar_api;
 use noaa_weather_client::apis::radar::RadarDataQueueQueryParams;
 use noaa_weather_client::models::RadarQueueHost;
@@ -176,12 +176,12 @@ pub struct RadarStationsArgs {
 ///
 /// * `command` - The specific radar subcommand and its arguments to execute.
 /// * `output` - The configured output policy.
-/// * `config` - The application configuration containing API details.
+/// * `client` - The NOAA API client.
 ///
 pub async fn handle_command(
     command: &RadarCommand,
     output: &Output,
-    config: &Configuration,
+    client: &Client,
 ) -> Result<()> {
     match command {
         RadarCommand::WindProfiler(args) => {
@@ -189,7 +189,7 @@ pub async fn handle_command(
                 .raw_json(
                     format!("getting radar wind-profiler data for {}", args.id),
                     radar_api::get_radar_wind_profiler(
-                        config,
+                        client,
                         &args.id,
                         args.time.as_deref(),
                         args.interval.as_deref(),
@@ -212,7 +212,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting radar data queue for host {}", args.host),
-                    radar_api::get_radar_data_queue(config, &args.host, params),
+                    radar_api::get_radar_data_queue(client, &args.host, params),
                 )
                 .await
         }
@@ -220,7 +220,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting radar server {}", args.id),
-                    radar_api::get_radar_server(config, &args.id, args.reporting_host.as_deref()),
+                    radar_api::get_radar_server(client, &args.id, args.reporting_host.as_deref()),
                 )
                 .await
         }
@@ -228,7 +228,7 @@ pub async fn handle_command(
             output
                 .show(
                     "listing radar servers",
-                    radar_api::get_radar_servers(config, args.reporting_host.as_deref()),
+                    radar_api::get_radar_servers(client, args.reporting_host.as_deref()),
                 )
                 .await
         }
@@ -237,7 +237,7 @@ pub async fn handle_command(
                 .show(
                     format!("getting radar station {}", args.station_id),
                     radar_api::get_radar_station(
-                        config,
+                        client,
                         &args.station_id,
                         args.reporting_host.as_deref(),
                         args.host.as_ref(),
@@ -249,7 +249,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting alarms for radar station {}", args.station_id),
-                    radar_api::get_radar_station_alarms(config, &args.station_id),
+                    radar_api::get_radar_station_alarms(client, &args.station_id),
                 )
                 .await
         }
@@ -258,7 +258,7 @@ pub async fn handle_command(
                 .show(
                     "listing radar stations",
                     radar_api::get_radar_stations(
-                        config,
+                        client,
                         args.station_type.clone(),
                         args.reporting_host.as_deref(),
                         args.host.as_ref(),
@@ -270,7 +270,7 @@ pub async fn handle_command(
             output
                 .show(
                     "getting radar SPGDS telemetry",
-                    radar_api::get_radar_spgds(config, args.published.as_deref()),
+                    radar_api::get_radar_spgds(client, args.published.as_deref()),
                 )
                 .await
         }

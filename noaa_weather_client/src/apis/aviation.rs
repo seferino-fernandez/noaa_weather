@@ -3,7 +3,8 @@
 //! Covers the `/aviation` endpoints for in-flight weather hazard reports
 //! issued by Air Traffic Service Units and Center Weather Service Units.
 
-use super::{Error, configuration, http};
+use super::Error;
+use crate::client::{Client, http};
 use crate::models;
 
 /// Returns a specific Center Weather Advisory (CWA) identified by CWSU, date, and sequence number.
@@ -12,7 +13,7 @@ use crate::models;
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `center_weather_service_unit_id`: The ID of the issuing Center Weather Service Unit (CWSU).
 /// * `date`: The date of the advisory in `YYYY-MM-DD` format.
 /// * `sequence`: The sequence number of the advisory (must be >= 100).
@@ -26,12 +27,12 @@ use crate::models;
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_center_weather_advisories_by_date_and_sequence(
-    configuration: &configuration::Configuration,
+    client: &Client,
     center_weather_service_unit_id: models::NwsCenterWeatherServiceUnitId,
     date: String,
     sequence: i32,
 ) -> Result<models::CenterWeatherAdvisoryGeoJson, Error> {
-    http::request(configuration, "/aviation/cwsus")
+    http::request(client, "/aviation/cwsus")
         .path_segment(center_weather_service_unit_id)
         .literal_path("cwas")
         .path_segment(date)
@@ -46,7 +47,7 @@ pub async fn get_center_weather_advisories_by_date_and_sequence(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `center_weather_service_unit_id`: The ID of the Center Weather Service Unit (CWSU).
 ///
 /// # Returns
@@ -58,10 +59,10 @@ pub async fn get_center_weather_advisories_by_date_and_sequence(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_center_weather_advisories(
-    configuration: &configuration::Configuration,
+    client: &Client,
     center_weather_service_unit_id: models::NwsCenterWeatherServiceUnitId,
 ) -> Result<models::CenterWeatherAdvisoryCollectionGeoJson, Error> {
-    http::request(configuration, "/aviation/cwsus")
+    http::request(client, "/aviation/cwsus")
         .path_segment(center_weather_service_unit_id)
         .literal_path("cwas")
         .json(http::JsonMedia::GeoJson)
@@ -74,7 +75,7 @@ pub async fn get_center_weather_advisories(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `center_weather_service_unit_id`: The ID of the Center Weather Service Unit (CWSU).
 ///
 /// # Returns
@@ -86,10 +87,10 @@ pub async fn get_center_weather_advisories(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_center_weather_service_unit(
-    configuration: &configuration::Configuration,
+    client: &Client,
     center_weather_service_unit_id: models::NwsCenterWeatherServiceUnitId,
 ) -> Result<models::CwsuOffice, Error> {
-    http::request(configuration, "/aviation/cwsus")
+    http::request(client, "/aviation/cwsus")
         .path_segment(center_weather_service_unit_id)
         .json(http::JsonMedia::JsonLd)
         .await
@@ -101,7 +102,7 @@ pub async fn get_center_weather_service_unit(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `air_traffic_service_unit`: The identifier of the issuing Air Traffic Service Unit (ATSU).
 /// * `date`: The date of issuance in `YYYY-MM-DD` format.
 /// * `time`: The time of issuance in `HHMM` format (UTC).
@@ -114,12 +115,12 @@ pub async fn get_center_weather_service_unit(
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_sigmet(
-    configuration: &configuration::Configuration,
+    client: &Client,
     air_traffic_service_unit: &str,
     date: String,
     time: &str,
 ) -> Result<models::SigmetGeoJson, Error> {
-    http::request(configuration, "/aviation/sigmets")
+    http::request(client, "/aviation/sigmets")
         .path_segment(air_traffic_service_unit)
         .path_segment(date)
         .path_segment(time)
@@ -133,7 +134,7 @@ pub async fn get_sigmet(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `start`: Optional start time for the query period (ISO 8601 format).
 /// * `end`: Optional end time for the query period (ISO 8601 format).
 /// * `date`: Optional date filter (`YYYY-MM-DD` format).
@@ -148,14 +149,14 @@ pub async fn get_sigmet(
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_sigmets(
-    configuration: &configuration::Configuration,
+    client: &Client,
     start: Option<String>,
     end: Option<String>,
     date: Option<String>,
     air_traffic_service_unit: Option<&str>,
     sequence: Option<&str>,
 ) -> Result<models::SigmetCollectionGeoJson, Error> {
-    http::request(configuration, "/aviation/sigmets")
+    http::request(client, "/aviation/sigmets")
         .query_scalar("start", start)
         .query_scalar("end", end)
         .query_scalar("date", date)
@@ -171,7 +172,7 @@ pub async fn get_sigmets(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `air_traffic_service_unit`: The identifier of the Air Traffic Service Unit (ATSU).
 ///
 /// # Returns
@@ -182,10 +183,10 @@ pub async fn get_sigmets(
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_sigmets_by_air_traffic_service_unit(
-    configuration: &configuration::Configuration,
+    client: &Client,
     air_traffic_service_unit: &str,
 ) -> Result<models::SigmetCollectionGeoJson, Error> {
-    http::request(configuration, "/aviation/sigmets")
+    http::request(client, "/aviation/sigmets")
         .path_segment(air_traffic_service_unit)
         .json(http::JsonMedia::GeoJson)
         .await
@@ -197,7 +198,7 @@ pub async fn get_sigmets_by_air_traffic_service_unit(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `air_traffic_service_unit`: The identifier of the Air Traffic Service Unit (ATSU).
 /// * `date`: The date filter in `YYYY-MM-DD` format.
 ///
@@ -209,11 +210,11 @@ pub async fn get_sigmets_by_air_traffic_service_unit(
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_sigmets_by_air_traffic_service_unit_and_date(
-    configuration: &configuration::Configuration,
+    client: &Client,
     air_traffic_service_unit: &str,
     date: String,
 ) -> Result<models::SigmetCollectionGeoJson, Error> {
-    http::request(configuration, "/aviation/sigmets")
+    http::request(client, "/aviation/sigmets")
         .path_segment(air_traffic_service_unit)
         .path_segment(date)
         .json(http::JsonMedia::GeoJson)
@@ -231,11 +232,7 @@ mod tests {
         get_center_weather_advisories_by_date_and_sequence, get_center_weather_service_unit,
         get_sigmet, get_sigmets,
     };
-    use crate::{apis::configuration::Configuration, models::NwsCenterWeatherServiceUnitId};
-
-    fn configuration(server: &MockServer) -> Configuration {
-        Configuration::new(None, Some(server.uri()), None, None)
-    }
+    use crate::{client::test_support::client_for, models::NwsCenterWeatherServiceUnitId};
 
     #[tokio::test]
     async fn sigmet_identifiers_date_and_time_are_distinct_encoded_geo_json_segments() {
@@ -254,7 +251,7 @@ mod tests {
             .await;
 
         get_sigmet(
-            &configuration(&server),
+            &client_for(&server),
             "WA/FC 1",
             "2026/08 30".to_owned(),
             "12:30/Z",
@@ -278,7 +275,7 @@ mod tests {
             .await;
 
         get_center_weather_advisories_by_date_and_sequence(
-            &configuration(&server),
+            &client_for(&server),
             NwsCenterWeatherServiceUnitId::Zab,
             "2026/08 30".to_owned(),
             101,
@@ -298,12 +295,9 @@ mod tests {
             .mount(&server)
             .await;
 
-        get_center_weather_service_unit(
-            &configuration(&server),
-            NwsCenterWeatherServiceUnitId::Zab,
-        )
-        .await
-        .unwrap();
+        get_center_weather_service_unit(&client_for(&server), NwsCenterWeatherServiceUnitId::Zab)
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
@@ -321,7 +315,7 @@ mod tests {
             .await;
 
         get_sigmets(
-            &configuration(&server),
+            &client_for(&server),
             Some("2026-08-30T00:00:00+00:00".to_owned()),
             None,
             Some(String::new()),

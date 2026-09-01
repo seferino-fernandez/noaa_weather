@@ -1,50 +1,57 @@
+//! The private request contract and response pipeline.
+//!
+//! Endpoint modules describe a request with [`request`] and finish it with a
+//! media-typed terminal (`json`, `xml`, `binary`). Everything between — the
+//! retry loop, manual redirects, the body size cap, and content-type
+//! validation — is owned here so that each endpoint stays a thin mapping.
+
 use std::{fmt, fmt::Write as _};
 
-use bytes::Bytes;
+use bytes::{Bytes, BytesMut};
+use jiff::Timestamp;
 use mime::Mime;
-use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
-use reqwest::header::{ACCEPT, CONTENT_TYPE, HeaderValue};
+use reqwest::{
+    StatusCode,
+    header::{CONTENT_TYPE, HeaderMap, HeaderValue, RETRY_AFTER},
+};
 use serde::de::DeserializeOwned;
+use tracing::Instrument as _;
 use url::Url;
 
-use super::{BinaryPayload, Error, ProtocolError, ResponseContent, configuration::Configuration};
+use super::{
+    Client, Inner,
+    redirect::{self, HopError, HopHeaders},
+    retry,
+    secret::Secret,
+};
+use crate::apis::{BinaryPayload, Error, ProtocolError, ResponseContent};
 
-const API_KEY_HEADER: &str = "X-Api-Key";
-const FEATURE_FLAGS_HEADER: &str = "Feature-Flags";
-
-// WHATWG path-segment escaping for special URLs. Backslash must be escaped in
-// addition to the normal path-segment set because HTTPS treats it as a path
-// separator.
-const FRAGMENT_ENCODE_SET: &AsciiSet = &CONTROLS.add(b' ').add(b'"').add(b'<').add(b'>').add(b'`');
-const PATH_ENCODE_SET: &AsciiSet = &FRAGMENT_ENCODE_SET.add(b'#').add(b'?').add(b'{').add(b'}');
-const SPECIAL_PATH_SEGMENT_ENCODE_SET: &AsciiSet = &PATH_ENCODE_SET.add(b'/').add(b'%').add(b'\\');
+const CORRELATION_ID_HEADER: &str = "X-Correlation-Id";
+const REQUEST_ID_HEADER: &str = "X-Request-Id";
 
 /// Begins a GET request whose request-contract mechanics are owned here.
-pub(crate) fn request<'configuration>(
-    configuration: &'configuration Configuration,
+pub(crate) fn request<'client>(
+    client: &'client Client,
     literal_path: &'static str,
-) -> ContractRequest<'configuration> {
-    let mut url = configuration.base_path.trim_end_matches('/').to_owned();
-    append_literal_path(&mut url, literal_path);
-    ContractRequest {
-        configuration,
-        target: match Url::parse(&url) {
-            Ok(parsed)
-                if matches!(parsed.scheme(), "http" | "https") && !parsed.cannot_be_a_base() =>
-            {
-                RequestTarget::Parsed(parsed)
-            }
-            _ => RequestTarget::Invalid(url),
-        },
+) -> ContractRequest<'client> {
+    let mut url = client.base_url().clone();
+    url.path_segments_mut()
+        .expect("validated base URLs support path segments")
+        .pop_if_empty();
+    let mut request = ContractRequest {
+        client,
+        url,
         value_buffer: None,
         feature_flags: None,
-    }
+    };
+    request.append_literal_path(literal_path);
+    request
 }
 
 /// A private request contract assembled before a reqwest request is created.
-pub(crate) struct ContractRequest<'configuration> {
-    configuration: &'configuration Configuration,
-    target: RequestTarget,
+pub(crate) struct ContractRequest<'client> {
+    client: &'client Client,
+    url: Url,
     value_buffer: Option<String>,
     feature_flags: Option<String>,
 }
@@ -52,19 +59,26 @@ pub(crate) struct ContractRequest<'configuration> {
 impl ContractRequest<'_> {
     /// Appends a trusted, compile-time path component without escaping it.
     pub(crate) fn literal_path(mut self, literal: &'static str) -> Self {
-        self.target.append_literal_path(literal);
+        self.append_literal_path(literal);
         self
     }
 
     /// Appends one untrusted dynamic path segment with special-URL escaping.
     pub(crate) fn path_segment(mut self, segment: impl fmt::Display) -> Self {
         let ContractRequest {
-            target,
-            value_buffer,
-            ..
+            url, value_buffer, ..
         } = &mut self;
         let segment = render_display(value_buffer, segment);
-        target.append_path_segment(segment);
+        // URL setters ignore dot segments. Supplying a percent-encoded dot
+        // makes the setter encode `%` and retain one opaque segment.
+        let segment = match segment {
+            "." => "%2E",
+            ".." => "%2E%2E",
+            segment => segment,
+        };
+        url.path_segments_mut()
+            .expect("HTTP URLs always support path segments")
+            .push(segment);
         self
     }
 
@@ -76,12 +90,10 @@ impl ContractRequest<'_> {
     ) -> Self {
         if let Some(value) = value {
             let ContractRequest {
-                target,
-                value_buffer,
-                ..
+                url, value_buffer, ..
             } = &mut self;
             let value = render_display(value_buffer, value);
-            target.append_query_pair(name, value);
+            url.query_pairs_mut().append_pair(name, value);
         }
         self
     }
@@ -94,9 +106,7 @@ impl ContractRequest<'_> {
     {
         if let Some(values) = values {
             let ContractRequest {
-                target,
-                value_buffer,
-                ..
+                url, value_buffer, ..
             } = &mut self;
             let value_buffer = value_buffer.get_or_insert_with(|| String::with_capacity(256));
             value_buffer.clear();
@@ -106,7 +116,7 @@ impl ContractRequest<'_> {
                 }
                 write!(value_buffer, "{value}").expect("writing to String cannot fail");
             }
-            target.append_query_pair(name, value_buffer);
+            url.query_pairs_mut().append_pair(name, value_buffer);
         }
         self
     }
@@ -155,95 +165,21 @@ impl ContractRequest<'_> {
         })
     }
 
-    fn into_builder(self, accept: &'static str) -> reqwest::RequestBuilder {
-        let mut request = self
-            .target
-            .into_builder(self.configuration)
-            .header(ACCEPT, accept);
-        if let Some(feature_flags) = self.feature_flags {
-            request = request.header(FEATURE_FLAGS_HEADER, feature_flags);
+    fn append_literal_path(&mut self, literal: &'static str) {
+        let literal = literal.trim_matches('/');
+        if !literal.is_empty() {
+            self.url
+                .path_segments_mut()
+                .expect("HTTP URLs always support path segments")
+                .extend(literal.split('/'));
         }
-        request
     }
 
     async fn send(self, accept: &'static str) -> Result<ReceivedResponse, Error> {
-        receive(self.into_builder(accept)).await
-    }
-}
-
-enum RequestTarget {
-    Parsed(Url),
-    Invalid(String),
-}
-
-impl RequestTarget {
-    fn append_literal_path(&mut self, literal: &'static str) {
-        match self {
-            Self::Parsed(url) => {
-                let literal = literal.trim_matches('/');
-                if !literal.is_empty() {
-                    url.path_segments_mut()
-                        .expect("HTTP URLs always support path segments")
-                        .extend(literal.split('/'));
-                }
-            }
-            Self::Invalid(url) => append_literal_path(url, literal),
-        }
-    }
-
-    fn append_path_segment(&mut self, segment: &str) {
-        match self {
-            Self::Parsed(url) => {
-                // URL setters ignore dot segments. Supplying a percent-encoded
-                // dot makes the setter encode `%` and retain one opaque segment.
-                let segment = match segment {
-                    "." => "%2E",
-                    ".." => "%2E%2E",
-                    segment => segment,
-                };
-                url.path_segments_mut()
-                    .expect("HTTP URLs always support path segments")
-                    .push(segment);
-            }
-            Self::Invalid(url) => {
-                url.push('/');
-                let segment_start = url.len();
-                write!(EncodedPathSegment(url), "{segment}")
-                    .expect("writing to String cannot fail");
-                let dot_count = match &url[segment_start..] {
-                    "." => 1,
-                    ".." => 2,
-                    _ => 0,
-                };
-                if dot_count != 0 {
-                    url.truncate(segment_start);
-                    for _ in 0..dot_count {
-                        url.push_str("%252E");
-                    }
-                }
-            }
-        }
-    }
-
-    fn append_query_pair(&mut self, name: &str, value: &str) {
-        match self {
-            Self::Parsed(url) => {
-                url.query_pairs_mut().append_pair(name, value);
-            }
-            Self::Invalid(url) => {
-                url.push(if url.contains('?') { '&' } else { '?' });
-                url.extend(url::form_urlencoded::byte_serialize(name.as_bytes()));
-                url.push('=');
-                url.extend(url::form_urlencoded::byte_serialize(value.as_bytes()));
-            }
-        }
-    }
-
-    fn into_builder(self, configuration: &Configuration) -> reqwest::RequestBuilder {
-        match self {
-            Self::Parsed(url) => configured_get(configuration, url),
-            Self::Invalid(url) => configured_get(configuration, url),
-        }
+        let feature_flags = self.feature_flags.as_deref().map(|flags| {
+            HeaderValue::from_str(flags).expect("feature flags are a closed ASCII set")
+        });
+        execute(self.client.inner(), self.url, accept, feature_flags).await
     }
 }
 
@@ -252,24 +188,6 @@ fn render_display<T: fmt::Display>(buffer: &mut Option<String>, value: T) -> &st
     buffer.clear();
     write!(buffer, "{value}").expect("writing to String cannot fail");
     buffer
-}
-
-fn append_literal_path(url: &mut String, literal: &'static str) {
-    let literal = literal.trim_matches('/');
-    if !literal.is_empty() {
-        url.push('/');
-        url.push_str(literal);
-    }
-}
-
-struct EncodedPathSegment<'url>(&'url mut String);
-
-impl fmt::Write for EncodedPathSegment<'_> {
-    fn write_str(&mut self, value: &str) -> fmt::Result {
-        self.0
-            .extend(utf8_percent_encode(value, SPECIAL_PATH_SEGMENT_ENCODE_SET));
-        Ok(())
-    }
 }
 
 fn csv<I, T>(values: I) -> String
@@ -352,55 +270,6 @@ impl XmlMedia {
     }
 }
 
-fn configured_get(
-    configuration: &Configuration,
-    url: impl reqwest::IntoUrl,
-) -> reqwest::RequestBuilder {
-    let mut request = configuration.client.get(url);
-    if let Some(user_agent) = &configuration.user_agent {
-        request = request.header(reqwest::header::USER_AGENT, user_agent);
-    }
-    if let Some(api_key) = &configuration.api_key {
-        request = request.header(API_KEY_HEADER, api_key);
-    }
-    request
-}
-
-async fn receive(request: reqwest::RequestBuilder) -> Result<ReceivedResponse, Error> {
-    let response = request.send().await?;
-    let status = response.status();
-    let url = response.url().clone();
-    let content_type = response.headers().get(CONTENT_TYPE).cloned();
-    let bytes = response.bytes().await?;
-
-    if status.is_success() {
-        return Ok(ReceivedResponse {
-            bytes,
-            content_type,
-            url,
-        });
-    }
-
-    let parsed_content_type = content_type
-        .as_ref()
-        .and_then(|value| value.to_str().ok())
-        .and_then(|value| value.parse().ok());
-    let problem_detail = serde_json::from_slice(&bytes).ok();
-    Err(Error::Response(Box::new(ResponseContent {
-        bytes,
-        status,
-        url,
-        problem_detail,
-        content_type: parsed_content_type,
-    })))
-}
-
-struct ReceivedResponse {
-    bytes: Bytes,
-    content_type: Option<HeaderValue>,
-    url: Url,
-}
-
 #[derive(Clone, Copy)]
 pub(crate) enum BinaryMedia {
     Pdf,
@@ -427,6 +296,222 @@ impl BinaryMedia {
             Self::Image => content_type.type_() == mime::IMAGE,
         }
     }
+}
+
+/// A complete response with a success status.
+struct ReceivedResponse {
+    bytes: Bytes,
+    content_type: Option<HeaderValue>,
+    url: Url,
+}
+
+/// One attempt's fully read response, before status classification.
+struct RawResponse {
+    status: StatusCode,
+    url: Url,
+    bytes: Bytes,
+    content_type: Option<HeaderValue>,
+    retry_after: Option<std::time::Duration>,
+    correlation_id: Option<Box<str>>,
+    request_id: Option<Box<str>>,
+}
+
+/// Why one attempt ended without a complete response.
+enum AttemptError {
+    /// A transport failure; retried when transient.
+    Transport(reqwest::Error),
+    /// A redirect or size-cap violation; never retried.
+    Protocol(Box<ProtocolError>),
+}
+
+impl From<HopError> for AttemptError {
+    fn from(error: HopError) -> Self {
+        match error {
+            HopError::Transport(source) => Self::Transport(source),
+            HopError::Redirect(error) => Self::Protocol(error),
+        }
+    }
+}
+
+/// Runs the retry loop around single attempts until success or a final error.
+async fn execute(
+    inner: &Inner,
+    url: Url,
+    accept: &'static str,
+    feature_flags: Option<HeaderValue>,
+) -> Result<ReceivedResponse, Error> {
+    let headers = HopHeaders {
+        accept,
+        feature_flags: feature_flags.as_ref(),
+        api_key: inner.api_key.as_ref().map(Secret::expose),
+    };
+    let mut attempt: u8 = 1;
+    loop {
+        let span = tracing::debug_span!(
+            "noaa_weather.request",
+            method = "GET",
+            url = %url,
+            attempt
+        );
+        let outcome = attempt_once(inner, &url, headers).instrument(span).await;
+        let retry = match &outcome {
+            Ok(raw) if raw.status.is_success() => None,
+            Ok(raw) if retry::retryable_status(raw.status) => {
+                Some((RetryReason::Status(raw.status), raw.retry_after))
+            }
+            Err(AttemptError::Transport(source)) if retry::retryable_transport(source) => {
+                Some((RetryReason::Transport, None))
+            }
+            Ok(_) | Err(_) => None,
+        };
+
+        if let Some((reason, retry_after)) = retry
+            && let Some(delay) = inner.retry.delay_before_retry(attempt, retry_after)
+        {
+            tracing::warn!(
+                attempt,
+                delay_ms = u64::try_from(delay.as_millis()).unwrap_or(u64::MAX),
+                reason = %reason,
+                "retrying NOAA request"
+            );
+            tokio::time::sleep(delay).await;
+            attempt += 1;
+            continue;
+        }
+
+        return match outcome {
+            Ok(raw) if raw.status.is_success() => Ok(ReceivedResponse {
+                bytes: raw.bytes,
+                content_type: raw.content_type,
+                url: raw.url,
+            }),
+            Ok(raw) => Err(response_error(raw, attempt)),
+            Err(AttemptError::Transport(source)) => Err(Error::Transport {
+                source,
+                attempts: attempt,
+            }),
+            Err(AttemptError::Protocol(error)) => Err(Error::Protocol(error)),
+        };
+    }
+}
+
+enum RetryReason {
+    Status(StatusCode),
+    Transport,
+}
+
+impl fmt::Display for RetryReason {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Status(status) => write!(formatter, "HTTP {status}"),
+            Self::Transport => formatter.write_str("transport failure"),
+        }
+    }
+}
+
+/// Follows redirects, records response metadata, and reads the body under
+/// the size cap.
+async fn attempt_once(
+    inner: &Inner,
+    url: &Url,
+    headers: HopHeaders<'_>,
+) -> Result<RawResponse, AttemptError> {
+    let response = redirect::follow(&inner.http, url.clone(), headers).await?;
+    let status = response.status();
+    let final_url = response.url().clone();
+    tracing::debug!(status = status.as_u16(), url = %final_url, "received response");
+    let response_headers = response.headers();
+    let content_type = response_headers.get(CONTENT_TYPE).cloned();
+    let retry_after = response_headers
+        .get(RETRY_AFTER)
+        .and_then(|value| retry::parse_retry_after(value, Timestamp::now()));
+    let correlation_id = header_text(response_headers, CORRELATION_ID_HEADER);
+    let request_id = header_text(response_headers, REQUEST_ID_HEADER);
+    let bytes = read_body(response, inner.max_response_bytes, &final_url).await?;
+    Ok(RawResponse {
+        status,
+        url: final_url,
+        bytes,
+        content_type,
+        retry_after,
+        correlation_id,
+        request_id,
+    })
+}
+
+fn header_text(headers: &HeaderMap, name: &'static str) -> Option<Box<str>> {
+    headers
+        .get(name)
+        .and_then(|value| value.to_str().ok())
+        .map(Box::from)
+}
+
+/// Buffers the body, refusing to exceed `limit` bytes after decompression.
+async fn read_body(
+    mut response: reqwest::Response,
+    limit: usize,
+    url: &Url,
+) -> Result<Bytes, AttemptError> {
+    let too_large = || {
+        AttemptError::Protocol(Box::new(ProtocolError::ResponseTooLarge {
+            limit,
+            url: url.clone(),
+        }))
+    };
+    let declared = response.content_length();
+    if declared.is_some_and(|length| length > u64::try_from(limit).unwrap_or(u64::MAX)) {
+        return Err(too_large());
+    }
+
+    let mut first: Option<Bytes> = None;
+    let mut buffer: Option<BytesMut> = None;
+    while let Some(chunk) = response.chunk().await.map_err(AttemptError::Transport)? {
+        let received = first.as_ref().map_or(0, Bytes::len)
+            + buffer.as_ref().map_or(0, BytesMut::len)
+            + chunk.len();
+        if received > limit {
+            return Err(too_large());
+        }
+        match (&mut first, &mut buffer) {
+            (None, None) => first = Some(chunk),
+            (Some(_), None) => {
+                let capacity = declared
+                    .and_then(|length| usize::try_from(length).ok())
+                    .unwrap_or(received)
+                    .min(limit);
+                let mut combined = BytesMut::with_capacity(capacity);
+                combined.extend_from_slice(first.take().as_deref().unwrap_or_default());
+                combined.extend_from_slice(&chunk);
+                buffer = Some(combined);
+            }
+            (_, Some(combined)) => combined.extend_from_slice(&chunk),
+        }
+    }
+    Ok(match (first, buffer) {
+        (_, Some(combined)) => combined.freeze(),
+        (Some(single), None) => single,
+        (None, None) => Bytes::new(),
+    })
+}
+
+fn response_error(raw: RawResponse, attempts: u8) -> Error {
+    let parsed_content_type = raw
+        .content_type
+        .as_ref()
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.parse().ok());
+    let problem_detail = serde_json::from_slice(&raw.bytes).ok();
+    Error::Response(Box::new(ResponseContent {
+        bytes: raw.bytes,
+        status: raw.status,
+        url: raw.url,
+        problem_detail,
+        content_type: parsed_content_type,
+        retry_after: raw.retry_after,
+        correlation_id: raw.correlation_id,
+        request_id: raw.request_id,
+        attempts,
+    }))
 }
 
 fn ensure_content_type(
@@ -481,8 +566,9 @@ mod tests {
         time::Instant,
     };
 
-    use reqwest::{Client, redirect::Policy};
+    use reqwest::header::HeaderValue;
     use stats_alloc::{INSTRUMENTED_SYSTEM, Region, Stats};
+    use url::Url;
     use wiremock::{
         Mock, MockServer, ResponseTemplate,
         matchers::{header, method, path},
@@ -490,12 +576,16 @@ mod tests {
 
     #[cfg(feature = "xml")]
     use super::XmlMedia;
-    use super::{BinaryMedia, FeatureFlag, JsonMedia, configured_get, request};
+    use super::{BinaryMedia, FeatureFlag, JsonMedia, request};
     #[cfg(feature = "radio")]
     use crate::apis::radio;
     use crate::{
-        Error, ProtocolError,
-        apis::{alerts, configuration::Configuration},
+        Client, Error, ProtocolError,
+        apis::alerts,
+        client::{
+            redirect::{HopHeaders, hop_request},
+            test_support::{USER_AGENT, builder_for, client_for, client_with_base},
+        },
     };
 
     thread_local! {
@@ -577,8 +667,9 @@ mod tests {
     }
 
     const ALERT_TYPES: &str = r#"{"eventTypes":["Test Warning"]}"#;
-    fn configuration(server: &MockServer, suffix: &str) -> Configuration {
-        Configuration::new(None, Some(format!("{}{suffix}", server.uri())), None, None)
+
+    fn client(server: &MockServer, suffix: &str) -> Client {
+        client_with_base(format!("{}{suffix}", server.uri()))
     }
 
     #[tokio::test]
@@ -596,13 +687,12 @@ mod tests {
             .mount(&server)
             .await;
 
-        let config = Configuration::new(
-            Some("foundation-tests/1.0".to_owned()),
-            Some(format!("{}/wiremock/prefix", server.uri())),
-            None,
-            Some("secret".to_owned()),
-        );
-        let response = alerts::get_alert_types(&config).await.unwrap();
+        let client = Client::builder("foundation-tests/1.0")
+            .base_url(format!("{}/wiremock/prefix", server.uri()))
+            .api_key("secret")
+            .build()
+            .unwrap();
+        let response = alerts::get_alert_types(&client).await.unwrap();
         assert_eq!(response.event_types.unwrap(), ["Test Warning"]);
     }
 
@@ -618,27 +708,34 @@ mod tests {
             .mount(&server)
             .await;
 
-        let config = configuration(&server, "/prefix/");
-        alerts::get_alert_types(&config).await.unwrap();
+        alerts::get_alert_types(&client(&server, "/prefix/"))
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
-    async fn response_error_keeps_typed_problem_and_raw_body() {
+    async fn response_error_keeps_typed_problem_raw_body_and_tracing_ids() {
         let server = MockServer::start().await;
         let problem = r#"{"type":"urn:test","title":"Bad point","status":400,"detail":"outside forecast area","instance":"urn:instance","correlationId":"abc-123"}"#;
         Mock::given(path("/alerts/types"))
             .respond_with(
                 ResponseTemplate::new(400)
                     .set_body_string(problem)
-                    .insert_header("Content-Type", "text/plain"),
+                    .insert_header("Content-Type", "text/plain")
+                    .insert_header("X-Correlation-Id", "abc-123")
+                    .insert_header("X-Request-Id", "req-9"),
             )
             .mount(&server)
             .await;
 
-        let Error::Response(response) = alerts::get_alert_types(&configuration(&server, ""))
+        let error = alerts::get_alert_types(&client_for(&server))
             .await
-            .unwrap_err()
-        else {
+            .unwrap_err();
+        assert_eq!(error.status().map(|status| status.as_u16()), Some(400));
+        assert_eq!(error.attempts(), 1);
+        assert!(!error.is_retryable());
+        assert_eq!(error.problem().unwrap().title, "Bad point");
+        let Error::Response(response) = error else {
             panic!("expected response error");
         };
         assert_eq!(response.status(), 400);
@@ -647,6 +744,9 @@ mod tests {
         assert_eq!(response.content_type().unwrap(), &mime::TEXT_PLAIN);
         assert_eq!(response.problem_detail().unwrap().title, "Bad point");
         assert_eq!(response.url().path(), "/alerts/types");
+        assert_eq!(response.correlation_id(), Some("abc-123"));
+        assert_eq!(response.request_id(), Some("req-9"));
+        assert_eq!(response.retry_after(), None);
     }
 
     #[tokio::test]
@@ -658,15 +758,18 @@ mod tests {
             .mount(&server)
             .await;
 
-        let Error::Response(response) = alerts::get_alert_types(&configuration(&server, ""))
+        let error = alerts::get_alert_types(&client_for(&server))
             .await
-            .unwrap_err()
-        else {
+            .unwrap_err();
+        assert!(error.is_retryable());
+        assert_eq!(error.attempts(), 1);
+        let Error::Response(response) = error else {
             panic!("expected response error");
         };
         assert_eq!(response.as_bytes(), body);
         assert!(response.problem_detail().is_none());
         assert!(response.content_type().is_none());
+        assert!(response.correlation_id().is_none());
         assert!(response.text().contains('\u{fffd}'));
     }
 
@@ -679,7 +782,7 @@ mod tests {
             .mount(&server)
             .await;
         assert!(matches!(
-            alerts::get_alert_types(&configuration(&server, "")).await,
+            alerts::get_alert_types(&client_for(&server)).await,
             Err(Error::Json(_))
         ));
 
@@ -691,7 +794,7 @@ mod tests {
             .mount(&server)
             .await;
         assert!(matches!(
-            radio::get_area_radio(&configuration(&server, ""), "KEC94").await,
+            radio::get_area_radio(&client_for(&server), "KEC94").await,
             Err(Error::Xml(_))
         ));
     }
@@ -715,7 +818,7 @@ mod tests {
                 .mount(&server)
                 .await;
 
-            let Error::Protocol(protocol) = alerts::get_alert_types(&configuration(&server, ""))
+            let Error::Protocol(protocol) = alerts::get_alert_types(&client_for(&server))
                 .await
                 .unwrap_err()
             else {
@@ -727,7 +830,7 @@ mod tests {
                 | ("incompatible", ProtocolError::IncompatibleContentType { .. }) => {}
                 _ => panic!("unexpected protocol error: {protocol:?}"),
             }
-            assert_eq!(protocol.expected(), "application/ld+json");
+            assert_eq!(protocol.expected(), Some("application/ld+json"));
             assert_eq!(protocol.url().path(), "/alerts/types");
         }
     }
@@ -748,7 +851,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let payload = request(&configuration(&server, ""), "/document")
+        let payload = request(&client_for(&server), "/document")
             .binary(BinaryMedia::Pdf)
             .await
             .unwrap();
@@ -773,7 +876,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let payload = request(&configuration(&server, ""), "/map")
+        let payload = request(&client_for(&server), "/map")
             .binary(BinaryMedia::Image)
             .await
             .unwrap();
@@ -785,25 +888,58 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn no_follow_redirect_is_a_response_error() {
+    async fn redirect_error_url_is_reported_after_all_hops_and_never_retried() {
         let server = MockServer::start().await;
         Mock::given(path("/alerts/types"))
-            .respond_with(
-                ResponseTemplate::new(302)
-                    .insert_header("Location", "/elsewhere")
-                    .set_body_string("redirecting"),
-            )
+            .respond_with(ResponseTemplate::new(302).insert_header("Location", "/moved"))
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(path("/moved"))
+            .respond_with(ResponseTemplate::new(307).set_body_string("no location"))
+            .expect(1)
             .mount(&server)
             .await;
 
-        let client = Client::builder().redirect(Policy::none()).build().unwrap();
-        let config = Configuration::new(None, Some(server.uri()), Some(client), None);
-        let Error::Response(response) = alerts::get_alert_types(&config).await.unwrap_err() else {
-            panic!("expected response error");
+        let client = builder_for(&server)
+            .retry(crate::RetryPolicy::default().base_delay(std::time::Duration::from_millis(1)))
+            .build()
+            .unwrap();
+        let error = alerts::get_alert_types(&client).await.unwrap_err();
+        assert!(!error.is_retryable());
+        assert_eq!(error.attempts(), 1);
+        let Error::Protocol(protocol) = error else {
+            panic!("expected protocol error");
         };
-        assert_eq!(response.status(), 302);
-        assert_eq!(response.url().path(), "/alerts/types");
-        assert_eq!(response.as_bytes(), b"redirecting");
+        assert!(matches!(
+            protocol.as_ref(),
+            ProtocolError::Redirect {
+                reason: crate::apis::RedirectReason::MissingLocation,
+                ..
+            }
+        ));
+        assert_eq!(protocol.url().path(), "/moved");
+        assert_eq!(protocol.expected(), None);
+        assert_eq!(protocol.actual(), None);
+    }
+
+    #[tokio::test]
+    async fn error_bodies_are_subject_to_the_size_cap() {
+        let server = MockServer::start().await;
+        Mock::given(path("/alerts/types"))
+            .respond_with(ResponseTemplate::new(500).set_body_bytes(vec![b'x'; 64]))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let client = builder_for(&server).max_response_bytes(16).build().unwrap();
+        let error = alerts::get_alert_types(&client).await.unwrap_err();
+        assert!(!error.is_retryable());
+        assert!(matches!(
+            error,
+            Error::Protocol(ref protocol)
+                if matches!(protocol.as_ref(), ProtocolError::ResponseTooLarge { limit: 16, .. })
+        ));
     }
 
     #[tokio::test]
@@ -815,7 +951,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        request(&configuration(&server, "/prefix"), "/stations")
+        request(&client(&server, "/prefix"), "/stations")
             .literal_path("observations")
             .path_segment(r"space slash/percent%question?#braces{}backslash\")
             .json::<serde_json::Value>(JsonMedia::GeoJson)
@@ -837,10 +973,10 @@ mod tests {
             .expect(3)
             .mount(&server)
             .await;
-        let config = configuration(&server, "");
+        let client = client_for(&server);
 
         for segment in ["", ".", ".."] {
-            request(&config, "/stations")
+            request(&client, "/stations")
                 .path_segment(segment)
                 .literal_path("observations")
                 .json::<serde_json::Value>(JsonMedia::GeoJson)
@@ -874,7 +1010,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        request(&configuration(&server, ""), "/test")
+        request(&client_for(&server), "/test")
             .query_scalar::<&str>("omitted", None)
             .query_scalar("empty", Some(""))
             .query_scalar("value", Some("space,slash/value"))
@@ -898,7 +1034,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        request(&configuration(&server, ""), "/test")
+        request(&client_for(&server), "/test")
             .query_csv::<[&str; 0], &str>("omitted", None)
             .query_csv("empty", Some([] as [&str; 0]))
             .query_csv("event", Some(["Flood Watch", "Wind/Warning"]))
@@ -935,7 +1071,7 @@ mod tests {
                 .mount(&server)
                 .await;
 
-            request(&configuration(&server, ""), "/media")
+            request(&client_for(&server), "/media")
                 .json::<serde_json::Value>(media)
                 .await
                 .unwrap();
@@ -957,7 +1093,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        request(&configuration(&server, ""), "/media")
+        request(&client_for(&server), "/media")
             .xml::<Document>(XmlMedia::Iwxxm)
             .await
             .unwrap();
@@ -981,7 +1117,7 @@ mod tests {
                 .mount(&server)
                 .await;
 
-            request(&configuration(&server, ""), "/media")
+            request(&client_for(&server), "/media")
                 .binary(media)
                 .await
                 .unwrap();
@@ -996,7 +1132,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let Error::Protocol(protocol) = request(&configuration(&server, ""), "/media")
+        let Error::Protocol(protocol) = request(&client_for(&server), "/media")
             .json::<serde_json::Value>(JsonMedia::GeoJson)
             .await
             .unwrap_err()
@@ -1007,30 +1143,25 @@ mod tests {
             protocol.as_ref(),
             ProtocolError::IncompatibleContentType { .. }
         ));
-        assert_eq!(protocol.expected(), "application/geo+json");
+        assert_eq!(protocol.expected(), Some("application/geo+json"));
     }
 
     #[tokio::test]
-    async fn contract_invalid_url_remains_a_transport_error() {
-        let config = Configuration::new(None, Some("not a url".to_owned()), None, None);
-        assert!(matches!(
-            request(&config, "/media")
-                .json::<serde_json::Value>(JsonMedia::GeoJson)
-                .await,
-            Err(Error::Transport(_))
-        ));
-    }
+    async fn connection_refused_is_a_transport_error_with_attempt_count() {
+        // Bind and immediately drop a listener so the port is closed.
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        drop(listener);
 
-    #[tokio::test]
-    async fn non_http_base_with_a_dynamic_path_remains_a_transport_error() {
-        let config = Configuration::new(None, Some("mailto:test".to_owned()), None, None);
-        assert!(matches!(
-            request(&config, "/stations")
-                .path_segment("KPHX")
-                .json::<serde_json::Value>(JsonMedia::GeoJson)
-                .await,
-            Err(Error::Transport(_))
-        ));
+        let client = client_with_base(format!("http://{address}"));
+        let error = request(&client, "/media")
+            .json::<serde_json::Value>(JsonMedia::GeoJson)
+            .await
+            .unwrap_err();
+        assert!(error.is_retryable(), "{error}");
+        assert_eq!(error.attempts(), 1);
+        assert!(matches!(error, Error::Transport { attempts: 1, .. }));
+        assert!(error.status().is_none());
     }
 
     #[tokio::test]
@@ -1043,14 +1174,13 @@ mod tests {
             .expect(1)
             .mount(&server)
             .await;
-        let config = Configuration::new(
-            Some("contract-tests/1.0".to_owned()),
-            Some(server.uri()),
-            None,
-            Some("secret".to_owned()),
-        );
+        let client = Client::builder("contract-tests/1.0")
+            .base_url(server.uri())
+            .api_key("secret")
+            .build()
+            .unwrap();
 
-        request(&config, "/media")
+        request(&client, "/media")
             .json::<serde_json::Value>(JsonMedia::GeoJson)
             .await
             .unwrap();
@@ -1065,7 +1195,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        request(&configuration(&server, ""), "/forecast")
+        request(&client_for(&server), "/forecast")
             .feature_flags([
                 FeatureFlag::ForecastTemperatureQuantitativeValue,
                 FeatureFlag::ForecastWindSpeedQuantitativeValue,
@@ -1079,11 +1209,15 @@ mod tests {
             requests[0].headers["Feature-Flags"].to_str().unwrap(),
             "forecast_temperature_qv,forecast_wind_speed_qv"
         );
+        assert_eq!(
+            requests[0].headers["User-Agent"].to_str().unwrap(),
+            USER_AGENT
+        );
     }
 
     // Run with:
     // cargo test -p noaa_weather_client --all-features --release \
-    //   apis::http::tests::request_construction_benchmark -- \
+    //   client::http::tests::request_construction_benchmark -- \
     //   --ignored --exact --nocapture --test-threads=1
     #[test]
     #[ignore = "manual allocation and timing acceptance benchmark"]
@@ -1099,17 +1233,15 @@ mod tests {
             "Tornado Warning",
         ];
 
-        let config = Configuration::new(
-            Some("request-benchmark/1.0".to_owned()),
-            Some("https://api.weather.gov".to_owned()),
-            None,
-            Some("benchmark-key".to_owned()),
-        );
+        let client = Client::builder("request-benchmark/1.0")
+            .api_key("benchmark-key")
+            .build()
+            .unwrap();
 
-        let legacy_scalar = || legacy_scalar_request(&config);
-        let contract_scalar = || contract_scalar_request(&config);
-        let legacy_csv = || legacy_csv_request(&config, &EVENTS);
-        let contract_csv = || contract_csv_request(&config, &EVENTS);
+        let legacy_scalar = || legacy_scalar_request(&client);
+        let contract_scalar = || contract_scalar_request(&client);
+        let legacy_csv = || legacy_csv_request(&client, &EVENTS);
+        let contract_csv = || contract_csv_request(&client, &EVENTS);
 
         black_box(legacy_scalar());
         black_box(contract_scalar());
@@ -1222,14 +1354,48 @@ mod tests {
             .count()
     }
 
-    fn legacy_scalar_request(config: &Configuration) -> reqwest::Request {
+    /// Builds the reqwest request for the first hop of a contract, which is
+    /// what the pipeline sends.
+    fn first_hop(
+        client: &Client,
+        contract: super::ContractRequest<'_>,
+        accept: &'static str,
+    ) -> reqwest::Request {
+        let feature_flags = contract
+            .feature_flags
+            .as_deref()
+            .map(|flags| HeaderValue::from_str(flags).unwrap());
+        let inner = client.inner();
+        let headers = HopHeaders {
+            accept,
+            feature_flags: feature_flags.as_ref(),
+            api_key: inner.api_key.as_ref().map(super::Secret::expose),
+        };
+        hop_request(&inner.http, contract.url.clone(), &headers, &contract.url)
+            .build()
+            .expect("benchmark URL must be valid")
+    }
+
+    fn legacy_get(client: &Client, url: String) -> reqwest::RequestBuilder {
+        let inner = client.inner();
+        let mut builder = inner
+            .http
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/ld+json");
+        if let Some(api_key) = &inner.api_key {
+            builder = builder.header("X-Api-Key", api_key.expose());
+        }
+        builder
+    }
+
+    fn legacy_scalar_request(client: &Client) -> reqwest::Request {
         let path = format!("/radar/queues/{}", "rds");
         let url = format!(
             "{}/{}",
-            config.base_path.trim_end_matches('/'),
+            client.base_url().as_str().trim_end_matches('/'),
             path.trim_start_matches('/')
         );
-        let mut builder = configured_get(config, url);
+        let mut builder = legacy_get(client, url);
         for (name, value) in [
             ("limit", "50000"),
             ("arrived", "2026-08-30T12:34:56+00:00"),
@@ -1247,8 +1413,8 @@ mod tests {
         builder.build().expect("benchmark URL must be valid")
     }
 
-    fn contract_scalar_request(config: &Configuration) -> reqwest::Request {
-        request(config, "/radar/queues")
+    fn contract_scalar_request(client: &Client) -> reqwest::Request {
+        let contract = request(client, "/radar/queues")
             .path_segment("rds")
             .query_scalar("limit", Some(50_000))
             .query_scalar("arrived", Some("2026-08-30T12:34:56+00:00"))
@@ -1257,20 +1423,18 @@ mod tests {
             .query_scalar("station", Some("KPHX"))
             .query_scalar("type", Some("NEXRAD"))
             .query_scalar("feed", Some("level2"))
-            .query_scalar("resolution", Some(1_i32))
-            .into_builder(JsonMedia::JsonLd.accept())
-            .build()
-            .expect("benchmark URL must be valid")
+            .query_scalar("resolution", Some(1_i32));
+        first_hop(client, contract, JsonMedia::JsonLd.accept())
     }
 
-    fn legacy_csv_request(config: &Configuration, values: &[&str]) -> reqwest::Request {
+    fn legacy_csv_request(client: &Client, values: &[&str]) -> reqwest::Request {
         let path = "/alerts/active".to_owned();
         let url = format!(
             "{}/{}",
-            config.base_path.trim_end_matches('/'),
+            client.base_url().as_str().trim_end_matches('/'),
             path.trim_start_matches('/')
         );
-        let mut builder = configured_get(config, url);
+        let mut builder = legacy_get(client, url);
         for name in ["area", "event", "message_type", "severity", "urgency"] {
             let value = values
                 .iter()
@@ -1282,15 +1446,23 @@ mod tests {
         builder.build().expect("benchmark URL must be valid")
     }
 
-    fn contract_csv_request(config: &Configuration, values: &[&str]) -> reqwest::Request {
-        request(config, "/alerts/active")
+    fn contract_csv_request(client: &Client, values: &[&str]) -> reqwest::Request {
+        let contract = request(client, "/alerts/active")
             .query_csv("area", Some(values.iter().copied()))
             .query_csv("event", Some(values.iter().copied()))
             .query_csv("message_type", Some(values.iter().copied()))
             .query_csv("severity", Some(values.iter().copied()))
-            .query_csv("urgency", Some(values.iter().copied()))
-            .into_builder(JsonMedia::GeoJson.accept())
-            .build()
-            .expect("benchmark URL must be valid")
+            .query_csv("urgency", Some(values.iter().copied()));
+        first_hop(client, contract, JsonMedia::GeoJson.accept())
+    }
+
+    #[test]
+    fn request_builder_joins_base_paths_without_touching_dynamic_segments() {
+        let client = client_with_base("http://localhost:1/prefix/");
+        let contract = request(&client, "/points/").path_segment("39.7,-97.1");
+        assert_eq!(
+            contract.url,
+            Url::parse("http://localhost:1/prefix/points/39.7,-97.1").unwrap()
+        );
     }
 }

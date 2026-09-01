@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
+use noaa_weather_client::Client;
 use noaa_weather_client::apis::aviation as aviation_api;
-use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::models::NwsCenterWeatherServiceUnitId;
 
 use crate::output::Output;
@@ -113,12 +113,12 @@ pub enum AviationCommands {
 ///
 /// * `command` - The specific aviation subcommand and its arguments to execute.
 /// * `output` - The configured output policy.
-/// * `config` - The application configuration containing API details.
+/// * `client` - The NOAA API client.
 ///
 pub async fn handle_command(
     command: &AviationCommands,
     output: &Output,
-    config: &Configuration,
+    client: &Client,
 ) -> Result<()> {
     match command {
         AviationCommands::Cwa(args) => {
@@ -129,7 +129,7 @@ pub async fn handle_command(
                         args.sequence, args.cwsu_id, args.date
                     ),
                     aviation_api::get_center_weather_advisories_by_date_and_sequence(
-                        config,
+                        client,
                         args.cwsu_id,
                         args.date.clone(),
                         args.sequence,
@@ -141,7 +141,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting CWAs for CWSU {}", args.cwsu_id),
-                    aviation_api::get_center_weather_advisories(config, args.cwsu_id),
+                    aviation_api::get_center_weather_advisories(client, args.cwsu_id),
                 )
                 .await
         }
@@ -149,7 +149,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting CWSU {} metadata", args.cwsu_id),
-                    aviation_api::get_center_weather_service_unit(config, args.cwsu_id),
+                    aviation_api::get_center_weather_service_unit(client, args.cwsu_id),
                 )
                 .await
         }
@@ -160,7 +160,7 @@ pub async fn handle_command(
                         "getting SIGMET from {} for {} at {}",
                         args.atsu, args.date, args.time
                     ),
-                    aviation_api::get_sigmet(config, &args.atsu, args.date.clone(), &args.time),
+                    aviation_api::get_sigmet(client, &args.atsu, args.date.clone(), &args.time),
                 )
                 .await
         }
@@ -169,7 +169,7 @@ pub async fn handle_command(
                 .show(
                     "querying SIGMETs",
                     aviation_api::get_sigmets(
-                        config,
+                        client,
                         args.start.clone(),
                         args.end.clone(),
                         args.date.clone(),

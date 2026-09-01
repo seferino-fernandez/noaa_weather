@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::apis::configuration::Configuration;
+use noaa_weather_client::Client;
 use noaa_weather_client::apis::offices as offices_api;
 use noaa_weather_client::models::NwsOfficeId;
 
@@ -70,19 +70,19 @@ pub enum OfficeCommands {
 ///
 /// * `command` - The specific office subcommand and its arguments to execute.
 /// * `output` - The configured output policy.
-/// * `config` - The application configuration containing API details.
+/// * `client` - The NOAA API client.
 ///
 pub async fn handle_command(
     command: &OfficeCommands,
     output: &Output,
-    config: &Configuration,
+    client: &Client,
 ) -> Result<()> {
     match command {
         OfficeCommands::Metadata(args) => {
             output
                 .show(
                     format!("getting NWS forecast office {} metadata", args.id),
-                    offices_api::get_forecast_office(config, &args.id),
+                    offices_api::get_forecast_office(client, &args.id),
                 )
                 .await
         }
@@ -90,7 +90,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting NWS forecast office {} headlines", args.id),
-                    offices_api::get_forecast_office_headlines(config, &args.id),
+                    offices_api::get_forecast_office_headlines(client, &args.id),
                 )
                 .await
         }
@@ -104,7 +104,7 @@ pub async fn handle_command(
                         "getting headline {headline_id} for NWS forecast office {}",
                         office_args.id
                     ),
-                    offices_api::get_forecast_office_headline(config, &office_args.id, headline_id),
+                    offices_api::get_forecast_office_headline(client, &office_args.id, headline_id),
                 )
                 .await
         }
@@ -112,7 +112,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting NWS forecast office {} briefing", args.id),
-                    offices_api::get_forecast_office_briefing(config, &args.id),
+                    offices_api::get_forecast_office_briefing(client, &args.id),
                 )
                 .await
         }
@@ -127,7 +127,7 @@ pub async fn handle_command(
                         office_args.id
                     ),
                     offices_api::get_forecast_office_briefing_document(
-                        config,
+                        client,
                         &office_args.id,
                         document_id,
                     ),
@@ -141,7 +141,7 @@ pub async fn handle_command(
                         "downloading latest briefing document for NWS forecast office {}",
                         args.id
                     ),
-                    offices_api::get_latest_forecast_office_briefing_document(config, &args.id),
+                    offices_api::get_latest_forecast_office_briefing_document(client, &args.id),
                 )
                 .await
         }
@@ -149,7 +149,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting NWS forecast office {} weather stories", args.id),
-                    offices_api::get_forecast_office_weather_stories(config, &args.id),
+                    offices_api::get_forecast_office_weather_stories(client, &args.id),
                 )
                 .await
         }
@@ -164,7 +164,7 @@ pub async fn handle_command(
                         office_args.id
                     ),
                     offices_api::get_forecast_office_weather_story_image(
-                        config,
+                        client,
                         &office_args.id,
                         story_id,
                     ),

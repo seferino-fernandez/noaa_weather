@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use noaa_weather_client::apis::configuration::Configuration;
+use noaa_weather_client::Client;
 
 use output::{Output, OutputArgs};
 
@@ -40,36 +40,41 @@ async fn main() {
 async fn try_main() -> Result<()> {
     let Cli { command, output } = Cli::parse();
     let output = Output::configured(output);
-    let config = Configuration::default();
+    let client = Client::builder(concat!(
+        "noaa-weather/",
+        env!("CARGO_PKG_VERSION"),
+        " (+https://github.com/seferino-fernandez/noaa_weather)"
+    ))
+    .build()?;
 
     match &command {
         Commands::Alerts { command } => {
-            alerts::handle_command(command, &output, &config).await?;
+            alerts::handle_command(command, &output, &client).await?;
         }
         Commands::Gridpoints { command } => {
-            gridpoints::handle_command(command, &output, &config).await?;
+            gridpoints::handle_command(command, &output, &client).await?;
         }
-        Commands::Glossary => glossary::handle_command(&output, &config).await?,
+        Commands::Glossary => glossary::handle_command(&output, &client).await?,
         Commands::Offices { command } => {
-            offices::handle_command(command, &output, &config).await?;
+            offices::handle_command(command, &output, &client).await?;
         }
         Commands::Points { command } => {
-            points::handle_command(command, &output, &config).await?;
+            points::handle_command(command, &output, &client).await?;
         }
-        Commands::Radar { command } => radar::handle_command(command, &output, &config).await?,
+        Commands::Radar { command } => radar::handle_command(command, &output, &client).await?,
         Commands::Stations { command } => {
-            stations::handle_command(command, &output, &config).await?;
+            stations::handle_command(command, &output, &client).await?;
         }
-        Commands::Zones { command } => zones::handle_command(command, &output, &config).await?,
+        Commands::Zones { command } => zones::handle_command(command, &output, &client).await?,
         Commands::Aviation { command } => {
-            aviation::handle_command(command, &output, &config).await?;
+            aviation::handle_command(command, &output, &client).await?;
         }
         Commands::Products { command } => {
-            products::handle_command(command, &output, &config).await?;
+            products::handle_command(command, &output, &client).await?;
         }
         #[cfg(feature = "radio")]
         Commands::Radio { command } => {
-            radio::handle_command(command, &output, &config).await?;
+            radio::handle_command(command, &output, &client).await?;
         }
     }
 
