@@ -17,7 +17,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 bytes.workspace = true
-jiff = { workspace = true, optional = true }
+jiff.workspace = true
 mime.workspace = true
 percent-encoding.workspace = true
 quick-xml = { workspace = true, features = ["serde", "serialize"], optional = true }
@@ -30,7 +30,7 @@ url.workspace = true
 [features]
 default = ["radio"]
 radio = ["xml"]
-xml = ["dep:jiff", "dep:quick-xml"]
+xml = ["dep:quick-xml"]
 
 [dev-dependencies]
 stats_alloc.workspace = true

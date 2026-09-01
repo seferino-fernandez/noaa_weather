@@ -54,22 +54,22 @@ impl From<String> for Operation {
     }
 }
 
-/// A successful human-readable document before destination-specific rendering.
-pub(crate) enum HumanDocument {
+/// A successful default presentation before destination-specific rendering.
+pub(crate) enum PresentationDocument {
     Table(Box<Table>),
     #[cfg(any(feature = "radio", test))]
     Text(String),
 }
 
-impl HumanDocument {
+impl PresentationDocument {
     fn table(table: Table) -> Self {
         Self::Table(Box::new(table))
     }
 }
 
-/// Associates a typed NOAA response with its default human presentation.
-pub(crate) trait HumanPresentation: Serialize {
-    fn human_presentation(&self) -> HumanDocument;
+/// Associates a typed NOAA response with its default non-JSON presentation.
+pub(crate) trait DefaultPresentation: Serialize {
+    fn default_presentation(&self) -> Result<PresentationDocument>;
 }
 
 mod binary {
@@ -101,7 +101,7 @@ impl BinaryPresentation for BinaryPayload {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Format {
-    Human,
+    Default,
     Json,
 }
 
@@ -116,7 +116,7 @@ impl Output {
         let format = if args.json {
             Format::Json
         } else {
-            Format::Human
+            Format::Default
         };
         let destination: Box<dyn DestinationAdapter> = match args.output {
             None => Box::new(StdoutDestination::implicit()),
@@ -130,14 +130,14 @@ impl Output {
         }
     }
 
-    /// Runs a typed NOAA operation and selects its human or JSON presentation.
+    /// Runs a typed NOAA operation and selects its default or JSON presentation.
     pub(crate) async fn show<T, E>(
         &self,
         operation: impl Into<Operation>,
         request: impl Future<Output = std::result::Result<T, E>>,
     ) -> Result<()>
     where
-        T: HumanPresentation,
+        T: DefaultPresentation,
         E: StdError + Send + Sync + 'static,
     {
         let operation = operation.into();
@@ -145,7 +145,7 @@ impl Output {
             self.destination.validate(MediaKind::Structured)?;
             let value = request.await.map_err(anyhow::Error::new)?;
             match self.format {
-                Format::Human => self.write_human(value.human_presentation()),
+                Format::Default => self.write_presentation(value.default_presentation()?),
                 Format::Json => self.write_json(&value),
             }
         }
@@ -214,16 +214,16 @@ impl Output {
         .with_context(|| operation.to_string())
     }
 
-    fn write_human(&self, document: HumanDocument) -> Result<()> {
+    fn write_presentation(&self, document: PresentationDocument) -> Result<()> {
         match document {
-            HumanDocument::Table(mut table) => {
+            PresentationDocument::Table(mut table) => {
                 if !self.destination.is_terminal() {
                     table.force_no_tty();
                 }
                 self.write_document(move |writer| write_table(writer, &table))
             }
             #[cfg(any(feature = "radio", test))]
-            HumanDocument::Text(text) => {
+            PresentationDocument::Text(text) => {
                 self.write_document(move |writer| write_text(writer, &text))
             }
         }

@@ -5,7 +5,7 @@ use noaa_weather_client::models::{
     QuantitativeValue,
 };
 
-use crate::output::{HumanDocument, HumanPresentation};
+use crate::output::{DefaultPresentation, PresentationDocument};
 use crate::utils::format::{format_datetime_human_readable, format_dewpoint};
 
 macro_rules! add_row_if_some {
@@ -217,21 +217,23 @@ fn format_wind(
     parts.join(" ")
 }
 
-impl HumanPresentation for GridpointGeoJson {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_gridpoint_table(self))
+impl DefaultPresentation for GridpointGeoJson {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_gridpoint_table(self)))
     }
 }
 
-impl HumanPresentation for Gridpoint12hForecastGeoJson {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_forecast_table(self))
+impl DefaultPresentation for Gridpoint12hForecastGeoJson {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_forecast_table(self)))
     }
 }
 
-impl HumanPresentation for GridpointHourlyForecastGeoJson {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_hourly_forecast_table(self))
+impl DefaultPresentation for GridpointHourlyForecastGeoJson {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_hourly_forecast_table(
+            self,
+        )))
     }
 }
 

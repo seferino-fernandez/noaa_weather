@@ -5,7 +5,7 @@ use noaa_weather_client::models::{
     OfficeHeadlineCollection, OfficeWeatherStory, OfficeWeatherStoryCollection,
 };
 
-use crate::output::{HumanDocument, HumanPresentation};
+use crate::output::{DefaultPresentation, PresentationDocument};
 use crate::utils::format::format_datetime_human_readable;
 
 fn value(value: Option<&str>) -> &str {
@@ -334,32 +334,42 @@ pub fn create_office_headline_table(office_headline: &OfficeHeadline) -> Table {
     table
 }
 
-impl HumanPresentation for Office {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_office_metadata_table(self))
+impl DefaultPresentation for Office {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_office_metadata_table(
+            self,
+        )))
     }
 }
 
-impl HumanPresentation for OfficeHeadlineCollection {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_office_headlines_table(self))
+impl DefaultPresentation for OfficeHeadlineCollection {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_office_headlines_table(
+            self,
+        )))
     }
 }
 
-impl HumanPresentation for OfficeHeadline {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_office_headline_table(self))
+impl DefaultPresentation for OfficeHeadline {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_office_headline_table(
+            self,
+        )))
     }
 }
 
-impl HumanPresentation for OfficeBriefingResponse {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_office_briefing_table(self))
+impl DefaultPresentation for OfficeBriefingResponse {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_office_briefing_table(
+            self,
+        )))
     }
 }
 
-impl HumanPresentation for OfficeWeatherStoryCollection {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_office_weather_stories_table(self))
+impl DefaultPresentation for OfficeWeatherStoryCollection {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(
+            create_office_weather_stories_table(self),
+        ))
     }
 }

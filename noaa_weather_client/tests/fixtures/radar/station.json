@@ -1,0 +1,56 @@
+{
+  "id": "https://api.weather.gov/radar/stations/KXYZ",
+  "type": "Feature",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [-112.1469, 33.2903, 999.0]
+  },
+  "properties": {
+    "id": "KXYZ",
+    "name": "Example Radar",
+    "stationType": "WSR-88D",
+    "elevation": {
+      "value": 420.0,
+      "unitCode": "wmoUnit:m",
+      "maxValue": 421.0,
+      "minValue": null,
+      "qualityControl": "checked"
+    },
+    "timeZone": "America/Phoenix",
+    "latency": {
+      "current": { "value": 1.25, "unitCode": "nwsUnit:s" },
+      "average": { "value": 2.5 },
+      "max": { "value": 9.75, "unitCode": "nwsUnit:s" },
+      "levelTwoLastReceivedTime": "2026-08-31T16:00:00Z",
+      "maxLatencyTime": "2026-08-31T15:59:00Z",
+      "reportingHost": "ldm.example",
+      "host": "data.example"
+    },
+    "rda": {
+      "timestamp": "2026-08-31T16:01:00Z",
+      "reportingHost": "rda.example",
+      "properties": {
+        "resolutionVersion": 4,
+        "nl2Path": "/data/level2"
+      }
+    },
+    "performance": {
+      "timestamp": "2026-08-31T16:02:00Z",
+      "reportingHost": "perf.example",
+      "properties": {
+        "ntp_status": 0,
+        "linearity": 0.25,
+        "performanceCheckTime": "2026-08-31T16:02:30Z"
+      }
+    },
+    "adaptation": {
+      "timestamp": "2026-08-31T16:03:00Z",
+      "reportingHost": "adapt.example",
+      "properties": {
+        "transmitterFrequency": { "value": 2800.0, "unitCode": "nwsUnit:MHz" },
+        "pathLossWG04Circulator": { "value": 0.4, "unitCode": "nwsUnit:dB" },
+        "transmitterSpectrumFilterInstalled": "yes"
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "@id": "https://api.weather.gov/radar/servers/ldm1",
+  "@type": "wx:RadarServer",
+  "id": "ldm1",
+  "type": "ldm",
+  "active": true,
+  "primary": false,
+  "aggregate": true,
+  "locked": false,
+  "radarNetworkUp": true,
+  "collectionTime": "2026-08-31T16:10:00Z",
+  "reportingHost": "ops.example",
+  "ping": {
+    "timestamp": "2026-08-31T16:09:00Z",
+    "targets": {
+      "client": { "alpha": true, "beta": false, "gamma": true },
+      "ldm": [],
+      "server": { "delta": false }
+    }
+  },
+  "command": {
+    "timestamp": "2026-08-31T16:08:00Z",
+    "lastExecuted": "restart",
+    "lastExecutedTime": "2026-08-31T16:07:00Z"
+  },
+  "hardware": {
+    "timestamp": "2026-08-31T16:06:00Z",
+    "cpuIdle": 97.5,
+    "load1": 0.1,
+    "load5": 0.2,
+    "load15": 0.3,
+    "uptime": "2026-08-01T00:00:00Z"
+  },
+  "ldm": {
+    "timestamp": "2026-08-31T16:05:00Z",
+    "active": true,
+    "latestProduct": "2026-08-31T16:04:00Z",
+    "oldestProduct": "2026-08-31T15:04:00Z",
+    "storageSize": 2048,
+    "count": 42
+  },
+  "network": {
+    "timestamp": "2026-08-31T16:03:00Z",
+    "eth0": {
+      "interface": "eno1",
+      "active": true,
+      "transNoError": 100,
+      "transError": 2,
+      "transDropped": 3,
+      "transOverrun": 4,
+      "recvNoError": 200,
+      "recvError": 5,
+      "recvDropped": 6,
+      "recvOverrun": 7
+    },
+    "eth1": {}
+  }
+}

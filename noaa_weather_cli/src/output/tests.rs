@@ -16,16 +16,21 @@ use wiremock::{
 
 use super::binary::Sealed;
 use super::sink::{DestinationAdapter, MediaKind, SinkTransaction};
-use super::{BinaryPresentation, Format, HumanDocument, HumanPresentation, Output, OutputArgs};
+use super::{
+    BinaryPresentation, DefaultPresentation, Format, Output, OutputArgs, PresentationDocument,
+};
 
 #[derive(Serialize)]
 struct Example {
     value: &'static str,
 }
 
-impl HumanPresentation for Example {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::Text(format!("value: {}\n\n", self.value))
+impl DefaultPresentation for Example {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::Text(format!(
+            "value: {}\n\n",
+            self.value
+        )))
     }
 }
 
@@ -40,12 +45,12 @@ impl Serialize for TableExample {
     }
 }
 
-impl HumanPresentation for TableExample {
-    fn human_presentation(&self) -> HumanDocument {
+impl DefaultPresentation for TableExample {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
         let mut table = Table::new();
         table.set_header(["Column"]);
         table.add_row(["Value"]);
-        HumanDocument::table(table)
+        Ok(PresentationDocument::table(table))
     }
 }
 
@@ -60,9 +65,9 @@ impl Serialize for InvalidJson {
     }
 }
 
-impl HumanPresentation for InvalidJson {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::Text("unused".to_owned())
+impl DefaultPresentation for InvalidJson {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::Text("unused".to_owned()))
     }
 }
 
@@ -98,8 +103,8 @@ impl fmt::Display for FetchError {
 impl std::error::Error for FetchError {}
 
 #[tokio::test]
-async fn human_text_has_one_trailing_newline() {
-    let (output, bytes) = memory_output(Format::Human);
+async fn default_text_has_one_trailing_newline() {
+    let (output, bytes) = memory_output(Format::Default);
 
     output
         .show("showing example", async {
@@ -112,8 +117,8 @@ async fn human_text_has_one_trailing_newline() {
 }
 
 #[tokio::test]
-async fn human_table_is_written_by_lines_with_one_final_newline() {
-    let (output, bytes) = memory_output(Format::Human);
+async fn default_table_is_written_by_lines_with_one_final_newline() {
+    let (output, bytes) = memory_output(Format::Default);
 
     output
         .show("showing table", async { Ok::<_, FetchError>(TableExample) })
@@ -146,7 +151,7 @@ async fn json_is_pretty_and_has_one_trailing_newline() {
 
 #[cfg(feature = "xml")]
 #[tokio::test]
-async fn normalized_taf_meaning_flows_through_the_human_output_seam() {
+async fn normalized_taf_meaning_flows_through_the_default_output_seam() {
     use noaa_weather_client::apis::{configuration::Configuration, stations};
 
     let server = MockServer::start().await;
@@ -159,7 +164,7 @@ async fn normalized_taf_meaning_flows_through_the_human_output_seam() {
         .mount(&server)
         .await;
     let configuration = Configuration::new(None, Some(server.uri()), None, None);
-    let (output, bytes) = memory_output(Format::Human);
+    let (output, bytes) = memory_output(Format::Default);
 
     output
         .show(
@@ -231,8 +236,8 @@ async fn normalized_taf_json_flows_through_the_output_seam() {
 }
 
 #[tokio::test]
-async fn raw_json_ignores_the_human_default() {
-    let (output, bytes) = memory_output(Format::Human);
+async fn raw_json_ignores_the_default_presentation() {
+    let (output, bytes) = memory_output(Format::Default);
 
     output
         .raw_json("showing raw JSON", async {
@@ -245,6 +250,108 @@ async fn raw_json_ignores_the_human_default() {
         String::from_utf8(bytes.borrow().clone()).unwrap(),
         "{\n  \"raw\": true\n}\n"
     );
+}
+
+#[tokio::test]
+async fn radar_station_default_presentation_uses_normalized_meaning() {
+    let station: noaa_weather_client::models::RadarStationFeature = serde_json::from_str(
+        include_str!("../../../noaa_weather_client/tests/fixtures/radar/station.json"),
+    )
+    .unwrap();
+    let (output, bytes) = memory_output(Format::Default);
+
+    output
+        .show("showing radar station", async {
+            Ok::<_, FetchError>(station)
+        })
+        .await
+        .unwrap();
+
+    let rendered = String::from_utf8(bytes.borrow().clone()).unwrap();
+    for expected in [
+        "KXYZ",
+        "Example Radar",
+        "Lon: -112.14690, Lat: 33.29030",
+        "1.25 s",
+        "9.75 s",
+        "ldm.example",
+        "America/Phoenix",
+    ] {
+        assert!(
+            rendered.contains(expected),
+            "missing {expected:?} in:\n{rendered}"
+        );
+    }
+    let maximum_time = "2026-08-31T15:59:00Z"
+        .parse::<jiff::Timestamp>()
+        .unwrap()
+        .to_zoned(jiff::tz::TimeZone::try_system().unwrap_or(jiff::tz::TimeZone::UTC))
+        .strftime("%D %r")
+        .to_string();
+    assert_eq!(rendered.matches(&maximum_time).count(), 1, "{rendered}");
+}
+
+#[tokio::test]
+async fn radar_server_default_presentation_uses_normalized_meaning() {
+    let server: noaa_weather_client::models::RadarServer = serde_json::from_str(include_str!(
+        "../../../noaa_weather_client/tests/fixtures/radar/server.json"
+    ))
+    .unwrap();
+    let (output, bytes) = memory_output(Format::Default);
+
+    output
+        .show("showing radar server", async {
+            Ok::<_, FetchError>(server)
+        })
+        .await
+        .unwrap();
+
+    let rendered = String::from_utf8(bytes.borrow().clone()).unwrap();
+    for expected in [
+        "Radar Server Status: ldm1",
+        "2 / 3 up",
+        "0 targets",
+        "eno1",
+        "100/2/3",
+        "eth1 Interface",
+        "2.00 KiB",
+    ] {
+        assert!(
+            rendered.contains(expected),
+            "missing {expected:?} in:\n{rendered}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn malformed_radar_timestamp_fails_only_default_presentation() {
+    let malformed = noaa_weather_client::models::RadarServer {
+        id: Some("broken".to_owned()),
+        collection_time: Some("not-a-timestamp".to_owned()),
+        ..noaa_weather_client::models::RadarServer::default()
+    };
+    let (default_output, default_bytes) = memory_output(Format::Default);
+
+    let error = default_output
+        .show("showing malformed radar server", async {
+            Ok::<_, FetchError>(malformed.clone())
+        })
+        .await
+        .unwrap_err();
+    let chain = format!("{error:#}");
+    assert!(chain.contains("showing malformed radar server"), "{chain}");
+    assert!(chain.contains("collection_time"), "{chain}");
+    assert!(default_bytes.borrow().is_empty());
+
+    let (json_output, json_bytes) = memory_output(Format::Json);
+    json_output
+        .show("showing malformed radar JSON", async {
+            Ok::<_, FetchError>(malformed)
+        })
+        .await
+        .unwrap();
+    let json: serde_json::Value = serde_json::from_slice(&json_bytes.borrow()).unwrap();
+    assert_eq!(json["collectionTime"], "not-a-timestamp");
 }
 
 #[tokio::test]
@@ -289,7 +396,7 @@ async fn json_rejection_precedes_binary_destination_validation() {
 
 #[tokio::test]
 async fn binary_bytes_are_not_text_framed() {
-    let (output, bytes) = memory_output(Format::Human);
+    let (output, bytes) = memory_output(Format::Default);
 
     output
         .download("downloading example", async {
@@ -305,7 +412,7 @@ async fn binary_bytes_are_not_text_framed() {
 
 #[tokio::test]
 async fn empty_binary_payload_is_rejected_without_committing() {
-    let (output, bytes) = memory_output(Format::Human);
+    let (output, bytes) = memory_output(Format::Default);
 
     let error = output
         .download("downloading example", async {
@@ -320,7 +427,7 @@ async fn empty_binary_payload_is_rejected_without_committing() {
 
 #[tokio::test]
 async fn operation_context_preserves_the_fetch_source() {
-    let (output, _) = memory_output(Format::Human);
+    let (output, _) = memory_output(Format::Default);
 
     let error = output
         .show("fetching contextual example", async {
@@ -338,7 +445,7 @@ async fn operation_context_preserves_the_fetch_source() {
 #[tokio::test]
 async fn broken_pipe_is_success_for_stdout_like_destinations() {
     let output = Output::with_destination(
-        Format::Human,
+        Format::Default,
         Box::new(FailingDestination {
             kind: io::ErrorKind::BrokenPipe,
             broken_pipe_is_success: true,
@@ -356,7 +463,7 @@ async fn broken_pipe_is_success_for_stdout_like_destinations() {
 #[tokio::test]
 async fn other_write_failures_retain_operation_and_sink_context() {
     let output = Output::with_destination(
-        Format::Human,
+        Format::Default,
         Box::new(FailingDestination {
             kind: io::ErrorKind::WriteZero,
             broken_pipe_is_success: false,

@@ -327,7 +327,7 @@ pub mod configuration;
 pub mod glossary;
 pub mod gridpoints;
 mod http;
-#[cfg(test)]
+#[cfg(all(test, feature = "xml"))]
 pub(crate) use http::measure_allocations;
 pub mod offices;
 pub mod points;

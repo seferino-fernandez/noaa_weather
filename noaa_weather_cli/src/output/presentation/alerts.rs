@@ -5,7 +5,7 @@ use noaa_weather_client::models::{
     AlertTypesResponse,
 };
 
-use crate::output::{HumanDocument, HumanPresentation};
+use crate::output::{DefaultPresentation, PresentationDocument};
 use crate::utils::format::{
     format_datetime_human_readable, format_optional_number, get_zone_from_url,
 };
@@ -329,26 +329,26 @@ pub fn create_alert_types_table(types_data: &AlertTypesResponse) -> comfy_table:
     table
 }
 
-impl HumanPresentation for AlertCollectionGeoJson {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_alerts_table(self))
+impl DefaultPresentation for AlertCollectionGeoJson {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_alerts_table(self)))
     }
 }
 
-impl HumanPresentation for AlertGeoJson {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_single_alert_table(self))
+impl DefaultPresentation for AlertGeoJson {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_single_alert_table(self)))
     }
 }
 
-impl HumanPresentation for ActiveAlertsCountResponse {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_alert_count_table(self))
+impl DefaultPresentation for ActiveAlertsCountResponse {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_alert_count_table(self)))
     }
 }
 
-impl HumanPresentation for AlertTypesResponse {
-    fn human_presentation(&self) -> HumanDocument {
-        HumanDocument::table(create_alert_types_table(self))
+impl DefaultPresentation for AlertTypesResponse {
+    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+        Ok(PresentationDocument::table(create_alert_types_table(self)))
     }
 }
