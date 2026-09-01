@@ -4,14 +4,17 @@ use noaa_weather_client::models::{
     TextProduct, TextProductCollection, TextProductLocationCollection, TextProductTypeCollection,
 };
 
-use crate::output::{DefaultPresentation, PresentationDocument};
-use crate::utils::format::format_datetime_human_readable;
+use super::{DefaultPresentation, DefaultPresenter, PresentationError};
+use crate::output::PresentationDocument;
 
 /// Formats a `TextProduct` into a `comfy_table::Table`.
 ///
 /// This function constructs a table displaying various attributes of a `TextProduct`.
 ///
-pub fn create_product_table(product: &TextProduct) -> Table {
+fn create_product_table(
+    product: &TextProduct,
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -38,32 +41,24 @@ pub fn create_product_table(product: &TextProduct) -> Table {
             .add_attribute(comfy_table::Attribute::Bold)
             .set_alignment(CellAlignment::Center),
     ]);
-    let product_id = product
-        .id
-        .as_deref()
-        .filter(|product_id| !product_id.is_empty())
-        .unwrap_or("N/A");
-
-    let issuance_time = product
-        .issuance_time
-        .as_deref()
-        .filter(|issuance_time| !issuance_time.is_empty());
-    let issuance_time_readable = format_datetime_human_readable(issuance_time);
+    let product_id = presenter.text(product.id.as_deref());
+    let issuance_time_readable =
+        presenter.timestamp("product.issuance_time", product.issuance_time.as_deref())?;
 
     table.add_row(vec![
         Cell::new(product_id),
-        Cell::new(product.wmo_collective_id.as_deref().unwrap_or("N/A")),
-        Cell::new(product.issuing_office.as_deref().unwrap_or("N/A")),
+        Cell::new(presenter.text(product.wmo_collective_id.as_deref())),
+        Cell::new(presenter.text(product.issuing_office.as_deref())),
         Cell::new(issuance_time_readable),
-        Cell::new(product.product_code.as_deref().unwrap_or("N/A")),
-        Cell::new(product.product_name.as_deref().unwrap_or("N/A")),
-        Cell::new(product.product_text.as_deref().unwrap_or("N/A")),
+        Cell::new(presenter.text(product.product_code.as_deref())),
+        Cell::new(presenter.text(product.product_name.as_deref())),
+        Cell::new(presenter.text(product.product_text.as_deref())),
     ]);
 
-    table
+    Ok(table)
 }
 
-pub fn create_product_types_table(product_types: &TextProductTypeCollection) -> Table {
+fn create_product_types_table(product_types: &TextProductTypeCollection) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -86,7 +81,10 @@ pub fn create_product_types_table(product_types: &TextProductTypeCollection) -> 
     table
 }
 
-pub fn create_products_table(products: &TextProductCollection) -> Table {
+fn create_products_table(
+    products: &TextProductCollection,
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -111,33 +109,30 @@ pub fn create_products_table(products: &TextProductCollection) -> Table {
             .set_alignment(CellAlignment::Center),
     ]);
 
-    for product in products.at_graph.iter().flatten() {
-        let product_id = product
-            .id
-            .as_deref()
-            .filter(|product_id| !product_id.is_empty())
-            .unwrap_or("N/A");
-
-        let issuance_time = product
-            .issuance_time
-            .as_deref()
-            .filter(|issuance_time| !issuance_time.is_empty());
-        let issuance_time_readable = format_datetime_human_readable(issuance_time);
+    for (index, product) in products.at_graph.iter().flatten().enumerate() {
+        let product_id = presenter.text(product.id.as_deref());
+        let issuance_time_readable = presenter.timestamp(
+            format!("products.at_graph[{index}].issuance_time"),
+            product.issuance_time.as_deref(),
+        )?;
 
         table.add_row(vec![
             Cell::new(product_id),
-            Cell::new(product.wmo_collective_id.as_deref().unwrap_or("N/A")),
-            Cell::new(product.issuing_office.as_deref().unwrap_or("N/A")),
+            Cell::new(presenter.text(product.wmo_collective_id.as_deref())),
+            Cell::new(presenter.text(product.issuing_office.as_deref())),
             Cell::new(issuance_time_readable),
-            Cell::new(product.product_code.as_deref().unwrap_or("N/A")),
-            Cell::new(product.product_name.as_deref().unwrap_or("N/A")),
+            Cell::new(presenter.text(product.product_code.as_deref())),
+            Cell::new(presenter.text(product.product_name.as_deref())),
         ]);
     }
 
-    table
+    Ok(table)
 }
 
-pub fn create_products_locations_table(product_locations: &TextProductLocationCollection) -> Table {
+fn create_products_locations_table(
+    product_locations: &TextProductLocationCollection,
+    presenter: &DefaultPresenter,
+) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -152,7 +147,7 @@ pub fn create_products_locations_table(product_locations: &TextProductLocationCo
 
     for product_location in product_locations.locations.iter().flatten() {
         let location_id = product_location.0;
-        let location_name = product_location.1.clone().unwrap_or("N/A".to_owned());
+        let location_name = presenter.text(product_location.1.as_deref());
         table.add_row(vec![Cell::new(location_id), Cell::new(location_name)]);
     }
 
@@ -160,27 +155,43 @@ pub fn create_products_locations_table(product_locations: &TextProductLocationCo
 }
 
 impl DefaultPresentation for TextProduct {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
-        Ok(PresentationDocument::table(create_product_table(self)))
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::table(create_product_table(
+            self, presenter,
+        )?))
     }
 }
 
 impl DefaultPresentation for TextProductCollection {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
-        Ok(PresentationDocument::table(create_products_table(self)))
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::table(create_products_table(
+            self, presenter,
+        )?))
     }
 }
 
 impl DefaultPresentation for TextProductLocationCollection {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(
-            create_products_locations_table(self),
+            create_products_locations_table(self, presenter),
         ))
     }
 }
 
 impl DefaultPresentation for TextProductTypeCollection {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        _presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(create_product_types_table(
             self,
         )))

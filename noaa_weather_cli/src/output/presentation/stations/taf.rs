@@ -12,7 +12,10 @@ use noaa_weather_client::models::{TerminalAerodromeForecast, TerminalAerodromeFo
 use super::*;
 
 /// Creates a table listing TAF metadata for one airport station.
-pub fn create_stations_tafs_metadata_table(tafs: &TerminalAerodromeForecastsResponse) -> Table {
+pub(super) fn create_stations_tafs_metadata_table(
+    tafs: &TerminalAerodromeForecastsResponse,
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -25,18 +28,21 @@ pub fn create_stations_tafs_metadata_table(tafs: &TerminalAerodromeForecastsResp
         header("Geometry"),
     ]);
 
-    for taf in tafs.graph.as_deref().unwrap_or_default() {
+    for (index, taf) in tafs.graph.as_deref().unwrap_or_default().iter().enumerate() {
+        let context = format!("TAF metadata entry {index} ({})", taf.id);
         table.add_row([
             Cell::new(&taf.id),
-            Cell::new(format_datetime_human_readable(taf.issue_time.as_deref())),
+            Cell::new(
+                presenter.timestamp(format!("{context} issue time"), taf.issue_time.as_deref())?,
+            ),
             Cell::new(taf.location.as_deref().unwrap_or("Unavailable")),
-            Cell::new(format_datetime_human_readable(taf.start.as_deref())),
-            Cell::new(format_datetime_human_readable(taf.end.as_deref())),
+            Cell::new(presenter.timestamp(format!("{context} start time"), taf.start.as_deref())?),
+            Cell::new(presenter.timestamp(format!("{context} end time"), taf.end.as_deref())?),
             Cell::new(taf.geometry.as_deref().unwrap_or("Unavailable")),
         ]);
     }
 
-    table
+    Ok(table)
 }
 
 fn header(value: &str) -> Cell {
@@ -46,7 +52,7 @@ fn header(value: &str) -> Cell {
 }
 
 /// Creates a human-readable table from normalized TAF meaning.
-pub fn create_stations_taf_table(taf: &TerminalAerodromeForecast) -> Table {
+pub(super) fn create_stations_taf_table(taf: &TerminalAerodromeForecast) -> Table {
     let mut table = Table::new();
     table
         .load_style(UTF8_FULL_CONDENSED)

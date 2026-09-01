@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context as _, Result, bail};
 use clap::Args;
 use comfy_table::Table;
+use jiff::tz::TimeZone;
 use noaa_weather_client::apis::BinaryPayload;
 use serde::Serialize;
 use serde_json::Value;
@@ -17,6 +18,8 @@ mod presentation;
 mod sink;
 
 use sink::{DestinationAdapter, MediaKind, StdoutDestination};
+
+use presentation::{DefaultPresentation, DefaultPresenter};
 
 pub(crate) use presentation::zones::ZoneObservations;
 
@@ -67,11 +70,6 @@ impl PresentationDocument {
     }
 }
 
-/// Associates a typed NOAA response with its default non-JSON presentation.
-pub(crate) trait DefaultPresentation: Serialize {
-    fn default_presentation(&self) -> Result<PresentationDocument>;
-}
-
 mod binary {
     pub trait Sealed {}
 }
@@ -109,6 +107,7 @@ enum Format {
 pub(crate) struct Output {
     format: Format,
     destination: Box<dyn DestinationAdapter>,
+    default_presenter: Option<DefaultPresenter>,
 }
 
 impl Output {
@@ -123,10 +122,13 @@ impl Output {
             Some(path) if path == Path::new("-") => Box::new(StdoutDestination::explicit()),
             Some(path) => Box::new(atomic_file::AtomicFileDestination::new(path)),
         };
+        let default_presenter = (format == Format::Default)
+            .then(|| DefaultPresenter::new(TimeZone::try_system().unwrap_or(TimeZone::UTC)));
 
         Self {
             format,
             destination,
+            default_presenter,
         }
     }
 
@@ -145,7 +147,12 @@ impl Output {
             self.destination.validate(MediaKind::Structured)?;
             let value = request.await.map_err(anyhow::Error::new)?;
             match self.format {
-                Format::Default => self.write_presentation(value.default_presentation()?),
+                Format::Default => {
+                    let presenter = self.default_presenter.as_ref().context(
+                        "default presentation policy was not configured for default output",
+                    )?;
+                    self.write_presentation(presenter.present(&value)?)
+                }
                 Format::Json => self.write_json(&value),
             }
         }
@@ -261,9 +268,12 @@ impl Output {
 
     #[cfg(test)]
     fn with_destination(format: Format, destination: Box<dyn DestinationAdapter>) -> Self {
+        let default_presenter =
+            (format == Format::Default).then(|| DefaultPresenter::new(TimeZone::UTC));
         Self {
             format,
             destination,
+            default_presenter,
         }
     }
 }

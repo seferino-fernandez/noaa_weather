@@ -1,5 +1,3 @@
-use std::{borrow, string};
-
 use comfy_table::presets::{UTF8_FULL, UTF8_FULL_CONDENSED};
 use comfy_table::{Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::{
@@ -7,11 +5,11 @@ use noaa_weather_client::models::{
     SigmetCollectionGeoJson, SigmetGeoJson,
 };
 
-use crate::output::{DefaultPresentation, PresentationDocument};
-use crate::utils::format::format_datetime_human_readable;
+use super::{DefaultPresentation, DefaultPresenter, PresentationError};
+use crate::output::PresentationDocument;
 
 /// Formats a CWSU office's details into a `comfy_table::Table`.
-pub fn create_cwsu_table(office: &CwsuOffice) -> Table {
+fn create_cwsu_table(office: &CwsuOffice, presenter: &DefaultPresenter) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -39,16 +37,8 @@ pub fn create_cwsu_table(office: &CwsuOffice) -> Table {
             .set_alignment(CellAlignment::Center),
     ]);
 
-    let office_id = office
-        .id
-        .as_deref()
-        .filter(|value| !value.is_empty())
-        .unwrap_or("N/A");
-    let name = office
-        .name
-        .as_deref()
-        .filter(|value| !value.is_empty())
-        .unwrap_or("N/A");
+    let office_id = presenter.text(office.id.as_deref());
+    let name = presenter.text(office.name.as_deref());
 
     // Dynamically construct the address string
     // Retrieve and trim address components to handle None, empty, or whitespace-only strings
@@ -91,35 +81,15 @@ pub fn create_cwsu_table(office: &CwsuOffice) -> Table {
     let final_address_str = address_lines.join("\n");
 
     // Use "N/A" if the fully constructed address is empty, otherwise use the constructed string.
-    let address_cell_content = if final_address_str.is_empty() {
-        "N/A".to_owned()
-    } else {
-        final_address_str
-    };
+    let address_cell_content = presenter.text(Some(&final_address_str));
 
     // For phone, email, website, and region, also ensure empty strings become "N/A"
     // The original .map_or("N/A", |v| v) for phone would print an empty string if phone_number was Some("").
     // The .filter(|s| !s.is_empty()) pattern handles this more robustly.
-    let phone = office
-        .phone_number
-        .as_deref()
-        .filter(|value| !value.is_empty())
-        .unwrap_or("N/A");
-    let email = office
-        .email
-        .as_deref()
-        .filter(|value| !value.is_empty())
-        .unwrap_or("N/A");
-    let website = office
-        .website_url
-        .as_deref()
-        .filter(|value| !value.is_empty())
-        .unwrap_or("N/A");
-    let region = office
-        .nws_region
-        .as_deref()
-        .filter(|value| !value.is_empty())
-        .unwrap_or("N/A");
+    let phone = presenter.text(office.phone_number.as_deref());
+    let email = presenter.text(office.email.as_deref());
+    let website = presenter.text(office.website_url.as_deref());
+    let region = presenter.text(office.nws_region.as_deref());
 
     table.add_row(vec![
         Cell::new(office_id),
@@ -134,7 +104,10 @@ pub fn create_cwsu_table(office: &CwsuOffice) -> Table {
 }
 
 /// Formats a single aviation center weather advisory into a comfy table.
-pub fn create_cwa_table(cwa: &CenterWeatherAdvisoryGeoJson) -> Table {
+fn create_cwa_table(
+    cwa: &CenterWeatherAdvisoryGeoJson,
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -161,28 +134,25 @@ pub fn create_cwa_table(cwa: &CenterWeatherAdvisoryGeoJson) -> Table {
             .add_attribute(comfy_table::Attribute::Bold)
             .set_alignment(CellAlignment::Center),
     ]);
-    let office_id = cwa.properties.as_ref().id.as_deref().unwrap_or("N/A");
+    let office_id = presenter.text(cwa.properties.as_ref().id.as_deref());
     let issue_time = cwa.properties.as_ref().issue_time.as_deref();
-    let issue_time_str = format_datetime_human_readable(issue_time);
+    let issue_time_str = presenter.timestamp("cwa.properties.issue_time", issue_time)?;
     let cwsu = cwa.properties.as_ref().cwsu;
-    let cwsu_str = cwsu.map_or_else(|| "N/A".to_owned(), |cwsu_value| cwsu_value.to_string());
+    let cwsu = cwsu.map(|value| value.to_string());
+    let cwsu_str = presenter.text(cwsu.as_deref());
     let sequence = cwa.properties.as_ref().sequence;
-    let sequence_str = sequence.map_or_else(
-        || "N/A".to_owned(),
-        |sequence_value| sequence_value.to_string(),
-    );
+    let sequence_str = presenter.integer(sequence);
     let start = cwa.properties.as_ref().start.as_deref();
     let end = cwa.properties.as_ref().end.as_deref();
     let start_and_end = format!(
         "{}\nto\n{}",
-        format_datetime_human_readable(start),
-        format_datetime_human_readable(end)
+        presenter.timestamp("cwa.properties.start", start)?,
+        presenter.timestamp("cwa.properties.end", end)?
     );
     let observed_property = cwa.properties.as_ref().observed_property.as_deref();
-    let observed_property_str =
-        observed_property.map_or_else(|| "N/A".to_owned(), borrow::ToOwned::to_owned);
+    let observed_property_str = presenter.text(observed_property);
     let text = cwa.properties.as_ref().text.as_deref();
-    let text_str = text.map_or_else(|| "N/A".to_owned(), borrow::ToOwned::to_owned);
+    let text_str = presenter.text(text);
     table.add_row(vec![
         Cell::new(office_id),
         Cell::new(issue_time_str),
@@ -192,11 +162,14 @@ pub fn create_cwa_table(cwa: &CenterWeatherAdvisoryGeoJson) -> Table {
         Cell::new(observed_property_str),
         Cell::new(text_str),
     ]);
-    table
+    Ok(table)
 }
 
 /// Formats a collection of aviation center weather advisories into a comfy table.
-pub fn create_cwas_table(cwas: &CenterWeatherAdvisoryCollectionGeoJson) -> Table {
+fn create_cwas_table(
+    cwas: &CenterWeatherAdvisoryCollectionGeoJson,
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -223,50 +196,26 @@ pub fn create_cwas_table(cwas: &CenterWeatherAdvisoryCollectionGeoJson) -> Table
             .add_attribute(comfy_table::Attribute::Bold)
             .set_alignment(CellAlignment::Center),
     ]);
-    for cwa in &cwas.features {
-        let office_id = cwa
-            .properties
-            .as_ref()
-            .unwrap()
-            .id
-            .as_deref()
-            .unwrap_or("N/A");
+    for (index, cwa) in cwas.features.iter().enumerate() {
+        let properties = cwa.properties.as_ref().unwrap();
+        let office_id = presenter.text(properties.id.as_deref());
         let issue_time = cwa.properties.as_ref().unwrap().issue_time.as_deref();
-        let issue_time_str = format_datetime_human_readable(issue_time);
-        let cwsu_binding = cwa
-            .properties
-            .as_ref()
-            .unwrap()
-            .cwsu
-            .as_ref()
-            .map(string::ToString::to_string);
-        let cwsu = cwsu_binding.as_deref().unwrap_or("N/A");
-        let sequence = cwa.properties.as_ref().unwrap().sequence;
-        let sequence_str = sequence.map_or_else(
-            || "N/A".to_owned(),
-            |sequence_value| sequence_value.to_string(),
-        );
-        let start = cwa.properties.as_ref().unwrap().start.as_deref();
-        let end = cwa.properties.as_ref().unwrap().end.as_deref();
+        let issue_time_str = presenter.timestamp(
+            format!("cwas.features[{index}].properties.issue_time"),
+            issue_time,
+        )?;
+        let cwsu = properties.cwsu.map(|value| value.to_string());
+        let cwsu = presenter.text(cwsu.as_deref());
+        let sequence_str = presenter.integer(properties.sequence);
+        let start = properties.start.as_deref();
+        let end = properties.end.as_deref();
         let start_and_end = format!(
             "{}\nto\n{}",
-            format_datetime_human_readable(start),
-            format_datetime_human_readable(end)
+            presenter.timestamp(format!("cwas.features[{index}].properties.start"), start)?,
+            presenter.timestamp(format!("cwas.features[{index}].properties.end"), end)?
         );
-        let observed_property = cwa
-            .properties
-            .as_ref()
-            .unwrap()
-            .observed_property
-            .as_deref()
-            .unwrap_or("N/A");
-        let text = cwa
-            .properties
-            .as_ref()
-            .unwrap()
-            .text
-            .as_deref()
-            .unwrap_or("N/A");
+        let observed_property = presenter.text(properties.observed_property.as_deref());
+        let text = presenter.text(properties.text.as_deref());
 
         table.add_row(vec![
             Cell::new(office_id),
@@ -278,11 +227,14 @@ pub fn create_cwas_table(cwas: &CenterWeatherAdvisoryCollectionGeoJson) -> Table
             Cell::new(text),
         ]);
     }
-    table
+    Ok(table)
 }
 
 /// Formats a single aviation SIGMET into a comfy table.
-pub fn create_sigmet_table(sigmet: &SigmetGeoJson) -> Table {
+fn create_sigmet_table(
+    sigmet: &SigmetGeoJson,
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -309,38 +261,41 @@ pub fn create_sigmet_table(sigmet: &SigmetGeoJson) -> Table {
             .add_attribute(comfy_table::Attribute::Bold)
             .set_alignment(CellAlignment::Center),
     ]);
-    let office_id = sigmet.properties.as_ref().id.as_deref().unwrap_or("N/A");
+    let office_id = presenter.text(sigmet.properties.as_ref().id.as_deref());
     let issue_time = sigmet.properties.as_ref().issue_time.as_deref();
-    let issue_time_str = format_datetime_human_readable(issue_time);
-    let fir = sigmet
-        .properties
-        .as_ref()
-        .fir
-        .clone()
-        .flatten()
-        .unwrap_or("N/A".to_owned());
-    let atsu = sigmet.properties.as_ref().atsu.as_deref().unwrap_or("N/A");
-    let sequence = sigmet
-        .properties
-        .as_ref()
-        .sequence
-        .clone()
-        .flatten()
-        .unwrap_or("N/A".to_owned());
+    let issue_time_str = presenter.timestamp("sigmet.properties.issue_time", issue_time)?;
+    let fir = presenter.text(
+        sigmet
+            .properties
+            .as_ref()
+            .fir
+            .as_ref()
+            .and_then(Option::as_deref),
+    );
+    let atsu = presenter.text(sigmet.properties.as_ref().atsu.as_deref());
+    let sequence = presenter.text(
+        sigmet
+            .properties
+            .as_ref()
+            .sequence
+            .as_ref()
+            .and_then(Option::as_deref),
+    );
     let start = sigmet.properties.as_ref().start.as_deref();
     let end = sigmet.properties.as_ref().end.as_deref();
     let start_and_end = format!(
         "{}\nto\n{}",
-        format_datetime_human_readable(start),
-        format_datetime_human_readable(end)
+        presenter.timestamp("sigmet.properties.start", start)?,
+        presenter.timestamp("sigmet.properties.end", end)?
     );
-    let phenomenon = sigmet
-        .properties
-        .as_ref()
-        .phenomenon
-        .clone()
-        .flatten()
-        .unwrap_or("N/A".to_owned());
+    let phenomenon = presenter.text(
+        sigmet
+            .properties
+            .as_ref()
+            .phenomenon
+            .as_ref()
+            .and_then(Option::as_deref),
+    );
     table.add_row(vec![
         Cell::new(office_id),
         Cell::new(issue_time_str),
@@ -350,11 +305,14 @@ pub fn create_sigmet_table(sigmet: &SigmetGeoJson) -> Table {
         Cell::new(phenomenon),
         Cell::new(start_and_end),
     ]);
-    table
+    Ok(table)
 }
 
 /// Formats a collection of aviation SIGMETs into a comfy table.
-pub fn create_sigmets_table(sigmets: &SigmetCollectionGeoJson) -> Table {
+fn create_sigmets_table(
+    sigmets: &SigmetCollectionGeoJson,
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -381,39 +339,24 @@ pub fn create_sigmets_table(sigmets: &SigmetCollectionGeoJson) -> Table {
             .add_attribute(comfy_table::Attribute::Bold)
             .set_alignment(CellAlignment::Center),
     ]);
-    for sigmet in &sigmets.features {
-        let office_id = sigmet.properties.as_ref().id.as_deref().unwrap_or("N/A");
-        let issue_time = sigmet.properties.as_ref().issue_time.as_deref();
-        let issue_time_str = format_datetime_human_readable(issue_time);
-        let fir = sigmet
-            .properties
-            .as_ref()
-            .fir
-            .clone()
-            .flatten()
-            .unwrap_or("N/A".to_owned());
-        let atsu = sigmet.properties.as_ref().atsu.as_deref().unwrap_or("N/A");
-        let sequence = sigmet
-            .properties
-            .as_ref()
-            .sequence
-            .clone()
-            .flatten()
-            .unwrap_or("N/A".to_owned());
-        let start = sigmet.properties.as_ref().start.as_deref();
-        let end = sigmet.properties.as_ref().end.as_deref();
+    for (index, sigmet) in sigmets.features.iter().enumerate() {
+        let properties = sigmet.properties.as_ref();
+        let office_id = presenter.text(properties.id.as_deref());
+        let issue_time_str = presenter.timestamp(
+            format!("sigmets.features[{index}].properties.issue_time"),
+            properties.issue_time.as_deref(),
+        )?;
+        let fir = presenter.text(properties.fir.as_ref().and_then(Option::as_deref));
+        let atsu = presenter.text(properties.atsu.as_deref());
+        let sequence = presenter.text(properties.sequence.as_ref().and_then(Option::as_deref));
+        let start = properties.start.as_deref();
+        let end = properties.end.as_deref();
         let start_and_end = format!(
             "{}\nto\n{}",
-            format_datetime_human_readable(start),
-            format_datetime_human_readable(end)
+            presenter.timestamp(format!("sigmets.features[{index}].properties.start"), start)?,
+            presenter.timestamp(format!("sigmets.features[{index}].properties.end"), end)?
         );
-        let phenomenon = sigmet
-            .properties
-            .as_ref()
-            .phenomenon
-            .clone()
-            .flatten()
-            .unwrap_or("N/A".to_owned());
+        let phenomenon = presenter.text(properties.phenomenon.as_ref().and_then(Option::as_deref));
         table.add_row(vec![
             Cell::new(office_id),
             Cell::new(issue_time_str),
@@ -424,35 +367,60 @@ pub fn create_sigmets_table(sigmets: &SigmetCollectionGeoJson) -> Table {
             Cell::new(start_and_end),
         ]);
     }
-    table
+    Ok(table)
 }
 
 impl DefaultPresentation for CwsuOffice {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
-        Ok(PresentationDocument::table(create_cwsu_table(self)))
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::table(create_cwsu_table(
+            self, presenter,
+        )))
     }
 }
 
 impl DefaultPresentation for CenterWeatherAdvisoryGeoJson {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
-        Ok(PresentationDocument::table(create_cwa_table(self)))
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::table(create_cwa_table(
+            self, presenter,
+        )?))
     }
 }
 
 impl DefaultPresentation for CenterWeatherAdvisoryCollectionGeoJson {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
-        Ok(PresentationDocument::table(create_cwas_table(self)))
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::table(create_cwas_table(
+            self, presenter,
+        )?))
     }
 }
 
 impl DefaultPresentation for SigmetGeoJson {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
-        Ok(PresentationDocument::table(create_sigmet_table(self)))
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::table(create_sigmet_table(
+            self, presenter,
+        )?))
     }
 }
 
 impl DefaultPresentation for SigmetCollectionGeoJson {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
-        Ok(PresentationDocument::table(create_sigmets_table(self)))
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::table(create_sigmets_table(
+            self, presenter,
+        )?))
     }
 }

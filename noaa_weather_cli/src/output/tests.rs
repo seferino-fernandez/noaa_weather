@@ -15,10 +15,9 @@ use wiremock::{
 };
 
 use super::binary::Sealed;
+use super::presentation::{DefaultPresentation, DefaultPresenter, PresentationError};
 use super::sink::{DestinationAdapter, MediaKind, SinkTransaction};
-use super::{
-    BinaryPresentation, DefaultPresentation, Format, Output, OutputArgs, PresentationDocument,
-};
+use super::{BinaryPresentation, Format, Output, OutputArgs, PresentationDocument};
 
 #[derive(Serialize)]
 struct Example {
@@ -26,7 +25,10 @@ struct Example {
 }
 
 impl DefaultPresentation for Example {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        _presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::Text(format!(
             "value: {}\n\n",
             self.value
@@ -46,7 +48,10 @@ impl Serialize for TableExample {
 }
 
 impl DefaultPresentation for TableExample {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        _presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         let mut table = Table::new();
         table.set_header(["Column"]);
         table.add_row(["Value"]);
@@ -66,7 +71,10 @@ impl Serialize for InvalidJson {
 }
 
 impl DefaultPresentation for InvalidJson {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        _presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::Text("unused".to_owned()))
     }
 }
@@ -130,6 +138,16 @@ async fn default_table_is_written_by_lines_with_one_final_newline() {
     assert!(output.contains("Value"));
     assert!(output.ends_with('\n'));
     assert!(!output.ends_with("\n\n"));
+}
+
+#[test]
+fn json_configuration_does_not_construct_a_default_presenter() {
+    let output = Output::configured(OutputArgs {
+        json: true,
+        output: None,
+    });
+
+    assert!(output.default_presenter.is_none());
 }
 
 #[tokio::test]
@@ -285,7 +303,7 @@ async fn radar_station_default_presentation_uses_normalized_meaning() {
     let maximum_time = "2026-08-31T15:59:00Z"
         .parse::<jiff::Timestamp>()
         .unwrap()
-        .to_zoned(jiff::tz::TimeZone::try_system().unwrap_or(jiff::tz::TimeZone::UTC))
+        .to_zoned(jiff::tz::TimeZone::UTC)
         .strftime("%D %r")
         .to_string();
     assert_eq!(rendered.matches(&maximum_time).count(), 1, "{rendered}");

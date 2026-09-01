@@ -5,14 +5,15 @@ use noaa_weather_client::models::{
     AlertTypesResponse,
 };
 
-use crate::output::{DefaultPresentation, PresentationDocument};
-use crate::utils::format::{
-    format_datetime_human_readable, format_optional_number, get_zone_from_url,
-};
+use super::{DefaultPresentation, DefaultPresenter, PresentationError};
+use crate::output::PresentationDocument;
 
 /// Formats a collection of alerts into a comfy table.
 /// Displays a summary of each alert, highlighting severity with color.
-pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> comfy_table::Table {
+fn create_alerts_table(
+    alerts_data: &AlertCollectionGeoJson,
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -43,18 +44,15 @@ pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> comfy_table:
                 .add_attribute(comfy_table::Attribute::Bold)
                 .set_alignment(CellAlignment::Center),
         ]);
-        return table;
+        return Ok(table);
     }
 
     for feature in &alerts_data.features {
         if let Some(alert_properties_box) = &feature.properties {
             let alert_properties = &**alert_properties_box;
 
-            let mut severity_cell = Cell::new(
-                alert_properties
-                    .severity
-                    .map_or_else(|| "N/A".to_owned(), |severity| severity.to_string()),
-            );
+            let severity = alert_properties.severity.map(|value| value.to_string());
+            let mut severity_cell = Cell::new(presenter.text(severity.as_deref()));
             if let Some(severity_value) = alert_properties.severity {
                 match severity_value {
                     AlertSeverity::Extreme => {
@@ -69,41 +67,49 @@ pub fn create_alerts_table(alerts_data: &AlertCollectionGeoJson) -> comfy_table:
 
             let event_headline = format!(
                 "{}\n\n{}",
-                alert_properties.sender_name.as_deref().unwrap_or("N/A"),
-                alert_properties
-                    .headline
-                    .clone()
-                    .flatten()
-                    .as_deref()
-                    .unwrap_or("N/A")
+                presenter.text(alert_properties.sender_name.as_deref()),
+                presenter.text(
+                    alert_properties
+                        .headline
+                        .as_ref()
+                        .and_then(Option::as_deref)
+                )
             );
-            let effective_date =
-                format_datetime_human_readable(alert_properties.effective.as_deref());
-            let expires_date = format_datetime_human_readable(alert_properties.expires.as_deref());
+            let effective_date = presenter.timestamp(
+                "alerts.features[].properties.effective",
+                alert_properties.effective.as_deref(),
+            )?;
+            let expires_date = presenter.timestamp(
+                "alerts.features[].properties.expires",
+                alert_properties.expires.as_deref(),
+            )?;
 
             let effective_date = format!("{effective_date}\nto\n{expires_date}");
             table.add_row(vec![
                 Cell::new(event_headline),
-                Cell::new(alert_properties.area_desc.as_deref().unwrap_or("N/A")),
+                Cell::new(presenter.text(alert_properties.area_desc.as_deref())),
                 Cell::new(effective_date),
                 severity_cell,
                 Cell::new(
-                    alert_properties
-                        .instruction
-                        .clone()
-                        .flatten()
-                        .as_deref()
-                        .unwrap_or("N/A"),
+                    presenter.text(
+                        alert_properties
+                            .instruction
+                            .as_ref()
+                            .and_then(Option::as_deref),
+                    ),
                 ),
-                Cell::new(alert_properties.id.as_deref().unwrap_or("N/A")),
+                Cell::new(presenter.text(alert_properties.id.as_deref())),
             ]);
         }
     }
-    table
+    Ok(table)
 }
 
 /// Formats a single alert's details into a comfy table.
-pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> comfy_table::Table {
+fn create_single_alert_table(
+    alert_data: &AlertGeoJson,
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -120,130 +126,103 @@ pub fn create_single_alert_table(alert_data: &AlertGeoJson) -> comfy_table::Tabl
 
     // Collect all details as strings
     let mut details = vec![
-        format!(
-            "ID: {}",
-            alert.id.clone().unwrap_or_else(|| "N/A".to_owned())
-        ),
-        format!(
-            "Event: {}",
-            alert.event.clone().unwrap_or_else(|| "N/A".to_owned())
-        ),
+        format!("ID: {}", presenter.text(alert.id.as_deref())),
+        format!("Event: {}", presenter.text(alert.event.as_deref())),
         format!(
             "Headline: {}",
-            alert
-                .headline
-                .clone()
-                .flatten()
-                .unwrap_or_else(|| "N/A".to_owned())
+            presenter.text(alert.headline.as_ref().and_then(Option::as_deref))
         ),
         format!(
             "Area Description: {}",
-            alert.area_desc.clone().unwrap_or_else(|| "N/A".to_owned())
+            presenter.text(alert.area_desc.as_deref())
         ),
         format!(
             "Sender Name: {}",
-            alert
-                .sender_name
-                .clone()
-                .unwrap_or_else(|| "N/A".to_owned())
+            presenter.text(alert.sender_name.as_deref())
         ),
         format!(
             "Sent: {}",
-            format_datetime_human_readable(alert.sent.as_deref())
+            presenter.timestamp("alert.properties.sent", alert.sent.as_deref())?
         ),
         format!(
             "Effective: {}",
-            format_datetime_human_readable(alert.effective.as_deref())
+            presenter.timestamp("alert.properties.effective", alert.effective.as_deref())?
         ),
         format!(
             "Onset: {}",
-            format_datetime_human_readable(alert.onset.clone().flatten().as_deref())
+            presenter.timestamp(
+                "alert.properties.onset",
+                alert.onset.as_ref().and_then(Option::as_deref),
+            )?
         ),
         format!(
             "Expires: {}",
-            format_datetime_human_readable(alert.expires.as_deref())
+            presenter.timestamp("alert.properties.expires", alert.expires.as_deref())?
         ),
         format!(
             "Ends: {}",
-            format_datetime_human_readable(alert.ends.clone().flatten().as_deref())
+            presenter.timestamp(
+                "alert.properties.ends",
+                alert.ends.as_ref().and_then(Option::as_deref),
+            )?
         ),
         format!(
             "Status: {}",
-            alert
-                .status
-                .map_or("N/A".to_owned(), |status| status.to_string())
+            presenter.text(alert.status.map(|value| value.to_string()).as_deref())
         ),
         format!(
             "Message Type: {}",
-            alert
-                .message_type
-                .map_or("N/A".to_owned(), |message_type| message_type.to_string())
+            presenter.text(alert.message_type.map(|value| value.to_string()).as_deref())
         ),
         format!(
             "Category: {}",
-            alert
-                .category
-                .map_or("N/A".to_owned(), |category| category.to_string())
+            presenter.text(alert.category.map(|value| value.to_string()).as_deref())
         ),
         format!(
             "Severity: {}",
-            alert
-                .severity
-                .map_or("N/A".to_owned(), |severity| severity.to_string())
+            presenter.text(alert.severity.map(|value| value.to_string()).as_deref())
         ),
         format!(
             "Certainty: {}",
-            alert
-                .certainty
-                .map_or("N/A".to_owned(), |certainty| certainty.to_string())
+            presenter.text(alert.certainty.map(|value| value.to_string()).as_deref())
         ),
         format!(
             "Urgency: {}",
-            alert
-                .urgency
-                .map_or("N/A".to_owned(), |urgency| urgency.to_string())
+            presenter.text(alert.urgency.map(|value| value.to_string()).as_deref())
         ),
         format!(
             "Instruction: {}",
-            alert
-                .instruction
-                .clone()
-                .flatten()
-                .unwrap_or_else(|| "N/A".to_owned())
+            presenter.text(alert.instruction.as_ref().and_then(Option::as_deref))
         ),
         format!(
             "Response: {}",
-            alert
-                .response
-                .map_or("N/A".to_owned(), |response| response.to_string())
+            presenter.text(alert.response.map(|value| value.to_string()).as_deref())
         ),
     ];
-    let formatted_affected_zones = alert.affected_zones.as_ref().map_or_else(
-        || "N/A".to_owned(),
-        |affected_zones_list| {
-            affected_zones_list
-                .iter()
-                .filter_map(|zone| get_zone_from_url(Some(zone.clone())))
-                .collect::<Vec<String>>()
-                .join(", ")
-        },
-    );
+    let affected_zones = alert.affected_zones.as_ref().map(|zones| {
+        zones
+            .iter()
+            .map(|zone| presenter.resource_identifier(Some(zone)))
+            .collect::<Vec<_>>()
+            .join(", ")
+    });
+    let formatted_affected_zones = presenter.text(affected_zones.as_deref());
 
     details.push(format!("Affected Zones: {formatted_affected_zones}"));
     if let Some(Some(note)) = &alert.note {
         details.push(format!("Note: {note}"));
     }
-    let description = alert
-        .description
-        .clone()
-        .unwrap_or_else(|| "N/A".to_owned());
+    let description = presenter.text(alert.description.as_deref());
 
     table.add_row(vec![Cell::new(details.join("\n")), Cell::new(description)]);
-    table
+    Ok(table)
 }
 
 /// Formats the active alerts count into a comfy table.
-pub fn create_alert_count_table(count_data: &ActiveAlertsCountResponse) -> comfy_table::Table {
+fn create_alert_count_table(
+    count_data: &ActiveAlertsCountResponse,
+    presenter: &DefaultPresenter,
+) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -264,9 +243,9 @@ pub fn create_alert_count_table(count_data: &ActiveAlertsCountResponse) -> comfy
 
     let active_alerts_summary_data = format!(
         "Total Active Alerts: {}\nLand Alerts: {}\nMarine Alerts: {}",
-        format_optional_number(count_data.total),
-        format_optional_number(count_data.land),
-        format_optional_number(count_data.marine)
+        presenter.integer(count_data.total),
+        presenter.integer(count_data.land),
+        presenter.integer(count_data.marine)
     );
     let mut active_alerts_by_area_data = String::new();
     if let Some(areas_map) = &count_data.areas
@@ -305,7 +284,7 @@ pub fn create_alert_count_table(count_data: &ActiveAlertsCountResponse) -> comfy
 }
 
 /// Formats the list of alert types into a comfy table.
-pub fn create_alert_types_table(types_data: &AlertTypesResponse) -> comfy_table::Table {
+fn create_alert_types_table(types_data: &AlertTypesResponse) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -330,25 +309,43 @@ pub fn create_alert_types_table(types_data: &AlertTypesResponse) -> comfy_table:
 }
 
 impl DefaultPresentation for AlertCollectionGeoJson {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
-        Ok(PresentationDocument::table(create_alerts_table(self)))
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::table(create_alerts_table(
+            self, presenter,
+        )?))
     }
 }
 
 impl DefaultPresentation for AlertGeoJson {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
-        Ok(PresentationDocument::table(create_single_alert_table(self)))
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::table(create_single_alert_table(
+            self, presenter,
+        )?))
     }
 }
 
 impl DefaultPresentation for ActiveAlertsCountResponse {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
-        Ok(PresentationDocument::table(create_alert_count_table(self)))
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::table(create_alert_count_table(
+            self, presenter,
+        )))
     }
 }
 
 impl DefaultPresentation for AlertTypesResponse {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        _presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(create_alert_types_table(self)))
     }
 }
