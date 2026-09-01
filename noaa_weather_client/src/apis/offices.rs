@@ -3,7 +3,8 @@
 //! Covers the `/offices/{officeId}` endpoints for retrieving office
 //! information and published headline summaries.
 
-use super::{BinaryPayload, Error, configuration, http};
+use super::{BinaryPayload, Error};
+use crate::client::{Client, http};
 use crate::models;
 
 /// Returns metadata about a specific NWS office.
@@ -12,7 +13,7 @@ use crate::models;
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The NWS office ID (e.g., "TOP", "WRH", "NWS").
 ///
 /// # Returns
@@ -24,10 +25,10 @@ use crate::models;
 /// Returns an [`Error`] if the request fails (e.g., invalid office ID)
 /// or the response cannot be parsed.
 pub async fn get_forecast_office(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: &models::NwsOfficeId,
 ) -> Result<models::Office, Error> {
-    http::request(configuration, "/offices")
+    http::request(client, "/offices")
         .path_segment(id)
         .json(http::JsonMedia::JsonLd)
         .await
@@ -39,7 +40,7 @@ pub async fn get_forecast_office(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The NWS office ID.
 /// * `headline_id`: The unique identifier of the headline.
 ///
@@ -52,11 +53,11 @@ pub async fn get_forecast_office(
 /// Returns an [`Error`] if the request fails (e.g., headline not found)
 /// or the response cannot be parsed.
 pub async fn get_forecast_office_headline(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: &models::NwsOfficeId,
     headline_id: &str,
 ) -> Result<models::OfficeHeadline, Error> {
-    http::request(configuration, "/offices")
+    http::request(client, "/offices")
         .path_segment(id)
         .literal_path("headlines")
         .path_segment(headline_id)
@@ -70,7 +71,7 @@ pub async fn get_forecast_office_headline(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The NWS office ID.
 ///
 /// # Returns
@@ -82,10 +83,10 @@ pub async fn get_forecast_office_headline(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_forecast_office_headlines(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: &models::NwsOfficeId,
 ) -> Result<models::OfficeHeadlineCollection, Error> {
-    http::request(configuration, "/offices")
+    http::request(client, "/offices")
         .path_segment(id)
         .literal_path("headlines")
         .json(http::JsonMedia::JsonLd)
@@ -98,17 +99,17 @@ pub async fn get_forecast_office_headlines(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The NWS office ID.
 ///
 /// # Errors
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_forecast_office_briefing(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: &models::NwsOfficeId,
 ) -> Result<models::OfficeBriefingResponse, Error> {
-    http::request(configuration, "/offices")
+    http::request(client, "/offices")
         .path_segment(id)
         .literal_path("briefing")
         .json(http::JsonMedia::JsonLd)
@@ -123,7 +124,7 @@ pub async fn get_forecast_office_briefing(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The NWS office ID.
 ///
 /// # Errors
@@ -131,10 +132,10 @@ pub async fn get_forecast_office_briefing(
 /// Returns an [`Error`] if the request fails, a redirect is not followed, or the
 /// final response is not a PDF.
 pub async fn get_latest_forecast_office_briefing_document(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: &models::NwsOfficeId,
 ) -> Result<BinaryPayload, Error> {
-    http::request(configuration, "/offices")
+    http::request(client, "/offices")
         .path_segment(id)
         .literal_path("briefing")
         .literal_path("download")
@@ -149,7 +150,7 @@ pub async fn get_latest_forecast_office_briefing_document(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The NWS forecast office ID.
 /// * `briefing_id`: The identifier of the briefing document.
 ///
@@ -157,11 +158,11 @@ pub async fn get_latest_forecast_office_briefing_document(
 ///
 /// Returns an [`Error`] if the request fails or the response is not a PDF.
 pub async fn get_forecast_office_briefing_document(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: &models::NwsOfficeId,
     briefing_id: &str,
 ) -> Result<BinaryPayload, Error> {
-    http::request(configuration, "/offices")
+    http::request(client, "/offices")
         .path_segment(id)
         .literal_path("briefing")
         .literal_path("download")
@@ -176,17 +177,17 @@ pub async fn get_forecast_office_briefing_document(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The NWS office ID.
 ///
 /// # Errors
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_forecast_office_weather_stories(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: &models::NwsOfficeId,
 ) -> Result<models::OfficeWeatherStoryCollection, Error> {
-    http::request(configuration, "/offices")
+    http::request(client, "/offices")
         .path_segment(id)
         .literal_path("weatherstories")
         .json(http::JsonMedia::JsonLd)
@@ -199,7 +200,7 @@ pub async fn get_forecast_office_weather_stories(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The NWS forecast office ID.
 /// * `image_id`: The identifier of the weather-story image.
 ///
@@ -207,11 +208,11 @@ pub async fn get_forecast_office_weather_stories(
 ///
 /// Returns an [`Error`] if the request fails or the response is not an image.
 pub async fn get_forecast_office_weather_story_image(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: &models::NwsOfficeId,
     image_id: &str,
 ) -> Result<BinaryPayload, Error> {
-    http::request(configuration, "/offices")
+    http::request(client, "/offices")
         .path_segment(id)
         .literal_path("weatherstories")
         .literal_path("download")
@@ -222,7 +223,6 @@ pub async fn get_forecast_office_weather_story_image(
 
 #[cfg(test)]
 mod tests {
-    use reqwest::{Client, StatusCode, redirect::Policy};
     use wiremock::{
         Mock, MockServer, ResponseTemplate,
         matchers::{header, method, path},
@@ -236,13 +236,9 @@ mod tests {
     };
     use crate::{
         Error,
-        apis::configuration::Configuration,
+        client::test_support::client_for,
         models::{NwsForecastOfficeId, NwsOfficeId, NwsRegionalHqid},
     };
-
-    fn configuration(server: &MockServer) -> Configuration {
-        Configuration::new(None, Some(server.uri()), None, None)
-    }
 
     fn psr() -> NwsOfficeId {
         NwsForecastOfficeId::Psr.into()
@@ -266,7 +262,7 @@ mod tests {
                 .mount(&server)
                 .await;
 
-            let response = get_forecast_office(&configuration(&server), &office)
+            let response = get_forecast_office(&client_for(&server), &office)
                 .await
                 .unwrap();
             assert_eq!(
@@ -286,13 +282,13 @@ mod tests {
             .mount(&server)
             .await;
 
-        let Error::Protocol(error) = get_forecast_office(&configuration(&server), &psr())
+        let Error::Protocol(error) = get_forecast_office(&client_for(&server), &psr())
             .await
             .unwrap_err()
         else {
             panic!("expected protocol error");
         };
-        assert_eq!(error.expected(), "application/ld+json");
+        assert_eq!(error.expected(), Some("application/ld+json"));
         assert_eq!(error.actual(), Some("application/json"));
     }
 
@@ -307,7 +303,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        get_forecast_office_headline(&configuration(&server), &psr(), "headline /%?")
+        get_forecast_office_headline(&client_for(&server), &psr(), "headline /%?")
             .await
             .unwrap();
     }
@@ -326,7 +322,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        get_forecast_office_headlines(&configuration(&server), &psr())
+        get_forecast_office_headlines(&client_for(&server), &psr())
             .await
             .unwrap();
     }
@@ -345,7 +341,7 @@ mod tests {
             .mount(&direct_server)
             .await;
 
-        let direct = get_forecast_office_briefing(&configuration(&direct_server), &psr())
+        let direct = get_forecast_office_briefing(&client_for(&direct_server), &psr())
             .await
             .unwrap();
         assert_eq!(direct.context, None);
@@ -366,7 +362,7 @@ mod tests {
             .mount(&wrapped_server)
             .await;
 
-        let wrapped = get_forecast_office_briefing(&configuration(&wrapped_server), &psr())
+        let wrapped = get_forecast_office_briefing(&client_for(&wrapped_server), &psr())
             .await
             .unwrap();
         assert!(wrapped.context.is_some());
@@ -387,7 +383,7 @@ mod tests {
             .mount(&null_server)
             .await;
 
-        let null = get_forecast_office_briefing(&configuration(&null_server), &psr())
+        let null = get_forecast_office_briefing(&client_for(&null_server), &psr())
             .await
             .unwrap();
         assert_eq!(null.briefing, None);
@@ -405,13 +401,13 @@ mod tests {
             .mount(&server)
             .await;
 
-        let Error::Protocol(error) = get_forecast_office_briefing(&configuration(&server), &psr())
+        let Error::Protocol(error) = get_forecast_office_briefing(&client_for(&server), &psr())
             .await
             .unwrap_err()
         else {
             panic!("expected protocol error");
         };
-        assert_eq!(error.expected(), "application/ld+json");
+        assert_eq!(error.expected(), Some("application/ld+json"));
         assert_eq!(error.actual(), Some("application/json"));
     }
 
@@ -429,7 +425,7 @@ mod tests {
             .mount(&bare_server)
             .await;
 
-        let bare = get_forecast_office_weather_stories(&configuration(&bare_server), &psr())
+        let bare = get_forecast_office_weather_stories(&client_for(&bare_server), &psr())
             .await
             .unwrap();
         assert_eq!(bare.context, None);
@@ -451,7 +447,7 @@ mod tests {
             .mount(&wrapped_server)
             .await;
 
-        let wrapped = get_forecast_office_weather_stories(&configuration(&wrapped_server), &psr())
+        let wrapped = get_forecast_office_weather_stories(&client_for(&wrapped_server), &psr())
             .await
             .unwrap();
         assert!(wrapped.context.is_some());
@@ -471,13 +467,13 @@ mod tests {
             .await;
 
         let Error::Protocol(error) =
-            get_forecast_office_weather_stories(&configuration(&server), &psr())
+            get_forecast_office_weather_stories(&client_for(&server), &psr())
                 .await
                 .unwrap_err()
         else {
             panic!("expected protocol error");
         };
-        assert_eq!(error.expected(), "application/ld+json");
+        assert_eq!(error.expected(), Some("application/ld+json"));
         assert_eq!(error.actual(), Some("application/json"));
     }
 
@@ -496,13 +492,10 @@ mod tests {
             .mount(&server)
             .await;
 
-        let payload = get_forecast_office_briefing_document(
-            &configuration(&server),
-            &psr(),
-            "briefing 2026/%",
-        )
-        .await
-        .unwrap();
+        let payload =
+            get_forecast_office_briefing_document(&client_for(&server), &psr(), "briefing 2026/%")
+                .await
+                .unwrap();
         assert_eq!(payload.as_bytes(), b"%PDF-briefing");
         assert_eq!(payload.content_type().essence_str(), "application/pdf");
         assert_eq!(
@@ -532,44 +525,12 @@ mod tests {
             .mount(&server)
             .await;
 
-        let payload = get_latest_forecast_office_briefing_document(&configuration(&server), &psr())
+        let payload = get_latest_forecast_office_briefing_document(&client_for(&server), &psr())
             .await
             .unwrap();
         assert_eq!(payload.as_bytes(), b"%PDF-latest");
         assert_eq!(payload.content_type().essence_str(), "application/pdf");
         assert_eq!(payload.final_url().path(), "/files/latest.pdf");
-    }
-
-    #[tokio::test]
-    async fn latest_briefing_respects_a_no_follow_redirect_policy() {
-        let server = MockServer::start().await;
-        Mock::given(method("GET"))
-            .and(path("/offices/PSR/briefing/download/latest"))
-            .and(header("Accept", "application/pdf"))
-            .respond_with(
-                ResponseTemplate::new(302)
-                    .insert_header("Location", "/files/latest.pdf")
-                    .set_body_string("redirecting"),
-            )
-            .expect(1)
-            .mount(&server)
-            .await;
-
-        let client = Client::builder().redirect(Policy::none()).build().unwrap();
-        let config = Configuration::new(None, Some(server.uri()), Some(client), None);
-        let Error::Response(response) =
-            get_latest_forecast_office_briefing_document(&config, &psr())
-                .await
-                .unwrap_err()
-        else {
-            panic!("expected redirect response error");
-        };
-        assert_eq!(response.status(), StatusCode::FOUND);
-        assert_eq!(
-            response.url().path(),
-            "/offices/PSR/briefing/download/latest"
-        );
-        assert_eq!(response.as_bytes(), b"redirecting");
     }
 
     #[tokio::test]
@@ -589,13 +550,10 @@ mod tests {
             .mount(&server)
             .await;
 
-        let payload = get_forecast_office_weather_story_image(
-            &configuration(&server),
-            &psr(),
-            "image 2026/%",
-        )
-        .await
-        .unwrap();
+        let payload =
+            get_forecast_office_weather_story_image(&client_for(&server), &psr(), "image 2026/%")
+                .await
+                .unwrap();
         assert_eq!(payload.as_bytes(), b"image-bytes");
         assert_eq!(payload.content_type().essence_str(), "image/avif");
         assert_eq!(

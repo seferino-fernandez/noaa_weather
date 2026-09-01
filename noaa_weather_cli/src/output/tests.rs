@@ -170,7 +170,7 @@ async fn json_is_pretty_and_has_one_trailing_newline() {
 #[cfg(feature = "xml")]
 #[tokio::test]
 async fn normalized_taf_meaning_flows_through_the_default_output_seam() {
-    use noaa_weather_client::apis::{configuration::Configuration, stations};
+    use noaa_weather_client::{Client, apis::stations};
 
     let server = MockServer::start().await;
     Mock::given(method("GET"))
@@ -181,13 +181,16 @@ async fn normalized_taf_meaning_flows_through_the_default_output_seam() {
         ))
         .mount(&server)
         .await;
-    let configuration = Configuration::new(None, Some(server.uri()), None, None);
+    let client = Client::builder("noaa-weather-tests/1.0")
+        .base_url(server.uri())
+        .build()
+        .unwrap();
     let (output, bytes) = memory_output(Format::Default);
 
     output
         .show(
             "showing semantic TAF",
-            stations::get_terminal_aerodrome_forecast(&configuration, "KXYZ", "2026-08-30", "1200"),
+            stations::get_terminal_aerodrome_forecast(&client, "KXYZ", "2026-08-30", "1200"),
         )
         .await
         .unwrap();
@@ -217,7 +220,7 @@ async fn normalized_taf_meaning_flows_through_the_default_output_seam() {
 #[cfg(feature = "xml")]
 #[tokio::test]
 async fn normalized_taf_json_flows_through_the_output_seam() {
-    use noaa_weather_client::apis::{configuration::Configuration, stations};
+    use noaa_weather_client::{Client, apis::stations};
 
     let server = MockServer::start().await;
     Mock::given(method("GET"))
@@ -228,13 +231,16 @@ async fn normalized_taf_json_flows_through_the_output_seam() {
         ))
         .mount(&server)
         .await;
-    let configuration = Configuration::new(None, Some(server.uri()), None, None);
+    let client = Client::builder("noaa-weather-tests/1.0")
+        .base_url(server.uri())
+        .build()
+        .unwrap();
     let (output, bytes) = memory_output(Format::Json);
 
     output
         .show(
             "showing semantic TAF JSON",
-            stations::get_terminal_aerodrome_forecast(&configuration, "KCXL", "2026-08-30", "1500"),
+            stations::get_terminal_aerodrome_forecast(&client, "KCXL", "2026-08-30", "1500"),
         )
         .await
         .unwrap();

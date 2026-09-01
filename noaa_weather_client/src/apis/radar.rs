@@ -3,7 +3,8 @@
 //! Covers the `/radar` endpoints for metadata about NEXRAD radar stations,
 //! distribution servers, and data queue status.
 
-use super::{Error, configuration, http};
+use super::Error;
+use crate::client::{Client, http};
 use crate::models::{self, RadarQueueHost};
 
 /// Parameters for the [`get_radar_data_queue`] function.
@@ -36,7 +37,7 @@ pub struct RadarDataQueueQueryParams<'a> {
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The ID of the radar wind profiler station.
 /// * `time`: Optional specific time for the data (ISO 8601 format or relative time).
 /// * `interval`: Optional time interval for the data (ISO 8601 duration format).
@@ -52,12 +53,12 @@ pub struct RadarDataQueueQueryParams<'a> {
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_radar_wind_profiler(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: &str,
     time: Option<&str>,
     interval: Option<&str>,
 ) -> Result<serde_json::Value, Error> {
-    http::request(configuration, "/radar/profilers")
+    http::request(client, "/radar/profilers")
         .path_segment(id)
         .query_scalar("time", time)
         .query_scalar("interval", interval)
@@ -72,7 +73,7 @@ pub async fn get_radar_wind_profiler(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `host`: The hostname of the radar queue server.
 /// * `params`: A [`RadarDataQueueQueryParams`] struct containing the query parameters.
 ///
@@ -85,11 +86,11 @@ pub async fn get_radar_wind_profiler(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_radar_data_queue(
-    configuration: &configuration::Configuration,
+    client: &Client,
     host: &RadarQueueHost,
     params: RadarDataQueueQueryParams<'_>,
 ) -> Result<models::RadarQueuesResponse, Error> {
-    http::request(configuration, "/radar/queues")
+    http::request(client, "/radar/queues")
         .path_segment(host)
         .query_scalar("limit", params.limit)
         .query_scalar("arrived", params.arrived)
@@ -109,7 +110,7 @@ pub async fn get_radar_data_queue(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The ID of the radar server.
 /// * `reporting_host`: Optional filter by reporting host.
 ///
@@ -122,11 +123,11 @@ pub async fn get_radar_data_queue(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_radar_server(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: &str,
     reporting_host: Option<&str>,
 ) -> Result<models::RadarServer, Error> {
-    http::request(configuration, "/radar/servers")
+    http::request(client, "/radar/servers")
         .path_segment(id)
         .query_scalar("reportingHost", reporting_host)
         .json(http::JsonMedia::JsonLd)
@@ -139,7 +140,7 @@ pub async fn get_radar_server(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `reporting_host`: Optional filter by reporting host.
 ///
 /// # Returns
@@ -151,10 +152,10 @@ pub async fn get_radar_server(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_radar_servers(
-    configuration: &configuration::Configuration,
+    client: &Client,
     reporting_host: Option<&str>,
 ) -> Result<models::RadarServersResponse, Error> {
-    http::request(configuration, "/radar/servers")
+    http::request(client, "/radar/servers")
         .query_scalar("reportingHost", reporting_host)
         .json(http::JsonMedia::JsonLd)
         .await
@@ -166,7 +167,7 @@ pub async fn get_radar_servers(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The ID of the radar station (e.g., "KABQ", "KMUX").
 /// * `reporting_host`: Optional filter by reporting host.
 /// * `host`: Optional filter by host server.
@@ -180,12 +181,12 @@ pub async fn get_radar_servers(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_radar_station(
-    configuration: &configuration::Configuration,
+    client: &Client,
     id: &str,
     reporting_host: Option<&str>,
     host: Option<&RadarQueueHost>,
 ) -> Result<models::RadarStationFeature, Error> {
-    http::request(configuration, "/radar/stations")
+    http::request(client, "/radar/stations")
         .path_segment(id)
         .query_scalar("reportingHost", reporting_host)
         .query_scalar("host", host)
@@ -199,7 +200,7 @@ pub async fn get_radar_station(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `station_id`: The ID of the radar station.
 ///
 /// # Returns
@@ -211,10 +212,10 @@ pub async fn get_radar_station(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_radar_station_alarms(
-    configuration: &configuration::Configuration,
+    client: &Client,
     station_id: &str,
 ) -> Result<models::RadarStationAlarmsResponse, Error> {
-    http::request(configuration, "/radar/stations")
+    http::request(client, "/radar/stations")
         .path_segment(station_id)
         .literal_path("alarms")
         .json(http::JsonMedia::JsonLd)
@@ -227,7 +228,7 @@ pub async fn get_radar_station_alarms(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `station_type`: Optional filter by station type(s) (e.g., "WSR-88D", "TDWR").
 /// * `reporting_host`: Optional filter by reporting host.
 /// * `host`: Optional filter by host server.
@@ -241,12 +242,12 @@ pub async fn get_radar_station_alarms(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_radar_stations(
-    configuration: &configuration::Configuration,
+    client: &Client,
     station_type: Option<Vec<String>>,
     reporting_host: Option<&str>,
     host: Option<&RadarQueueHost>,
 ) -> Result<models::RadarStationsResponse, Error> {
-    http::request(configuration, "/radar/stations")
+    http::request(client, "/radar/stations")
         .query_csv("stationType", station_type)
         .query_scalar("reportingHost", reporting_host)
         .query_scalar("host", host)
@@ -260,7 +261,7 @@ pub async fn get_radar_stations(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `published`: Optional publication time interval in ISO 8601 format.
 ///
 /// # Returns
@@ -271,10 +272,10 @@ pub async fn get_radar_stations(
 ///
 /// Returns an [`Error`] if the request fails or the response cannot be parsed.
 pub async fn get_radar_spgds(
-    configuration: &configuration::Configuration,
+    client: &Client,
     published: Option<&str>,
 ) -> Result<models::RadarSpgdsResponse, Error> {
-    http::request(configuration, "/radar/spgds")
+    http::request(client, "/radar/spgds")
         .query_scalar("published", published)
         .json(http::JsonMedia::JsonLd)
         .await
@@ -288,11 +289,7 @@ mod tests {
     };
 
     use super::{get_radar_server, get_radar_spgds, get_radar_stations};
-    use crate::{Error, apis::configuration::Configuration, models::RadarQueueHost};
-
-    fn configuration(server: &MockServer) -> Configuration {
-        Configuration::new(None, Some(server.uri()), None, None)
-    }
+    use crate::{Error, client::test_support::client_for, models::RadarQueueHost};
 
     #[tokio::test]
     async fn station_types_are_one_csv_query_and_station_collection_is_geo_json() {
@@ -309,7 +306,7 @@ mod tests {
             .await;
 
         get_radar_stations(
-            &configuration(&server),
+            &client_for(&server),
             Some(vec!["WSR-88D".to_owned(), "TD/WR".to_owned()]),
             Some("report/host"),
             Some(&RadarQueueHost::Rds),
@@ -346,10 +343,9 @@ mod tests {
             .mount(&server)
             .await;
 
-        let response =
-            get_radar_server(&configuration(&server), "ldm/one host", Some("report/host"))
-                .await
-                .unwrap();
+        let response = get_radar_server(&client_for(&server), "ldm/one host", Some("report/host"))
+            .await
+            .unwrap();
 
         assert_eq!(response.id.as_deref(), Some("ldm/one host"));
         let requests = server.received_requests().await.unwrap();
@@ -382,9 +378,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let response = get_radar_spgds(&configuration(&server), None)
-            .await
-            .unwrap();
+        let response = get_radar_spgds(&client_for(&server), None).await.unwrap();
 
         assert_eq!(response.spgds.len(), 1);
         let entry = &response.spgds[0];
@@ -417,7 +411,7 @@ mod tests {
             .await;
         let published = "2026-01-01T00:00:00+00:00/2026-01-01T01:30:00+00:00";
 
-        let response = get_radar_spgds(&configuration(&server), Some(published))
+        let response = get_radar_spgds(&client_for(&server), Some(published))
             .await
             .unwrap();
 
@@ -442,7 +436,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let error = get_radar_spgds(&configuration(&server), None)
+        let error = get_radar_spgds(&client_for(&server), None)
             .await
             .unwrap_err();
         let Error::Response(response) = error else {

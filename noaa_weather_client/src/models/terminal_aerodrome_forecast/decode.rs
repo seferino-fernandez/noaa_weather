@@ -951,7 +951,7 @@ mod tests {
     use std::{hint::black_box, time::Instant};
 
     use super::decode_iwxxm;
-    use crate::apis::measure_allocations;
+    use crate::client::measure_allocations;
 
     const FIXTURE: &[u8] = include_bytes!("../../../tests/fixtures/taf/kflg_normal.xml");
     const MAX_ALLOCATION_OPERATIONS: usize = 200;

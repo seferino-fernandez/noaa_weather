@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::apis::configuration::Configuration;
+use noaa_weather_client::Client;
 use noaa_weather_client::apis::points as points_api;
 
 use crate::output::Output;
@@ -34,19 +34,19 @@ pub enum PointCommands {
 ///
 /// * `command` - The specific point subcommand and its arguments to execute.
 /// * `output` - The configured output policy.
-/// * `config` - The application configuration containing API details.
+/// * `client` - The NOAA API client.
 ///
 pub async fn handle_command(
     command: &PointCommands,
     output: &Output,
-    config: &Configuration,
+    client: &Client,
 ) -> Result<()> {
     match command {
         PointCommands::Metadata(args) => {
             output
                 .show(
                     "getting point metadata",
-                    points_api::get_point(config, args.latitude, args.longitude),
+                    points_api::get_point(client, args.latitude, args.longitude),
                 )
                 .await
         }

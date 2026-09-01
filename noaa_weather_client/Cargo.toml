@@ -19,12 +19,13 @@ rustdoc-args = ["--cfg", "docsrs"]
 bytes.workspace = true
 jiff.workspace = true
 mime.workspace = true
-percent-encoding.workspace = true
 quick-xml = { workspace = true, features = ["serde", "serialize"], optional = true }
-reqwest = { workspace = true, features = ["json", "multipart", "query"] }
+reqwest = { workspace = true, features = ["gzip", "json", "query"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 serde_with.workspace = true
+tokio = { workspace = true, features = ["time"] }
+tracing.workspace = true
 url.workspace = true
 
 [features]

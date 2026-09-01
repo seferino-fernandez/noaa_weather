@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::apis::configuration::Configuration;
+use noaa_weather_client::Client;
 use noaa_weather_client::apis::products as products_api;
 use noaa_weather_client::apis::products::ProductsQueryParams;
 use noaa_weather_client::models::NwsForecastOfficeId;
@@ -156,19 +156,19 @@ pub enum ProductCommands {
 ///
 /// * `command` - The specific product subcommand and its arguments to execute.
 /// * `output` - The configured output policy.
-/// * `config` - The application configuration containing API details.
+/// * `client` - The NOAA API client.
 ///
 pub async fn handle_command(
     command: &ProductCommands,
     output: &Output,
-    config: &Configuration,
+    client: &Client,
 ) -> Result<()> {
     match command {
         ProductCommands::LocationProducts(args) => {
             output
                 .show(
                     "getting products for a location",
-                    products_api::get_products_by_location(config, &args.location_id),
+                    products_api::get_products_by_location(client, &args.location_id),
                 )
                 .await
         }
@@ -176,7 +176,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting product {}", args.id),
-                    products_api::get_product(config, &args.id),
+                    products_api::get_product(client, &args.id),
                 )
                 .await
         }
@@ -184,7 +184,7 @@ pub async fn handle_command(
             output
                 .show(
                     "getting product locations",
-                    products_api::get_product_locations(config),
+                    products_api::get_product_locations(client),
                 )
                 .await
         }
@@ -192,7 +192,7 @@ pub async fn handle_command(
             output
                 .show(
                     "getting product types",
-                    products_api::get_product_types(config),
+                    products_api::get_product_types(client),
                 )
                 .await
         }
@@ -209,7 +209,7 @@ pub async fn handle_command(
             output
                 .show(
                     "querying products",
-                    products_api::get_products_query(config, params),
+                    products_api::get_products_query(client, params),
                 )
                 .await
         }
@@ -217,7 +217,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting products of type {}", args.type_id),
-                    products_api::get_products_by_type(config, &args.type_id),
+                    products_api::get_products_by_type(client, &args.type_id),
                 )
                 .await
         }
@@ -229,7 +229,7 @@ pub async fn handle_command(
                         args.type_id, args.location_id
                     ),
                     products_api::get_products_by_type_and_location(
-                        config,
+                        client,
                         &args.type_id,
                         &args.location_id,
                     ),
@@ -240,7 +240,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting locations for product type {}", args.type_id),
-                    products_api::get_product_issuance_locations_by_type(config, &args.type_id),
+                    products_api::get_product_issuance_locations_by_type(client, &args.type_id),
                 )
                 .await
         }
@@ -252,7 +252,7 @@ pub async fn handle_command(
                         args.type_id, args.location_id
                     ),
                     products_api::get_latest_product_by_type_and_location(
-                        config,
+                        client,
                         &args.type_id,
                         &args.location_id,
                     ),

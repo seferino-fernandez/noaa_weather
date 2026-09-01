@@ -6,7 +6,8 @@
 
 use std::fmt;
 
-use super::{Error, configuration, http};
+use super::Error;
+use crate::client::{Client, http};
 use crate::models;
 
 struct Coordinates {
@@ -28,7 +29,7 @@ impl fmt::Display for Coordinates {
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `latitude`: The latitude of the point (e.g., 39.7456).
 /// * `longitude`: The longitude of the point (e.g., -97.0892).
 ///
@@ -42,11 +43,11 @@ impl fmt::Display for Coordinates {
 /// Returns an [`Error`] if the request fails (e.g., invalid coordinates,
 /// point outside CONUS) or the response cannot be parsed.
 pub async fn get_point(
-    configuration: &configuration::Configuration,
+    client: &Client,
     latitude: f64,
     longitude: f64,
 ) -> Result<models::PointGeoJson, Error> {
-    http::request(configuration, "/points")
+    http::request(client, "/points")
         .path_segment(Coordinates {
             latitude,
             longitude,
@@ -63,7 +64,7 @@ mod tests {
     };
 
     use super::get_point;
-    use crate::apis::configuration::Configuration;
+    use crate::client::test_support::client_for;
 
     #[tokio::test]
     async fn typed_coordinates_are_one_geo_json_path_segment() {
@@ -78,8 +79,8 @@ mod tests {
             .expect(1)
             .mount(&server)
             .await;
-        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+        let client = client_for(&server);
 
-        get_point(&configuration, 39.7456, -97.0892).await.unwrap();
+        get_point(&client, 39.7456, -97.0892).await.unwrap();
     }
 }

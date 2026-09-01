@@ -3,7 +3,8 @@
 //! Covers the `/alerts` family of endpoints. Use [`ActiveAlertsParams`] and
 //! [`GetAlertsParams`] to filter by severity, urgency, area, and more.
 
-use super::{Error, configuration, http};
+use super::Error;
+use crate::client::{Client, http};
 use crate::models::{self, AreaCode};
 
 /// Parameters for the [`get_active_alerts`] function.
@@ -82,7 +83,7 @@ pub struct GetAlertsParams<'a> {
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `params`: A [`ActiveAlertsParams`] struct containing the query parameters.
 ///
 /// # Returns
@@ -95,10 +96,10 @@ pub struct GetAlertsParams<'a> {
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_active_alerts(
-    configuration: &configuration::Configuration,
+    client: &Client,
     params: ActiveAlertsParams<'_>,
 ) -> Result<models::AlertCollectionGeoJson, Error> {
-    http::request(configuration, "/alerts/active")
+    http::request(client, "/alerts/active")
         .query_csv("status", params.status)
         .query_csv("message_type", params.message_type)
         .query_csv("event", params.event)
@@ -121,7 +122,7 @@ pub async fn get_active_alerts(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `area`: The state/territory abbreviation or marine area code (e.g., "AL", "GM", "CA").
 ///
 /// # Returns
@@ -134,10 +135,10 @@ pub async fn get_active_alerts(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_active_alerts_for_area(
-    configuration: &configuration::Configuration,
+    client: &Client,
     area: &AreaCode,
 ) -> Result<models::AlertCollectionGeoJson, Error> {
-    http::request(configuration, "/alerts/active/area")
+    http::request(client, "/alerts/active/area")
         .path_segment(area)
         .json(http::JsonMedia::GeoJson)
         .await
@@ -149,7 +150,7 @@ pub async fn get_active_alerts_for_area(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 ///
 /// # Returns
 ///
@@ -161,9 +162,9 @@ pub async fn get_active_alerts_for_area(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_active_alerts_count(
-    configuration: &configuration::Configuration,
+    client: &Client,
 ) -> Result<models::ActiveAlertsCountResponse, Error> {
-    http::request(configuration, "/alerts/active/count")
+    http::request(client, "/alerts/active/count")
         .json(http::JsonMedia::JsonLd)
         .await
 }
@@ -174,7 +175,7 @@ pub async fn get_active_alerts_count(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `region`: The [`models::MarineRegionCode`] for the desired marine region.
 ///
 /// # Returns
@@ -187,10 +188,10 @@ pub async fn get_active_alerts_count(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_active_alerts_for_marine_region(
-    configuration: &configuration::Configuration,
+    client: &Client,
     region: models::MarineRegionCode,
 ) -> Result<models::AlertCollectionGeoJson, Error> {
-    http::request(configuration, "/alerts/active/region")
+    http::request(client, "/alerts/active/region")
         .path_segment(region)
         .json(http::JsonMedia::GeoJson)
         .await
@@ -202,7 +203,7 @@ pub async fn get_active_alerts_for_marine_region(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `zone_id`: The NWS public zone or county identifier (e.g., "CAZ043", "CAC073").
 ///
 /// # Returns
@@ -215,10 +216,10 @@ pub async fn get_active_alerts_for_marine_region(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_active_alerts_for_zone(
-    configuration: &configuration::Configuration,
+    client: &Client,
     zone_id: &str,
 ) -> Result<models::AlertCollectionGeoJson, Error> {
-    http::request(configuration, "/alerts/active/zone")
+    http::request(client, "/alerts/active/zone")
         .path_segment(zone_id)
         .json(http::JsonMedia::GeoJson)
         .await
@@ -231,7 +232,7 @@ pub async fn get_active_alerts_for_zone(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `params`: A [`GetAlertsParams`] struct containing the query parameters.
 ///
 /// # Returns
@@ -244,10 +245,10 @@ pub async fn get_active_alerts_for_zone(
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
 pub async fn get_alerts(
-    configuration: &configuration::Configuration,
+    client: &Client,
     params: GetAlertsParams<'_>,
 ) -> Result<models::AlertCollectionGeoJson, Error> {
-    http::request(configuration, "/alerts")
+    http::request(client, "/alerts")
         .query_scalar("start", params.start)
         .query_scalar("end", params.end)
         .query_csv("status", params.status)
@@ -274,7 +275,7 @@ pub async fn get_alerts(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 /// * `id`: The unique identifier of the alert.
 ///
 /// # Returns
@@ -286,11 +287,8 @@ pub async fn get_alerts(
 ///
 /// Returns an [`Error`] if the request fails, the alert ID is not found,
 /// or the response cannot be parsed.
-pub async fn get_alert(
-    configuration: &configuration::Configuration,
-    id: &str,
-) -> Result<models::AlertGeoJson, Error> {
-    http::request(configuration, "/alerts")
+pub async fn get_alert(client: &Client, id: &str) -> Result<models::AlertGeoJson, Error> {
+    http::request(client, "/alerts")
         .path_segment(id)
         .json(http::JsonMedia::GeoJson)
         .await
@@ -302,7 +300,7 @@ pub async fn get_alert(
 ///
 /// # Parameters
 ///
-/// * `configuration`: The API client configuration.
+/// * `client`: The API client.
 ///
 /// # Returns
 ///
@@ -313,10 +311,8 @@ pub async fn get_alert(
 ///
 /// Returns an [`Error`] if the request fails or the response
 /// cannot be parsed.
-pub async fn get_alert_types(
-    configuration: &configuration::Configuration,
-) -> Result<models::AlertTypesResponse, Error> {
-    http::request(configuration, "/alerts/types")
+pub async fn get_alert_types(client: &Client) -> Result<models::AlertTypesResponse, Error> {
+    http::request(client, "/alerts/types")
         .json(http::JsonMedia::JsonLd)
         .await
 }
@@ -333,7 +329,7 @@ mod tests {
         get_active_alerts_for_area, get_active_alerts_for_marine_region,
         get_active_alerts_for_zone, get_alert, get_alert_types, get_alerts,
     };
-    use crate::apis::configuration::Configuration;
+    use crate::client::test_support::client_for;
     use crate::models::{AreaCode, MarineRegionCode, StateTerritoryCode};
 
     #[tokio::test]
@@ -347,10 +343,10 @@ mod tests {
             ))
             .mount(&server)
             .await;
-        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+        let client = client_for(&server);
 
         get_alerts(
-            &configuration,
+            &client,
             GetAlertsParams {
                 start: Some("2026-08-30T00:00:00Z".to_owned()),
                 ..GetAlertsParams::default()
@@ -378,9 +374,9 @@ mod tests {
             .expect(1)
             .mount(&server)
             .await;
-        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+        let client = client_for(&server);
 
-        get_alert(&configuration, "space slash/id").await.unwrap();
+        get_alert(&client, "space slash/id").await.unwrap();
     }
 
     #[tokio::test]
@@ -396,10 +392,10 @@ mod tests {
             .expect(1)
             .mount(&server)
             .await;
-        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+        let client = client_for(&server);
 
         get_active_alerts(
-            &configuration,
+            &client,
             ActiveAlertsParams {
                 event: Some(vec!["Flood Watch".to_owned(), "Wind/Warning".to_owned()]),
                 code: None,
@@ -442,9 +438,9 @@ mod tests {
             .expect(1)
             .mount(&server)
             .await;
-        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+        let client = client_for(&server);
 
-        get_active_alerts_count(&configuration).await.unwrap();
+        get_active_alerts_count(&client).await.unwrap();
     }
 
     #[tokio::test]
@@ -457,9 +453,9 @@ mod tests {
             .expect(1)
             .mount(&server)
             .await;
-        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+        let client = client_for(&server);
 
-        get_alert_types(&configuration).await.unwrap();
+        get_alert_types(&client).await.unwrap();
     }
 
     #[tokio::test]
@@ -475,12 +471,10 @@ mod tests {
             .expect(1)
             .mount(&server)
             .await;
-        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+        let client = client_for(&server);
         let area = AreaCode::StateTerritoryCode(StateTerritoryCode::Ca);
 
-        get_active_alerts_for_area(&configuration, &area)
-            .await
-            .unwrap();
+        get_active_alerts_for_area(&client, &area).await.unwrap();
     }
 
     #[tokio::test]
@@ -496,9 +490,9 @@ mod tests {
             .expect(1)
             .mount(&server)
             .await;
-        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+        let client = client_for(&server);
 
-        get_active_alerts_for_marine_region(&configuration, MarineRegionCode::Gm)
+        get_active_alerts_for_marine_region(&client, MarineRegionCode::Gm)
             .await
             .unwrap();
     }
@@ -516,9 +510,9 @@ mod tests {
             .expect(1)
             .mount(&server)
             .await;
-        let configuration = Configuration::new(None, Some(server.uri()), None, None);
+        let client = client_for(&server);
 
-        get_active_alerts_for_zone(&configuration, "CAZ 043/alternate")
+        get_active_alerts_for_zone(&client, "CAZ 043/alternate")
             .await
             .unwrap();
     }

@@ -8,19 +8,22 @@
 //! Run with: just example-alerts
 //! Or: cargo run --example weather_alerts --manifest-path noaa_weather_client/Cargo.toml
 
+use noaa_weather_client::Client;
 use noaa_weather_client::apis::alerts;
-use noaa_weather_client::apis::configuration::Configuration;
 use noaa_weather_client::models::{AlertSeverity, AreaCode, StateTerritoryCode};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = Configuration::default();
+    let client = Client::builder(
+        "noaa-weather-examples/1.0 (+https://github.com/seferino-fernandez/noaa_weather)",
+    )
+    .build()?;
 
     println!("NOAA Weather Alerts Example\n");
 
     // 1. Get count of all active alerts
     println!("[1] Getting alert count...");
-    match alerts::get_active_alerts_count(&config).await {
+    match alerts::get_active_alerts_count(&client).await {
         Ok(count_response) => {
             println!(
                 "  Total active alerts: {}",
@@ -41,7 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 2. Get alerts for California
     println!("\n[2] Getting alerts for California...");
     match alerts::get_active_alerts_for_area(
-        &config,
+        &client,
         &AreaCode::StateTerritoryCode(StateTerritoryCode::Ca),
     )
     .await
@@ -91,7 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 3. Get available alert types
     println!("\n[3] Getting available alert types...");
-    match alerts::get_alert_types(&config).await {
+    match alerts::get_alert_types(&client).await {
         Ok(types_response) => {
             if let Some(event_types) = &types_response.event_types {
                 println!("  Available alert types ({} total):", event_types.len());
@@ -119,7 +122,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ]),
         ..Default::default()
     };
-    match alerts::get_active_alerts(&config, severity_params).await {
+    match alerts::get_active_alerts(&client, severity_params).await {
         Ok(severe_alerts) => {
             println!(
                 "  Found {} high-severity alerts",
@@ -149,14 +152,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 5. Get specific alert by ID (if any alerts exist)
     println!("\n[5] Getting detailed information for a specific alert...");
     let single_alert_params = alerts::ActiveAlertsParams::default();
-    match alerts::get_active_alerts(&config, single_alert_params).await {
+    match alerts::get_active_alerts(&client, single_alert_params).await {
         Ok(any_alerts) => {
             if let Some(first_alert) = any_alerts.features.first() {
                 if let Some(alert_id) = &first_alert.properties.as_ref().and_then(|p| p.id.as_ref())
                 {
                     println!("  Getting details for alert: {}", alert_id);
 
-                    match alerts::get_alert(&config, alert_id).await {
+                    match alerts::get_alert(&client, alert_id).await {
                         Ok(detailed_alert) => {
                             let props = &detailed_alert.properties;
                             println!("    Alert Details:");

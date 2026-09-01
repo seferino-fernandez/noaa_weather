@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::apis::configuration::Configuration;
+use noaa_weather_client::Client;
 use noaa_weather_client::apis::zones::{self as zones_api, GetZonesByTypeParams, GetZonesParams};
 use noaa_weather_client::models::{AreaCode, NwsZoneType, RegionCode};
 
@@ -108,12 +108,12 @@ pub enum ZoneCommands {
 ///
 /// * `command` - The specific zone subcommand and its arguments to execute.
 /// * `output` - The configured output policy.
-/// * `config` - The application configuration containing API details.
+/// * `client` - The NOAA API client.
 ///
 pub async fn handle_command(
     command: &ZoneCommands,
     output: &Output,
-    config: &Configuration,
+    client: &Client,
 ) -> Result<()> {
     match command {
         ZoneCommands::List {
@@ -142,7 +142,7 @@ pub async fn handle_command(
                                 limit: *limit,
                                 effective: effective.clone(),
                             };
-                            zones_api::get_zones(config, params).await
+                            zones_api::get_zones(client, params).await
                         }
                         Some(types) if types.len() == 1 => {
                             let single_type = types[0];
@@ -156,7 +156,7 @@ pub async fn handle_command(
                                 limit: *limit,
                                 effective: effective.clone(),
                             };
-                            zones_api::get_zones_by_type(config, single_type, params).await
+                            zones_api::get_zones_by_type(client, single_type, params).await
                         }
                         Some(types) => {
                             let params = GetZonesParams {
@@ -169,7 +169,7 @@ pub async fn handle_command(
                                 limit: *limit,
                                 effective: effective.clone(),
                             };
-                            zones_api::get_zones(config, params).await
+                            zones_api::get_zones(client, params).await
                         }
                     }
                 })
@@ -182,7 +182,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting zone {}/{}", zone_args.r#type, zone_args.id),
-                    zones_api::get_zone(config, zone_args.r#type, &zone_args.id, effective.clone()),
+                    zones_api::get_zone(client, zone_args.r#type, &zone_args.id, effective.clone()),
                 )
                 .await
         }
@@ -194,7 +194,7 @@ pub async fn handle_command(
                         zone_args.r#type, zone_args.id
                     ),
                     zones_api::get_current_zone_forecast(
-                        config,
+                        client,
                         &zone_args.r#type.to_string(),
                         &zone_args.id,
                     ),
@@ -205,7 +205,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting stations for forecast zone {id}"),
-                    zones_api::get_stations_by_zone(config, id, *limit, None),
+                    zones_api::get_stations_by_zone(client, id, *limit, None),
                 )
                 .await
         }
@@ -220,7 +220,7 @@ pub async fn handle_command(
                     format!("getting observations for forecast zone {id}"),
                     async {
                         zones_api::get_zone_observations(
-                            config,
+                            client,
                             id,
                             start.clone(),
                             end.clone(),
