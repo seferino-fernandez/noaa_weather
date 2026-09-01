@@ -4,10 +4,6 @@
 
 Office briefing PDFs and weather-story images are binary. Their download commands require `--output <PATH>`, reject `--json` and `--output -`, reject empty responses, and never write binary bytes to standard output.
 
-Default tables use one shared weather-value policy for missing values, units, measurement fallbacks, identifiers and timestamps. The CLI resolves the system time zone once for each default-output session and falls back to UTC if it is unavailable. A malformed timestamp fails default presentation with field context instead of producing partial output or being shown as missing. JSON output bypasses this policy and preserves the typed response serialization.
-
-See [Output architecture](architecture.md) for the interface and invariants behind this behavior.
-
 ## Command guides
 
 - [Alerts](cli/alerts.md)
