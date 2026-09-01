@@ -6,7 +6,6 @@ use output::{Output, OutputArgs};
 
 mod commands;
 mod output;
-mod utils;
 
 #[cfg(feature = "radio")]
 use commands::radio;

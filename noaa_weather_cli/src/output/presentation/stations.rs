@@ -5,10 +5,7 @@ use noaa_weather_client::models::{
     ObservationStationCollectionGeoJson, ObservationStationGeoJson,
 };
 
-use crate::output::{DefaultPresentation, PresentationDocument};
-use crate::utils::format::{
-    format_datetime_human_readable, format_optional_value_unit, get_zone_from_url,
-};
+use super::{DefaultPresentation, DefaultPresenter, PresentationDocument, PresentationError};
 
 /// Creates a table listing all observation stations with key summary information.
 ///
@@ -16,7 +13,10 @@ use crate::utils::format::{
 /// and formats them into a table. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
-pub fn create_stations_table(station_data: &ObservationStationCollectionGeoJson) -> Table {
+fn create_stations_table(
+    station_data: &ObservationStationCollectionGeoJson,
+    presenter: &DefaultPresenter,
+) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -42,7 +42,7 @@ pub fn create_stations_table(station_data: &ObservationStationCollectionGeoJson)
     ]);
 
     for feature in &station_data.features {
-        table.add_row(create_station_row(feature));
+        table.add_row(create_station_row(feature, presenter));
     }
 
     table
@@ -54,7 +54,10 @@ pub fn create_stations_table(station_data: &ObservationStationCollectionGeoJson)
 /// and formats it into a table. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
-pub fn create_observation_station_table(observation_station: &ObservationStationGeoJson) -> Table {
+fn create_observation_station_table(
+    observation_station: &ObservationStationGeoJson,
+    presenter: &DefaultPresenter,
+) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -79,7 +82,7 @@ pub fn create_observation_station_table(observation_station: &ObservationStation
             .set_alignment(CellAlignment::Center),
     ]);
 
-    table.add_row(create_station_row(observation_station));
+    table.add_row(create_station_row(observation_station, presenter));
 
     table
 }
@@ -90,15 +93,17 @@ pub fn create_observation_station_table(observation_station: &ObservationStation
 /// and formats it into a table. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
-pub fn create_stations_observation_table(observation: &ObservationGeoJson) -> Table {
+fn create_stations_observation_table(
+    observation: &ObservationGeoJson,
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
 
     let props = &observation.properties;
 
-    let station_id_str =
-        get_zone_from_url(props.station.as_ref()).unwrap_or_else(|| "N/A".to_owned());
+    let station_id_str = presenter.resource_identifier(props.station.as_deref());
 
     let title = format!("Station: {station_id_str} - Observation");
     table.set_header(vec![
@@ -112,70 +117,73 @@ pub fn create_stations_observation_table(observation: &ObservationGeoJson) -> Ta
 
     table.add_row(vec![
         Cell::new("Timestamp").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(format_datetime_human_readable(props.timestamp.as_deref())),
+        Cell::new(presenter.timestamp(
+            format!("station observation {station_id_str} timestamp"),
+            props.timestamp.as_deref(),
+        )?),
     ]);
 
     table.add_row(vec![
         Cell::new("Text Description").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(props.text_description.as_deref().unwrap_or("N/A")),
+        Cell::new(presenter.text(props.text_description.as_deref())),
     ]);
 
     table.add_row(vec![
         Cell::new("Temperature").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(format_optional_value_unit(&props.temperature)),
+        Cell::new(presenter.value_unit(props.temperature.as_ref())),
     ]);
 
     table.add_row(vec![
         Cell::new("Dewpoint").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(format_optional_value_unit(&props.dewpoint)),
+        Cell::new(presenter.value_unit(props.dewpoint.as_ref())),
     ]);
 
     table.add_row(vec![
         Cell::new("Wind Direction").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(format_optional_value_unit(&props.wind_direction)),
+        Cell::new(presenter.value_unit(props.wind_direction.as_ref())),
     ]);
 
     table.add_row(vec![
         Cell::new("Wind Speed").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(format_optional_value_unit(&props.wind_speed)),
+        Cell::new(presenter.value_unit(props.wind_speed.as_ref())),
     ]);
 
     table.add_row(vec![
         Cell::new("Wind Gust").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(format_optional_value_unit(&props.wind_gust)),
+        Cell::new(presenter.value_unit(props.wind_gust.as_ref())),
     ]);
 
     table.add_row(vec![
         Cell::new("Barometric Pressure").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(format_optional_value_unit(&props.barometric_pressure)),
+        Cell::new(presenter.value_unit(props.barometric_pressure.as_ref())),
     ]);
 
     table.add_row(vec![
         Cell::new("Sea Level Pressure").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(format_optional_value_unit(&props.sea_level_pressure)),
+        Cell::new(presenter.value_unit(props.sea_level_pressure.as_ref())),
     ]);
 
     table.add_row(vec![
         Cell::new("Visibility").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(format_optional_value_unit(&props.visibility)),
+        Cell::new(presenter.value_unit(props.visibility.as_ref())),
     ]);
 
     table.add_row(vec![
         Cell::new("Relative Humidity").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(format_optional_value_unit(&props.relative_humidity)),
+        Cell::new(presenter.value_unit(props.relative_humidity.as_ref())),
     ]);
 
     table.add_row(vec![
         Cell::new("Wind Chill").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(format_optional_value_unit(&props.wind_chill)),
+        Cell::new(presenter.value_unit(props.wind_chill.as_ref())),
     ]);
 
     table.add_row(vec![
         Cell::new("Heat Index").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new(format_optional_value_unit(&props.heat_index)),
+        Cell::new(presenter.value_unit(props.heat_index.as_ref())),
     ]);
 
-    table
+    Ok(table)
 }
 
 /// Creates a table listing the latest observation for a single observation station.
@@ -184,7 +192,10 @@ pub fn create_stations_observation_table(observation: &ObservationGeoJson) -> Ta
 /// and formats it into a table. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
-pub fn create_stations_observations_table(observations: &ObservationCollectionGeoJson) -> Table {
+fn create_stations_observations_table(
+    observations: &ObservationCollectionGeoJson,
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -229,23 +240,24 @@ pub fn create_stations_observations_table(observations: &ObservationCollectionGe
     ]);
     let observations_features = &observations.features;
 
-    for observation in observations_features {
-        let timestamp_str =
-            format_datetime_human_readable(observation.properties.timestamp.as_deref());
-        let temperature_str = format_optional_value_unit(&observation.properties.temperature);
-        let dewpoint_str = format_optional_value_unit(&observation.properties.dewpoint);
-        let wind_direction_str = format_optional_value_unit(&observation.properties.wind_direction);
-        let wind_speed_str = format_optional_value_unit(&observation.properties.wind_speed);
-        let wind_gust_str = format_optional_value_unit(&observation.properties.wind_gust);
-        let barometric_pressure_str =
-            format_optional_value_unit(&observation.properties.barometric_pressure);
-        let sea_level_pressure_str =
-            format_optional_value_unit(&observation.properties.sea_level_pressure);
-        let visibility_str = format_optional_value_unit(&observation.properties.visibility);
-        let relative_humidity_str =
-            format_optional_value_unit(&observation.properties.relative_humidity);
-        let wind_chill_str = format_optional_value_unit(&observation.properties.wind_chill);
-        let heat_index_str = format_optional_value_unit(&observation.properties.heat_index);
+    for (index, observation) in observations_features.iter().enumerate() {
+        let properties = &observation.properties;
+        let station = presenter.resource_identifier(properties.station.as_deref());
+        let timestamp_str = presenter.timestamp(
+            format!("station observation {index} ({station}) timestamp"),
+            properties.timestamp.as_deref(),
+        )?;
+        let temperature_str = presenter.value_unit(properties.temperature.as_ref());
+        let dewpoint_str = presenter.value_unit(properties.dewpoint.as_ref());
+        let wind_direction_str = presenter.value_unit(properties.wind_direction.as_ref());
+        let wind_speed_str = presenter.value_unit(properties.wind_speed.as_ref());
+        let wind_gust_str = presenter.value_unit(properties.wind_gust.as_ref());
+        let barometric_pressure_str = presenter.value_unit(properties.barometric_pressure.as_ref());
+        let sea_level_pressure_str = presenter.value_unit(properties.sea_level_pressure.as_ref());
+        let visibility_str = presenter.value_unit(properties.visibility.as_ref());
+        let relative_humidity_str = presenter.value_unit(properties.relative_humidity.as_ref());
+        let wind_chill_str = presenter.value_unit(properties.wind_chill.as_ref());
+        let heat_index_str = presenter.value_unit(properties.heat_index.as_ref());
 
         table.add_row(vec![
             Cell::new(timestamp_str),
@@ -263,14 +275,14 @@ pub fn create_stations_observations_table(observations: &ObservationCollectionGe
         ]);
     }
 
-    table
+    Ok(table)
 }
 
 #[cfg(feature = "xml")]
 mod taf;
 
 #[cfg(feature = "xml")]
-pub use taf::{create_stations_taf_table, create_stations_tafs_metadata_table};
+use taf::{create_stations_taf_table, create_stations_tafs_metadata_table};
 
 /// Creates a row for a single observation station.
 ///
@@ -278,13 +290,16 @@ pub use taf::{create_stations_taf_table, create_stations_tafs_metadata_table};
 /// and formats it into a row. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
-fn create_station_row(observation_station: &ObservationStationGeoJson) -> Vec<String> {
+fn create_station_row(
+    observation_station: &ObservationStationGeoJson,
+    presenter: &DefaultPresenter,
+) -> Vec<String> {
     let station = &observation_station.properties;
 
-    let elevation_str = format_optional_value_unit(&station.elevation);
+    let elevation_str = presenter.value_unit(station.elevation.as_ref());
 
     let point_str = observation_station.geometry.as_ref().map_or_else(
-        || "N/A".to_owned(),
+        || presenter.text(None),
         |geo_json_geometry| match geo_json_geometry.as_ref() {
             GeoJsonGeometry::GeoJsonPoint(point) => {
                 format!("{:?}", point.coordinates)
@@ -293,34 +308,25 @@ fn create_station_row(observation_station: &ObservationStationGeoJson) -> Vec<St
             | GeoJsonGeometry::GeoJsonPolygon(_)
             | GeoJsonGeometry::GeoJsonMultiPoint(_)
             | GeoJsonGeometry::GeoJsonMultiLineString(_)
-            | GeoJsonGeometry::GeoJsonMultiPolygon(_) => "N/A".to_owned(),
+            | GeoJsonGeometry::GeoJsonMultiPolygon(_) => presenter.text(None),
         },
     );
 
-    let timezone_str = station
-        .time_zone
-        .clone()
-        .unwrap_or_else(|| "N/A".to_owned());
+    let timezone_str = presenter.text(station.time_zone.as_deref());
 
-    let forecast_zone =
-        get_zone_from_url(station.forecast.clone()).unwrap_or_else(|| "N/A".to_owned());
+    let forecast_zone = presenter.resource_identifier(station.forecast.as_deref());
 
-    let county = get_zone_from_url(station.county.clone()).unwrap_or_else(|| "N/A".to_owned());
+    let county = presenter.resource_identifier(station.county.as_deref());
 
-    let fire_weather_zone =
-        get_zone_from_url(station.fire_weather_zone.clone()).unwrap_or_else(|| "N/A".to_owned());
+    let fire_weather_zone = presenter.resource_identifier(station.fire_weather_zone.as_deref());
 
     let zones = format!(
         "Forecast Zone: {forecast_zone}\nCounty: {county}\nFire Weather Zone: {fire_weather_zone}"
     );
 
     vec![
-        station
-            .station_identifier
-            .as_deref()
-            .unwrap_or("N/A")
-            .to_owned(),
-        station.name.as_deref().unwrap_or("N/A").to_owned(),
+        presenter.text(station.station_identifier.as_deref()),
+        presenter.text(station.name.as_deref()),
         elevation_str,
         timezone_str,
         point_str,
@@ -329,47 +335,67 @@ fn create_station_row(observation_station: &ObservationStationGeoJson) -> Vec<St
 }
 
 impl DefaultPresentation for ObservationStationCollectionGeoJson {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
-        Ok(PresentationDocument::table(create_stations_table(self)))
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::table(create_stations_table(
+            self, presenter,
+        )))
     }
 }
 
 impl DefaultPresentation for ObservationStationGeoJson {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(
-            create_observation_station_table(self),
+            create_observation_station_table(self, presenter),
         ))
     }
 }
 
 impl DefaultPresentation for ObservationGeoJson {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(
-            create_stations_observation_table(self),
+            create_stations_observation_table(self, presenter)?,
         ))
     }
 }
 
 impl DefaultPresentation for ObservationCollectionGeoJson {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(
-            create_stations_observations_table(self),
+            create_stations_observations_table(self, presenter)?,
         ))
     }
 }
 
 #[cfg(feature = "xml")]
 impl DefaultPresentation for noaa_weather_client::models::TerminalAerodromeForecastsResponse {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(
-            create_stations_tafs_metadata_table(self),
+            create_stations_tafs_metadata_table(self, presenter)?,
         ))
     }
 }
 
 #[cfg(feature = "xml")]
 impl DefaultPresentation for noaa_weather_client::models::TerminalAerodromeForecast {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        _presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(create_stations_taf_table(self)))
     }
 }

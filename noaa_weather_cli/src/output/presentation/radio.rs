@@ -2,15 +2,20 @@ use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Attribute, Cell, ContentArrangement, Table};
 use noaa_weather_client::models::{RadioBroadcast, RadioTransmitter, RadioTransmitterCollection};
 
-use crate::output::{DefaultPresentation, PresentationDocument};
+use super::{DefaultPresentation, DefaultPresenter, PresentationError};
+use crate::output::PresentationDocument;
 
-fn add_transmitter_row(table: &mut Table, transmitter: &RadioTransmitter) {
+fn add_transmitter_row(
+    table: &mut Table,
+    transmitter: &RadioTransmitter,
+    presenter: &DefaultPresenter,
+) {
     table.add_row(vec![
-        Cell::new(transmitter.call_sign.as_deref().unwrap_or("N/A")),
-        Cell::new(transmitter.frequency.as_deref().unwrap_or("N/A")),
-        Cell::new(transmitter.site_name.as_deref().unwrap_or("N/A")),
-        Cell::new(transmitter.city.as_deref().unwrap_or("N/A")),
-        Cell::new(transmitter.state.as_deref().unwrap_or("N/A")),
+        Cell::new(presenter.text(transmitter.call_sign.as_deref())),
+        Cell::new(presenter.text(transmitter.frequency.as_deref())),
+        Cell::new(presenter.text(transmitter.site_name.as_deref())),
+        Cell::new(presenter.text(transmitter.city.as_deref())),
+        Cell::new(presenter.text(transmitter.state.as_deref())),
         Cell::new(transmitter.same_codes.len()),
         Cell::new(transmitter.counties.len()),
     ]);
@@ -33,18 +38,24 @@ fn transmitter_table() -> Table {
 }
 
 /// Creates a concise table for a transmitter collection.
-pub fn create_radio_transmitters_table(collection: &RadioTransmitterCollection) -> Table {
+fn create_radio_transmitters_table(
+    collection: &RadioTransmitterCollection,
+    presenter: &DefaultPresenter,
+) -> Table {
     let mut table = transmitter_table();
     for transmitter in &collection.transmitters {
-        add_transmitter_row(&mut table, transmitter);
+        add_transmitter_row(&mut table, transmitter, presenter);
     }
     table
 }
 
 /// Creates a concise table for one transmitter.
-pub fn create_radio_transmitter_table(transmitter: &RadioTransmitter) -> Table {
+fn create_radio_transmitter_table(
+    transmitter: &RadioTransmitter,
+    presenter: &DefaultPresenter,
+) -> Table {
     let mut table = transmitter_table();
-    add_transmitter_row(&mut table, transmitter);
+    add_transmitter_row(&mut table, transmitter, presenter);
     table
 }
 
@@ -52,7 +63,7 @@ pub fn create_radio_transmitter_table(transmitter: &RadioTransmitter) -> Table {
 ///
 /// Iterates through paragraphs and sentences, extracting the full text of each
 /// sentence. Metadata marks are displayed as bracketed annotations between paragraphs.
-pub fn format_radio_broadcast(broadcast: &RadioBroadcast) -> String {
+fn format_radio_broadcast(broadcast: &RadioBroadcast) -> String {
     let mut output = String::new();
     output.push_str(&format!(
         "NOAA Weather Radio Broadcast (lang: {})\n",
@@ -92,23 +103,32 @@ pub fn format_radio_broadcast(broadcast: &RadioBroadcast) -> String {
 }
 
 impl DefaultPresentation for RadioBroadcast {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        _presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::Text(format_radio_broadcast(self)))
     }
 }
 
 impl DefaultPresentation for RadioTransmitterCollection {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(
-            create_radio_transmitters_table(self),
+            create_radio_transmitters_table(self, presenter),
         ))
     }
 }
 
 impl DefaultPresentation for RadioTransmitter {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(create_radio_transmitter_table(
-            self,
+            self, presenter,
         )))
     }
 }

@@ -1,20 +1,22 @@
 use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Attribute, Cell, CellAlignment, ContentArrangement, Table};
-use jiff::Timestamp;
-use jiff::tz::TimeZone;
 use noaa_weather_client::models::radar::{
-    RadarMeasurement, RadarNetworkInterfaceTelemetry, RadarPingSummary, RadarPosition,
-    RadarServerTelemetry, RadarStationTelemetry,
+    RadarNetworkInterfaceTelemetry, RadarPingSummary, RadarPosition, RadarServerTelemetry,
+    RadarStationTelemetry,
 };
 use noaa_weather_client::models::{
     RadarQueuesResponse, RadarServer, RadarServersResponse, RadarSpgdsResponse,
     RadarStationAlarmsResponse, RadarStationFeature, RadarStationsResponse,
 };
 
-use crate::output::{DefaultPresentation, PresentationDocument};
+use crate::output::PresentationDocument;
+use crate::output::presentation::{DefaultPresentation, DefaultPresenter, PresentationError};
 
 /// Creates a concise summary of SPGDS host telemetry.
-pub fn create_radar_spgds_table(response: &RadarSpgdsResponse) -> Table {
+fn create_radar_spgds_table(
+    response: &RadarSpgdsResponse,
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -27,43 +29,43 @@ pub fn create_radar_spgds_table(response: &RadarSpgdsResponse) -> Table {
         "Gateways",
     ]);
 
-    for entry in &response.spgds {
+    for (index, entry) in response.spgds.iter().enumerate() {
         table.add_row(vec![
-            Cell::new(entry.id.as_deref().unwrap_or("N/A")),
-            Cell::new(entry.timestamp.as_deref().unwrap_or("N/A")),
+            Cell::new(presenter.text(entry.id.as_deref())),
+            Cell::new(presenter.timestamp(
+                format!("radar.spgds[{index}].timestamp"),
+                entry.timestamp.as_deref(),
+            )?),
             Cell::new(
-                entry
-                    .dataflow
-                    .as_ref()
-                    .and_then(|status| status.state.as_deref())
-                    .unwrap_or("N/A"),
+                presenter.text(
+                    entry
+                        .dataflow
+                        .as_ref()
+                        .and_then(|status| status.state.as_deref()),
+                ),
             ),
             Cell::new(
-                entry
-                    .ldm
-                    .as_ref()
-                    .and_then(|status| status.conns.as_deref())
-                    .unwrap_or("N/A"),
+                presenter.text(
+                    entry
+                        .ldm
+                        .as_ref()
+                        .and_then(|status| status.conns.as_deref()),
+                ),
             ),
             Cell::new(
-                entry
-                    .second_hd
-                    .as_ref()
-                    .and_then(|status| status.state.as_deref())
-                    .unwrap_or("N/A"),
+                presenter.text(
+                    entry
+                        .second_hd
+                        .as_ref()
+                        .and_then(|status| status.state.as_deref()),
+                ),
             ),
             Cell::new(entry.spg.len()),
         ]);
     }
 
-    table
+    Ok(table)
 }
-
-use crate::utils::format::{
-    format_bytes_to_human_readable, format_datetime_human_readable, format_optional_bool_as_yes_no,
-    format_optional_f64_display, format_optional_f64_precise, format_optional_i32,
-    format_optional_i64, format_optional_string, format_optional_value_unit,
-};
 
 // --- Helper Functions ---
 // These are kept private to this module as they are specific to formatting radar station data.
@@ -80,22 +82,22 @@ fn add_section_header(table: &mut Table, title: &str) {
 
 /// Formats geographic coordinates `Option<Vec<f64>>` (longitude, latitude) for display.
 /// Uses "N/A" if None or invalid.
-fn format_position(position: RadarPosition) -> String {
+fn format_position(position: RadarPosition, presenter: &DefaultPresenter) -> String {
     match position {
-        RadarPosition::Missing => "N/A".to_owned(),
+        RadarPosition::Missing => presenter.missing(),
         RadarPosition::Invalid => "Invalid Coords".to_owned(),
         RadarPosition::Coordinates {
             longitude,
             latitude,
         } => format!("Lon: {longitude:.5}, Lat: {latitude:.5}"),
-        _ => "N/A".to_owned(),
+        _ => presenter.missing(),
     }
 }
 
 /// Creates a summary string for ping targets (e.g., "X / Y up").
-fn format_ping_summary(summary: Option<RadarPingSummary>) -> String {
+fn format_ping_summary(summary: Option<RadarPingSummary>, presenter: &DefaultPresenter) -> String {
     summary.map_or_else(
-        || "N/A".to_owned(),
+        || presenter.missing(),
         |summary| {
             if summary.total() == 0 {
                 return "0 targets".to_owned();
@@ -105,73 +107,46 @@ fn format_ping_summary(summary: Option<RadarPingSummary>) -> String {
     )
 }
 
-fn format_timestamp(timestamp: Option<Timestamp>) -> String {
-    timestamp.map_or_else(
-        || "N/A".to_owned(),
-        |timestamp| {
-            let time_zone = TimeZone::try_system().unwrap_or(TimeZone::UTC);
-            timestamp.to_zoned(time_zone).strftime("%D %r").to_string()
-        },
-    )
-}
-
-fn format_text(value: Option<&str>) -> String {
-    value.unwrap_or("N/A").to_owned()
-}
-
-fn format_measurement(measurement: Option<&RadarMeasurement>) -> String {
-    let Some(measurement) = measurement else {
-        return "N/A".to_owned();
-    };
-    let Some(value) = measurement.value() else {
-        return "N/A".to_owned();
-    };
-    let unit = measurement.unit().map_or("N/A", |unit| match unit {
-        noaa_weather_client::models::UnitCodeType::Wmo(unit) => unit.alt_label(),
-        noaa_weather_client::models::UnitCodeType::Nws(unit) => unit.alt_label(),
-    });
-    format!("{value:.2} {unit}").trim().to_owned()
-}
-
 /// Adds rows for network interface statistics to the table.
 fn add_network_interface_stats_rows(
     table: &mut Table,
     if_name: &str,
     stats: &RadarNetworkInterfaceTelemetry,
+    presenter: &DefaultPresenter,
 ) {
     table.add_row(vec![
         Cell::new(format!("{if_name} Interface")),
-        Cell::new(format_text(stats.interface())),
+        Cell::new(presenter.text(stats.interface())),
     ]);
     table.add_row(vec![
         Cell::new(format!("{if_name} Active")),
-        Cell::new(format_optional_bool_as_yes_no(&stats.active())),
+        Cell::new(presenter.yes_no(stats.active())),
     ]);
     table.add_row(vec![
         Cell::new(format!("{if_name} Tx Packets (OK/Err/Drop)")),
         Cell::new(format!(
             "{}/{}/{}",
-            format_optional_i64(&stats.transmitted_ok()),
-            format_optional_i64(&stats.transmitted_errors()),
-            format_optional_i64(&stats.transmitted_dropped())
+            presenter.integer(stats.transmitted_ok()),
+            presenter.integer(stats.transmitted_errors()),
+            presenter.integer(stats.transmitted_dropped())
         )),
     ]);
     table.add_row(vec![
         Cell::new(format!("{if_name} Tx Overruns")),
-        Cell::new(format_optional_i64(&stats.transmitted_overruns())),
+        Cell::new(presenter.integer(stats.transmitted_overruns())),
     ]);
     table.add_row(vec![
         Cell::new(format!("{if_name} Rx Packets (OK/Err/Drop)")),
         Cell::new(format!(
             "{}/{}/{}",
-            format_optional_i64(&stats.received_ok()),
-            format_optional_i64(&stats.received_errors()),
-            format_optional_i64(&stats.received_dropped())
+            presenter.integer(stats.received_ok()),
+            presenter.integer(stats.received_errors()),
+            presenter.integer(stats.received_dropped())
         )),
     ]);
     table.add_row(vec![
         Cell::new(format!("{if_name} Rx Overruns")),
-        Cell::new(format_optional_i64(&stats.received_overruns())),
+        Cell::new(presenter.integer(stats.received_overruns())),
     ]);
 }
 
@@ -189,7 +164,10 @@ fn add_network_interface_stats_rows(
 ///
 /// A `Result<Table>` which is the `comfy_table::Table` ready for printing,
 /// or an error if table creation fails (though current implementation always returns Ok).
-fn create_radar_station_telemetry_table(telemetry: &RadarStationTelemetry) -> Table {
+fn create_radar_station_telemetry_table(
+    telemetry: &RadarStationTelemetry,
+    presenter: &DefaultPresenter,
+) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -206,211 +184,228 @@ fn create_radar_station_telemetry_table(telemetry: &RadarStationTelemetry) -> Ta
     add_section_header(&mut table, "General Information");
     table.add_row(vec![
         Cell::new("Feature ID (URL)"),
-        Cell::new(format_text(telemetry.feature_id())),
+        Cell::new(presenter.text(telemetry.feature_id())),
     ]);
     table.add_row(vec![
         Cell::new("Coordinates"),
-        Cell::new(format_position(telemetry.position())),
+        Cell::new(format_position(telemetry.position(), presenter)),
     ]);
 
     if let Some(station) = telemetry.station() {
         table.add_row(vec![
             Cell::new("Station ID (ICAO)"),
-            Cell::new(format_text(station.id())),
+            Cell::new(presenter.text(station.id())),
         ]);
         table.add_row(vec![
             Cell::new("Name"),
-            Cell::new(format_text(station.name())),
+            Cell::new(presenter.text(station.name())),
         ]);
         table.add_row(vec![
             Cell::new("Type"),
-            Cell::new(format_text(station.station_type())),
+            Cell::new(presenter.text(station.station_type())),
         ]);
         table.add_row(vec![
             Cell::new("Elevation"),
-            Cell::new(format_measurement(station.elevation())),
+            Cell::new(presenter.radar_measurement(station.elevation())),
         ]);
         table.add_row(vec![
             Cell::new("Time Zone"),
-            Cell::new(format_text(station.time_zone())),
+            Cell::new(presenter.text(station.time_zone())),
         ]);
 
         add_section_header(&mut table, "Latency Information");
         if let Some(latency) = station.latency() {
             table.add_row(vec![
                 Cell::new("Current Latency"),
-                Cell::new(format_measurement(latency.current())),
+                Cell::new(presenter.radar_measurement(latency.current())),
             ]);
             table.add_row(vec![
                 Cell::new("Average Latency"),
-                Cell::new(format_measurement(latency.average())),
+                Cell::new(presenter.radar_measurement(latency.average())),
             ]);
             table.add_row(vec![
                 Cell::new("Max Latency"),
-                Cell::new(format_measurement(latency.maximum())),
+                Cell::new(presenter.radar_measurement(latency.maximum())),
             ]);
             table.add_row(vec![
                 Cell::new("Level II Last Received"),
-                Cell::new(format_timestamp(latency.level_two_last_received())),
+                Cell::new(presenter.parsed_timestamp(latency.level_two_last_received())),
             ]);
             table.add_row(vec![
                 Cell::new("Max Latency Time"),
-                Cell::new(format_timestamp(latency.maximum_at())),
+                Cell::new(presenter.parsed_timestamp(latency.maximum_at())),
             ]);
             table.add_row(vec![
                 Cell::new("Reporting Host"),
-                Cell::new(format_text(latency.reporting_host())),
+                Cell::new(presenter.text(latency.reporting_host())),
             ]);
             table.add_row(vec![
                 Cell::new("Data Host"),
-                Cell::new(format_text(latency.data_host())),
+                Cell::new(presenter.text(latency.data_host())),
             ]);
         } else {
-            table.add_row(vec![Cell::new("Latency Data"), Cell::new("N/A")]);
+            table.add_row(vec![
+                Cell::new("Latency Data"),
+                Cell::new(presenter.missing()),
+            ]);
         }
 
         add_section_header(&mut table, "RDA Information");
         if let Some(rda_info) = station.rda() {
             table.add_row(vec![
                 Cell::new("RDA Timestamp"),
-                Cell::new(format_timestamp(rda_info.timestamp())),
+                Cell::new(presenter.parsed_timestamp(rda_info.timestamp())),
             ]);
             table.add_row(vec![
                 Cell::new("RDA Reporting Host"),
-                Cell::new(format_text(rda_info.reporting_host())),
+                Cell::new(presenter.text(rda_info.reporting_host())),
             ]);
             if let Some(rda_props) = rda_info.properties() {
                 table.add_row(vec![
                     Cell::new("Volume Coverage Pattern (VCP)"),
-                    Cell::new(format_text(rda_props.volume_coverage_pattern())),
+                    Cell::new(presenter.text(rda_props.volume_coverage_pattern())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Control Status"),
-                    Cell::new(format_text(rda_props.control_status())),
+                    Cell::new(presenter.text(rda_props.control_status())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Build Number"),
-                    Cell::new(format_optional_f64_display(&rda_props.build_number())),
+                    Cell::new(presenter.decimal(rda_props.build_number())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Alarm Summary"),
-                    Cell::new(format_text(rda_props.alarm_summary())),
+                    Cell::new(presenter.text(rda_props.alarm_summary())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Mode"),
-                    Cell::new(format_text(rda_props.mode())),
+                    Cell::new(presenter.text(rda_props.mode())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Generator State"),
-                    Cell::new(format_text(rda_props.generator_state())),
+                    Cell::new(presenter.text(rda_props.generator_state())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Super Resolution Status"),
-                    Cell::new(format_text(rda_props.super_resolution_status())),
+                    Cell::new(presenter.text(rda_props.super_resolution_status())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Operability Status"),
-                    Cell::new(format_text(rda_props.operability_status())),
+                    Cell::new(presenter.text(rda_props.operability_status())),
                 ]);
                 table.add_row(vec![
                     Cell::new("RDA Status"),
-                    Cell::new(format_text(rda_props.status())),
+                    Cell::new(presenter.text(rda_props.status())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Avg. Transmitter Power"),
-                    Cell::new(format_measurement(rda_props.average_transmitter_power())),
+                    Cell::new(presenter.radar_measurement(rda_props.average_transmitter_power())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Reflectivity Cal. Correction"),
-                    Cell::new(format_measurement(
-                        rda_props.reflectivity_calibration_correction(),
-                    )),
+                    Cell::new(
+                        presenter
+                            .radar_measurement(rda_props.reflectivity_calibration_correction()),
+                    ),
                 ]);
             } else {
-                table.add_row(vec![Cell::new("RDA Properties"), Cell::new("N/A")]);
+                table.add_row(vec![
+                    Cell::new("RDA Properties"),
+                    Cell::new(presenter.missing()),
+                ]);
             }
         } else {
-            table.add_row(vec![Cell::new("RDA Data"), Cell::new("N/A")]);
+            table.add_row(vec![Cell::new("RDA Data"), Cell::new(presenter.missing())]);
         }
 
         add_section_header(&mut table, "Performance Information");
         if let Some(perf_info) = station.performance() {
             table.add_row(vec![
                 Cell::new("Perf. Timestamp"),
-                Cell::new(format_timestamp(perf_info.timestamp())),
+                Cell::new(presenter.parsed_timestamp(perf_info.timestamp())),
             ]);
             table.add_row(vec![
                 Cell::new("Perf. Reporting Host"),
-                Cell::new(format_text(perf_info.reporting_host())),
+                Cell::new(presenter.text(perf_info.reporting_host())),
             ]);
             if let Some(perf_props) = perf_info.properties() {
                 table.add_row(vec![
                     Cell::new("NTP Status"),
-                    Cell::new(format_optional_i32(&perf_props.ntp_status())),
+                    Cell::new(presenter.integer(perf_props.ntp_status())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Linearity"),
-                    Cell::new(format_optional_f64_precise(&perf_props.linearity())),
+                    Cell::new(presenter.precise_decimal(perf_props.linearity())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Power Source"),
-                    Cell::new(format_text(perf_props.power_source())),
+                    Cell::new(presenter.text(perf_props.power_source())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Fuel Level"),
-                    Cell::new(format_measurement(perf_props.fuel_level())),
+                    Cell::new(presenter.radar_measurement(perf_props.fuel_level())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Shelter Temp."),
-                    Cell::new(format_measurement(perf_props.shelter_temperature())),
+                    Cell::new(presenter.radar_measurement(perf_props.shelter_temperature())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Radome Air Temp."),
-                    Cell::new(format_measurement(perf_props.radome_air_temperature())),
+                    Cell::new(presenter.radar_measurement(perf_props.radome_air_temperature())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Transmitter Peak Power"),
-                    Cell::new(format_measurement(perf_props.transmitter_peak_power())),
+                    Cell::new(presenter.radar_measurement(perf_props.transmitter_peak_power())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Performance Check Time"),
-                    Cell::new(format_timestamp(perf_props.performance_check_time())),
+                    Cell::new(presenter.parsed_timestamp(perf_props.performance_check_time())),
                 ]);
             } else {
-                table.add_row(vec![Cell::new("Performance Properties"), Cell::new("N/A")]);
+                table.add_row(vec![
+                    Cell::new("Performance Properties"),
+                    Cell::new(presenter.missing()),
+                ]);
             }
         } else {
-            table.add_row(vec![Cell::new("Performance Data"), Cell::new("N/A")]);
+            table.add_row(vec![
+                Cell::new("Performance Data"),
+                Cell::new(presenter.missing()),
+            ]);
         }
 
         add_section_header(&mut table, "Adaptation Highlights");
         if let Some(adapt_info) = station.adaptation() {
             table.add_row(vec![
                 Cell::new("Adapt. Timestamp"),
-                Cell::new(format_timestamp(adapt_info.timestamp())),
+                Cell::new(presenter.parsed_timestamp(adapt_info.timestamp())),
             ]);
             if let Some(adapt_props) = adapt_info.properties() {
                 table.add_row(vec![
                     Cell::new("Transmitter Freq."),
-                    Cell::new(format_measurement(adapt_props.transmitter_frequency())),
+                    Cell::new(presenter.radar_measurement(adapt_props.transmitter_frequency())),
                 ]);
                 table.add_row(vec![
                     Cell::new("Antenna Gain (incl. Radome)"),
-                    Cell::new(format_measurement(
-                        adapt_props.antenna_gain_including_radome(),
-                    )),
+                    Cell::new(
+                        presenter.radar_measurement(adapt_props.antenna_gain_including_radome()),
+                    ),
                 ]);
                 table.add_row(vec![
                     Cell::new("Tx Spectrum Filter Installed"),
-                    Cell::new(format_text(
-                        adapt_props.transmitter_spectrum_filter_installed(),
-                    )),
+                    Cell::new(presenter.text(adapt_props.transmitter_spectrum_filter_installed())),
                 ]);
             } else {
-                table.add_row(vec![Cell::new("Adaptation Properties"), Cell::new("N/A")]);
+                table.add_row(vec![
+                    Cell::new("Adaptation Properties"),
+                    Cell::new(presenter.missing()),
+                ]);
             }
         } else {
-            table.add_row(vec![Cell::new("Adaptation Data"), Cell::new("N/A")]);
+            table.add_row(vec![
+                Cell::new("Adaptation Data"),
+                Cell::new(presenter.missing()),
+            ]);
         }
     } else {
         table.add_row(vec![
@@ -422,7 +417,10 @@ fn create_radar_station_telemetry_table(telemetry: &RadarStationTelemetry) -> Ta
     table
 }
 
-pub fn create_radar_stations_table(radar_stations: &RadarStationsResponse) -> Table {
+fn create_radar_stations_table(
+    radar_stations: &RadarStationsResponse,
+    presenter: &DefaultPresenter,
+) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -447,11 +445,11 @@ pub fn create_radar_stations_table(radar_stations: &RadarStationsResponse) -> Ta
     for radar_station_feature in radar_stations.features.iter().flatten() {
         if let Some(station) = &radar_station_feature.radar_station {
             table.add_row(vec![
-                Cell::new(format_optional_string(&station.id)),
-                Cell::new(format_optional_string(&station.name)),
-                Cell::new(format_optional_string(&station.station_type)),
-                Cell::new(format_optional_value_unit(&station.elevation)),
-                Cell::new(format_optional_string(&station.time_zone)),
+                Cell::new(presenter.text(station.id.as_deref())),
+                Cell::new(presenter.text(station.name.as_deref())),
+                Cell::new(presenter.text(station.station_type.as_deref())),
+                Cell::new(presenter.value_unit(station.elevation.as_ref())),
+                Cell::new(presenter.text(station.time_zone.as_deref())),
             ]);
         }
     }
@@ -463,9 +461,10 @@ pub fn create_radar_stations_table(radar_stations: &RadarStationsResponse) -> Ta
 /// The table is structured with sections for general information, latency,
 /// RDA (Radar Data Acquisition), performance, and adaptation highlights.
 /// Optional fields are displayed as "N/A" if not present in the data.
-pub fn create_radar_station_alarms_table(
+fn create_radar_station_alarms_table(
     radar_station_alarms: &RadarStationAlarmsResponse,
-) -> Table {
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -487,19 +486,30 @@ pub fn create_radar_station_alarms_table(
             .set_alignment(CellAlignment::Center),
     ]);
 
-    for alarm in radar_station_alarms.radar_station_alarms.iter().flatten() {
+    for (index, alarm) in radar_station_alarms
+        .radar_station_alarms
+        .iter()
+        .flatten()
+        .enumerate()
+    {
         table.add_row(vec![
-            Cell::new(format_optional_string(&alarm.station_id)),
-            Cell::new(format_datetime_human_readable(alarm.timestamp.as_deref())),
-            Cell::new(format_optional_string(&alarm.message)),
-            Cell::new(format_optional_string(&alarm.status).to_uppercase()),
-            Cell::new(format_optional_i32(&alarm.active_channel)),
+            Cell::new(presenter.text(alarm.station_id.as_deref())),
+            Cell::new(presenter.timestamp(
+                format!("radar_station_alarms[{index}].timestamp"),
+                alarm.timestamp.as_deref(),
+            )?),
+            Cell::new(presenter.text(alarm.message.as_deref())),
+            Cell::new(presenter.text(alarm.status.as_deref()).to_uppercase()),
+            Cell::new(presenter.integer(alarm.active_channel)),
         ]);
     }
-    table
+    Ok(table)
 }
 
-pub fn create_radar_data_queue_table(radar_data_queue: &RadarQueuesResponse) -> Table {
+fn create_radar_data_queue_table(
+    radar_data_queue: &RadarQueuesResponse,
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -530,23 +540,25 @@ pub fn create_radar_data_queue_table(radar_data_queue: &RadarQueuesResponse) -> 
             .set_alignment(CellAlignment::Center),
     ]);
 
-    for entry in radar_data_queue.radar_queues.iter().flatten() {
+    for (index, entry) in radar_data_queue.radar_queues.iter().flatten().enumerate() {
         table.add_row(vec![
-            Cell::new(format_optional_string(&entry.host)),
-            Cell::new(format_datetime_human_readable(
+            Cell::new(presenter.text(entry.host.as_deref())),
+            Cell::new(presenter.timestamp(
+                format!("radar_queues[{index}].arrival_time"),
                 entry.arrival_time.as_deref(),
-            )),
-            Cell::new(format_datetime_human_readable(
+            )?),
+            Cell::new(presenter.timestamp(
+                format!("radar_queues[{index}].creation_time"),
                 entry.creation_time.as_deref(),
-            )),
-            Cell::new(format_optional_string(&entry.r#type)),
-            Cell::new(format_optional_string(&entry.feed)),
-            Cell::new(format_optional_i32(&entry.resolution_version)),
-            Cell::new(format_optional_string(&entry.sequence_number)),
-            Cell::new(format_optional_i32(&entry.size)),
+            )?),
+            Cell::new(presenter.text(entry.r#type.as_deref())),
+            Cell::new(presenter.text(entry.feed.as_deref())),
+            Cell::new(presenter.integer(entry.resolution_version)),
+            Cell::new(presenter.text(entry.sequence_number.as_deref())),
+            Cell::new(presenter.integer(entry.size)),
         ]);
     }
-    table
+    Ok(table)
 }
 
 /// Creates a table displaying status information for a NOAA Radar Server.
@@ -562,7 +574,10 @@ pub fn create_radar_data_queue_table(radar_data_queue: &RadarQueuesResponse) -> 
 /// # Returns
 ///
 /// A `Result<Table>` which is the `comfy_table::Table` ready for printing.
-fn create_radar_server_telemetry_table(telemetry: &RadarServerTelemetry) -> Table {
+fn create_radar_server_telemetry_table(
+    telemetry: &RadarServerTelemetry,
+    presenter: &DefaultPresenter,
+) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -577,41 +592,39 @@ fn create_radar_server_telemetry_table(telemetry: &RadarServerTelemetry) -> Tabl
     add_section_header(&mut table, "General");
     table.add_row(vec![
         Cell::new("Server ID"),
-        Cell::new(format_text(telemetry.id())),
+        Cell::new(presenter.text(telemetry.id())),
     ]);
     table.add_row(vec![
         Cell::new("Server Type"),
-        Cell::new(format_text(telemetry.server_type())),
+        Cell::new(presenter.text(telemetry.server_type())),
     ]);
     table.add_row(vec![
         Cell::new("Active"),
-        Cell::new(format_optional_bool_as_yes_no(&telemetry.active())),
+        Cell::new(presenter.yes_no(telemetry.active())),
     ]);
     table.add_row(vec![
         Cell::new("Primary"),
-        Cell::new(format_optional_bool_as_yes_no(&telemetry.primary())),
+        Cell::new(presenter.yes_no(telemetry.primary())),
     ]);
     table.add_row(vec![
         Cell::new("Aggregate"),
-        Cell::new(format_optional_bool_as_yes_no(&telemetry.aggregate())),
+        Cell::new(presenter.yes_no(telemetry.aggregate())),
     ]);
     table.add_row(vec![
         Cell::new("Locked"),
-        Cell::new(format_optional_bool_as_yes_no(&telemetry.locked())),
+        Cell::new(presenter.yes_no(telemetry.locked())),
     ]);
     table.add_row(vec![
         Cell::new("Radar Network Up"),
-        Cell::new(format_optional_bool_as_yes_no(
-            &telemetry.radar_network_up(),
-        )),
+        Cell::new(presenter.yes_no(telemetry.radar_network_up())),
     ]);
     table.add_row(vec![
         Cell::new("Collection Time"),
-        Cell::new(format_timestamp(telemetry.collection_time())),
+        Cell::new(presenter.parsed_timestamp(telemetry.collection_time())),
     ]);
     table.add_row(vec![
         Cell::new("Reporting Host"),
-        Cell::new(format_text(telemetry.reporting_host())),
+        Cell::new(presenter.text(telemetry.reporting_host())),
     ]);
 
     // --- Ping Status ---
@@ -619,32 +632,32 @@ fn create_radar_server_telemetry_table(telemetry: &RadarServerTelemetry) -> Tabl
     if let Some(ping_status) = telemetry.ping() {
         table.add_row(vec![
             Cell::new("Ping Status Timestamp"),
-            Cell::new(format_timestamp(ping_status.timestamp())),
+            Cell::new(presenter.parsed_timestamp(ping_status.timestamp())),
         ]);
         if let Some(targets) = ping_status.targets() {
             table.add_row(vec![
                 Cell::new("Client Targets"),
-                Cell::new(format_ping_summary(targets.client())),
+                Cell::new(format_ping_summary(targets.client(), presenter)),
             ]);
             table.add_row(vec![
                 Cell::new("LDM Targets"),
-                Cell::new(format_ping_summary(targets.ldm())),
+                Cell::new(format_ping_summary(targets.ldm(), presenter)),
             ]);
             table.add_row(vec![
                 Cell::new("Radar Targets"),
-                Cell::new(format_ping_summary(targets.radar())),
+                Cell::new(format_ping_summary(targets.radar(), presenter)),
             ]);
             table.add_row(vec![
                 Cell::new("Server Targets"),
-                Cell::new(format_ping_summary(targets.server())),
+                Cell::new(format_ping_summary(targets.server(), presenter)),
             ]);
             table.add_row(vec![
                 Cell::new("Misc Targets"),
-                Cell::new(format_ping_summary(targets.misc())),
+                Cell::new(format_ping_summary(targets.misc(), presenter)),
             ]);
         }
     } else {
-        table.add_row(vec![Cell::new("Ping Data"), Cell::new("N/A")]);
+        table.add_row(vec![Cell::new("Ping Data"), Cell::new(presenter.missing())]);
     }
 
     // --- Command Status ---
@@ -652,30 +665,33 @@ fn create_radar_server_telemetry_table(telemetry: &RadarServerTelemetry) -> Tabl
     if let Some(command) = telemetry.command() {
         table.add_row(vec![
             Cell::new("Command Status Timestamp"),
-            Cell::new(format_timestamp(command.timestamp())),
+            Cell::new(presenter.parsed_timestamp(command.timestamp())),
         ]);
         table.add_row(vec![
             Cell::new("Last Executed"),
-            Cell::new(format_text(command.last_executed())),
+            Cell::new(presenter.text(command.last_executed())),
         ]);
         table.add_row(vec![
             Cell::new("Last Executed Time"),
-            Cell::new(format_timestamp(command.last_executed_time())),
+            Cell::new(presenter.parsed_timestamp(command.last_executed_time())),
         ]);
         table.add_row(vec![
             Cell::new("Last NEXRAD Data Time"),
-            Cell::new(format_timestamp(command.last_nexrad_data_time())),
+            Cell::new(presenter.parsed_timestamp(command.last_nexrad_data_time())),
         ]);
         table.add_row(vec![
             Cell::new("Last Received"),
-            Cell::new(format_text(command.last_received())),
+            Cell::new(presenter.text(command.last_received())),
         ]);
         table.add_row(vec![
             Cell::new("Last Received Time"),
-            Cell::new(format_timestamp(command.last_received_time())),
+            Cell::new(presenter.parsed_timestamp(command.last_received_time())),
         ]);
     } else {
-        table.add_row(vec![Cell::new("Command Data"), Cell::new("N/A")]);
+        table.add_row(vec![
+            Cell::new("Command Data"),
+            Cell::new(presenter.missing()),
+        ]);
     }
 
     // --- Hardware Status ---
@@ -683,48 +699,45 @@ fn create_radar_server_telemetry_table(telemetry: &RadarServerTelemetry) -> Tabl
     if let Some(hardware) = telemetry.hardware() {
         table.add_row(vec![
             Cell::new("Hardware Status Timestamp"),
-            Cell::new(format_timestamp(hardware.timestamp())),
+            Cell::new(presenter.parsed_timestamp(hardware.timestamp())),
         ]);
         table.add_row(vec![
             Cell::new("CPU Idle"),
-            Cell::new(format!(
-                "{} %",
-                format_optional_f64_display(&hardware.cpu_idle())
-            )),
+            Cell::new(format!("{} %", presenter.decimal(hardware.cpu_idle()))),
         ]);
         table.add_row(vec![
             Cell::new("I/O Utilization"),
             Cell::new(format!(
                 "{} %",
-                format_optional_f64_display(&hardware.io_utilization())
+                presenter.decimal(hardware.io_utilization())
             )),
         ]);
         table.add_row(vec![
             Cell::new("Disk Status/Value"),
-            Cell::new(format_optional_i32(&hardware.disk())),
+            Cell::new(presenter.integer(hardware.disk())),
         ]);
         table.add_row(vec![
             Cell::new("Load Avg (1m/5m/15m)"),
             Cell::new(format!(
                 "{}/{}/{}",
-                format_optional_f64_display(&hardware.load1()),
-                format_optional_f64_display(&hardware.load5()),
-                format_optional_f64_display(&hardware.load15())
+                presenter.decimal(hardware.load1()),
+                presenter.decimal(hardware.load5()),
+                presenter.decimal(hardware.load15())
             )),
         ]);
         table.add_row(vec![
             Cell::new("Memory Usage"),
-            Cell::new(format!(
-                "{} %",
-                format_optional_f64_display(&hardware.memory())
-            )),
+            Cell::new(format!("{} %", presenter.decimal(hardware.memory()))),
         ]);
         table.add_row(vec![
             Cell::new("System Uptime Since"),
-            Cell::new(format_timestamp(hardware.uptime())),
+            Cell::new(presenter.parsed_timestamp(hardware.uptime())),
         ]);
     } else {
-        table.add_row(vec![Cell::new("Hardware Data"), Cell::new("N/A")]);
+        table.add_row(vec![
+            Cell::new("Hardware Data"),
+            Cell::new(presenter.missing()),
+        ]);
     }
 
     // --- LDM Status ---
@@ -732,30 +745,30 @@ fn create_radar_server_telemetry_table(telemetry: &RadarServerTelemetry) -> Tabl
     if let Some(ldm) = telemetry.ldm() {
         table.add_row(vec![
             Cell::new("LDM Status Timestamp"),
-            Cell::new(format_timestamp(ldm.timestamp())),
+            Cell::new(presenter.parsed_timestamp(ldm.timestamp())),
         ]);
         table.add_row(vec![
             Cell::new("LDM Active"),
-            Cell::new(format_optional_bool_as_yes_no(&ldm.active())),
+            Cell::new(presenter.yes_no(ldm.active())),
         ]);
         table.add_row(vec![
             Cell::new("Latest Product Time"),
-            Cell::new(format_timestamp(ldm.latest_product())),
+            Cell::new(presenter.parsed_timestamp(ldm.latest_product())),
         ]);
         table.add_row(vec![
             Cell::new("Oldest Product Time"),
-            Cell::new(format_timestamp(ldm.oldest_product())),
+            Cell::new(presenter.parsed_timestamp(ldm.oldest_product())),
         ]);
         table.add_row(vec![
             Cell::new("Storage Size"),
-            Cell::new(format_bytes_to_human_readable(ldm.storage_size())),
+            Cell::new(presenter.bytes(ldm.storage_size())),
         ]);
         table.add_row(vec![
             Cell::new("Product Count"),
-            Cell::new(format_optional_i32(&ldm.count())),
+            Cell::new(presenter.integer(ldm.count())),
         ]);
     } else {
-        table.add_row(vec![Cell::new("LDM Data"), Cell::new("N/A")]);
+        table.add_row(vec![Cell::new("LDM Data"), Cell::new(presenter.missing())]);
     }
 
     // --- Network Status ---
@@ -763,20 +776,29 @@ fn create_radar_server_telemetry_table(telemetry: &RadarServerTelemetry) -> Tabl
     if let Some(network) = telemetry.network() {
         table.add_row(vec![
             Cell::new("Network Status Timestamp"),
-            Cell::new(format_timestamp(network.timestamp())),
+            Cell::new(presenter.parsed_timestamp(network.timestamp())),
         ]);
         if let Some(if_stats) = network.eth0() {
-            add_network_interface_stats_rows(&mut table, "eth0", if_stats);
+            add_network_interface_stats_rows(&mut table, "eth0", if_stats, presenter);
         } else {
-            table.add_row(vec![Cell::new("eth0 Interface Data"), Cell::new("N/A")]);
+            table.add_row(vec![
+                Cell::new("eth0 Interface Data"),
+                Cell::new(presenter.missing()),
+            ]);
         }
         if let Some(if_stats) = network.eth1() {
-            add_network_interface_stats_rows(&mut table, "eth1", if_stats);
+            add_network_interface_stats_rows(&mut table, "eth1", if_stats, presenter);
         } else {
-            table.add_row(vec![Cell::new("eth1 Interface Data"), Cell::new("N/A")]);
+            table.add_row(vec![
+                Cell::new("eth1 Interface Data"),
+                Cell::new(presenter.missing()),
+            ]);
         }
     } else {
-        table.add_row(vec![Cell::new("Network Data"), Cell::new("N/A")]);
+        table.add_row(vec![
+            Cell::new("Network Data"),
+            Cell::new(presenter.missing()),
+        ]);
     }
 
     table
@@ -796,9 +818,10 @@ fn create_radar_server_telemetry_table(telemetry: &RadarServerTelemetry) -> Tabl
 /// # Returns
 ///
 /// A `Result<Table>` which is the `comfy_table::Table` ready for printing.
-pub fn create_radar_servers_table(
+fn create_radar_servers_table(
     radar_servers_response: &RadarServersResponse,
-) -> anyhow::Result<Table> {
+    presenter: &DefaultPresenter,
+) -> Result<Table, PresentationError> {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -838,33 +861,24 @@ pub fn create_radar_servers_table(
 
     if let Some(servers) = &radar_servers_response.radar_servers {
         for server in servers {
-            let telemetry = RadarServerTelemetry::try_from(server)?;
-            let ldm_active = telemetry.ldm().and_then(|ldm| ldm.active()).map_or_else(
-                || "N/A".to_owned(),
-                |bool_opt| format_optional_bool_as_yes_no(&Some(bool_opt)),
-            );
-            let ldm_count = telemetry
-                .ldm()
-                .and_then(|ldm| ldm.count())
-                .map_or_else(|| "N/A".to_owned(), |count| count.to_string());
-            let load1 = telemetry
-                .hardware()
-                .and_then(|hardware| hardware.load1())
-                .map_or_else(|| "N/A".to_owned(), |load1| format!("{load1:.2}"));
+            let telemetry =
+                RadarServerTelemetry::try_from(server).map_err(PresentationError::source_data)?;
+            let ldm_active = presenter.yes_no(telemetry.ldm().and_then(|ldm| ldm.active()));
+            let ldm_count = presenter.integer(telemetry.ldm().and_then(|ldm| ldm.count()));
+            let load1 =
+                presenter.decimal(telemetry.hardware().and_then(|hardware| hardware.load1()));
 
             table.add_row(vec![
-                Cell::new(format_text(telemetry.id())),
-                Cell::new(format_text(telemetry.server_type())),
-                Cell::new(format_optional_bool_as_yes_no(&telemetry.active())),
-                Cell::new(format_optional_bool_as_yes_no(&telemetry.primary())),
-                Cell::new(format_optional_bool_as_yes_no(
-                    &telemetry.radar_network_up(),
-                )),
+                Cell::new(presenter.text(telemetry.id())),
+                Cell::new(presenter.text(telemetry.server_type())),
+                Cell::new(presenter.yes_no(telemetry.active())),
+                Cell::new(presenter.yes_no(telemetry.primary())),
+                Cell::new(presenter.yes_no(telemetry.radar_network_up())),
                 Cell::new(ldm_active),
                 Cell::new(ldm_count).set_alignment(CellAlignment::Right),
                 Cell::new(load1).set_alignment(CellAlignment::Right),
-                Cell::new(format_timestamp(telemetry.collection_time())),
-                Cell::new(format_text(telemetry.reporting_host())),
+                Cell::new(presenter.parsed_timestamp(telemetry.collection_time())),
+                Cell::new(presenter.text(telemetry.reporting_host())),
             ]);
         }
     } else {
@@ -881,57 +895,82 @@ pub fn create_radar_servers_table(
 }
 
 impl DefaultPresentation for RadarSpgdsResponse {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
-        Ok(PresentationDocument::table(create_radar_spgds_table(self)))
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::table(create_radar_spgds_table(
+            self, presenter,
+        )?))
     }
 }
 
 impl DefaultPresentation for RadarStationFeature {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
-        let telemetry = RadarStationTelemetry::try_from(self)?;
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        let telemetry =
+            RadarStationTelemetry::try_from(self).map_err(PresentationError::source_data)?;
         Ok(PresentationDocument::table(
-            create_radar_station_telemetry_table(&telemetry),
+            create_radar_station_telemetry_table(&telemetry, presenter),
         ))
     }
 }
 
 impl DefaultPresentation for RadarStationsResponse {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(create_radar_stations_table(
-            self,
+            self, presenter,
         )))
     }
 }
 
 impl DefaultPresentation for RadarStationAlarmsResponse {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(
-            create_radar_station_alarms_table(self),
+            create_radar_station_alarms_table(self, presenter)?,
         ))
     }
 }
 
 impl DefaultPresentation for RadarQueuesResponse {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(create_radar_data_queue_table(
-            self,
-        )))
+            self, presenter,
+        )?))
     }
 }
 
 impl DefaultPresentation for RadarServer {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
-        let telemetry = RadarServerTelemetry::try_from(self)?;
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        let telemetry =
+            RadarServerTelemetry::try_from(self).map_err(PresentationError::source_data)?;
         Ok(PresentationDocument::table(
-            create_radar_server_telemetry_table(&telemetry),
+            create_radar_server_telemetry_table(&telemetry, presenter),
         ))
     }
 }
 
 impl DefaultPresentation for RadarServersResponse {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(create_radar_servers_table(
-            self,
+            self, presenter,
         )?))
     }
 }

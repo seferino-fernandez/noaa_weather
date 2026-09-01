@@ -2,11 +2,11 @@ use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Attribute, Cell, CellAlignment, Table};
 use noaa_weather_client::models::PointGeoJson;
 
-use crate::output::{DefaultPresentation, PresentationDocument};
-use crate::utils::format::get_zone_from_url;
+use super::{DefaultPresentation, DefaultPresenter, PresentationError};
+use crate::output::PresentationDocument;
 
 /// Formats point metadata into a `comfy_table::Table`.
-pub fn create_point_metadata_table(point_data: &PointGeoJson) -> Table {
+fn create_point_metadata_table(point_data: &PointGeoJson, presenter: &DefaultPresenter) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_header(vec![
@@ -37,7 +37,8 @@ pub fn create_point_metadata_table(point_data: &PointGeoJson) -> Table {
     add_row_if_some!(
         table,
         "Forecast Office",
-        get_zone_from_url(properties.forecast_office.clone())
+        properties.forecast_office,
+        |value: &String| presenter.resource_identifier(Some(value))
     );
     add_row_if_some!(table, "Grid ID", properties.grid_id);
     add_row_if_some!(table, "Grid X", properties.grid_x);
@@ -45,32 +46,41 @@ pub fn create_point_metadata_table(point_data: &PointGeoJson) -> Table {
     add_row_if_some!(
         table,
         "Forecast Zone",
-        get_zone_from_url(properties.forecast_zone.clone())
+        properties.forecast_zone,
+        |value: &String| presenter.resource_identifier(Some(value))
     );
-    add_row_if_some!(
-        table,
-        "County Zone",
-        get_zone_from_url(properties.county.clone())
-    );
+    add_row_if_some!(table, "County Zone", properties.county, |value: &String| {
+        presenter.resource_identifier(Some(value))
+    });
     add_row_if_some!(
         table,
         "Fire Weather Zone",
-        get_zone_from_url(properties.fire_weather_zone.clone())
+        properties.fire_weather_zone,
+        |value: &String| presenter.resource_identifier(Some(value))
     );
-    add_row_if_some!(table, "Time Zone", properties.time_zone);
+    add_row_if_some!(
+        table,
+        "Time Zone",
+        properties.time_zone,
+        |value: &String| { presenter.text(Some(value)) }
+    );
     add_row_if_some!(
         table,
         "Radar Station",
-        get_zone_from_url(properties.radar_station.clone())
+        properties.radar_station,
+        |value: &String| presenter.resource_identifier(Some(value))
     );
 
     table
 }
 
 impl DefaultPresentation for PointGeoJson {
-    fn default_presentation(&self) -> anyhow::Result<PresentationDocument> {
+    fn present_default(
+        &self,
+        presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(create_point_metadata_table(
-            self,
+            self, presenter,
         )))
     }
 }
