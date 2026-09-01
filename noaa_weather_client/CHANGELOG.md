@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0](https://github.com/seferino-fernandez/noaa_weather/compare/v1.3.0...v1.4.0)
+_01 September 2026_
+
+### Added
+
+* Support NOAA 3.11
+
+### Documented
+
+* Remove architecture notes and manual changelog entries
+
+### Other
+
+* Deepen a radar normalization module so validity, missing state, and summaries sit behind one semantic seam before presentation.
+* Normalize TAF meaning before presentation
+* Deepen the existing request seam so operation modules retain NOAA meaning while its implementation absorbs repeated request-contract mechanics.
+
 ## [1.3.0](https://github.com/seferino-fernandez/noaa_weather/compare/v1.2.0...v1.3.0)
 
 _22 August 2026_
