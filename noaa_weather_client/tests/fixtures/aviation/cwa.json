@@ -1,0 +1,43 @@
+{
+  "@context": {
+    "@version": "1.1"
+  },
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          34.413,
+          -114.193
+        ],
+        [
+          34.384,
+          -113.416
+        ],
+        [
+          32.768,
+          -113.414
+        ],
+        [
+          32.959,
+          -114.054
+        ],
+        [
+          34.413,
+          -114.193
+        ]
+      ]
+    ]
+  },
+  "properties": {
+    "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-09-02/106",
+    "issueTime": "2026-09-02T01:05:00+00:00",
+    "cwsu": "ZAB",
+    "sequence": 106,
+    "start": "2026-09-02T01:05:00+00:00",
+    "end": "2026-09-02T02:00:00+00:00",
+    "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+    "text": "DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 24015KT TOPS TO FL400. AZ"
+  }
+}

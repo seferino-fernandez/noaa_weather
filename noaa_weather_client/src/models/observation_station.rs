@@ -5,8 +5,6 @@ use super::ValueUnit;
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ObservationStation {
-    #[serde(rename = "@context", skip_serializing_if = "Option::is_none")]
-    pub at_context: Option<Box<models::JsonLdContext>>,
     /// A geometry represented in Well-Known Text (WKT) format.
     #[serde(
         rename = "geometry",
@@ -51,7 +49,6 @@ pub struct ObservationStation {
 impl ObservationStation {
     pub fn new() -> ObservationStation {
         ObservationStation {
-            at_context: None,
             geometry: None,
             at_id: None,
             at_type: None,

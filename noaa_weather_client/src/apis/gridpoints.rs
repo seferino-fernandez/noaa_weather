@@ -24,6 +24,7 @@ use serde::{Deserialize, Serialize};
 
 use super::Error;
 use crate::client::{Client, http};
+use crate::geo::{Feature, FeatureCollection};
 use crate::ids::GridpointId;
 use crate::models;
 
@@ -113,7 +114,7 @@ impl Gridpoints<'_> {
     ///
     /// Returns an [`Error`] if the request fails or the response cannot be
     /// decoded.
-    pub async fn get(&self, grid: &GridpointId) -> Result<models::GridpointGeoJson, Error> {
+    pub async fn get(&self, grid: &GridpointId) -> Result<Feature<models::Gridpoint>, Error> {
         self.grid(grid).json(http::JsonMedia::GeoJson).await
     }
 
@@ -145,7 +146,7 @@ impl Gridpoints<'_> {
         &self,
         grid: &GridpointId,
         query: &ForecastQuery,
-    ) -> Result<models::Gridpoint12hForecastGeoJson, Error> {
+    ) -> Result<Feature<models::Gridpoint12hForecast>, Error> {
         self.grid(grid)
             .literal_path("forecast")
             .query(query)
@@ -182,7 +183,7 @@ impl Gridpoints<'_> {
         &self,
         grid: &GridpointId,
         query: &ForecastQuery,
-    ) -> Result<models::GridpointHourlyForecastGeoJson, Error> {
+    ) -> Result<Feature<models::GridpointHourlyForecast>, Error> {
         self.grid(grid)
             .literal_path("forecast/hourly")
             .query(query)
@@ -210,6 +211,14 @@ impl Gridpoints<'_> {
     /// # }
     /// ```
     ///
+    /// # Paging
+    ///
+    /// NOAA's `pagination.next` on this operation is wrong: it points at
+    /// `/stations?id[]=…&cursor=…`, which returns an empty page, rather than
+    /// at the gridpoint. Do not feed the token from `next_cursor()` back into
+    /// a request; [`GridpointStationsQuery`] has no `cursor` for that reason.
+    /// Raise `limit` instead.
+    ///
     /// # Errors
     ///
     /// Returns an [`Error`] if the request fails or the response cannot be
@@ -218,7 +227,7 @@ impl Gridpoints<'_> {
         &self,
         grid: &GridpointId,
         query: &GridpointStationsQuery,
-    ) -> Result<models::ObservationStationCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::ObservationStation>, Error> {
         self.grid(grid)
             .literal_path("stations")
             .query(query)

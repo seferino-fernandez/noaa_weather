@@ -17,9 +17,9 @@ pub use apis::{
     ProtocolError, Radar, Radio, RedirectReason, ResponseContent, Stations, Zones,
 };
 pub use client::{BuildError, Client, ClientBuilder, RetryPolicy};
-pub use geo::Coordinates;
+pub use geo::{Coordinates, Feature, FeatureCollection, Geometry, Pagination, Position};
 pub use ids::{
-    AlertId, AtsuId, CallSign, CwsuId, GridpointId, InvalidValue, OfficeId, ProductId,
+    AlertId, AtsuId, CallSign, Cursor, CwsuId, GridpointId, InvalidValue, OfficeId, ProductId,
     ProductTypeCode, RadarStationId, StationId, ValueKind, ZoneId,
 };
 pub use time::Interval;

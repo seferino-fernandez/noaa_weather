@@ -59,7 +59,7 @@ async fn alerts_handle_encodes_filters_as_csv() {
     )
     .await;
 
-    client_for(&server)
+    let alerts = client_for(&server)
         .alerts()
         .active(&ActiveAlertsQuery {
             severity: vec![AlertSeverity::Severe, AlertSeverity::Extreme],
@@ -69,6 +69,8 @@ async fn alerts_handle_encodes_filters_as_csv() {
         .await
         .unwrap();
 
+    assert!(alerts.is_empty());
+    assert_eq!(alerts.next_cursor(), None);
     assert_eq!(
         only_query(&server).await.as_deref(),
         Some("zone=AZZ540&severity=Severe%2CExtreme")
@@ -370,7 +372,7 @@ async fn radio_handle_pages_transmitters_and_decodes_broadcasts() {
     client
         .radio()
         .transmitters(&TransmittersQuery {
-            cursor: Some("abc".to_owned()),
+            cursor: Some("abc".parse().unwrap()),
         })
         .await
         .unwrap();

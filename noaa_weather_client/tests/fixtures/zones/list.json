@@ -1,0 +1,156 @@
+{
+  "@context": {
+    "@version": "1.1"
+  },
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "id": "https://api.weather.gov/zones/county/AKC013",
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "@id": "https://api.weather.gov/zones/county/AKC013",
+        "@type": "wx:Zone",
+        "id": "AKC013",
+        "type": "county",
+        "name": "Aleutians East",
+        "effectiveDate": "2026-04-16T18:00:00+00:00",
+        "expirationDate": "2200-01-01T00:00:00+00:00",
+        "state": "AK",
+        "forecastOffice": "https://api.weather.gov/offices/AFC",
+        "gridIdentifier": "AFC",
+        "awipsLocationIdentifier": "AFC",
+        "cwa": [
+          "AFC"
+        ],
+        "forecastOffices": [
+          "https://api.weather.gov/offices/AFC"
+        ],
+        "timeZone": [
+          "America/Anchorage",
+          "America/Nome"
+        ],
+        "observationStations": [],
+        "radarStation": null
+      }
+    },
+    {
+      "id": "https://api.weather.gov/zones/county/AKC016",
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "@id": "https://api.weather.gov/zones/county/AKC016",
+        "@type": "wx:Zone",
+        "id": "AKC016",
+        "type": "county",
+        "name": "Aleutians West",
+        "effectiveDate": "2026-04-16T18:00:00+00:00",
+        "expirationDate": "2200-01-01T00:00:00+00:00",
+        "state": "AK",
+        "forecastOffice": "https://api.weather.gov/offices/AFC",
+        "gridIdentifier": "AFC",
+        "awipsLocationIdentifier": "AFC",
+        "cwa": [
+          "AFC"
+        ],
+        "forecastOffices": [
+          "https://api.weather.gov/offices/AFC"
+        ],
+        "timeZone": [
+          "America/Nome",
+          "America/Adak"
+        ],
+        "observationStations": [],
+        "radarStation": null
+      }
+    },
+    {
+      "id": "https://api.weather.gov/zones/county/AKC020",
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "@id": "https://api.weather.gov/zones/county/AKC020",
+        "@type": "wx:Zone",
+        "id": "AKC020",
+        "type": "county",
+        "name": "Anchorage",
+        "effectiveDate": "2026-04-16T18:00:00+00:00",
+        "expirationDate": "2200-01-01T00:00:00+00:00",
+        "state": "AK",
+        "forecastOffice": "https://api.weather.gov/offices/AFC",
+        "gridIdentifier": "AFC",
+        "awipsLocationIdentifier": "AFC",
+        "cwa": [
+          "AFC"
+        ],
+        "forecastOffices": [
+          "https://api.weather.gov/offices/AFC"
+        ],
+        "timeZone": [
+          "America/Anchorage"
+        ],
+        "observationStations": [],
+        "radarStation": null
+      }
+    },
+    {
+      "id": "https://api.weather.gov/zones/county/AKC050",
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "@id": "https://api.weather.gov/zones/county/AKC050",
+        "@type": "wx:Zone",
+        "id": "AKC050",
+        "type": "county",
+        "name": "Bethel",
+        "effectiveDate": "2026-04-16T18:00:00+00:00",
+        "expirationDate": "2200-01-01T00:00:00+00:00",
+        "state": "AK",
+        "forecastOffice": "https://api.weather.gov/offices/AFC",
+        "gridIdentifier": "AFC",
+        "awipsLocationIdentifier": "AFC",
+        "cwa": [
+          "AFC"
+        ],
+        "forecastOffices": [
+          "https://api.weather.gov/offices/AFC"
+        ],
+        "timeZone": [
+          "America/Anchorage",
+          "America/Nome"
+        ],
+        "observationStations": [],
+        "radarStation": null
+      }
+    },
+    {
+      "id": "https://api.weather.gov/zones/county/AKC060",
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "@id": "https://api.weather.gov/zones/county/AKC060",
+        "@type": "wx:Zone",
+        "id": "AKC060",
+        "type": "county",
+        "name": "Bristol Bay",
+        "effectiveDate": "2026-04-16T18:00:00+00:00",
+        "expirationDate": "2200-01-01T00:00:00+00:00",
+        "state": "AK",
+        "forecastOffice": "https://api.weather.gov/offices/AFC",
+        "gridIdentifier": "AFC",
+        "awipsLocationIdentifier": "AFC",
+        "cwa": [
+          "AFC"
+        ],
+        "forecastOffices": [
+          "https://api.weather.gov/offices/AFC"
+        ],
+        "timeZone": [
+          "America/Anchorage"
+        ],
+        "observationStations": [],
+        "radarStation": null
+      }
+    }
+  ]
+}

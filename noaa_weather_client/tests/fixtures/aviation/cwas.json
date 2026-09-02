@@ -1,0 +1,3454 @@
+{
+  "@context": {
+    "@version": "1.1"
+  },
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              34.413,
+              -114.193
+            ],
+            [
+              34.384,
+              -113.416
+            ],
+            [
+              32.768,
+              -113.414
+            ],
+            [
+              32.959,
+              -114.054
+            ],
+            [
+              34.413,
+              -114.193
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-09-02/106",
+        "issueTime": "2026-09-02T01:05:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 106,
+        "start": "2026-09-02T01:05:00+00:00",
+        "end": "2026-09-02T02:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 24015KT TOPS TO FL400. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.705,
+              -110.246
+            ],
+            [
+              32.397,
+              -109.627
+            ],
+            [
+              32.116,
+              -110.154
+            ],
+            [
+              32.469,
+              -110.524
+            ],
+            [
+              32.705,
+              -110.246
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-09-01/105",
+        "issueTime": "2026-09-01T21:27:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 105,
+        "start": "2026-09-01T21:27:00+00:00",
+        "end": "2026-09-01T22:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/PrecipitationRate",
+        "text": "DVLPG AREA SHRA/TSRA WITH MOD TO HVY PCPN. MOV LTL TOPS TO FL390. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.65,
+              -111.853
+            ],
+            [
+              35.149,
+              -111.099
+            ],
+            [
+              34.549,
+              -112.403
+            ],
+            [
+              35.318,
+              -112.79
+            ],
+            [
+              35.65,
+              -111.853
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-09-01/301",
+        "issueTime": "2026-09-01T20:08:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 301,
+        "start": "2026-09-01T20:08:00+00:00",
+        "end": "2026-09-01T21:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD PCPN. MOV FROM 22010KT TOPS EST TO FL390. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              36.302,
+              -106.755
+            ],
+            [
+              34.568,
+              -106.033
+            ],
+            [
+              32.878,
+              -108.021
+            ],
+            [
+              35.596,
+              -108.837
+            ],
+            [
+              36.302,
+              -106.755
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-09-01/204",
+        "issueTime": "2026-09-01T20:07:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 204,
+        "start": "2026-09-01T20:07:00+00:00",
+        "end": "2026-09-01T21:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD PCPN. MOV FROM 22005KT TOPS TO FL390. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.876,
+              -104.85
+            ],
+            [
+              32.414,
+              -104.163
+            ],
+            [
+              30.562,
+              -104.553
+            ],
+            [
+              31.101,
+              -105.545
+            ],
+            [
+              32.876,
+              -104.85
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-09-01/104",
+        "issueTime": "2026-09-01T20:06:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 104,
+        "start": "2026-09-01T20:06:00+00:00",
+        "end": "2026-09-01T21:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 23010KT TOPS EST TO FL400. NM TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              36.428,
+              -104.681
+            ],
+            [
+              36.173,
+              -103.915
+            ],
+            [
+              33.691,
+              -105.044
+            ],
+            [
+              33.784,
+              -105.911
+            ],
+            [
+              36.428,
+              -104.681
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-09-01/203",
+        "issueTime": "2026-09-01T19:13:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 203,
+        "start": "2026-09-01T19:13:00+00:00",
+        "end": "2026-09-01T20:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 24010KT TOPS EST TO FL400. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.338,
+              -104.621
+            ],
+            [
+              30.454,
+              -102.69
+            ],
+            [
+              29.9,
+              -104.564
+            ],
+            [
+              32.514,
+              -105.545
+            ],
+            [
+              32.338,
+              -104.621
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-09-01/103",
+        "issueTime": "2026-09-01T19:13:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 103,
+        "start": "2026-09-01T19:13:00+00:00",
+        "end": "2026-09-01T20:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 21010KT TOPS TO FL400. NM TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              37.023,
+              -103.896
+            ],
+            [
+              35.657,
+              -104.316
+            ],
+            [
+              35.808,
+              -106.219
+            ],
+            [
+              36.366,
+              -106.947
+            ],
+            [
+              37.023,
+              -103.896
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-09-01/202",
+        "issueTime": "2026-09-01T18:39:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 202,
+        "start": "2026-09-01T18:39:00+00:00",
+        "end": "2026-09-01T19:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 26010KT TOPS TO FL400. CO NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              36.799,
+              -104.713
+            ],
+            [
+              35.991,
+              -105.136
+            ],
+            [
+              35.705,
+              -106.608
+            ],
+            [
+              36.43,
+              -107.139
+            ],
+            [
+              36.769,
+              -105.868
+            ],
+            [
+              36.799,
+              -104.713
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-09-01/201",
+        "issueTime": "2026-09-01T18:17:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 201,
+        "start": "2026-09-01T18:17:00+00:00",
+        "end": "2026-09-01T19:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD PCPN. MOV FROM 22005KT TOPS TO FL370. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              33.656,
+              -105.542
+            ],
+            [
+              33.529,
+              -105.174
+            ],
+            [
+              32.514,
+              -105.545
+            ],
+            [
+              32.64,
+              -106.376
+            ],
+            [
+              33.656,
+              -105.542
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-09-01/102",
+        "issueTime": "2026-09-01T18:17:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 102,
+        "start": "2026-09-01T18:17:00+00:00",
+        "end": "2026-09-01T19:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD PCPN. MOV LTL TOPS EST TO FL330. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              33.337,
+              -105.419
+            ],
+            [
+              32.631,
+              -105.467
+            ],
+            [
+              32.73,
+              -105.926
+            ],
+            [
+              33.337,
+              -105.817
+            ],
+            [
+              33.337,
+              -105.419
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-09-01/101",
+        "issueTime": "2026-09-01T17:43:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 101,
+        "start": "2026-09-01T17:43:00+00:00",
+        "end": "2026-09-01T18:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV LTL TOPS TO FL360. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              31.998,
+              -106.92
+            ],
+            [
+              31.935,
+              -106.014
+            ],
+            [
+              31.641,
+              -106.376
+            ],
+            [
+              31.807,
+              -106.964
+            ],
+            [
+              31.998,
+              -106.92
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-09-01/401",
+        "issueTime": "2026-09-01T00:59:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 401,
+        "start": "2026-09-01T00:59:00+00:00",
+        "end": "2026-09-01T02:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/WindGusts",
+        "text": "AREA BLDU WITH SFC WNDS MOV FROM 230 GUSTS 30-40 KTS VIS AOB-1SM CONDS SPRDG NEWD. NM TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              34.06,
+              -113.763
+            ],
+            [
+              33.475,
+              -113.763
+            ],
+            [
+              33.691,
+              -114.148
+            ],
+            [
+              33.997,
+              -114.235
+            ],
+            [
+              34.06,
+              -113.763
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-31/104",
+        "issueTime": "2026-08-31T22:19:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 104,
+        "start": "2026-08-31T22:19:00+00:00",
+        "end": "2026-08-31T23:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/SvrTstm",
+        "text": "AREA SEV TSRA WITH EXTRM PCPN. MOV FROM 27010KT TOPS EST TO FL550.  HAIL >2 IN. SFC WND GTS OVR 60KTS.  THIS IS ADDN INFO TO CONVECTIVE  SIGMET 98W. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              33.019,
+              -105.542
+            ],
+            [
+              30.416,
+              -102.913
+            ],
+            [
+              29.782,
+              -104.7
+            ],
+            [
+              31.308,
+              -106.376
+            ],
+            [
+              32.917,
+              -106.35
+            ],
+            [
+              33.019,
+              -105.542
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-31/103",
+        "issueTime": "2026-08-31T21:07:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 103,
+        "start": "2026-08-31T21:07:00+00:00",
+        "end": "2026-08-31T22:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/PrecipitationRate",
+        "text": "DVLPG AREA SHRA/TSRA WITH MOD TO HVY PCPN. MOV FROM 18010KT TOPS EST TO FL380. NM TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              34.423,
+              -106.297
+            ],
+            [
+              34.044,
+              -105.467
+            ],
+            [
+              32.514,
+              -105.545
+            ],
+            [
+              32.736,
+              -107.27
+            ],
+            [
+              34.423,
+              -106.297
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-31/102",
+        "issueTime": "2026-08-31T20:37:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 102,
+        "start": "2026-08-31T20:37:00+00:00",
+        "end": "2026-08-31T21:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/PrecipitationRate",
+        "text": "DVLPG AREA SHRA/TSRA WITH MOD TO HVY PCPN. MOV FROM 18015KT TOPS EST TO FL390. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.622,
+              -111.27
+            ],
+            [
+              32.258,
+              -113.139
+            ],
+            [
+              34.177,
+              -113.906
+            ],
+            [
+              35.37,
+              -112.787
+            ],
+            [
+              35.622,
+              -111.27
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-31/303",
+        "issueTime": "2026-08-31T14:58:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 303,
+        "start": "2026-08-31T14:58:00+00:00",
+        "end": "2026-08-31T16:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA EMBD TSRA. MOV FROM 22020KT TOPS TO FL300. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.369,
+              -112.48
+            ],
+            [
+              34.448,
+              -111.732
+            ],
+            [
+              32.258,
+              -113.139
+            ],
+            [
+              34.766,
+              -113.812
+            ],
+            [
+              35.369,
+              -112.48
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-31/302",
+        "issueTime": "2026-08-31T13:57:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 302,
+        "start": "2026-08-31T13:57:00+00:00",
+        "end": "2026-08-31T15:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA EMBD TSRA. MOV FROM 22020KT TOPS TO FL330. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.369,
+              -112.48
+            ],
+            [
+              34.448,
+              -111.732
+            ],
+            [
+              32.258,
+              -113.139
+            ],
+            [
+              34.766,
+              -113.812
+            ],
+            [
+              35.369,
+              -112.48
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-31/301",
+        "issueTime": "2026-08-31T13:02:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 301,
+        "start": "2026-08-31T13:02:00+00:00",
+        "end": "2026-08-31T14:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA EMBD TSRA. MOV FROM 22020KT TOPS TO FL370. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.969,
+              -108.555
+            ],
+            [
+              31.346,
+              -108.811
+            ],
+            [
+              31.283,
+              -110.941
+            ],
+            [
+              32.969,
+              -108.555
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-31/201",
+        "issueTime": "2026-08-31T12:00:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 201,
+        "start": "2026-08-31T12:00:00+00:00",
+        "end": "2026-08-31T13:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA EMBD TSRA. MOV FROM 18020KT TOPS TO FL310. NM AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              36.82,
+              -106.189
+            ],
+            [
+              33.902,
+              -107.27
+            ],
+            [
+              35.979,
+              -107.701
+            ],
+            [
+              36.82,
+              -106.189
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-31/101",
+        "issueTime": "2026-08-31T11:58:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 101,
+        "start": "2026-08-31T11:58:00+00:00",
+        "end": "2026-08-31T13:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA EMBD TSRA. MOV FROM 19010KT TOPS TO FL310. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.078,
+              -109.809
+            ],
+            [
+              31.192,
+              -109.791
+            ],
+            [
+              31.039,
+              -110.414
+            ],
+            [
+              31.881,
+              -110.663
+            ],
+            [
+              32.078,
+              -109.809
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-31/205",
+        "issueTime": "2026-08-31T03:03:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 205,
+        "start": "2026-08-31T03:03:00+00:00",
+        "end": "2026-08-31T04:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 16010KT TOPS TO FL410. NO UPDT AFT 310315Z. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              33.434,
+              -113.109
+            ],
+            [
+              33.434,
+              -111.213
+            ],
+            [
+              32.885,
+              -111.317
+            ],
+            [
+              33.02,
+              -113.21
+            ],
+            [
+              33.434,
+              -113.109
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-31/501",
+        "issueTime": "2026-08-31T02:54:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 501,
+        "start": "2026-08-31T02:54:00+00:00",
+        "end": "2026-08-31T04:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/LowIFR",
+        "text": "AREA OCNL IFR CONDS VIS BLW 3SM IN HZ DU . ..NO UPDATES AVBL AFT  0315Z.. CWSU 310255Z. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-31/111",
+        "issueTime": "2026-08-31T02:47:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 111,
+        "start": "2026-08-31T02:47:00+00:00",
+        "end": "2026-08-31T03:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/SvrTstm",
+        "text": "ISOL SEV TSRA DIAM 30NM WITH HVY TO EXTRM PCPN. MOV FROM 20010KT TOPS TO FL490. LARGE HAIL POSS. MICROBURSTS POSS. CONDS CONTG BYD 310305Z. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              31.294,
+              -104.461
+            ],
+            [
+              30.562,
+              -103.325
+            ],
+            [
+              30.371,
+              -104.017
+            ],
+            [
+              30.754,
+              -105.088
+            ],
+            [
+              31.294,
+              -104.461
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-31/110",
+        "issueTime": "2026-08-31T00:13:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 110,
+        "start": "2026-08-31T00:13:00+00:00",
+        "end": "2026-08-31T01:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH HVY PCPN. MOV FROM 13010KT TOPS TO FL410. TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              31.14,
+              -104.387
+            ],
+            [
+              30.607,
+              -103.061
+            ],
+            [
+              30.18,
+              -103.482
+            ],
+            [
+              30.626,
+              -104.731
+            ],
+            [
+              31.14,
+              -104.387
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/109",
+        "issueTime": "2026-08-30T23:21:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 109,
+        "start": "2026-08-30T23:21:00+00:00",
+        "end": "2026-08-31T00:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH HVY PCPN. MOV FROM 13010KT TOPS TO FL400. TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              34.415,
+              -105.155
+            ],
+            [
+              32.278,
+              -105.822
+            ],
+            [
+              31.909,
+              -108.137
+            ],
+            [
+              32.517,
+              -108.447
+            ],
+            [
+              32.62,
+              -106.965
+            ],
+            [
+              34.214,
+              -105.601
+            ],
+            [
+              34.415,
+              -105.155
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/404",
+        "issueTime": "2026-08-30T22:22:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 404,
+        "start": "2026-08-30T22:22:00+00:00",
+        "end": "2026-08-30T23:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH HVY PCPN. MOV FROM 18005KT TOPS TO FL410. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.935,
+              -112.012
+            ],
+            [
+              31.409,
+              -111.775
+            ],
+            [
+              31.542,
+              -112.576
+            ],
+            [
+              32.845,
+              -112.717
+            ],
+            [
+              32.935,
+              -112.012
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/108",
+        "issueTime": "2026-08-30T22:12:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 108,
+        "start": "2026-08-30T22:12:00+00:00",
+        "end": "2026-08-30T23:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 20010KT TOPS TO FL380. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              33.656,
+              -105.542
+            ],
+            [
+              32.749,
+              -105.326
+            ],
+            [
+              32.071,
+              -108.265
+            ],
+            [
+              32.524,
+              -108.535
+            ],
+            [
+              32.62,
+              -106.965
+            ],
+            [
+              33.656,
+              -105.542
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/403",
+        "issueTime": "2026-08-30T22:02:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 403,
+        "start": "2026-08-30T22:02:00+00:00",
+        "end": "2026-08-30T23:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH HVY PCPN. MOV FROM 18010KT TOPS TO FL350. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              34.958,
+              -113.544
+            ],
+            [
+              34.467,
+              -112.767
+            ],
+            [
+              33.475,
+              -113.763
+            ],
+            [
+              33.997,
+              -114.235
+            ],
+            [
+              34.958,
+              -113.544
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/107",
+        "issueTime": "2026-08-30T21:46:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 107,
+        "start": "2026-08-30T21:46:00+00:00",
+        "end": "2026-08-30T22:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH HVY PCPN. MOV FROM 21015KT TOPS TO FL400. CONDS CONTG BYD 302205Z. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              34.044,
+              -105.467
+            ],
+            [
+              33.083,
+              -105.358
+            ],
+            [
+              32.724,
+              -107.945
+            ],
+            [
+              32.98,
+              -108.006
+            ],
+            [
+              33,
+              -106.988
+            ],
+            [
+              34.044,
+              -105.467
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/402",
+        "issueTime": "2026-08-30T21:42:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 402,
+        "start": "2026-08-30T21:42:00+00:00",
+        "end": "2026-08-30T22:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 18010KT TOPS TO FL360. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/106",
+        "issueTime": "2026-08-30T21:11:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 106,
+        "start": "2026-08-30T21:11:00+00:00",
+        "end": "2026-08-30T22:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "ISOL TSRA DIAM 50NM WITH HVY PCPN. MOV FROM 21010KT TOPS TO 010.  HAIL TO 0.75 IN POSS. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              36.661,
+              -102.117
+            ],
+            [
+              36.211,
+              -100.96
+            ],
+            [
+              35.411,
+              -102.271
+            ],
+            [
+              35.474,
+              -102.459
+            ],
+            [
+              36.661,
+              -102.117
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/204",
+        "issueTime": "2026-08-30T21:07:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 204,
+        "start": "2026-08-30T21:07:00+00:00",
+        "end": "2026-08-30T22:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH HVY PCPN. MOV FROM 23010KT TOPS TO FL490. HAIL TO 0.50 IN POSS. TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.628,
+              -107.328
+            ],
+            [
+              35.23,
+              -107.172
+            ],
+            [
+              34.406,
+              -110.412
+            ],
+            [
+              34.714,
+              -110.567
+            ],
+            [
+              35.628,
+              -107.328
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/401",
+        "issueTime": "2026-08-30T20:42:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 401,
+        "start": "2026-08-30T20:42:00+00:00",
+        "end": "2026-08-30T21:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH HVY PCPN. MOV FROM 24005KT TOPS TO FL400. CONDS CONTG BYD 302105Z. AZ NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/203",
+        "issueTime": "2026-08-30T20:34:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 203,
+        "start": "2026-08-30T20:34:00+00:00",
+        "end": "2026-08-30T21:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "ISOL TSRA DIAM 30NM WITH HVY PCPN. MOV FROM 23010KT TOPS TO FL420. TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/105",
+        "issueTime": "2026-08-30T20:00:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 105,
+        "start": "2026-08-30T20:00:00+00:00",
+        "end": "2026-08-30T21:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG ISOL TSRA DIAM 30NM WITH HVY PCPN. MOV LTL TOPS TO FL360. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              34.826,
+              -109.224
+            ],
+            [
+              34.206,
+              -106.608
+            ],
+            [
+              32.928,
+              -107.422
+            ],
+            [
+              34.048,
+              -109.95
+            ],
+            [
+              34.826,
+              -109.224
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/104",
+        "issueTime": "2026-08-30T19:07:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 104,
+        "start": "2026-08-30T19:07:00+00:00",
+        "end": "2026-08-30T20:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 20005KT TOPS TO FL390. AZ NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              36.07,
+              -105.643
+            ],
+            [
+              34.503,
+              -105.724
+            ],
+            [
+              34.456,
+              -106.608
+            ],
+            [
+              35.955,
+              -106.608
+            ],
+            [
+              36.07,
+              -105.643
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/301",
+        "issueTime": "2026-08-30T19:03:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 301,
+        "start": "2026-08-30T19:03:00+00:00",
+        "end": "2026-08-30T21:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/LLWS",
+        "text": "AREA MOD/SEV TURB BLW 010. LLWS POSS. SPEED CHANGES OF +/- 20 KTS.  RPRTD BY GL4 ACFT. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              34.511,
+              -113.042
+            ],
+            [
+              34.036,
+              -112.48
+            ],
+            [
+              33.942,
+              -113.62
+            ],
+            [
+              34.177,
+              -113.906
+            ],
+            [
+              34.511,
+              -113.042
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/103",
+        "issueTime": "2026-08-30T15:35:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 103,
+        "start": "2026-08-30T15:35:00+00:00",
+        "end": "2026-08-30T17:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH HVY PCPN. MOV FROM 24015KT TOPS EST TO FL380. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.538,
+              -102.648
+            ],
+            [
+              35.028,
+              -102.271
+            ],
+            [
+              34.304,
+              -103.4
+            ],
+            [
+              34.683,
+              -103.603
+            ],
+            [
+              35.538,
+              -102.648
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/202",
+        "issueTime": "2026-08-30T12:05:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 202,
+        "start": "2026-08-30T12:05:00+00:00",
+        "end": "2026-08-30T13:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/PrecipitationRate",
+        "text": "AREA SHRA/TSRA WITH MOD PCPN. MOV FROM 15015KT TOPS TO FL370. NM TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              33.052,
+              -110.905
+            ],
+            [
+              32.587,
+              -110.385
+            ],
+            [
+              32.116,
+              -110.941
+            ],
+            [
+              32.963,
+              -111.447
+            ],
+            [
+              33.052,
+              -110.905
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/102",
+        "issueTime": "2026-08-30T12:04:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 102,
+        "start": "2026-08-30T12:04:00+00:00",
+        "end": "2026-08-30T13:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/PrecipitationRate",
+        "text": "AREA SHRA/TSRA WITH MOD TO HVY PCPN. MOV FROM 27015KT TOPS EST TO FL370. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.501,
+              -102.662
+            ],
+            [
+              34.984,
+              -101.994
+            ],
+            [
+              33.656,
+              -103.7
+            ],
+            [
+              34.004,
+              -104.621
+            ],
+            [
+              35.501,
+              -102.662
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/201",
+        "issueTime": "2026-08-30T11:31:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 201,
+        "start": "2026-08-30T11:31:00+00:00",
+        "end": "2026-08-30T12:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD PCPN. MOV FROM 14015KT TOPS EST TO FL400. NM TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.819,
+              -112.317
+            ],
+            [
+              32.885,
+              -110.565
+            ],
+            [
+              32.18,
+              -110.759
+            ],
+            [
+              32.116,
+              -112.121
+            ],
+            [
+              32.819,
+              -112.317
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/101",
+        "issueTime": "2026-08-30T11:29:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 101,
+        "start": "2026-08-30T11:29:00+00:00",
+        "end": "2026-08-30T12:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 23015KT TOPS EST TO FL400. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.451,
+              -106.105
+            ],
+            [
+              34.627,
+              -106.105
+            ],
+            [
+              34.627,
+              -107.112
+            ],
+            [
+              35.451,
+              -107.112
+            ],
+            [
+              35.451,
+              -106.105
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/201",
+        "issueTime": "2026-08-30T00:54:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 201,
+        "start": "2026-08-30T00:53:00+00:00",
+        "end": "2026-08-30T01:45:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/LowIFR",
+        "text": "AREA OCNL IFR CONDS VIS BLW 3SM IN HZ DU. VISIBLE ON WEBCAM. CWSU  300055Z. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              37.403,
+              -102.689
+            ],
+            [
+              36.725,
+              -101.924
+            ],
+            [
+              35.785,
+              -104.757
+            ],
+            [
+              36.119,
+              -105.371
+            ],
+            [
+              37.403,
+              -102.689
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-29/106",
+        "issueTime": "2026-08-29T23:28:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 106,
+        "start": "2026-08-29T23:28:00+00:00",
+        "end": "2026-08-30T00:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 24010KT TOPS TO FL370. CO NM OK TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              30.116,
+              -103.304
+            ],
+            [
+              29.838,
+              -102.393
+            ],
+            [
+              29.193,
+              -102.652
+            ],
+            [
+              28.986,
+              -103.353
+            ],
+            [
+              30.116,
+              -103.304
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-29/105",
+        "issueTime": "2026-08-29T22:32:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 105,
+        "start": "2026-08-29T22:32:00+00:00",
+        "end": "2026-08-29T23:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 12010KT TOPS TO FL400. TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-29/104",
+        "issueTime": "2026-08-29T20:12:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 104,
+        "start": "2026-08-29T20:12:00+00:00",
+        "end": "2026-08-29T21:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/SvrTstm",
+        "text": "DVLPG ISOL SEV TSRA DIAM 30NM WITH HVY PCPN. MOV LTL TOPS TO FL450. LARGE HAIL POSS. MICROBURSTS POSS. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              33.039,
+              -110.489
+            ],
+            [
+              32.269,
+              -108.869
+            ],
+            [
+              31.192,
+              -109.791
+            ],
+            [
+              31.292,
+              -111.914
+            ],
+            [
+              33.039,
+              -110.489
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-29/103",
+        "issueTime": "2026-08-29T19:46:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 103,
+        "start": "2026-08-29T19:46:00+00:00",
+        "end": "2026-08-29T20:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH HVY PCPN. MOV LTL TOPS TO FL430. HAIL TO 0.75 IN POSS. CONDS CONTG BYD 292005Z. AZ NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.387,
+              -109.124
+            ],
+            [
+              31.346,
+              -108.811
+            ],
+            [
+              31.347,
+              -110.565
+            ],
+            [
+              31.881,
+              -110.663
+            ],
+            [
+              32.387,
+              -109.124
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-29/102",
+        "issueTime": "2026-08-29T19:18:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 102,
+        "start": "2026-08-29T19:18:00+00:00",
+        "end": "2026-08-29T20:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH HVY PCPN. MOV LTL TOPS TO FL390. HAIL TO 0.50 IN POSS. AZ NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.036,
+              -112.48
+            ],
+            [
+              34.448,
+              -111.732
+            ],
+            [
+              33.434,
+              -113.209
+            ],
+            [
+              33.71,
+              -113.482
+            ],
+            [
+              35.036,
+              -112.48
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-29/101",
+        "issueTime": "2026-08-29T17:35:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 101,
+        "start": "2026-08-29T17:35:00+00:00",
+        "end": "2026-08-29T18:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/SvrTstm",
+        "text": "DVLPG AREA SEV TSRA WITH HVY TO EXTRM PCPN. MOV FROM 21010KT TOPS TO FL500. LARGE HAIL POSS. MICROBURSTS POSS. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.705,
+              -110.246
+            ],
+            [
+              32.371,
+              -110.214
+            ],
+            [
+              32.244,
+              -111.304
+            ],
+            [
+              31.861,
+              -111.668
+            ],
+            [
+              32.499,
+              -112.031
+            ],
+            [
+              32.705,
+              -110.246
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-29/106",
+        "issueTime": "2026-08-29T01:15:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 106,
+        "start": "2026-08-29T01:15:00+00:00",
+        "end": "2026-08-29T02:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV LTL TOPS TO FL370. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/105",
+        "issueTime": "2026-08-28T22:42:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 105,
+        "start": "2026-08-28T22:42:00+00:00",
+        "end": "2026-08-28T23:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "ISOL TSRA DIAM 30NM WITH MOD TO HVY PCPN. MOV FROM 02005KT TOPS TO FL430. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/202",
+        "issueTime": "2026-08-28T21:44:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 202,
+        "start": "2026-08-28T21:44:00+00:00",
+        "end": "2026-08-28T22:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "ISOL TSRA DIAM 30NM WITH MOD TO HVY PCPN. MOV FROM 14005KT TOPS TO FL410. CONDS CONTG BYD 282205Z. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/104",
+        "issueTime": "2026-08-28T21:42:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 104,
+        "start": "2026-08-28T21:42:00+00:00",
+        "end": "2026-08-28T22:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "ISOL TSRA DIAM 30NM. MOV FROM 31005KT TOPS TO FL390. CONDS CONTG BYD 282205Z. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              33.193,
+              -110.414
+            ],
+            [
+              32.034,
+              -108.985
+            ],
+            [
+              31.347,
+              -110.565
+            ],
+            [
+              32.116,
+              -111.334
+            ],
+            [
+              33.193,
+              -110.414
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/201",
+        "issueTime": "2026-08-28T20:43:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 201,
+        "start": "2026-08-28T20:43:00+00:00",
+        "end": "2026-08-28T21:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 09005KT TOPS TO FL450. CONDS CONTG BYD 282105Z. AZ NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/103",
+        "issueTime": "2026-08-28T20:20:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 103,
+        "start": "2026-08-28T20:20:00+00:00",
+        "end": "2026-08-28T21:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "ISOL TSRA DIAM 30NM WITH MOD TO HVY PCPN. MOV LTL TOPS TO FL340. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              30.371,
+              -104.404
+            ],
+            [
+              30.249,
+              -102.913
+            ],
+            [
+              29.664,
+              -103.198
+            ],
+            [
+              29.9,
+              -104.564
+            ],
+            [
+              30.371,
+              -104.404
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/102",
+        "issueTime": "2026-08-28T19:23:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 102,
+        "start": "2026-08-28T19:23:00+00:00",
+        "end": "2026-08-28T20:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH HVY PCPN. MOV FROM 04005KT TOPS TO FL360. TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.824,
+              -105.136
+            ],
+            [
+              32.414,
+              -105.079
+            ],
+            [
+              33.576,
+              -110.522
+            ],
+            [
+              35.671,
+              -108.656
+            ],
+            [
+              35.824,
+              -105.136
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/101",
+        "issueTime": "2026-08-28T18:05:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 101,
+        "start": "2026-08-28T18:05:00+00:00",
+        "end": "2026-08-28T19:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV LTL TOPS TO FL350. AZ NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/110",
+        "issueTime": "2026-08-28T03:03:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 110,
+        "start": "2026-08-28T03:03:00+00:00",
+        "end": "2026-08-28T04:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "ISOL TSRA DIAM 30NM WITH MOD TO HVY PCPN. MOV FROM 32005KT TOPS TO FL400. NO UPDT AFT 280315Z. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              33.282,
+              -110.88
+            ],
+            [
+              32.411,
+              -110.593
+            ],
+            [
+              32.434,
+              -112.508
+            ],
+            [
+              33.14,
+              -112.364
+            ],
+            [
+              33.282,
+              -110.88
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/502",
+        "issueTime": "2026-08-28T02:34:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 502,
+        "start": "2026-08-28T02:34:00+00:00",
+        "end": "2026-08-28T03:30:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/LowIFR",
+        "text": "AREA OCNL IFR ISOL LIFR CONDS VIS BLW 3SM IN HZ DU. RPRTD BY OBS.  ..NO UPDATES AVBL AFT 0315Z.. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/205",
+        "issueTime": "2026-08-28T02:30:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 205,
+        "start": "2026-08-28T02:30:00+00:00",
+        "end": "2026-08-28T03:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "ISOL TSRA DIAM 30NM WITH MOD TO HVY PCPN. MOV FROM 02005KT TOPS TO FL380. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.183,
+              -103.399
+            ],
+            [
+              34.995,
+              -102.84
+            ],
+            [
+              32.891,
+              -105.911
+            ],
+            [
+              33.554,
+              -106.35
+            ],
+            [
+              35.183,
+              -103.399
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/109",
+        "issueTime": "2026-08-28T02:27:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 109,
+        "start": "2026-08-28T02:27:00+00:00",
+        "end": "2026-08-28T03:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 34005KT TOPS TO FL450. NM TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              31.14,
+              -104.387
+            ],
+            [
+              30.244,
+              -104.374
+            ],
+            [
+              30.052,
+              -104.909
+            ],
+            [
+              30.96,
+              -104.7
+            ],
+            [
+              31.14,
+              -104.387
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/108",
+        "issueTime": "2026-08-28T01:22:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 108,
+        "start": "2026-08-28T01:22:00+00:00",
+        "end": "2026-08-28T02:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 05005KT TOPS TO FL390. TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.424,
+              -111.092
+            ],
+            [
+              32.352,
+              -110.663
+            ],
+            [
+              31.808,
+              -111.092
+            ],
+            [
+              32.116,
+              -111.531
+            ],
+            [
+              32.424,
+              -111.092
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/402",
+        "issueTime": "2026-08-28T01:14:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 402,
+        "start": "2026-08-28T01:14:00+00:00",
+        "end": "2026-08-28T02:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/SvrTstm",
+        "text": "AREA SEV TSRA. MOV FROM 14010KT TOPS TO FL430. LARGE HAIL POSS. OVR 50KT WIND GUST POSS. THIS IS ADDN INFO TO CONVECTIVE SIGMET . AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.956,
+              -110.629
+            ],
+            [
+              32.116,
+              -110.646
+            ],
+            [
+              32.116,
+              -112.318
+            ],
+            [
+              32.896,
+              -112.279
+            ],
+            [
+              32.956,
+              -110.629
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/501",
+        "issueTime": "2026-08-28T00:45:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 501,
+        "start": "2026-08-28T00:45:00+00:00",
+        "end": "2026-08-28T01:45:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/LowIFR",
+        "text": "AREA OCNL IFR CONDS VIS BLW 3SM IN HZ DU. RPRTD BY OBS. VISIBLE ON  WEBCAM. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.511,
+              -112.47
+            ],
+            [
+              32.116,
+              -111.531
+            ],
+            [
+              31.734,
+              -112.031
+            ],
+            [
+              32.203,
+              -112.623
+            ],
+            [
+              32.511,
+              -112.47
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/107",
+        "issueTime": "2026-08-28T00:37:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 107,
+        "start": "2026-08-28T00:37:00+00:00",
+        "end": "2026-08-28T01:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH HVY TO EXTRM PCPN. MOV FROM 13010KT TOPS TO FL480. CONDS CONTG BYD 280105Z. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              41.039,
+              -95.452
+            ],
+            [
+              31.988,
+              -110.688
+            ],
+            [
+              32.244,
+              -111.194
+            ],
+            [
+              41.295,
+              -96.022
+            ],
+            [
+              41.039,
+              -95.452
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-28/401",
+        "issueTime": "2026-08-28T00:32:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 401,
+        "start": "2026-08-28T00:32:00+00:00",
+        "end": "2026-08-28T01:15:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/SvrTstm",
+        "text": "ISOL SEV TSRA DIAM 30NM. MOV FROM 13010KT TOPS TO FL430. LARGE HAIL POSS. OVR 50KT WIND GUST POSS. THIS IS ADDN INFO TO CONVECTIVE SIGMET . AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-27/106",
+        "issueTime": "2026-08-27T22:08:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 106,
+        "start": "2026-08-27T22:08:00+00:00",
+        "end": "2026-08-27T23:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "ISOL TSRA DIAM 30NM. MOV FROM 01010KT TOPS TO FL370. TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.466,
+              -104.567
+            ],
+            [
+              34.864,
+              -104.545
+            ],
+            [
+              34.577,
+              -106.375
+            ],
+            [
+              35.103,
+              -106.42
+            ],
+            [
+              35.466,
+              -104.567
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-27/302",
+        "issueTime": "2026-08-27T20:34:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 302,
+        "start": "2026-08-27T20:34:00+00:00",
+        "end": "2026-08-27T21:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH HVY PCPN. MOV FROM 32005KT TOPS TO FL450. CONDS CONTG BYD 272105Z. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-27/204",
+        "issueTime": "2026-08-27T20:11:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 204,
+        "start": "2026-08-27T20:11:00+00:00",
+        "end": "2026-08-27T21:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/SvrTstm",
+        "text": "ISOL SEV TSRA DIAM 30NM WITH HVY PCPN. MOV LTL TOPS TO FL450. LARGE HAIL POSS. MICROBURSTS POSS. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-27/105",
+        "issueTime": "2026-08-27T20:08:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 105,
+        "start": "2026-08-27T20:08:00+00:00",
+        "end": "2026-08-27T21:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG ISOL TSRA DIAM 30NM WITH HVY PCPN. MOV FROM 01005KT TOPS TO FL430. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.022,
+              -110.723
+            ],
+            [
+              34.646,
+              -109.752
+            ],
+            [
+              33.749,
+              -109.765
+            ],
+            [
+              34.668,
+              -111.154
+            ],
+            [
+              35.022,
+              -110.723
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-27/203",
+        "issueTime": "2026-08-27T19:36:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 203,
+        "start": "2026-08-27T19:36:00+00:00",
+        "end": "2026-08-27T20:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV LTL TOPS TO FL330. CONDS CONTG BYD 272005Z. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.161,
+              -105.961
+            ],
+            [
+              31.101,
+              -105.545
+            ],
+            [
+              31.346,
+              -106.151
+            ],
+            [
+              32.115,
+              -106.226
+            ],
+            [
+              32.161,
+              -105.961
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-27/104",
+        "issueTime": "2026-08-27T19:18:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 104,
+        "start": "2026-08-27T19:18:00+00:00",
+        "end": "2026-08-27T20:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH HVY PCPN. MOV LTL TOPS TO FL380. NM TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.768,
+              -111.707
+            ],
+            [
+              35.329,
+              -110.567
+            ],
+            [
+              34.668,
+              -111.154
+            ],
+            [
+              35.369,
+              -112.48
+            ],
+            [
+              35.768,
+              -111.707
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-27/301",
+        "issueTime": "2026-08-27T18:30:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 301,
+        "start": "2026-08-27T18:30:00+00:00",
+        "end": "2026-08-27T19:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 22010KT TOPS TO FL390. CONDS CONTG BYD 271905Z. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              36.645,
+              -104.951
+            ],
+            [
+              35.466,
+              -104.567
+            ],
+            [
+              34.837,
+              -108.445
+            ],
+            [
+              35.671,
+              -108.656
+            ],
+            [
+              36.645,
+              -104.951
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-27/202",
+        "issueTime": "2026-08-27T18:28:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 202,
+        "start": "2026-08-27T18:28:00+00:00",
+        "end": "2026-08-27T19:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 31010KT TOPS TO FL390. CONDS CONTG BYD 271905Z. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              36.645,
+              -104.951
+            ],
+            [
+              35.466,
+              -104.567
+            ],
+            [
+              34.837,
+              -108.445
+            ],
+            [
+              35.671,
+              -108.656
+            ],
+            [
+              36.645,
+              -104.951
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-27/202",
+        "issueTime": "2026-08-27T18:27:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 202,
+        "start": "2026-08-27T18:27:00+00:00",
+        "end": "2026-08-27T19:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 31010KT TOPS TO FL390. CONDS CONTG BYD 271900Z. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              34.048,
+              -108.807
+            ],
+            [
+              31.223,
+              -102.764
+            ],
+            [
+              29.547,
+              -103.062
+            ],
+            [
+              31.944,
+              -108.629
+            ],
+            [
+              34.048,
+              -108.807
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-27/103",
+        "issueTime": "2026-08-27T18:25:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 103,
+        "start": "2026-08-27T18:25:00+00:00",
+        "end": "2026-08-27T19:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 36010KT TOPS TO FL450. CONDS CONTG BYD 271905Z. NM TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-27/102",
+        "issueTime": "2026-08-27T17:44:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 102,
+        "start": "2026-08-27T17:44:00+00:00",
+        "end": "2026-08-27T18:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "ISOL TSRA DIAM 40NM WITH MOD TO HVY PCPN. MOV LTL TOPS TO FL440. CONDS CONTG BYD 271805Z. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              31.807,
+              -105.2
+            ],
+            [
+              29.538,
+              -104.017
+            ],
+            [
+              31.474,
+              -106.376
+            ],
+            [
+              31.807,
+              -105.2
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-27/201",
+        "issueTime": "2026-08-27T13:59:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 201,
+        "start": "2026-08-27T13:59:00+00:00",
+        "end": "2026-08-27T15:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA. MOV FROM 35010KT TOPS TO FL370. TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.253,
+              -105.109
+            ],
+            [
+              30.371,
+              -104.404
+            ],
+            [
+              31.961,
+              -106.301
+            ],
+            [
+              32.253,
+              -105.109
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-27/101",
+        "issueTime": "2026-08-27T12:17:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 101,
+        "start": "2026-08-27T12:17:00+00:00",
+        "end": "2026-08-27T13:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA. MOV FROM 34010KT TOPS TO FL400. NM TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-27/112",
+        "issueTime": "2026-08-27T00:03:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 112,
+        "start": "2026-08-27T00:03:00+00:00",
+        "end": "2026-08-27T00:15:00+00:00",
+        "observedProperty": null,
+        "text": "FROM 60ENE PHX-70NNE TUS-50N TUS-40E PHX-60ENE PHX CANCEL"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.347,
+              -106.453
+            ],
+            [
+              35.039,
+              -106.201
+            ],
+            [
+              34.885,
+              -106.686
+            ],
+            [
+              35.157,
+              -106.752
+            ],
+            [
+              35.347,
+              -106.453
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/301",
+        "issueTime": "2026-08-26T23:42:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 301,
+        "start": "2026-08-26T23:42:00+00:00",
+        "end": "2026-08-27T01:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/WindGusts",
+        "text": "AREA BLDU WITH SFC WNDS MOV FROM 320 GUSTS 30-40 KTS VIS AOB-3SM CONDS SPRDG SWD. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/112",
+        "issueTime": "2026-08-26T23:27:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 112,
+        "start": "2026-08-26T23:27:00+00:00",
+        "end": "2026-08-27T23:35:00+00:00",
+        "observedProperty": null,
+        "text": "FROM 60ENE PHX-70NNE TUS-50N TUS-40E PHX-60ENE PHX CANCEL"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              33.817,
+              -110.905
+            ],
+            [
+              33.193,
+              -110.414
+            ],
+            [
+              32.949,
+              -110.941
+            ],
+            [
+              33.434,
+              -111.213
+            ],
+            [
+              33.817,
+              -110.905
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/111",
+        "issueTime": "2026-08-26T23:00:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 111,
+        "start": "2026-08-26T23:00:00+00:00",
+        "end": "2026-08-27T00:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/SvrTstm",
+        "text": "AREA SEV TSRA WITH HVY TO EXTRM PCPN. MOV FROM 16010KT TOPS EST TO  FL420. SFC WND GST OVR 50KT POSS. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              30.987,
+              -104.313
+            ],
+            [
+              30.538,
+              -104.017
+            ],
+            [
+              30.052,
+              -104.909
+            ],
+            [
+              30.754,
+              -105.088
+            ],
+            [
+              30.987,
+              -104.313
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/110",
+        "issueTime": "2026-08-26T22:40:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 110,
+        "start": "2026-08-26T22:40:00+00:00",
+        "end": "2026-08-26T23:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 30010KT TOPS TO FL390. TX"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.491,
+              -105.136
+            ],
+            [
+              35.466,
+              -104.567
+            ],
+            [
+              34.825,
+              -105.136
+            ],
+            [
+              35.196,
+              -105.371
+            ],
+            [
+              35.491,
+              -105.136
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/109",
+        "issueTime": "2026-08-26T21:20:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 109,
+        "start": "2026-08-26T21:20:00+00:00",
+        "end": "2026-08-26T22:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/SvrTstm",
+        "text": "AREA SEV TSRA WITH HVY TO EXTRM PCPN. MOV LTL TOPS EST TO FL500. 2 IN HAIL, SFC WND GTS OVR 55KTS POSS. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.318,
+              -112.17
+            ],
+            [
+              34.241,
+              -112.713
+            ],
+            [
+              34.766,
+              -114.015
+            ],
+            [
+              35.37,
+              -112.787
+            ],
+            [
+              35.318,
+              -112.17
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/204",
+        "issueTime": "2026-08-26T20:04:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 204,
+        "start": "2026-08-26T20:04:00+00:00",
+        "end": "2026-08-26T21:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/PrecipitationRate",
+        "text": "AREA SHRA/TSRA WITH MOD TO HVY PCPN. MOV FROM 27010KT TOPS TO FL370. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              33.434,
+              -110.415
+            ],
+            [
+              33.269,
+              -109.263
+            ],
+            [
+              32.078,
+              -109.809
+            ],
+            [
+              32.732,
+              -111.242
+            ],
+            [
+              33.434,
+              -110.415
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/108",
+        "issueTime": "2026-08-26T20:03:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 108,
+        "start": "2026-08-26T20:03:00+00:00",
+        "end": "2026-08-26T21:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/PrecipitationRate",
+        "text": "AREA SHRA/TSRA WITH MOD PCPN. MOV FROM 22010KT TOPS TO FL370. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              34.206,
+              -106.608
+            ],
+            [
+              33.401,
+              -104.805
+            ],
+            [
+              32.126,
+              -105.471
+            ],
+            [
+              33.052,
+              -110.905
+            ],
+            [
+              34.264,
+              -110.126
+            ],
+            [
+              34.206,
+              -106.608
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/203",
+        "issueTime": "2026-08-26T19:02:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 203,
+        "start": "2026-08-26T19:02:00+00:00",
+        "end": "2026-08-26T20:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/PrecipitationRate",
+        "text": "AREA SHRA/TSRA WITH MOD TO HVY PCPN. MOV FROM 27010KT TOPS TO FL390. AZ NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              34.646,
+              -109.005
+            ],
+            [
+              33.809,
+              -105.185
+            ],
+            [
+              32.396,
+              -105.683
+            ],
+            [
+              33.595,
+              -109.843
+            ],
+            [
+              34.646,
+              -109.005
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/202",
+        "issueTime": "2026-08-26T18:39:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 202,
+        "start": "2026-08-26T18:39:00+00:00",
+        "end": "2026-08-26T20:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD PCPN. MOV FROM 27010KT TOPS EST TO FL370. AZ NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              36.727,
+              -104.579
+            ],
+            [
+              35.657,
+              -104.726
+            ],
+            [
+              34.826,
+              -109.224
+            ],
+            [
+              35.964,
+              -109.572
+            ],
+            [
+              36.769,
+              -105.868
+            ],
+            [
+              36.727,
+              -104.579
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/107",
+        "issueTime": "2026-08-26T18:26:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 107,
+        "start": "2026-08-26T18:26:00+00:00",
+        "end": "2026-08-26T19:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 27010KT TOPS EST TO FL400. AZ NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              36.727,
+              -104.579
+            ],
+            [
+              35.785,
+              -104.757
+            ],
+            [
+              35.372,
+              -106.608
+            ],
+            [
+              36.43,
+              -107.139
+            ],
+            [
+              36.727,
+              -104.579
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/106",
+        "issueTime": "2026-08-26T18:07:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 106,
+        "start": "2026-08-26T18:07:00+00:00",
+        "end": "2026-08-26T19:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 27010KT TOPS EST TO FL400. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              36.845,
+              -104.433
+            ],
+            [
+              35.504,
+              -105.057
+            ],
+            [
+              35.294,
+              -107.36
+            ],
+            [
+              36.082,
+              -108.099
+            ],
+            [
+              36.845,
+              -104.433
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/202",
+        "issueTime": "2026-08-26T17:46:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 202,
+        "start": "2026-08-26T17:46:00+00:00",
+        "end": "2026-08-26T18:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV LTL TOPS TO FL400. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              36.953,
+              -104.634
+            ],
+            [
+              35.657,
+              -104.726
+            ],
+            [
+              35.347,
+              -106.453
+            ],
+            [
+              36.277,
+              -107.511
+            ],
+            [
+              36.953,
+              -104.634
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/201",
+        "issueTime": "2026-08-26T17:46:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 201,
+        "start": "2026-08-26T17:46:00+00:00",
+        "end": "2026-08-26T18:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV LTL TOPS TO FL400. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.277,
+              -111.475
+            ],
+            [
+              34.646,
+              -109.005
+            ],
+            [
+              33.749,
+              -109.765
+            ],
+            [
+              34.703,
+              -111.873
+            ],
+            [
+              35.277,
+              -111.475
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/105",
+        "issueTime": "2026-08-26T17:37:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 105,
+        "start": "2026-08-26T17:37:00+00:00",
+        "end": "2026-08-26T18:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV LTL TOPS TO FL400. AZ NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/104",
+        "issueTime": "2026-08-26T17:24:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 104,
+        "start": "2026-08-26T17:24:00+00:00",
+        "end": "2026-08-26T18:00:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "DVLPG ISOL TSRA DIAM 15NM WITH MOD TO HVY PCPN. MOV LTL TOPS TO FL400. AZ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.039,
+              -107.422
+            ],
+            [
+              34.656,
+              -105.481
+            ],
+            [
+              34.214,
+              -105.601
+            ],
+            [
+              34.45,
+              -107.328
+            ],
+            [
+              35.039,
+              -107.422
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/103",
+        "issueTime": "2026-08-26T16:06:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 103,
+        "start": "2026-08-26T16:06:00+00:00",
+        "end": "2026-08-26T17:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 29015KT TOPS TO FL350. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/102",
+        "issueTime": "2026-08-26T14:40:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 102,
+        "start": "2026-08-26T14:40:00+00:00",
+        "end": "2026-08-26T15:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "ISOL TSRA DIAM 30NM WITH MOD TO HVY PCPN. MOV FROM 29015KT TOPS TO FL310. NM"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.501,
+              -106.375
+            ],
+            [
+              34.885,
+              -106.686
+            ],
+            [
+              34.911,
+              -106.984
+            ],
+            [
+              35.501,
+              -106.842
+            ],
+            [
+              35.501,
+              -106.375
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id": "https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-26/101",
+        "issueTime": "2026-08-26T13:10:00+00:00",
+        "cwsu": "ZAB",
+        "sequence": 101,
+        "start": "2026-08-26T13:10:00+00:00",
+        "end": "2026-08-26T14:05:00+00:00",
+        "observedProperty": "https://codes.nws.noaa.gov/NWSI-10-803/BasisForIssuance/Tstm",
+        "text": "AREA TSRA. MOV FROM 30015KT TOPS TO FL370. NM"
+      }
+    }
+  ]
+}

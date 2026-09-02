@@ -20,10 +20,10 @@ Get the text forecast for a specific zone.
 noaa-weather zones forecast --type <TYPE> --id <ID>
 ```
 
-List observation stations within a forecast zone.
+List observation stations within a forecast zone. `--cursor` is accepted because the NOAA API declares it, but NOAA currently publishes a broken `pagination.next` link for this operation (it points at the generic `/stations` listing past the end of the results), so do not feed that cursor back; without `--limit` the first page already lists every station in the zone.
 
 ```sh
-noaa-weather zones stations --id <ID> [--limit <1-500>]
+noaa-weather zones stations --id <ID> [--limit <1-500>] [--cursor <CURSOR>]
 ```
 
 List observations for a forecast zone.

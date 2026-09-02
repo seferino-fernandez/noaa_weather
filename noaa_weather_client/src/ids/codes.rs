@@ -18,6 +18,9 @@ pub(super) enum Chars {
     AlnumHyphen,
     /// Printable ASCII other than space (`!` through `~`).
     Printable,
+    /// ASCII letters, digits, and the base64 and URL-safe base64 symbols
+    /// `+`, `/`, `=`, `_`, and `-`.
+    Base64,
 }
 
 impl Chars {
@@ -27,6 +30,9 @@ impl Chars {
             Self::Letters => byte.is_ascii_alphabetic(),
             Self::AlnumHyphen => byte.is_ascii_alphanumeric() || byte == b'-',
             Self::Printable => byte.is_ascii_graphic(),
+            Self::Base64 => {
+                byte.is_ascii_alphanumeric() || matches!(byte, b'+' | b'/' | b'=' | b'_' | b'-')
+            }
         }
     }
 }
@@ -138,8 +144,21 @@ const ALERT: Rule = Rule {
     reason: "must be 1 to 256 printable ASCII characters with no whitespace",
 };
 
+const CURSOR: Rule = Rule {
+    kind: ValueKind::Cursor,
+    min: 1,
+    max: 512,
+    chars: Chars::Base64,
+    case: Case::Preserve,
+    reason: "must be 1 to 512 ASCII letters, digits, or the symbols + / = _ -",
+};
+
 fn parse_station(input: &str) -> Result<Box<str>, InvalidValue> {
     STATION.parse(input)
+}
+
+fn parse_cursor(input: &str) -> Result<Box<str>, InvalidValue> {
+    CURSOR.parse(input)
 }
 
 fn parse_cwsu(input: &str) -> Result<Box<str>, InvalidValue> {
@@ -316,6 +335,30 @@ str_id! {
     "^[!-~]{1,256}$"
 }
 
+str_id! {
+    /// An opaque pagination cursor issued by NOAA.
+    ///
+    /// Used by the `cursor` query parameter of `/alerts`, `/stations`,
+    /// `/stations/{id}/observations`, `/zones/forecast/{id}/stations`, and
+    /// `/radio`. NOAA issues base64 tokens such as `eyJzIjo1MDB9`, sometimes
+    /// with `=` padding; this accepts 1 to 512 ASCII letters, digits, or the
+    /// symbols `+ / = _ -` and preserves the text exactly. Obtain one from
+    /// [`FeatureCollection::next_cursor`](crate::geo::FeatureCollection::next_cursor)
+    /// rather than constructing it by hand.
+    ///
+    /// ```
+    /// use noaa_weather_client::Cursor;
+    ///
+    /// let cursor: Cursor = "eyJzIjo1MDB9".parse()?;
+    /// assert_eq!(cursor.as_str(), "eyJzIjo1MDB9");
+    /// assert!("has space".parse::<Cursor>().is_err());
+    /// # Ok::<(), noaa_weather_client::InvalidValue>(())
+    /// ```
+    Cursor, parse_cursor,
+    "Opaque NOAA pagination cursor, 1 to 512 ASCII letters, digits, or the symbols + / = _ - (base64).",
+    "^[A-Za-z0-9+/=_-]{1,512}$"
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -467,6 +510,36 @@ mod tests {
             ValueKind::AlertId
         );
         assert_eq!(rejected::<AlertId>("urn:oïd:1").kind(), ValueKind::AlertId);
+    }
+
+    #[test]
+    fn cursor_preserves_base64_text_and_rejects_other_symbols() {
+        let cursor: Cursor = "eyJ0IjoxNzU2Nzc0NzAwfQ==".parse().unwrap();
+        assert_eq!(cursor.as_str(), "eyJ0IjoxNzU2Nzc0NzAwfQ==");
+        assert_eq!(cursor.to_string(), "eyJ0IjoxNzU2Nzc0NzAwfQ==");
+        assert!("a+b/c=d_e-f".parse::<Cursor>().is_ok());
+        assert!("A".repeat(512).parse::<Cursor>().is_ok());
+        assert_eq!(rejected::<Cursor>("").kind(), ValueKind::Cursor);
+        assert_eq!(
+            rejected::<Cursor>(&"A".repeat(513)).kind(),
+            ValueKind::Cursor
+        );
+        for input in [
+            "has space",
+            "percent%3D",
+            "quest?",
+            "amp&",
+            "tab\t",
+            "ünïcode",
+        ] {
+            let error = rejected::<Cursor>(input);
+            assert_eq!(error.kind(), ValueKind::Cursor, "{input:?}");
+            assert_eq!(error.input(), input);
+        }
+        assert_eq!(
+            rejected::<Cursor>("not valid!").to_string(),
+            "invalid cursor \"not valid!\": must be 1 to 512 ASCII letters, digits, or the symbols + / = _ -"
+        );
     }
 
     #[test]

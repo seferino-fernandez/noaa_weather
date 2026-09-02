@@ -4,6 +4,12 @@ use serde::{Deserialize, Serialize};
 /// Alert : An object representing a public alert message. Unless otherwise noted, the fields in this object correspond to the National Weather Service CAP v1.2 specification, which extends the OASIS Common Alerting Protocol (CAP) v1.2 specification and USA Integrated Public Alert and Warning System (IPAWS) Profile v1.0. Refer to this documentation for more complete information. <http://docs.oasis-open.org/emergency/cap/v1.2/CAP-v1.2-os.html> <http://docs.oasis-open.org/emergency/cap/v1.2/ipaws-profile/v1.0/cs01/cap-v1.2-ipaws-profile-cs01.html> <https://alerts.weather.gov/#technical-notes-v12>
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Alert {
+    /// The canonical API URL for this alert.
+    #[serde(rename = "@id", skip_serializing_if = "Option::is_none")]
+    pub at_id: Option<String>,
+    /// The JSON-LD type assigned to this alert.
+    #[serde(rename = "@type", skip_serializing_if = "Option::is_none")]
+    pub at_type: Option<String>,
     /// The identifier of the alert message.
     #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
@@ -119,6 +125,8 @@ impl Alert {
     /// An object representing a public alert message. Unless otherwise noted, the fields in this object correspond to the National Weather Service CAP v1.2 specification, which extends the OASIS Common Alerting Protocol (CAP) v1.2 specification and USA Integrated Public Alert and Warning System (IPAWS) Profile v1.0. Refer to this documentation for more complete information. <http://docs.oasis-open.org/emergency/cap/v1.2/CAP-v1.2-os.html> <http://docs.oasis-open.org/emergency/cap/v1.2/ipaws-profile/v1.0/cs01/cap-v1.2-ipaws-profile-cs01.html> <https://alerts.weather.gov/#technical-notes-v12>
     pub fn new() -> Alert {
         Alert {
+            at_id: None,
+            at_type: None,
             id: None,
             area_desc: None,
             geocode: None,

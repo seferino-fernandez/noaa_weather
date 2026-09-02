@@ -2,7 +2,7 @@
 
 Radio commands are always available. Call signs and county zone ids are validated before any request is made; a malformed value is a usage error (exit code 2).
 
-List transmitter metadata, optionally continuing from an opaque pagination cursor:
+List transmitter metadata, optionally continuing from the opaque pagination cursor in a previous page's `pagination.next` value in `--json` output:
 
 ```sh
 noaa-weather radio transmitters [--cursor <CURSOR>]

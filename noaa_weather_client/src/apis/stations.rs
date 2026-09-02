@@ -20,12 +20,16 @@
 //! # }
 //! ```
 
+use std::num::NonZeroU16;
+
 use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 
 use super::Error;
+use super::pagination::{self, Paged};
 use crate::client::{Client, http};
-use crate::ids::StationId;
+use crate::geo::{Feature, FeatureCollection};
+use crate::ids::{Cursor, StationId};
 use crate::models::{self, AreaCode};
 
 /// Filters and paging for [`Stations::list`].
@@ -44,9 +48,19 @@ pub struct StationsQuery {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "schemars", schemars(range(min = 1, max = 500)))]
     pub limit: Option<u16>,
-    /// Opaque pagination cursor from a previous page.
+    /// Opaque pagination cursor from a previous page, obtained from
+    /// [`FeatureCollection::next_cursor`].
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub cursor: Option<String>,
+    pub cursor: Option<Cursor>,
+}
+
+impl Paged for StationsQuery {
+    fn at_cursor(&self, cursor: Cursor) -> Self {
+        Self {
+            cursor: Some(cursor),
+            ..self.clone()
+        }
+    }
 }
 
 impl http::QueryParams for StationsQuery {
@@ -92,9 +106,19 @@ pub struct ObservationsQuery {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "schemars", schemars(range(min = 1, max = 500)))]
     pub limit: Option<u16>,
-    /// Opaque pagination cursor from a previous page.
+    /// Opaque pagination cursor from a previous page, obtained from
+    /// [`FeatureCollection::next_cursor`].
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub cursor: Option<String>,
+    pub cursor: Option<Cursor>,
+}
+
+impl Paged for ObservationsQuery {
+    fn at_cursor(&self, cursor: Cursor) -> Self {
+        Self {
+            cursor: Some(cursor),
+            ..self.clone()
+        }
+    }
 }
 
 impl http::QueryParams for ObservationsQuery {
@@ -148,7 +172,7 @@ impl Stations<'_> {
     pub async fn get(
         &self,
         station: &StationId,
-    ) -> Result<models::ObservationStationGeoJson, Error> {
+    ) -> Result<Feature<models::ObservationStation>, Error> {
         self.station(station).json(http::JsonMedia::GeoJson).await
     }
 
@@ -181,11 +205,61 @@ impl Stations<'_> {
     pub async fn list(
         &self,
         query: &StationsQuery,
-    ) -> Result<models::ObservationStationCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::ObservationStation>, Error> {
         http::request(self.client, "/stations")
             .query(query)
             .json(http::JsonMedia::GeoJson)
             .await
+    }
+
+    /// Returns up to `max_pages` pages of [`Stations::list`] merged into one
+    /// collection.
+    ///
+    /// `GET /stations`, repeated with each page's cursor.
+    ///
+    /// The first page is fetched with `query` as given, cursor included;
+    /// later pages follow `pagination.next`. Features are concatenated in
+    /// NOAA's order. The result's `pagination` is `None` when every page was
+    /// fetched, or the last page's link when `max_pages` stopped the walk
+    /// with more available, so `next_cursor()` resumes it. An error on any
+    /// page is returned as is; there is no partial result.
+    ///
+    /// ```no_run
+    /// use std::num::NonZeroU16;
+    ///
+    /// use noaa_weather_client::{Client, apis::stations::StationsQuery};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let arizona = client
+    ///     .stations()
+    ///     .list_all(
+    ///         &StationsQuery {
+    ///             state: vec!["AZ".parse().unwrap()],
+    ///             limit: Some(500),
+    ///             ..Default::default()
+    ///         },
+    ///         NonZeroU16::new(3).unwrap(),
+    ///     )
+    ///     .await?;
+    /// println!("{} stations", arizona.len());
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if any page request fails or cannot be decoded.
+    pub async fn list_all(
+        &self,
+        query: &StationsQuery,
+        max_pages: NonZeroU16,
+    ) -> Result<FeatureCollection<models::ObservationStation>, Error> {
+        let stations = *self;
+        pagination::collect(query, max_pages, |page| async move {
+            stations.list(&page).await
+        })
+        .await
     }
 
     /// Returns the most recent observation from one station.
@@ -215,7 +289,7 @@ impl Stations<'_> {
         &self,
         station: &StationId,
         query: &LatestObservationQuery,
-    ) -> Result<models::ObservationGeoJson, Error> {
+    ) -> Result<Feature<models::Observation>, Error> {
         self.station(station)
             .literal_path("observations/latest")
             .query(query)
@@ -250,12 +324,66 @@ impl Stations<'_> {
         &self,
         station: &StationId,
         query: &ObservationsQuery,
-    ) -> Result<models::ObservationCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::Observation>, Error> {
         self.station(station)
             .literal_path("observations")
             .query(query)
             .json(http::JsonMedia::GeoJson)
             .await
+    }
+
+    /// Returns up to `max_pages` pages of [`Stations::observations`] merged
+    /// into one collection.
+    ///
+    /// `GET /stations/{stationId}/observations`, repeated with each page's
+    /// cursor.
+    ///
+    /// The first page is fetched with `query` as given, cursor included;
+    /// later pages follow `pagination.next`. Features are concatenated in
+    /// NOAA's order (newest first). The result's `pagination` is `None` when
+    /// every page was fetched, or the last page's link when `max_pages`
+    /// stopped the walk with more available, so `next_cursor()` resumes it.
+    /// An error on any page is returned as is; there is no partial result.
+    ///
+    /// ```no_run
+    /// use std::num::NonZeroU16;
+    ///
+    /// use noaa_weather_client::{Client, StationId, apis::stations::ObservationsQuery};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let station: StationId = "KPHX".parse()?;
+    /// let week = client
+    ///     .stations()
+    ///     .observations_all(
+    ///         &station,
+    ///         &ObservationsQuery {
+    ///             start: Some("2026-08-23T00:00:00Z".parse().unwrap()),
+    ///             limit: Some(500),
+    ///             ..Default::default()
+    ///         },
+    ///         NonZeroU16::new(5).unwrap(),
+    ///     )
+    ///     .await?;
+    /// println!("{} observations", week.len());
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if any page request fails or cannot be decoded.
+    pub async fn observations_all(
+        &self,
+        station: &StationId,
+        query: &ObservationsQuery,
+        max_pages: NonZeroU16,
+    ) -> Result<FeatureCollection<models::Observation>, Error> {
+        let stations = *self;
+        pagination::collect(query, max_pages, |page| async move {
+            stations.observations(station, &page).await
+        })
+        .await
     }
 
     /// Returns the observation recorded at exactly `time`, sent as an
@@ -284,7 +412,7 @@ impl Stations<'_> {
         &self,
         station: &StationId,
         time: Timestamp,
-    ) -> Result<models::ObservationGeoJson, Error> {
+    ) -> Result<Feature<models::Observation>, Error> {
         self.station(station)
             .literal_path("observations")
             .path_segment(time.strftime(http::RFC3339_SECONDS))
@@ -401,7 +529,7 @@ mod tests {
                 id: vec!["KPHX".parse().unwrap(), "kiwa".parse().unwrap()],
                 state: vec!["AZ".parse().unwrap(), "CA".parse().unwrap()],
                 limit: Some(20),
-                cursor: Some("next-page".to_owned()),
+                cursor: Some("next-page".parse().unwrap()),
             })
             .await
             .unwrap();
@@ -505,7 +633,7 @@ mod tests {
                     start: Some("2026-08-30T00:00:00.5Z".parse().unwrap()),
                     end: Some("2026-08-30T06:00:00Z".parse().unwrap()),
                     limit: Some(1),
-                    cursor: Some("next page".to_owned()),
+                    cursor: Some("bmV4dA==".parse().unwrap()),
                 },
             )
             .await
@@ -535,7 +663,7 @@ mod tests {
                     "/stations/KPHX/observations".to_owned(),
                     Some(
                         "start=2026-08-30T00%3A00%3A00Z&end=2026-08-30T06%3A00%3A00Z\
-                         &limit=1&cursor=next+page"
+                         &limit=1&cursor=bmV4dA%3D%3D"
                             .to_owned()
                     ),
                     "application/geo+json".to_owned(),

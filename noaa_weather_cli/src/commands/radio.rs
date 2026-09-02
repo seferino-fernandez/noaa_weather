@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
 use noaa_weather_client::apis::radio::TransmittersQuery;
-use noaa_weather_client::{CallSign, Client, Coordinates, ZoneId};
+use noaa_weather_client::{CallSign, Client, Coordinates, Cursor, ZoneId};
 
 use crate::output::Output;
 
@@ -23,9 +23,9 @@ pub struct StationRadioArgs {
 /// Arguments for listing NOAA Weather Radio transmitters.
 #[derive(Args, Debug, Clone)]
 pub struct RadioTransmittersArgs {
-    /// Pagination cursor returned by a previous request.
+    /// Opaque pagination cursor from a previous page (see pagination.next in --json output)
     #[arg(long)]
-    cursor: Option<String>,
+    cursor: Option<Cursor>,
 }
 
 /// Arguments for a county-zone transmitter lookup.

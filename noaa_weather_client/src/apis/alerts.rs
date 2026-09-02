@@ -17,20 +17,21 @@
 //!         ..Default::default()
 //!     })
 //!     .await?;
-//! println!("{} severe alerts", severe.features.len());
+//! println!("{} severe alerts", severe.len());
 //! # Ok(())
 //! # }
 //! ```
 
-use std::{fmt, str::FromStr};
+use std::{fmt, num::NonZeroU16, str::FromStr};
 
 use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 
 use super::Error;
+use super::pagination::{self, Paged};
 use crate::client::{Client, http};
-use crate::geo::Coordinates;
-use crate::ids::{AlertId, ZoneId};
+use crate::geo::{Coordinates, Feature, FeatureCollection};
+use crate::ids::{AlertId, Cursor, ZoneId};
 use crate::models::{
     self, AlertCertainty, AlertMessageType, AlertSeverity, AlertStatus, AlertUrgency, AreaCode,
     MarineRegionCode,
@@ -205,9 +206,19 @@ pub struct AlertsQuery {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "schemars", schemars(range(min = 1, max = 500)))]
     pub limit: Option<u16>,
-    /// Opaque pagination cursor from a previous page.
+    /// Opaque pagination cursor from a previous page, obtained from
+    /// [`FeatureCollection::next_cursor`].
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub cursor: Option<String>,
+    pub cursor: Option<Cursor>,
+}
+
+impl Paged for AlertsQuery {
+    fn at_cursor(&self, cursor: Cursor) -> Self {
+        Self {
+            cursor: Some(cursor),
+            ..self.clone()
+        }
+    }
 }
 
 impl http::QueryParams for AlertsQuery {
@@ -274,7 +285,7 @@ impl Alerts<'_> {
     pub async fn active(
         &self,
         query: &ActiveAlertsQuery,
-    ) -> Result<models::AlertCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::Alert>, Error> {
         http::request(self.client, "/alerts/active")
             .query(query)
             .json(http::JsonMedia::GeoJson)
@@ -305,7 +316,7 @@ impl Alerts<'_> {
     pub async fn active_for_area(
         &self,
         area: &AreaCode,
-    ) -> Result<models::AlertCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::Alert>, Error> {
         http::request(self.client, "/alerts/active/area")
             .path_segment(area)
             .json(http::JsonMedia::GeoJson)
@@ -338,7 +349,7 @@ impl Alerts<'_> {
     pub async fn active_for_marine_region(
         &self,
         region: MarineRegionCode,
-    ) -> Result<models::AlertCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::Alert>, Error> {
         http::request(self.client, "/alerts/active/region")
             .path_segment(region)
             .json(http::JsonMedia::GeoJson)
@@ -368,7 +379,7 @@ impl Alerts<'_> {
     pub async fn active_for_zone(
         &self,
         zone: &ZoneId,
-    ) -> Result<models::AlertCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::Alert>, Error> {
         http::request(self.client, "/alerts/active/zone")
             .path_segment(zone)
             .json(http::JsonMedia::GeoJson)
@@ -429,11 +440,62 @@ impl Alerts<'_> {
     pub async fn search(
         &self,
         query: &AlertsQuery,
-    ) -> Result<models::AlertCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::Alert>, Error> {
         http::request(self.client, "/alerts")
             .query(query)
             .json(http::JsonMedia::GeoJson)
             .await
+    }
+
+    /// Returns up to `max_pages` pages of [`Alerts::search`] merged into one
+    /// collection.
+    ///
+    /// `GET /alerts`, repeated with each page's cursor.
+    ///
+    /// The first page is fetched with `query` as given, cursor included;
+    /// later pages follow `pagination.next`. Features are concatenated in
+    /// NOAA's order and `title` and `updated` come from the first page. The
+    /// result's `pagination` is `None` when every page was fetched, or the
+    /// last page's link when `max_pages` stopped the walk with more
+    /// available, so `next_cursor()` resumes it. An error on any page is
+    /// returned as is; there is no partial result.
+    ///
+    /// ```no_run
+    /// use std::num::NonZeroU16;
+    ///
+    /// use noaa_weather_client::{Client, apis::alerts::AlertsQuery};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let recent = client
+    ///     .alerts()
+    ///     .list_all(
+    ///         &AlertsQuery {
+    ///             start: Some("2026-08-30T00:00:00Z".parse().unwrap()),
+    ///             limit: Some(500),
+    ///             ..Default::default()
+    ///         },
+    ///         NonZeroU16::new(4).unwrap(),
+    ///     )
+    ///     .await?;
+    /// println!("{} alerts, more: {}", recent.len(), recent.next_cursor().is_some());
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if any page request fails or cannot be decoded.
+    pub async fn list_all(
+        &self,
+        query: &AlertsQuery,
+        max_pages: NonZeroU16,
+    ) -> Result<FeatureCollection<models::Alert>, Error> {
+        let alerts = *self;
+        pagination::collect(query, max_pages, |page| async move {
+            alerts.search(&page).await
+        })
+        .await
     }
 
     /// Returns one alert by its identifier.
@@ -456,7 +518,7 @@ impl Alerts<'_> {
     ///
     /// Returns an [`Error`] if the request fails, the alert is not found, or
     /// the response cannot be decoded.
-    pub async fn get(&self, id: &AlertId) -> Result<models::AlertGeoJson, Error> {
+    pub async fn get(&self, id: &AlertId) -> Result<Feature<models::Alert>, Error> {
         http::request(self.client, "/alerts")
             .path_segment(id)
             .json(http::JsonMedia::GeoJson)
@@ -594,7 +656,7 @@ mod tests {
                 end: Some("2026-08-30T06:30:00-05:00".parse().unwrap()),
                 event: vec!["Tornado Warning".to_owned()],
                 limit: Some(25),
-                cursor: Some("next page".to_owned()),
+                cursor: Some("bmV4dA==".parse().unwrap()),
                 ..Default::default()
             })
             .await
@@ -604,7 +666,7 @@ mod tests {
         assert_eq!(
             query,
             "start=2026-08-30T00%3A00%3A00Z&end=2026-08-30T11%3A30%3A00Z\
-             &event=Tornado+Warning&limit=25&cursor=next+page"
+             &event=Tornado+Warning&limit=25&cursor=bmV4dA%3D%3D"
         );
         assert!(!query.contains("active"));
     }
@@ -632,7 +694,7 @@ mod tests {
                 severity: vec![AlertSeverity::Severe, AlertSeverity::Extreme],
                 certainty: vec![AlertCertainty::Observed],
                 limit: Some(25),
-                cursor: Some("next page".to_owned()),
+                cursor: Some("bmV4dA==".parse().unwrap()),
             })
             .await
             .unwrap();
@@ -644,7 +706,7 @@ mod tests {
                  &status=actual%2Ctest&message_type=Alert&event=Flood+Watch%2CWind%2FWarning\
                  &code=AZC013&area=AZ&point=39.7456%2C-97.0892&region=GM&region_type=marine\
                  &zone=AZZ540%2CAZC013&urgency=Immediate&severity=Severe%2CExtreme\
-                 &certainty=Observed&limit=25&cursor=next+page"
+                 &certainty=Observed&limit=25&cursor=bmV4dA%3D%3D"
             )
         );
     }

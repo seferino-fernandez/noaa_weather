@@ -28,6 +28,7 @@ pub struct Gridpoint12hForecastPeriod {
     pub temperature: Option<Box<models::QuantitativeValue>>,
     /// If not null, indicates a non-diurnal temperature trend for the period (either rising temperature overnight, or falling temperature during the day)
     #[serde_as(as = "Option<NoneAsEmptyString>")]
+    #[serde(rename = "temperatureTrend")]
     pub temperature_trend: Option<Option<TemperatureTrend>>,
     #[serde(
         rename = "probabilityOfPrecipitation",
@@ -45,8 +46,11 @@ pub struct Gridpoint12hForecastPeriod {
     pub wind_gust: Option<Option<Box<models::QuantitativeValue>>>,
     /// The prevailing direction of the wind for the period, using a 16-point compass.
     #[serde_as(as = "Option<NoneAsEmptyString>")]
-    #[serde(rename(deserialize = "windDirection"))]
+    #[serde(rename = "windDirection")]
     pub wind_direction: Option<Option<WindDirection>>,
+    /// URL for an icon representing the forecast conditions.
+    #[serde(rename = "icon", skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
     /// A brief textual forecast summary for the period.
     #[serde(rename = "shortForecast", skip_serializing_if = "Option::is_none")]
     pub short_forecast: Option<String>,
@@ -70,6 +74,7 @@ impl Gridpoint12hForecastPeriod {
             wind_speed: None,
             wind_gust: None,
             wind_direction: None,
+            icon: None,
             short_forecast: None,
             detailed_forecast: None,
         }
@@ -184,7 +189,7 @@ mod tests {
     use super::Gridpoint12hForecastPeriod;
 
     #[test]
-    fn quantitative_forecast_ignores_removed_temperature_unit_and_icon() {
+    fn quantitative_forecast_preserves_icon_and_ignores_temperature_unit() {
         let period: Gridpoint12hForecastPeriod = serde_json::from_str(
             r#"{
                 "temperature":{"value":72,"unitCode":"wmoUnit:degF"},
@@ -207,6 +212,6 @@ mod tests {
         );
         let serialized = serde_json::to_value(period).unwrap();
         assert!(serialized.get("temperatureUnit").is_none());
-        assert!(serialized.get("icon").is_none());
+        assert_eq!(serialized["icon"], "https://example.test/legacy.png");
     }
 }

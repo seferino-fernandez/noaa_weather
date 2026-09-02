@@ -3,8 +3,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Point {
-    #[serde(rename = "@context", skip_serializing_if = "Option::is_none")]
-    pub at_context: Option<Box<models::JsonLdContext>>,
     /// A geometry represented in Well-Known Text (WKT) format.
     #[serde(
         rename = "geometry",
@@ -39,7 +37,7 @@ pub struct Point {
     )]
     pub observation_stations: Option<String>,
     #[serde(rename = "relativeLocation", skip_serializing_if = "Option::is_none")]
-    pub relative_location: Option<Box<models::PointRelativeLocation>>,
+    pub relative_location: Option<crate::geo::Feature<models::RelativeLocation>>,
     #[serde(rename = "forecastZone", skip_serializing_if = "Option::is_none")]
     pub forecast_zone: Option<String>,
     #[serde(rename = "county", skip_serializing_if = "Option::is_none")]
@@ -63,7 +61,6 @@ pub struct Point {
 impl Point {
     pub fn new() -> Point {
         Point {
-            at_context: None,
             geometry: None,
             at_id: None,
             at_type: None,

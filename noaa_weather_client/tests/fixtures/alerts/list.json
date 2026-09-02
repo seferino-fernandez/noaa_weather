@@ -1,0 +1,642 @@
+{
+  "@context": [
+    "https://geojson.org/geojson-ld/geojson-context.jsonld",
+    {
+      "@version": "1.1",
+      "wx": "https://api.weather.gov/ontology#",
+      "@vocab": "https://api.weather.gov/ontology#"
+    }
+  ],
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.af7e0442df8bfed7953cb5cae6e4661304cc1f49.001.1",
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -85.79,
+              43.23
+            ],
+            [
+              -85.79,
+              43.24
+            ],
+            [
+              -85.48,
+              43.47
+            ],
+            [
+              -84.84,
+              43.46
+            ],
+            [
+              -84.85,
+              43.29
+            ],
+            [
+              -84.84,
+              43.29
+            ],
+            [
+              -84.84,
+              43.22
+            ],
+            [
+              -85.79,
+              43.23
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.af7e0442df8bfed7953cb5cae6e4661304cc1f49.001.1",
+        "@type": "wx:Alert",
+        "id": "urn:oid:2.49.0.1.840.0.af7e0442df8bfed7953cb5cae6e4661304cc1f49.001.1",
+        "areaDesc": "Newaygo; Montcalm; Kent",
+        "geocode": {
+          "SAME": [
+            "026123",
+            "026117",
+            "026081"
+          ],
+          "UGC": [
+            "MIZ044",
+            "MIZ051",
+            "MIZ057"
+          ]
+        },
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/MIZ044",
+          "https://api.weather.gov/zones/forecast/MIZ051",
+          "https://api.weather.gov/zones/forecast/MIZ057"
+        ],
+        "references": [],
+        "sent": "2026-09-02T03:48:00-04:00",
+        "effective": "2026-09-02T03:48:00-04:00",
+        "onset": "2026-09-02T03:48:00-04:00",
+        "expires": "2026-09-02T04:45:00-04:00",
+        "ends": null,
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Moderate",
+        "certainty": "Observed",
+        "urgency": "Expected",
+        "event": "Special Weather Statement",
+        "sender": "w-nws.webmaster@noaa.gov",
+        "senderName": "NWS Grand Rapids MI",
+        "headline": "Special Weather Statement issued September 2 at 3:48AM EDT by NWS Grand Rapids MI",
+        "description": "At 347 AM EDT, Doppler radar was tracking strong thunderstorms along\na line extending from near Howard City to 9 miles northeast of\nSparta. Movement was east at 30 mph.\n\nHAZARD...Winds in excess of 40 mph and penny size hail.\n\nSOURCE...Radar indicated.\n\nIMPACT...Gusty winds could knock down tree limbs and blow around\nunsecured objects. Minor damage to outdoor objects is\npossible.\n\nLocations impacted include...\nStanton...             Howard City...         Edmore...\nLakeview...            Cedar Springs...       Crystal...\nSidney...              Sand Lake...           Casnovia...\nMcBride...             Pierson...             Westville...\nGowen...               Cedar Lake...          Entrican...\nAmble...               Indian Lake...         Vestaburg...\nWyman...               Langston...",
+        "instruction": "If outdoors, consider seeking shelter inside a building.",
+        "response": "Execute",
+        "note": null,
+        "parameters": {
+          "AWIPSidentifier": [
+            "SPSGRR"
+          ],
+          "WMOidentifier": [
+            "WWUS83 KGRR 020748"
+          ],
+          "NWSheadline": [
+            "Strong thunderstorms will impact portions of northern Kent, southeastern Newaygo and Montcalm Counties through 445 AM EDT"
+          ],
+          "eventMotionDescription": [
+            "2026-09-02T07:47:00-00:00...storm...275DEG...27KT...43.43,-85.39 43.28,-85.62"
+          ],
+          "maxWindGust": [
+            "40 MPH"
+          ],
+          "maxHailSize": [
+            "0.75"
+          ],
+          "BLOCKCHANNEL": [
+            "EAS",
+            "NWEM",
+            "CMAS"
+          ],
+          "EAS-ORG": [
+            "WXR"
+          ]
+        },
+        "scope": "Public",
+        "code": "IPAWSv1.0",
+        "language": "en-US",
+        "web": "http://www.weather.gov",
+        "eventCode": {
+          "SAME": [
+            "SPS"
+          ],
+          "NationalWeatherService": [
+            "SPS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0-KEEPALIVE-51140",
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0-KEEPALIVE-51140",
+        "@type": "wx:Alert",
+        "id": "urn:oid:2.49.0.1.840.0-KEEPALIVE-51140",
+        "areaDesc": "Montgomery",
+        "geocode": {
+          "SAME": [
+            "024031"
+          ],
+          "UGC": [
+            "MDC031"
+          ]
+        },
+        "affectedZones": [
+          "https://api.weather.gov/zones/county/MDC031"
+        ],
+        "references": [],
+        "sent": "2026-09-02T07:47:16+00:00",
+        "effective": "2026-09-02T07:47:16+00:00",
+        "onset": null,
+        "expires": "2026-09-02T07:57:16+00:00",
+        "ends": null,
+        "status": "Test",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Unknown",
+        "certainty": "Unknown",
+        "urgency": "Unknown",
+        "event": "Test Message",
+        "sender": "w-nws.webmaster@noaa.gov",
+        "senderName": "NWS",
+        "headline": null,
+        "description": "Monitoring message only. Please disregard.",
+        "instruction": "Monitoring message only. Please disregard.",
+        "response": "None",
+        "note": "This is only a test for monitoring of vital dissemination systems.",
+        "parameters": {
+          "AWIPSidentifier": [
+            "KEPWBC"
+          ],
+          "WMOidentifier": [
+            "NZUS91 KWBC 020747"
+          ],
+          "BLOCKCHANNEL": [
+            "CMAS",
+            "EAS",
+            "NWEM"
+          ]
+        },
+        "scope": "Public",
+        "code": "IPAWSv1.0",
+        "language": "en-US",
+        "web": "http://www.weather.gov",
+        "eventCode": {
+          "SAME": [
+            "NWS"
+          ],
+          "NationalWeatherService": [
+            "TST"
+          ]
+        }
+      }
+    },
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.eac0148b2838ef4c3a0fdb45fc4ca6d60a01ea27.001.1",
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -88.16,
+              43.71
+            ],
+            [
+              -88.45,
+              43.73
+            ],
+            [
+              -88.44,
+              43.89
+            ],
+            [
+              -88.4,
+              43.89
+            ],
+            [
+              -88.4,
+              43.94
+            ],
+            [
+              -88.17,
+              43.94
+            ],
+            [
+              -88.16,
+              43.71
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.eac0148b2838ef4c3a0fdb45fc4ca6d60a01ea27.001.1",
+        "@type": "wx:Alert",
+        "id": "urn:oid:2.49.0.1.840.0.eac0148b2838ef4c3a0fdb45fc4ca6d60a01ea27.001.1",
+        "areaDesc": "Fond Du Lac",
+        "geocode": {
+          "SAME": [
+            "055039"
+          ],
+          "UGC": [
+            "WIZ051"
+          ]
+        },
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/WIZ051"
+        ],
+        "references": [],
+        "sent": "2026-09-02T02:46:00-05:00",
+        "effective": "2026-09-02T02:46:00-05:00",
+        "onset": "2026-09-02T02:46:00-05:00",
+        "expires": "2026-09-02T03:30:00-05:00",
+        "ends": null,
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Moderate",
+        "certainty": "Observed",
+        "urgency": "Expected",
+        "event": "Special Weather Statement",
+        "sender": "w-nws.webmaster@noaa.gov",
+        "senderName": "NWS Milwaukee/Sullivan WI",
+        "headline": "Special Weather Statement issued September 2 at 2:46AM CDT by NWS Milwaukee/Sullivan WI",
+        "description": "At 246 AM CDT, Doppler radar was tracking a strong thunderstorm near\nRosendale, or near North Fond Du Lac, moving east at 45 mph.\n\nHAZARD...Wind gusts up to 50 mph and half inch hail.\n\nSOURCE...Radar indicated.\n\nIMPACT...Gusty winds could knock down tree limbs and blow around\nunsecured objects. Minor hail damage to vegetation is\npossible.\n\nLocations impacted include...\nFond Du Lac, Southern Lake Winnebago, Taycheedah, Mount Calvary, St.\nCloud, Calvary, Peebles, Marytown, Town of Forest, Johnsburg, and\nPipe.\n\nThis includes the following highways...\nU.S. Highway 151 near mile marker 163, and between mile markers 165\nand 169.\nInterstate 41 near mile marker 96.",
+        "instruction": "If outdoors, consider seeking shelter inside a building.\n\nFrequent cloud to ground lightning is occurring with this storm.\nLightning can strike 10 miles away from a thunderstorm. Seek a safe\nshelter inside a building or vehicle.",
+        "response": "Execute",
+        "note": null,
+        "parameters": {
+          "AWIPSidentifier": [
+            "SPSMKX"
+          ],
+          "WMOidentifier": [
+            "WWUS83 KMKX 020746"
+          ],
+          "NWSheadline": [
+            "A STRONG THUNDERSTORM WILL IMPACT NORTHEASTERN FOND DU LAC COUNTY THROUGH 330 AM CDT"
+          ],
+          "eventMotionDescription": [
+            "2026-09-02T07:46:00-00:00...storm...272DEG...38KT...43.85,-88.6"
+          ],
+          "maxWindGust": [
+            "50 MPH"
+          ],
+          "maxHailSize": [
+            "0.50"
+          ],
+          "BLOCKCHANNEL": [
+            "EAS",
+            "NWEM",
+            "CMAS"
+          ],
+          "EAS-ORG": [
+            "WXR"
+          ]
+        },
+        "scope": "Public",
+        "code": "IPAWSv1.0",
+        "language": "en-US",
+        "web": "http://www.weather.gov",
+        "eventCode": {
+          "SAME": [
+            "SPS"
+          ],
+          "NationalWeatherService": [
+            "SPS"
+          ]
+        }
+      }
+    },
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.d0de060466dc387307cc0a44dbed836b1d20c5e5.001.1",
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -90.85,
+              44.5
+            ],
+            [
+              -90.71,
+              44.31
+            ],
+            [
+              -90.76,
+              43.96
+            ],
+            [
+              -91.28,
+              43.85
+            ],
+            [
+              -91.35,
+              43.92
+            ],
+            [
+              -91.4,
+              43.98
+            ],
+            [
+              -91.34,
+              43.98
+            ],
+            [
+              -91.47,
+              44.28
+            ],
+            [
+              -91.47,
+              44.29
+            ],
+            [
+              -91.52,
+              44.39
+            ],
+            [
+              -90.92,
+              44.54
+            ],
+            [
+              -90.92,
+              44.5
+            ],
+            [
+              -90.85,
+              44.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.d0de060466dc387307cc0a44dbed836b1d20c5e5.001.1",
+        "@type": "wx:Alert",
+        "id": "urn:oid:2.49.0.1.840.0.d0de060466dc387307cc0a44dbed836b1d20c5e5.001.1",
+        "areaDesc": "Buffalo, WI",
+        "geocode": {
+          "SAME": [
+            "055011"
+          ],
+          "UGC": [
+            "WIC011"
+          ]
+        },
+        "affectedZones": [
+          "https://api.weather.gov/zones/county/WIC011"
+        ],
+        "references": [
+          {
+            "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.08c14df6cccd6f5f0611d2a53a712ac6e8ae7215.001.1",
+            "identifier": "urn:oid:2.49.0.1.840.0.08c14df6cccd6f5f0611d2a53a712ac6e8ae7215.001.1",
+            "sender": "w-nws.webmaster@noaa.gov",
+            "sent": "2026-09-02T02:25:00-05:00"
+          }
+        ],
+        "sent": "2026-09-02T02:42:00-05:00",
+        "effective": "2026-09-02T02:42:00-05:00",
+        "onset": "2026-09-02T02:42:00-05:00",
+        "expires": "2026-09-02T02:57:58-05:00",
+        "ends": "2026-09-02T03:15:00-05:00",
+        "status": "Actual",
+        "messageType": "Cancel",
+        "category": "Met",
+        "severity": "Minor",
+        "certainty": "Observed",
+        "urgency": "Past",
+        "event": "Severe Thunderstorm Warning",
+        "sender": "w-nws.webmaster@noaa.gov",
+        "senderName": "NWS La Crosse WI",
+        "headline": "The Severe Thunderstorm Warning has been cancelled.",
+        "description": "The Severe Thunderstorm Warning has been cancelled and is no longer in effect.",
+        "instruction": null,
+        "response": "AllClear",
+        "note": null,
+        "parameters": {
+          "AWIPSidentifier": [
+            "SVSARX"
+          ],
+          "WMOidentifier": [
+            "WWUS53 KARX 020742"
+          ],
+          "NWSheadline": [
+            "THE SEVERE THUNDERSTORM WARNING FOR EAST CENTRAL BUFFALO COUNTY IS CANCELLED"
+          ],
+          "eventMotionDescription": [
+            "2026-09-02T07:41:00-00:00...storm...260DEG...48KT...44.35,-91.37 44.17,-91.24 43.96,-91.19"
+          ],
+          "BLOCKCHANNEL": [
+            "EAS",
+            "NWEM",
+            "CMAS"
+          ],
+          "EAS-ORG": [
+            "WXR"
+          ],
+          "VTEC": [
+            "/O.CAN.KARX.SV.W.0194.000000T0000Z-260902T0815Z/"
+          ],
+          "eventEndingTime": [
+            "2026-09-02T03:15:00-05:00"
+          ]
+        },
+        "scope": "Public",
+        "code": "IPAWSv1.0",
+        "language": "en-US",
+        "web": "http://www.weather.gov",
+        "eventCode": {
+          "SAME": [
+            "SVS"
+          ],
+          "NationalWeatherService": [
+            "SVW"
+          ]
+        }
+      }
+    },
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.d0de060466dc387307cc0a44dbed836b1d20c5e5.002.1",
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -90.85,
+              44.5
+            ],
+            [
+              -90.71,
+              44.31
+            ],
+            [
+              -90.76,
+              43.96
+            ],
+            [
+              -91.28,
+              43.85
+            ],
+            [
+              -91.35,
+              43.92
+            ],
+            [
+              -91.4,
+              43.98
+            ],
+            [
+              -91.34,
+              43.98
+            ],
+            [
+              -91.47,
+              44.28
+            ],
+            [
+              -91.47,
+              44.29
+            ],
+            [
+              -91.52,
+              44.39
+            ],
+            [
+              -90.92,
+              44.54
+            ],
+            [
+              -90.92,
+              44.5
+            ],
+            [
+              -90.85,
+              44.5
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.d0de060466dc387307cc0a44dbed836b1d20c5e5.002.1",
+        "@type": "wx:Alert",
+        "id": "urn:oid:2.49.0.1.840.0.d0de060466dc387307cc0a44dbed836b1d20c5e5.002.1",
+        "areaDesc": "Jackson, WI; La Crosse, WI; Monroe, WI; Trempealeau, WI",
+        "geocode": {
+          "SAME": [
+            "055053",
+            "055063",
+            "055081",
+            "055121"
+          ],
+          "UGC": [
+            "WIC053",
+            "WIC063",
+            "WIC081",
+            "WIC121"
+          ]
+        },
+        "affectedZones": [
+          "https://api.weather.gov/zones/county/WIC053",
+          "https://api.weather.gov/zones/county/WIC063",
+          "https://api.weather.gov/zones/county/WIC081",
+          "https://api.weather.gov/zones/county/WIC121"
+        ],
+        "references": [
+          {
+            "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.08c14df6cccd6f5f0611d2a53a712ac6e8ae7215.001.1",
+            "identifier": "urn:oid:2.49.0.1.840.0.08c14df6cccd6f5f0611d2a53a712ac6e8ae7215.001.1",
+            "sender": "w-nws.webmaster@noaa.gov",
+            "sent": "2026-09-02T02:25:00-05:00"
+          }
+        ],
+        "sent": "2026-09-02T02:42:00-05:00",
+        "effective": "2026-09-02T02:42:00-05:00",
+        "onset": "2026-09-02T02:42:00-05:00",
+        "expires": "2026-09-02T03:15:00-05:00",
+        "ends": "2026-09-02T03:15:00-05:00",
+        "status": "Actual",
+        "messageType": "Update",
+        "category": "Met",
+        "severity": "Severe",
+        "certainty": "Observed",
+        "urgency": "Immediate",
+        "event": "Severe Thunderstorm Warning",
+        "sender": "w-nws.webmaster@noaa.gov",
+        "senderName": "NWS La Crosse WI",
+        "headline": "Severe Thunderstorm Warning issued September 2 at 2:42AM CDT until September 2 at 3:15AM CDT by NWS La Crosse WI",
+        "description": "At 241 AM CDT, severe thunderstorms were located along a line\nextending from near Independence to 7 miles northwest of North Bend\nto near Holmen, moving east at 55 mph.\n\nHAZARD...60 mph wind gusts and penny size hail.\n\nSOURCE...Radar indicated.\n\nIMPACT...Expect damage to roofs, siding, and trees.\n\nThese severe storms will be near...\nWhitehall, Blair, and North Bend around 245 AM CDT.\nSparta, Black River Falls, Alma Center, and Cataract around 300 AM\nCDT.\nMerrillan around 305 AM CDT.\n\nOther locations impacted by these severe thunderstorms include\nFranklin, Shamrock, Camp Decorah, Stevenstown, Perry Creek Recreation\nArea, North Branch, and County Roads D E And E.\n\nThis includes the following highways...\nInterstate 94 between mile markers 97 and 123.\nInterstate 90 in Wisconsin between mile markers 1 and 7, and near\nmile marker 11.",
+        "instruction": "For your protection move to an interior room on the lowest floor of a\nbuilding.",
+        "response": "Shelter",
+        "note": null,
+        "parameters": {
+          "AWIPSidentifier": [
+            "SVSARX"
+          ],
+          "WMOidentifier": [
+            "WWUS53 KARX 020742"
+          ],
+          "NWSheadline": [
+            "A SEVERE THUNDERSTORM WARNING REMAINS IN EFFECT UNTIL 315 AM CDT FOR NORTHERN LA CROSSE...WESTERN JACKSON...NORTHWESTERN MONROE AND SOUTHERN TREMPEALEAU COUNTIES"
+          ],
+          "eventMotionDescription": [
+            "2026-09-02T07:41:00-00:00...storm...260DEG...48KT...44.35,-91.37 44.17,-91.24 43.96,-91.19"
+          ],
+          "windThreat": [
+            "RADAR INDICATED"
+          ],
+          "maxWindGust": [
+            "60 MPH"
+          ],
+          "hailThreat": [
+            "RADAR INDICATED"
+          ],
+          "maxHailSize": [
+            "0.75"
+          ],
+          "BLOCKCHANNEL": [
+            "EAS",
+            "NWEM",
+            "CMAS"
+          ],
+          "EAS-ORG": [
+            "WXR"
+          ],
+          "VTEC": [
+            "/O.CON.KARX.SV.W.0194.000000T0000Z-260902T0815Z/"
+          ],
+          "eventEndingTime": [
+            "2026-09-02T03:15:00-05:00"
+          ]
+        },
+        "scope": "Public",
+        "code": "IPAWSv1.0",
+        "language": "en-US",
+        "web": "http://www.weather.gov",
+        "eventCode": {
+          "SAME": [
+            "SVS"
+          ],
+          "NationalWeatherService": [
+            "SVW"
+          ]
+        }
+      }
+    }
+  ],
+  "title": "Watches, warnings, and advisories",
+  "updated": "2026-09-02T07:48:22+00:00",
+  "pagination": {
+    "next": "https://api.weather.gov/alerts?limit=5&cursor=eyJ0IjoxNzg4MzM0OTIwLCJpIjoidXJuOm9pZDoyLjQ5LjAuMS44NDAuMC5kMGRlMDYwNDY2ZGMzODczMDdjYzBhNDRkYmVkODM2YjFkMjBjNWU1LjAwMi4xIn0%3D"
+  }
+}

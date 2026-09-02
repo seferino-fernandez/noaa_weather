@@ -5,7 +5,7 @@ use noaa_weather_client::apis::zones::{
     ZoneObservationsQuery, ZoneQuery, ZoneStationsQuery, ZoneType, ZonesQuery,
 };
 use noaa_weather_client::models::{AreaCode, RegionCode};
-use noaa_weather_client::{Client, Coordinates, ZoneId};
+use noaa_weather_client::{Client, Coordinates, Cursor, ZoneId};
 
 use super::parse;
 use crate::output::{Output, ZoneObservations};
@@ -83,6 +83,9 @@ pub enum ZoneCommands {
         /// Optional: Limit the number of stations returned (1 to 500).
         #[arg(long, value_parser = clap::value_parser!(u16).range(1..=500))]
         limit: Option<u16>,
+        /// Opaque pagination cursor from a previous page. NOAA currently publishes a broken pagination.next link for this operation, so do not feed its cursor back; omit --limit to get every station at once
+        #[arg(long)]
+        cursor: Option<Cursor>,
     },
     /// List recent observations for stations within a forecast zone.
     ///
@@ -180,10 +183,10 @@ pub async fn handle_command(
                 )
                 .await
         }
-        ZoneCommands::Stations { id, limit } => {
+        ZoneCommands::Stations { id, limit, cursor } => {
             let query = ZoneStationsQuery {
                 limit: *limit,
-                cursor: None,
+                cursor: cursor.clone(),
             };
             output
                 .show(

@@ -4,6 +4,11 @@ An asynchronous, typed Rust client for version 3.11.0 of the [NOAA Weather API](
 
 This project uses NOAA/NWS data but is not an official NOAA/NWS library.
 
+GeoJSON endpoints return `Feature<T>` for one resource and
+`FeatureCollection<T>` for lists. These shared envelopes retain feature ids,
+geometry, collection metadata, and valid pagination links while each
+endpoint-specific model remains in `properties`.
+
 ## Install
 
 ```bash
@@ -75,6 +80,68 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
   List fields are `Vec<T>` (sent as one comma-separated value), instants are `Option<jiff::Timestamp>` (sent as RFC 3339), periods are `Option<Interval>` (ISO 8601 intervals), limits are `Option<u16>`. Query structs also derive `Serialize`/`Deserialize` in camelCase for JSON tooling; the wire encoding is separate and never produced from serde.
 - **Date and time segments.** `stations().taf(&station, issued)` and `aviation().sigmet(&atsu, issued)` take one `jiff::Timestamp` and send its UTC date and `HHMM` minute (seconds are dropped). `stations().observation_at` sends RFC 3339 UTC. `aviation().cwa` and `sigmets_for_atsu_on` take a `jiff::civil::Date`.
 - **Composition.** `points().forecast_for(coordinates)` is the one composed convenience: it calls `points().get`, converts the response to a `GridpointId`, and calls `gridpoints().forecast`. A point without grid coordinates is `Error::Invalid`.
+
+## Pagination
+
+Paged responses expose NOAA's opaque next-page token through
+`FeatureCollection::next_cursor()`. Copy that cursor into the query to walk
+pages yourself:
+
+```rust,no_run
+use noaa_weather_client::{Client, apis::alerts::AlertsQuery};
+
+# async fn example() -> Result<(), Box<dyn std::error::Error>> {
+let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;
+let mut query = AlertsQuery {
+    limit: Some(100),
+    ..Default::default()
+};
+
+loop {
+    let page = client.alerts().search(&query).await?;
+    for alert in &page {
+        println!("{}", alert.event.as_deref().unwrap_or("unknown alert"));
+    }
+    let Some(cursor) = page.next_cursor() else {
+        break;
+    };
+    query.cursor = Some(cursor);
+}
+# Ok(())
+# }
+```
+
+For a bounded automatic walk, `Alerts::list_all`, `Stations::list_all`, and
+`Stations::observations_all` concatenate pages in NOAA's order. The nonzero
+argument is the maximum number of pages to fetch:
+
+```rust,no_run
+use std::num::NonZeroU16;
+
+use noaa_weather_client::{Client, apis::alerts::AlertsQuery};
+
+# async fn example() -> Result<(), Box<dyn std::error::Error>> {
+let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;
+let alerts = client
+    .alerts()
+    .list_all(&AlertsQuery::default(), NonZeroU16::new(4).unwrap())
+    .await?;
+println!("{} alerts", alerts.len());
+# Ok(())
+# }
+```
+
+Three NOAA operations publish broken `pagination.next` links and cannot be
+walked this way:
+
+- Gridpoint stations link to `/stations?id[]=…&cursor=…`, which returns an
+  empty page rather than the next gridpoint page. Its query deliberately has
+  no cursor; raise `limit` instead.
+- Zone stations publish the same incorrect `/stations?id[]=…&cursor=…` link.
+  Do not feed it back into `ZoneStationsQuery::cursor`; raise `limit` instead.
+- Zone observations link to one station's
+  `/stations/{id}/observations` rather than the zone. Their query deliberately
+  has no cursor; use `Stations::observations_all` per station for history.
 
 ## NOAA path → handle method
 

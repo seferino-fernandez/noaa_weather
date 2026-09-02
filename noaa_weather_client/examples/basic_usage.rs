@@ -67,17 +67,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n[3] Getting active weather alerts...");
     match client.alerts().active(&ActiveAlertsQuery::default()).await {
         Ok(alerts_data) => {
-            println!("  Found {} active alerts", alerts_data.features.len());
-            for (index, alert) in alerts_data.features.iter().take(3).enumerate() {
-                if let Some(properties) = &alert.properties {
-                    println!(
-                        "    {}. {}",
-                        index + 1,
-                        properties.event.as_deref().unwrap_or("Unknown Event")
-                    );
-                    if let Some(areas) = &properties.area_desc {
-                        println!("       Areas: {}", areas);
-                    }
+            println!("  Found {} active alerts", alerts_data.len());
+            // `Feature<Alert>` dereferences to `Alert`, so properties read
+            // directly off the feature.
+            for (index, alert) in alerts_data.iter().take(3).enumerate() {
+                println!(
+                    "    {}. {}",
+                    index + 1,
+                    alert.event.as_deref().unwrap_or("Unknown Event")
+                );
+                if let Some(areas) = &alert.area_desc {
+                    println!("       Areas: {}", areas);
                 }
             }
         }

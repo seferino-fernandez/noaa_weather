@@ -1,12 +1,13 @@
 use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Attribute, Cell, CellAlignment, Table};
-use noaa_weather_client::models::PointGeoJson;
+use noaa_weather_client::Feature;
+use noaa_weather_client::models::Point;
 
 use super::{DefaultPresentation, DefaultPresenter, PresentationError};
 use crate::output::PresentationDocument;
 
 /// Formats point metadata into a `comfy_table::Table`.
-fn create_point_metadata_table(point_data: &PointGeoJson, presenter: &DefaultPresenter) -> Table {
+fn create_point_metadata_table(point_data: &Feature<Point>, presenter: &DefaultPresenter) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_header(vec![
@@ -74,7 +75,7 @@ fn create_point_metadata_table(point_data: &PointGeoJson, presenter: &DefaultPre
     table
 }
 
-impl DefaultPresentation for PointGeoJson {
+impl DefaultPresentation for Feature<Point> {
     fn present_default(
         &self,
         presenter: &DefaultPresenter,

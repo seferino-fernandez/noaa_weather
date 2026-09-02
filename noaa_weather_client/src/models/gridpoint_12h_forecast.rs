@@ -4,8 +4,6 @@ use serde::{Deserialize, Serialize};
 /// Gridpoint12hForecast : A multi-day forecast for a 2.5km grid square, using 12-hour periods.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Gridpoint12hForecast {
-    #[serde(rename = "@context", skip_serializing_if = "Option::is_none")]
-    pub at_context: Option<Box<models::JsonLdContext>>,
     /// A geometry represented in Well-Known Text (WKT) format.
     #[serde(
         rename = "geometry",
@@ -38,7 +36,6 @@ impl Gridpoint12hForecast {
     /// A multi-day forecast for a 2.5km grid square, using 12-hour periods.
     pub fn new() -> Gridpoint12hForecast {
         Gridpoint12hForecast {
-            at_context: None,
             geometry: None,
             units: None,
             forecast_generator: None,
