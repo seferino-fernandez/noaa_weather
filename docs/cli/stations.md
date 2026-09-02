@@ -8,10 +8,10 @@ Get station metadata:
 noaa-weather stations metadata --id <ID>
 ```
 
-List stations, optionally filtering by ID or state/marine area.
+List stations, optionally filtering by ID or state/marine area. `--cursor` accepts the opaque pagination cursor from a previous page's `pagination.next` value in `--json` output.
 
 ```sh
-noaa-weather stations list [--id <ID1,ID2...>] [--state <ST1,ST2...>] [--limit <1-500>]
+noaa-weather stations list [--id <ID1,ID2...>] [--state <ST1,ST2...>] [--limit <1-500>] [--cursor <CURSOR>]
 ```
 
 Get the latest observation for a station.
@@ -20,10 +20,10 @@ Get the latest observation for a station.
 noaa-weather stations latest-observation --station-id <ID> [--require-quality-controlled]
 ```
 
-List historical observations for a station.
+List historical observations for a station. `--cursor` accepts the opaque pagination cursor from a previous page's `pagination.next` value in `--json` output.
 
 ```sh
-noaa-weather stations observations --station-id <ID> [--start <TIME>] [--end <TIME>] [--limit <1-500>]
+noaa-weather stations observations --station-id <ID> [--start <TIME>] [--end <TIME>] [--limit <1-500>] [--cursor <CURSOR>]
 noaa-weather stations observations --station-id KPHX --start 6h --end 1h
 ```
 

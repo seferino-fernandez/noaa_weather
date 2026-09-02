@@ -6,7 +6,7 @@ use noaa_weather_client::models::{
     AlertCertainty, AlertMessageType, AlertSeverity, AlertStatus, AlertUrgency, AreaCode,
     MarineRegionCode,
 };
-use noaa_weather_client::{AlertId, Client, Coordinates, ZoneId};
+use noaa_weather_client::{AlertId, Client, Coordinates, Cursor, ZoneId};
 
 use super::parse;
 use crate::output::Output;
@@ -180,6 +180,10 @@ pub enum AlertCommands {
         /// Limit number of results returned by the API (1 to 500).
         #[arg(long, value_parser = clap::value_parser!(u16).range(1..=500))]
         limit: Option<u16>,
+
+        /// Opaque pagination cursor from a previous page (see pagination.next in --json output)
+        #[arg(long)]
+        cursor: Option<Cursor>,
     },
 
     /// Get a single alert by its unique NWS ID.
@@ -292,6 +296,7 @@ pub async fn handle_command(
             severity,
             certainty,
             limit,
+            cursor,
         } => {
             let query = AlertsQuery {
                 start: *start,
@@ -309,7 +314,7 @@ pub async fn handle_command(
                 severity: severity.clone(),
                 certainty: certainty.clone(),
                 limit: *limit,
-                cursor: None,
+                cursor: cursor.clone(),
             };
 
             output.show("querying alerts", alerts.search(&query)).await

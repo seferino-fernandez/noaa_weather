@@ -4,8 +4,6 @@ use serde::{Deserialize, Serialize};
 /// `ZoneForecast` : An object representing a zone area forecast.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ZoneForecast {
-    #[serde(rename = "@context", skip_serializing_if = "Option::is_none")]
-    pub at_context: Option<Box<models::JsonLdContext>>,
     /// A geometry represented in Well-Known Text (WKT) format.
     #[serde(
         rename = "geometry",
@@ -29,7 +27,6 @@ impl ZoneForecast {
     /// An object representing a zone area forecast.
     pub fn new() -> Self {
         Self {
-            at_context: None,
             geometry: None,
             zone: None,
             updated: None,

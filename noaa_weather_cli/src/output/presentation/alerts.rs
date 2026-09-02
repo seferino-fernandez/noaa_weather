@@ -1,9 +1,9 @@
 use comfy_table::presets::{UTF8_FULL, UTF8_FULL_CONDENSED};
 use comfy_table::{Attribute, Cell, CellAlignment, Color, ContentArrangement, Table};
 use noaa_weather_client::models::{
-    ActiveAlertsCountResponse, Alert, AlertCollectionGeoJson, AlertGeoJson, AlertSeverity,
-    AlertTypesResponse,
+    ActiveAlertsCountResponse, Alert, AlertSeverity, AlertTypesResponse,
 };
+use noaa_weather_client::{Feature, FeatureCollection};
 
 use super::{DefaultPresentation, DefaultPresenter, PresentationError};
 use crate::output::PresentationDocument;
@@ -11,7 +11,7 @@ use crate::output::PresentationDocument;
 /// Formats a collection of alerts into a comfy table.
 /// Displays a summary of each alert, highlighting severity with color.
 fn create_alerts_table(
-    alerts_data: &AlertCollectionGeoJson,
+    alerts_data: &FeatureCollection<Alert>,
     presenter: &DefaultPresenter,
 ) -> Result<Table, PresentationError> {
     let mut table = Table::new();
@@ -48,66 +48,64 @@ fn create_alerts_table(
     }
 
     for feature in &alerts_data.features {
-        if let Some(alert_properties_box) = &feature.properties {
-            let alert_properties = &**alert_properties_box;
+        let alert_properties = &feature.properties;
 
-            let severity = alert_properties.severity.map(|value| value.to_string());
-            let mut severity_cell = Cell::new(presenter.text(severity.as_deref()));
-            if let Some(severity_value) = alert_properties.severity {
-                match severity_value {
-                    AlertSeverity::Extreme => {
-                        severity_cell = severity_cell.fg(Color::Red).add_attribute(Attribute::Bold);
-                    }
-                    AlertSeverity::Severe => severity_cell = severity_cell.fg(Color::Red),
-                    AlertSeverity::Moderate => severity_cell = severity_cell.fg(Color::Yellow),
-                    AlertSeverity::Minor => severity_cell = severity_cell.fg(Color::Green),
-                    AlertSeverity::Unknown => {}
+        let severity = alert_properties.severity.map(|value| value.to_string());
+        let mut severity_cell = Cell::new(presenter.text(severity.as_deref()));
+        if let Some(severity_value) = alert_properties.severity {
+            match severity_value {
+                AlertSeverity::Extreme => {
+                    severity_cell = severity_cell.fg(Color::Red).add_attribute(Attribute::Bold);
                 }
+                AlertSeverity::Severe => severity_cell = severity_cell.fg(Color::Red),
+                AlertSeverity::Moderate => severity_cell = severity_cell.fg(Color::Yellow),
+                AlertSeverity::Minor => severity_cell = severity_cell.fg(Color::Green),
+                AlertSeverity::Unknown => {}
             }
+        }
 
-            let event_headline = format!(
-                "{}\n\n{}",
-                presenter.text(alert_properties.sender_name.as_deref()),
+        let event_headline = format!(
+            "{}\n\n{}",
+            presenter.text(alert_properties.sender_name.as_deref()),
+            presenter.text(
+                alert_properties
+                    .headline
+                    .as_ref()
+                    .and_then(Option::as_deref)
+            )
+        );
+        let effective_date = presenter.timestamp(
+            "alerts.features[].properties.effective",
+            alert_properties.effective.as_deref(),
+        )?;
+        let expires_date = presenter.timestamp(
+            "alerts.features[].properties.expires",
+            alert_properties.expires.as_deref(),
+        )?;
+
+        let effective_date = format!("{effective_date}\nto\n{expires_date}");
+        table.add_row(vec![
+            Cell::new(event_headline),
+            Cell::new(presenter.text(alert_properties.area_desc.as_deref())),
+            Cell::new(effective_date),
+            severity_cell,
+            Cell::new(
                 presenter.text(
                     alert_properties
-                        .headline
+                        .instruction
                         .as_ref()
-                        .and_then(Option::as_deref)
-                )
-            );
-            let effective_date = presenter.timestamp(
-                "alerts.features[].properties.effective",
-                alert_properties.effective.as_deref(),
-            )?;
-            let expires_date = presenter.timestamp(
-                "alerts.features[].properties.expires",
-                alert_properties.expires.as_deref(),
-            )?;
-
-            let effective_date = format!("{effective_date}\nto\n{expires_date}");
-            table.add_row(vec![
-                Cell::new(event_headline),
-                Cell::new(presenter.text(alert_properties.area_desc.as_deref())),
-                Cell::new(effective_date),
-                severity_cell,
-                Cell::new(
-                    presenter.text(
-                        alert_properties
-                            .instruction
-                            .as_ref()
-                            .and_then(Option::as_deref),
-                    ),
+                        .and_then(Option::as_deref),
                 ),
-                Cell::new(presenter.text(alert_properties.id.as_deref())),
-            ]);
-        }
+            ),
+            Cell::new(presenter.text(alert_properties.id.as_deref())),
+        ]);
     }
     Ok(table)
 }
 
 /// Formats a single alert's details into a comfy table.
 fn create_single_alert_table(
-    alert_data: &AlertGeoJson,
+    alert_data: &Feature<Alert>,
     presenter: &DefaultPresenter,
 ) -> Result<Table, PresentationError> {
     let mut table = Table::new();
@@ -308,7 +306,7 @@ fn create_alert_types_table(types_data: &AlertTypesResponse) -> Table {
     table
 }
 
-impl DefaultPresentation for AlertCollectionGeoJson {
+impl DefaultPresentation for FeatureCollection<Alert> {
     fn present_default(
         &self,
         presenter: &DefaultPresenter,
@@ -319,7 +317,7 @@ impl DefaultPresentation for AlertCollectionGeoJson {
     }
 }
 
-impl DefaultPresentation for AlertGeoJson {
+impl DefaultPresentation for Feature<Alert> {
     fn present_default(
         &self,
         presenter: &DefaultPresenter,

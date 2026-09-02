@@ -1,0 +1,43 @@
+{
+  "@context": {
+    "@version": "1.1"
+  },
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          47.39,
+          -111.64
+        ],
+        [
+          45.27,
+          -116.21
+        ],
+        [
+          44.14,
+          -115.37
+        ],
+        [
+          44.86,
+          -109.96
+        ],
+        [
+          47.39,
+          -111.64
+        ]
+      ]
+    ]
+  },
+  "properties": {
+    "id": "https://api.weather.gov/aviation/sigmets/KKCI/2026-09-02/0655",
+    "issueTime": "2026-09-02T06:55:00+00:00",
+    "fir": "KZLC",
+    "atsu": "KKCI",
+    "sequence": "19W",
+    "phenomenon": null,
+    "start": "2026-09-02T06:55:00+00:00",
+    "end": "2026-09-02T08:55:00+00:00"
+  }
+}

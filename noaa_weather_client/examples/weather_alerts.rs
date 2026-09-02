@@ -49,40 +49,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
     {
         Ok(ca_alerts) => {
-            println!("  Found {} alerts for California", ca_alerts.features.len());
+            println!("  Found {} alerts for California", ca_alerts.len());
 
-            for (index, alert_feature) in ca_alerts.features.iter().take(3).enumerate() {
-                if let Some(alert_props) = &alert_feature.properties {
-                    println!("\n    Alert #{}", index + 1);
-                    println!(
-                        "    Event: {}",
-                        alert_props.event.as_deref().unwrap_or("Unknown")
-                    );
-                    println!(
-                        "    Headline: {}",
-                        alert_props
-                            .headline
-                            .as_ref()
-                            .and_then(|h| h.as_ref())
-                            .map(|s| s.as_str())
-                            .unwrap_or("No headline")
-                    );
-                    println!(
-                        "    Areas: {}",
-                        alert_props.area_desc.as_deref().unwrap_or("Unknown")
-                    );
+            for (index, alert) in ca_alerts.iter().take(3).enumerate() {
+                println!("\n    Alert #{}", index + 1);
+                println!("    Event: {}", alert.event.as_deref().unwrap_or("Unknown"));
+                println!(
+                    "    Headline: {}",
+                    alert
+                        .headline
+                        .as_ref()
+                        .and_then(|h| h.as_ref())
+                        .map(|s| s.as_str())
+                        .unwrap_or("No headline")
+                );
+                println!(
+                    "    Areas: {}",
+                    alert.area_desc.as_deref().unwrap_or("Unknown")
+                );
 
-                    if let Some(severity) = &alert_props.severity {
-                        println!("    Severity: {}", severity);
-                    }
+                if let Some(severity) = &alert.severity {
+                    println!("    Severity: {}", severity);
+                }
 
-                    if let Some(urgency) = &alert_props.urgency {
-                        println!("    Urgency: {}", urgency);
-                    }
+                if let Some(urgency) = &alert.urgency {
+                    println!("    Urgency: {}", urgency);
+                }
 
-                    if let Some(expires) = &alert_props.expires {
-                        println!("    Expires: {}", expires);
-                    }
+                if let Some(expires) = &alert.expires {
+                    println!("    Expires: {}", expires);
                 }
             }
         }
@@ -124,24 +119,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     match alerts.active(&severity_query).await {
         Ok(severe_alerts) => {
-            println!(
-                "  Found {} high-severity alerts",
-                severe_alerts.features.len()
-            );
+            println!("  Found {} high-severity alerts", severe_alerts.len());
 
-            for (index, alert_feature) in severe_alerts.features.iter().enumerate() {
-                if let Some(alert_props) = &alert_feature.properties {
-                    println!(
-                        "    {}. {} - {}",
-                        index + 1,
-                        alert_props.event.as_deref().unwrap_or("Unknown"),
-                        alert_props
-                            .severity
-                            .as_ref()
-                            .map(|s| s.to_string())
-                            .unwrap_or("Unknown severity".to_string())
-                    );
-                }
+            for (index, alert) in severe_alerts.iter().enumerate() {
+                println!(
+                    "    {}. {} - {}",
+                    index + 1,
+                    alert.event.as_deref().unwrap_or("Unknown"),
+                    alert
+                        .severity
+                        .as_ref()
+                        .map(|s| s.to_string())
+                        .unwrap_or("Unknown severity".to_string())
+                );
             }
         }
         Err(error) => {
@@ -153,11 +143,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n[5] Getting detailed information for a specific alert...");
     match alerts.active(&ActiveAlertsQuery::default()).await {
         Ok(any_alerts) => {
+            // `feature.id` is the NOAA self-link URL; the URN NOAA accepts
+            // in `/alerts/{id}` is the `id` inside `properties`.
             let first_id = any_alerts
                 .features
                 .first()
-                .and_then(|alert| alert.properties.as_ref())
-                .and_then(|properties| properties.id.as_deref())
+                .and_then(|alert| alert.properties.id.as_deref())
                 .map(str::parse::<AlertId>);
             match first_id {
                 Some(Ok(alert_id)) => {

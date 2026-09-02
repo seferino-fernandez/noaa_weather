@@ -1,0 +1,134 @@
+{
+  "@context": [
+    "https://geojson.org/geojson-ld/geojson-context.jsonld",
+    {
+      "@version": "1.1",
+      "wx": "https://api.weather.gov/ontology#",
+      "@vocab": "https://api.weather.gov/ontology#"
+    }
+  ],
+  "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.af7e0442df8bfed7953cb5cae6e4661304cc1f49.001.1",
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          -85.79,
+          43.23
+        ],
+        [
+          -85.79,
+          43.24
+        ],
+        [
+          -85.48,
+          43.47
+        ],
+        [
+          -84.84,
+          43.46
+        ],
+        [
+          -84.85,
+          43.29
+        ],
+        [
+          -84.84,
+          43.29
+        ],
+        [
+          -84.84,
+          43.22
+        ],
+        [
+          -85.79,
+          43.23
+        ]
+      ]
+    ]
+  },
+  "properties": {
+    "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.af7e0442df8bfed7953cb5cae6e4661304cc1f49.001.1",
+    "@type": "wx:Alert",
+    "id": "urn:oid:2.49.0.1.840.0.af7e0442df8bfed7953cb5cae6e4661304cc1f49.001.1",
+    "areaDesc": "Newaygo; Montcalm; Kent",
+    "geocode": {
+      "SAME": [
+        "026123",
+        "026117",
+        "026081"
+      ],
+      "UGC": [
+        "MIZ044",
+        "MIZ051",
+        "MIZ057"
+      ]
+    },
+    "affectedZones": [
+      "https://api.weather.gov/zones/forecast/MIZ044",
+      "https://api.weather.gov/zones/forecast/MIZ051",
+      "https://api.weather.gov/zones/forecast/MIZ057"
+    ],
+    "references": [],
+    "sent": "2026-09-02T03:48:00-04:00",
+    "effective": "2026-09-02T03:48:00-04:00",
+    "onset": "2026-09-02T03:48:00-04:00",
+    "expires": "2026-09-02T04:45:00-04:00",
+    "ends": null,
+    "status": "Actual",
+    "messageType": "Alert",
+    "category": "Met",
+    "severity": "Moderate",
+    "certainty": "Observed",
+    "urgency": "Expected",
+    "event": "Special Weather Statement",
+    "sender": "w-nws.webmaster@noaa.gov",
+    "senderName": "NWS Grand Rapids MI",
+    "headline": "Special Weather Statement issued September 2 at 3:48AM EDT by NWS Grand Rapids MI",
+    "description": "At 347 AM EDT, Doppler radar was tracking strong thunderstorms along\na line extending from near Howard City to 9 miles northeast of\nSparta. Movement was east at 30 mph.\n\nHAZARD...Winds in excess of 40 mph and penny size hail.\n\nSOURCE...Radar indicated.\n\nIMPACT...Gusty winds could knock down tree limbs and blow around\nunsecured objects. Minor damage to outdoor objects is\npossible.\n\nLocations impacted include...\nStanton...             Howard City...         Edmore...\nLakeview...            Cedar Springs...       Crystal...\nSidney...              Sand Lake...           Casnovia...\nMcBride...             Pierson...             Westville...\nGowen...               Cedar Lake...          Entrican...\nAmble...               Indian Lake...         Vestaburg...\nWyman...               Langston...",
+    "instruction": "If outdoors, consider seeking shelter inside a building.",
+    "response": "Execute",
+    "note": null,
+    "parameters": {
+      "AWIPSidentifier": [
+        "SPSGRR"
+      ],
+      "WMOidentifier": [
+        "WWUS83 KGRR 020748"
+      ],
+      "NWSheadline": [
+        "Strong thunderstorms will impact portions of northern Kent, southeastern Newaygo and Montcalm Counties through 445 AM EDT"
+      ],
+      "eventMotionDescription": [
+        "2026-09-02T07:47:00-00:00...storm...275DEG...27KT...43.43,-85.39 43.28,-85.62"
+      ],
+      "maxWindGust": [
+        "40 MPH"
+      ],
+      "maxHailSize": [
+        "0.75"
+      ],
+      "BLOCKCHANNEL": [
+        "EAS",
+        "NWEM",
+        "CMAS"
+      ],
+      "EAS-ORG": [
+        "WXR"
+      ]
+    },
+    "scope": "Public",
+    "code": "IPAWSv1.0",
+    "language": "en-US",
+    "web": "http://www.weather.gov",
+    "eventCode": {
+      "SAME": [
+        "SPS"
+      ],
+      "NationalWeatherService": [
+        "SPS"
+      ]
+    }
+  }
+}

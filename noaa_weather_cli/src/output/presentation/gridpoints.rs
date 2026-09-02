@@ -1,14 +1,13 @@
 use comfy_table::presets::UTF8_FULL_CONDENSED;
 use comfy_table::{Cell, CellAlignment, ContentArrangement, Table};
-use noaa_weather_client::models::{
-    Gridpoint12hForecastGeoJson, GridpointGeoJson, GridpointHourlyForecastGeoJson,
-};
+use noaa_weather_client::Feature;
+use noaa_weather_client::models::{Gridpoint, Gridpoint12hForecast, GridpointHourlyForecast};
 
 use super::{DefaultPresentation, DefaultPresenter, PresentationDocument, PresentationError};
 
 /// Formats raw gridpoint data into a `comfy_table::Table`.
 fn create_gridpoint_table(
-    gridpoint_data: &GridpointGeoJson,
+    gridpoint_data: &Feature<Gridpoint>,
     presenter: &DefaultPresenter,
 ) -> Result<Table, PresentationError> {
     let mut table = Table::new();
@@ -42,7 +41,7 @@ fn create_gridpoint_table(
 
 /// Formats the multi-day 12-hour forecast into a comfy table.
 fn create_forecast_table(
-    forecast_data: &Gridpoint12hForecastGeoJson,
+    forecast_data: &Feature<Gridpoint12hForecast>,
     presenter: &DefaultPresenter,
 ) -> Result<Table, PresentationError> {
     let mut table = Table::new();
@@ -95,7 +94,7 @@ fn create_forecast_table(
 
 /// Formats the hourly forecast into a comfy table.
 fn create_hourly_forecast_table(
-    forecast_data: &GridpointHourlyForecastGeoJson,
+    forecast_data: &Feature<GridpointHourlyForecast>,
     presenter: &DefaultPresenter,
 ) -> Result<Table, PresentationError> {
     let mut table = Table::new();
@@ -151,7 +150,7 @@ fn create_hourly_forecast_table(
     Ok(table)
 }
 
-impl DefaultPresentation for GridpointGeoJson {
+impl DefaultPresentation for Feature<Gridpoint> {
     fn present_default(
         &self,
         presenter: &DefaultPresenter,
@@ -162,7 +161,7 @@ impl DefaultPresentation for GridpointGeoJson {
     }
 }
 
-impl DefaultPresentation for Gridpoint12hForecastGeoJson {
+impl DefaultPresentation for Feature<Gridpoint12hForecast> {
     fn present_default(
         &self,
         presenter: &DefaultPresenter,
@@ -173,7 +172,7 @@ impl DefaultPresentation for Gridpoint12hForecastGeoJson {
     }
 }
 
-impl DefaultPresentation for GridpointHourlyForecastGeoJson {
+impl DefaultPresentation for Feature<GridpointHourlyForecast> {
     fn present_default(
         &self,
         presenter: &DefaultPresenter,

@@ -5,7 +5,7 @@ use noaa_weather_client::apis::stations::{
     LatestObservationQuery, ObservationsQuery, StationsQuery,
 };
 use noaa_weather_client::models::AreaCode;
-use noaa_weather_client::{Client, StationId};
+use noaa_weather_client::{Client, Cursor, StationId};
 
 use super::parse;
 use crate::output::Output;
@@ -35,6 +35,9 @@ pub enum StationCommands {
         /// Optional: Limit the number of observation stations returned by the API (1 to 500).
         #[arg(long, value_parser = clap::value_parser!(u16).range(1..=500))]
         limit: Option<u16>,
+        /// Opaque pagination cursor from a previous page (see pagination.next in --json output)
+        #[arg(long)]
+        cursor: Option<Cursor>,
     },
 
     /// Get the latest observation for a specific station.
@@ -66,6 +69,9 @@ pub enum StationCommands {
         /// Optional: Limit the number of observations returned by the API (1 to 500).
         #[arg(long, value_parser = clap::value_parser!(u16).range(1..=500))]
         limit: Option<u16>,
+        /// Opaque pagination cursor from a previous page (see pagination.next in --json output)
+        #[arg(long)]
+        cursor: Option<Cursor>,
     },
     /// Get a single observation for a station at a specific time.
     ///
@@ -123,12 +129,17 @@ pub async fn handle_command(
                 .show(format!("getting station {id} metadata"), stations.get(id))
                 .await
         }
-        StationCommands::List { id, state, limit } => {
+        StationCommands::List {
+            id,
+            state,
+            limit,
+            cursor,
+        } => {
             let query = StationsQuery {
                 id: id.clone(),
                 state: state.clone(),
                 limit: *limit,
-                cursor: None,
+                cursor: cursor.clone(),
             };
             output
                 .show("listing observation stations", stations.list(&query))
@@ -153,12 +164,13 @@ pub async fn handle_command(
             start,
             end,
             limit,
+            cursor,
         } => {
             let query = ObservationsQuery {
                 start: *start,
                 end: *end,
                 limit: *limit,
-                cursor: None,
+                cursor: cursor.clone(),
             };
             output
                 .show(

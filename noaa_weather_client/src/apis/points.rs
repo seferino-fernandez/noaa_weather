@@ -22,7 +22,7 @@
 use super::Error;
 use super::gridpoints::ForecastQuery;
 use crate::client::{Client, http};
-use crate::geo::Coordinates;
+use crate::geo::{Coordinates, Feature};
 use crate::ids::GridpointId;
 use crate::models;
 
@@ -64,7 +64,7 @@ impl Points<'_> {
     ///
     /// Returns an [`Error`] if the request fails (for example a point outside
     /// NOAA's coverage) or the response cannot be decoded.
-    pub async fn get(&self, point: Coordinates) -> Result<models::PointGeoJson, Error> {
+    pub async fn get(&self, point: Coordinates) -> Result<Feature<models::Point>, Error> {
         http::request(self.client, "/points")
             .path_segment(point)
             .json(http::JsonMedia::GeoJson)
@@ -98,9 +98,9 @@ impl Points<'_> {
     pub async fn forecast_for(
         &self,
         point: Coordinates,
-    ) -> Result<models::Gridpoint12hForecastGeoJson, Error> {
+    ) -> Result<Feature<models::Gridpoint12hForecast>, Error> {
         let point = self.get(point).await?;
-        let grid = GridpointId::try_from(point.properties.as_ref())?;
+        let grid = GridpointId::try_from(&point.properties)?;
         self.client
             .gridpoints()
             .forecast(&grid, &ForecastQuery::default())

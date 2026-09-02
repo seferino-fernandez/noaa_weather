@@ -1,9 +1,9 @@
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{Attribute, Cell, CellAlignment, ContentArrangement, Table};
 use noaa_weather_client::models::{
-    MetarPhenomenon, Observation, ObservationCloudLayersInner, ObservationCollectionGeoJson,
-    ObservationGeoJson, Zone, ZoneCollectionGeoJson, ZoneForecastGeoJson, ZoneGeoJson, ZoneState,
+    MetarPhenomenon, Observation, ObservationCloudLayersInner, Zone, ZoneForecast, ZoneState,
 };
+use noaa_weather_client::{Feature, FeatureCollection};
 use serde::Serialize;
 
 use crate::output::PresentationDocument;
@@ -11,17 +11,17 @@ use crate::output::presentation::{DefaultPresentation, DefaultPresenter, Present
 
 /// Creates a table listing all zones with key summary information.
 ///
-/// This function processes a `ZoneCollectionGeoJson`, which contains a list of zones,
+/// This function processes a zone feature collection, which contains a list of zones,
 /// and formats them into a table. Each row represents a zone, displaying its ID, name,
 /// type, state, time zones, forecast office, and a summary of observation stations.
 ///
 /// # Arguments
-/// * `zone_collection`: A reference to the `ZoneCollectionGeoJson` struct.
+/// * `zone_collection`: A reference to the zone feature collection.
 ///
 /// # Returns
 /// A `Result<Table>` which is the `comfy_table::Table` ready for display, or an error.
 fn create_zones_table(
-    zone_collection: &ZoneCollectionGeoJson,
+    zone_collection: &FeatureCollection<Zone>,
     presenter: &DefaultPresenter,
 ) -> Table {
     let mut table = Table::new();
@@ -63,16 +63,16 @@ fn create_zones_table(
 
 /// Creates a table listing the metadata for a single zone.
 ///
-/// This function processes a `ZoneGeoJson`, which contains the metadata for a single zone,
+/// This function processes a zone feature, which contains the metadata for a single zone,
 /// and formats it into a table. Each row represents a zone, displaying its ID, name,
 /// type, state, time zones, forecast office, and a summary of observation stations.
 ///
 /// # Arguments
-/// * `zone_geo`: A reference to the `ZoneGeoJson` struct.
+/// * `zone_geo`: A reference to the zone feature.
 ///
 /// # Returns
 /// A `Result<Table>` which is the `comfy_table::Table` ready for display, or an error.
-fn create_zone_metadata_table(zone_geo: &ZoneGeoJson, presenter: &DefaultPresenter) -> Table {
+fn create_zone_metadata_table(zone_geo: &Feature<Zone>, presenter: &DefaultPresenter) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -108,17 +108,17 @@ fn create_zone_metadata_table(zone_geo: &ZoneGeoJson, presenter: &DefaultPresent
 
 /// Creates a table listing the forecast for a single zone.
 ///
-/// This function processes a `ZoneForecastGeoJson`, which contains the forecast for a single zone,
+/// This function processes a zone forecast feature, which contains the forecast for a single zone,
 /// and formats it into a table. Each row represents a forecast period, displaying its name and
 /// detailed forecast.
 ///
 /// # Arguments
-/// * `zone_forecast`: A reference to the `ZoneForecastGeoJson` struct.
+/// * `zone_forecast`: A reference to the zone forecast feature.
 ///
 /// # Returns
 /// A `Result<Table>` which is the `comfy_table::Table` ready for display, or an error.
 fn create_zone_forecast_table(
-    zone_forecast: &ZoneForecastGeoJson,
+    zone_forecast: &Feature<ZoneForecast>,
     presenter: &DefaultPresenter,
 ) -> Table {
     let mut table = Table::new();
@@ -278,13 +278,12 @@ fn format_observation_present_weather(weather_opt: Option<&Vec<MetarPhenomenon>>
 /// Each row represents a single observation from a station.
 ///
 /// # Arguments
-/// * `observations_features`: A slice of `ObservationGeoJson` features. This typically comes
-///   from the `features` array of an `ObservationCollectionGeoJson` response.
+/// * `observations_features`: A slice of observation features from a feature collection.
 ///
 /// # Returns
 /// A `Result<Table>` which is the `comfy_table::Table` ready for display, or an error.
 fn create_zone_observations_table(
-    observations_features: &[ObservationGeoJson],
+    observations_features: &[Feature<Observation>],
     presenter: &DefaultPresenter,
 ) -> Result<Table, PresentationError> {
     let mut table = Table::new();
@@ -380,7 +379,7 @@ fn create_zone_observations_table(
     Ok(table)
 }
 
-impl DefaultPresentation for ZoneCollectionGeoJson {
+impl DefaultPresentation for FeatureCollection<Zone> {
     fn present_default(
         &self,
         presenter: &DefaultPresenter,
@@ -391,7 +390,7 @@ impl DefaultPresentation for ZoneCollectionGeoJson {
     }
 }
 
-impl DefaultPresentation for ZoneGeoJson {
+impl DefaultPresentation for Feature<Zone> {
     fn present_default(
         &self,
         presenter: &DefaultPresenter,
@@ -402,7 +401,7 @@ impl DefaultPresentation for ZoneGeoJson {
     }
 }
 
-impl DefaultPresentation for ZoneForecastGeoJson {
+impl DefaultPresentation for Feature<ZoneForecast> {
     fn present_default(
         &self,
         presenter: &DefaultPresenter,
@@ -415,7 +414,7 @@ impl DefaultPresentation for ZoneForecastGeoJson {
 
 #[derive(Serialize)]
 #[serde(transparent)]
-pub(crate) struct ZoneObservations(pub(crate) ObservationCollectionGeoJson);
+pub(crate) struct ZoneObservations(pub(crate) FeatureCollection<Observation>);
 
 impl DefaultPresentation for ZoneObservations {
     fn present_default(

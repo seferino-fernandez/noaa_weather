@@ -26,7 +26,7 @@ use serde::{Deserialize, Serialize};
 use super::Error;
 use crate::client::{Client, http};
 use crate::geo::Coordinates;
-use crate::ids::{CallSign, ZoneId};
+use crate::ids::{CallSign, Cursor, ZoneId};
 use crate::models;
 
 /// Paging for [`Radio::transmitters`].
@@ -34,9 +34,10 @@ use crate::models;
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", default)]
 pub struct TransmittersQuery {
-    /// Opaque pagination cursor from a previous page.
+    /// Opaque pagination cursor from a previous page, taken from the
+    /// `cursor` parameter of the previous response's `pagination.next` link.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub cursor: Option<String>,
+    pub cursor: Option<Cursor>,
 }
 
 impl http::QueryParams for TransmittersQuery {
@@ -336,7 +337,7 @@ mod tests {
         let second_page = client
             .radio()
             .transmitters(&TransmittersQuery {
-                cursor: Some("opaque+/=? value".to_owned()),
+                cursor: Some("opaque+/=_-".parse().unwrap()),
             })
             .await
             .unwrap();
@@ -353,10 +354,7 @@ mod tests {
 
         let requests = server.received_requests().await.unwrap();
         assert_eq!(requests[0].url.query(), None);
-        assert_eq!(
-            requests[1].url.query(),
-            Some("cursor=opaque%2B%2F%3D%3F+value")
-        );
+        assert_eq!(requests[1].url.query(), Some("cursor=opaque%2B%2F%3D_-"));
     }
 
     #[tokio::test]

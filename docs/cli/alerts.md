@@ -36,10 +36,10 @@ noaa-weather alerts zone --zone-id <ZONE_ID>
 
 ## List Alerts, Including Past Ones
 
-`--start` and `--end` accept an RFC 3339 timestamp or a relative age such as `6h`, `30m`, or `2d`, resolved when the command starts.
+`--start` and `--end` accept an RFC 3339 timestamp or a relative age such as `6h`, `30m`, or `2d`, resolved when the command starts. `--cursor` accepts the opaque pagination cursor from a previous page's `pagination.next` value in `--json` output.
 
 ```sh
-noaa-weather alerts list [--start <TIME>] [--end <TIME>] [--limit <1-500>] ...
+noaa-weather alerts list [--start <TIME>] [--end <TIME>] [--limit <1-500>] [--cursor <CURSOR>] ...
 noaa-weather alerts list --start 6h --status actual
 ```
 

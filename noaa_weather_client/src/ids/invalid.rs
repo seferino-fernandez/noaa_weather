@@ -33,6 +33,8 @@ pub enum ValueKind {
     Coordinates,
     /// An ISO 8601 time interval.
     Interval,
+    /// An opaque pagination cursor such as `eyJzIjo1MDB9`.
+    Cursor,
 }
 
 impl ValueKind {
@@ -53,6 +55,7 @@ impl ValueKind {
             Self::GridpointId => "gridpoint id",
             Self::Coordinates => "coordinates",
             Self::Interval => "interval",
+            Self::Cursor => "cursor",
         }
     }
 }
@@ -162,6 +165,7 @@ mod tests {
             ValueKind::GridpointId,
             ValueKind::Coordinates,
             ValueKind::Interval,
+            ValueKind::Cursor,
         ] {
             let name = kind.to_string();
             assert!(!name.is_empty());

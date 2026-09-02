@@ -17,7 +17,9 @@
 //! character set, and letters are uppercase-normalized where NOAA treats the
 //! code as case-insensitive. Only [`ZoneId`] has a closed shape (state or
 //! marine area prefix, `C` or `Z`, three digits). Server-issued opaque ids
-//! such as headline or briefing ids stay plain strings.
+//! such as headline or briefing ids stay plain strings; the one opaque
+//! server-issued value with a type is the pagination [`Cursor`], because it
+//! is fed back into a query and NOAA rejects malformed ones with HTTP 400.
 //!
 //! ```
 //! use noaa_weather_client::{GridpointId, StationId, ZoneId};
@@ -46,7 +48,8 @@ mod office;
 mod zone;
 
 pub use codes::{
-    AlertId, AtsuId, CallSign, CwsuId, ProductId, ProductTypeCode, RadarStationId, StationId,
+    AlertId, AtsuId, CallSign, Cursor, CwsuId, ProductId, ProductTypeCode, RadarStationId,
+    StationId,
 };
 pub use gridpoint::GridpointId;
 pub use invalid::{InvalidValue, ValueKind};
@@ -105,6 +108,8 @@ pub(crate) mod schema_tests {
         let too_long_product = "a".repeat(65);
         let long_alert = "~".repeat(256);
         let too_long_alert = "!".repeat(257);
+        let long_cursor = "A".repeat(512);
+        let too_long_cursor = "A".repeat(513);
 
         assert_pattern_matches_parser::<StationId>(
             &["KSLC", "kslc", "ABC", "ABCDEFGHIJKLMNOP", "K1SL"],
@@ -160,6 +165,25 @@ pub(crate) mod schema_tests {
                 "urn:oid: 1",
                 "urn:oid:1\n",
                 "urn:oïd:1",
+            ],
+        );
+        assert_pattern_matches_parser::<Cursor>(
+            &[
+                "eyJzIjo1MDB9",
+                "eyJ0IjoxNzU2Nzc0NzAwfQ==",
+                "a+b/c=d_e-f",
+                "A",
+                &long_cursor,
+            ],
+            &[
+                "",
+                &too_long_cursor,
+                "has space",
+                "percent%3D",
+                "quest?",
+                "amp&",
+                "eyJzIjo1MDB9\n",
+                "ünïcode",
             ],
         );
         assert_pattern_matches_parser::<ZoneId>(
@@ -219,6 +243,7 @@ pub(crate) mod schema_tests {
         assert_string_schema::<ProductTypeCode>();
         assert_string_schema::<RadarStationId>();
         assert_string_schema::<AlertId>();
+        assert_string_schema::<Cursor>();
         assert_string_schema::<ZoneId>();
         assert_string_schema::<GridpointId>();
     }

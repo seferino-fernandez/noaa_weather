@@ -1,0 +1,253 @@
+{
+  "@context": [
+    "https://geojson.org/geojson-ld/geojson-context.jsonld",
+    {
+      "@version": "1.1",
+      "wx": "https://api.weather.gov/ontology#",
+      "s": "https://schema.org/",
+      "geo": "http://www.opengis.net/ont/geosparql#",
+      "unit": "http://codes.wmo.int/common/unit/",
+      "@vocab": "https://api.weather.gov/ontology#",
+      "geometry": {
+        "@id": "s:GeoCoordinates",
+        "@type": "geo:wktLiteral"
+      },
+      "city": "s:addressLocality",
+      "state": "s:addressRegion",
+      "distance": {
+        "@id": "s:Distance",
+        "@type": "s:QuantitativeValue"
+      },
+      "bearing": {
+        "@type": "s:QuantitativeValue"
+      },
+      "value": {
+        "@id": "s:value"
+      },
+      "unitCode": {
+        "@id": "s:unitCode",
+        "@type": "@id"
+      },
+      "forecastOffice": {
+        "@type": "@id"
+      },
+      "forecastGridData": {
+        "@type": "@id"
+      },
+      "publicZone": {
+        "@type": "@id"
+      },
+      "county": {
+        "@type": "@id"
+      },
+      "observationStations": {
+        "@container": "@list",
+        "@type": "@id"
+      }
+    }
+  ],
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "id": "https://api.weather.gov/stations/ARAU1",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -113.02208,
+          40.59828
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/stations/ARAU1",
+        "@type": "wx:ObservationStation",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 1533.144
+        },
+        "stationIdentifier": "ARAU1",
+        "name": "ARAGONITE",
+        "timeZone": "America/Denver",
+        "provider": "RAWS",
+        "subProvider": "",
+        "forecast": "https://api.weather.gov/zones/forecast/UTZ101",
+        "county": "https://api.weather.gov/zones/county/UTC045",
+        "fireWeatherZone": "https://api.weather.gov/zones/fire/UTZ478"
+      }
+    },
+    {
+      "id": "https://api.weather.gov/stations/KDPG",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -112.9217,
+          40.18376
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/stations/KDPG",
+        "@type": "wx:ObservationStation",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 1321.9176
+        },
+        "stationIdentifier": "KDPG",
+        "name": "Michael Army Airfield - Dugway Proving Ground",
+        "timeZone": "America/Denver",
+        "provider": "OTHER-MTR",
+        "subProvider": "",
+        "forecast": "https://api.weather.gov/zones/forecast/UTZ101",
+        "county": "https://api.weather.gov/zones/county/UTC045",
+        "fireWeatherZone": "https://api.weather.gov/zones/fire/UTZ478"
+      }
+    },
+    {
+      "id": "https://api.weather.gov/stations/KENV",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -114.03583,
+          40.72056
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/stations/KENV",
+        "@type": "wx:ObservationStation",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 1291.1328
+        },
+        "stationIdentifier": "KENV",
+        "name": "Wendover Airport",
+        "timeZone": "America/Denver",
+        "provider": "ASOS-HFM",
+        "subProvider": "",
+        "forecast": "https://api.weather.gov/zones/forecast/UTZ101",
+        "county": "https://api.weather.gov/zones/county/UTC045",
+        "fireWeatherZone": "https://api.weather.gov/zones/fire/UTZ478"
+      }
+    },
+    {
+      "id": "https://api.weather.gov/stations/RSBU1",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -113.59111,
+          41.60944
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/stations/RSBU1",
+        "@type": "wx:ObservationStation",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 1520.0376
+        },
+        "stationIdentifier": "RSBU1",
+        "name": "ROSEBUD",
+        "timeZone": "America/Denver",
+        "provider": "RAWS",
+        "subProvider": "",
+        "forecast": "https://api.weather.gov/zones/forecast/UTZ101",
+        "county": "https://api.weather.gov/zones/county/UTC003",
+        "fireWeatherZone": "https://api.weather.gov/zones/fire/UTZ478"
+      }
+    },
+    {
+      "id": "https://api.weather.gov/stations/UT33",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -113.4992,
+          40.7313
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/stations/UT33",
+        "@type": "wx:ObservationStation",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 1287.1704
+        },
+        "stationIdentifier": "UT33",
+        "name": "I-80 @ mp 29",
+        "timeZone": "America/Denver",
+        "provider": "MesoWest",
+        "subProvider": "UTAH DOT",
+        "forecast": "https://api.weather.gov/zones/forecast/UTZ101",
+        "county": "https://api.weather.gov/zones/county/UTC045",
+        "fireWeatherZone": "https://api.weather.gov/zones/fire/UTZ478"
+      }
+    },
+    {
+      "id": "https://api.weather.gov/stations/UTCUR",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -113.0858,
+          41.9379
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/stations/UTCUR",
+        "@type": "wx:ObservationStation",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 1452.6768
+        },
+        "stationIdentifier": "UTCUR",
+        "name": "SR-30 @ Curlew",
+        "timeZone": "America/Denver",
+        "provider": "MesoWest",
+        "subProvider": "UTAH DOT",
+        "forecast": "https://api.weather.gov/zones/forecast/UTZ101",
+        "county": "https://api.weather.gov/zones/county/UTC003",
+        "fireWeatherZone": "https://api.weather.gov/zones/fire/UTZ478"
+      }
+    },
+    {
+      "id": "https://api.weather.gov/stations/UTGRS",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -113.01041,
+          40.76157
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/stations/UTGRS",
+        "@type": "wx:ObservationStation",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 1425.5496
+        },
+        "stationIdentifier": "UTGRS",
+        "name": "I-80 @ Grassey",
+        "timeZone": "America/Denver",
+        "provider": "MesoWest",
+        "subProvider": "UTAH DOT",
+        "forecast": "https://api.weather.gov/zones/forecast/UTZ101",
+        "county": "https://api.weather.gov/zones/county/UTC045",
+        "fireWeatherZone": "https://api.weather.gov/zones/fire/UTZ478"
+      }
+    }
+  ],
+  "observationStations": [
+    "https://api.weather.gov/stations/ARAU1",
+    "https://api.weather.gov/stations/KDPG",
+    "https://api.weather.gov/stations/KENV",
+    "https://api.weather.gov/stations/RSBU1",
+    "https://api.weather.gov/stations/UT33",
+    "https://api.weather.gov/stations/UTCUR",
+    "https://api.weather.gov/stations/UTGRS"
+  ],
+  "pagination": {
+    "next": "https://api.weather.gov/stations?id%5B0%5D=ARAU1&id%5B1%5D=KDPG&id%5B2%5D=KENV&id%5B3%5D=RSBU1&id%5B4%5D=UT33&id%5B5%5D=UTCUR&id%5B6%5D=UTGRS&cursor=eyJzIjo1MDB9"
+  }
+}

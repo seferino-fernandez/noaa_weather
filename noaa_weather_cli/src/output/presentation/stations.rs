@@ -1,20 +1,19 @@
 use comfy_table::presets::{UTF8_FULL, UTF8_FULL_CONDENSED};
 use comfy_table::{Cell, CellAlignment, ContentArrangement, Table};
-use noaa_weather_client::models::{
-    GeoJsonGeometry, ObservationCollectionGeoJson, ObservationGeoJson,
-    ObservationStationCollectionGeoJson, ObservationStationGeoJson,
-};
+use noaa_weather_client::geo::Geometry;
+use noaa_weather_client::models::{Observation, ObservationStation};
+use noaa_weather_client::{Feature, FeatureCollection};
 
 use super::{DefaultPresentation, DefaultPresenter, PresentationDocument, PresentationError};
 
 /// Creates a table listing all observation stations with key summary information.
 ///
-/// This function processes a `ObservationStationCollectionGeoJson`, which contains a list of observation stations,
+/// This function processes a station feature collection, which contains a list of observation stations,
 /// and formats them into a table. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
 fn create_stations_table(
-    station_data: &ObservationStationCollectionGeoJson,
+    station_data: &FeatureCollection<ObservationStation>,
     presenter: &DefaultPresenter,
 ) -> Table {
     let mut table = Table::new();
@@ -50,12 +49,12 @@ fn create_stations_table(
 
 /// Creates a table listing a single observation station with key summary information.
 ///
-/// This function processes a `ObservationStationGeoJson`, which contains a single observation station,
+/// This function processes a station feature, which contains a single observation station,
 /// and formats it into a table. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
 fn create_observation_station_table(
-    observation_station: &ObservationStationGeoJson,
+    observation_station: &Feature<ObservationStation>,
     presenter: &DefaultPresenter,
 ) -> Table {
     let mut table = Table::new();
@@ -89,12 +88,12 @@ fn create_observation_station_table(
 
 /// Creates a table listing the latest observation for a single observation station.
 ///
-/// This function processes an `ObservationGeoJson`, which contains a single observation,
+/// This function processes an observation feature, which contains a single observation,
 /// and formats it into a table. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
 fn create_stations_observation_table(
-    observation: &ObservationGeoJson,
+    observation: &Feature<Observation>,
     presenter: &DefaultPresenter,
 ) -> Result<Table, PresentationError> {
     let mut table = Table::new();
@@ -188,12 +187,12 @@ fn create_stations_observation_table(
 
 /// Creates a table listing the latest observation for a single observation station.
 ///
-/// This function processes an `ObservationCollectionGeoJson`, which contains a single observation,
+/// This function processes an observation feature collection,
 /// and formats it into a table. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
 fn create_stations_observations_table(
-    observations: &ObservationCollectionGeoJson,
+    observations: &FeatureCollection<Observation>,
     presenter: &DefaultPresenter,
 ) -> Result<Table, PresentationError> {
     let mut table = Table::new();
@@ -284,12 +283,12 @@ use taf::{create_stations_taf_table, create_stations_tafs_metadata_table};
 
 /// Creates a row for a single observation station.
 ///
-/// This function processes an `ObservationStationGeoJson`, which contains a single observation station,
+/// This function processes a station feature, which contains a single observation station,
 /// and formats it into a row. Each row represents a station, displaying its ID, name,
 /// elevation, and time zone.
 ///
 fn create_station_row(
-    observation_station: &ObservationStationGeoJson,
+    observation_station: &Feature<ObservationStation>,
     presenter: &DefaultPresenter,
 ) -> Vec<String> {
     let station = &observation_station.properties;
@@ -298,15 +297,16 @@ fn create_station_row(
 
     let point_str = observation_station.geometry.as_ref().map_or_else(
         || presenter.text(None),
-        |geo_json_geometry| match geo_json_geometry.as_ref() {
-            GeoJsonGeometry::GeoJsonPoint(point) => {
-                format!("{:?}", point.coordinates)
+        |geometry| match geometry {
+            Geometry::Point(position) => {
+                format!("[{}, {}]", position.lon(), position.lat())
             }
-            GeoJsonGeometry::GeoJsonLineString(_)
-            | GeoJsonGeometry::GeoJsonPolygon(_)
-            | GeoJsonGeometry::GeoJsonMultiPoint(_)
-            | GeoJsonGeometry::GeoJsonMultiLineString(_)
-            | GeoJsonGeometry::GeoJsonMultiPolygon(_) => presenter.text(None),
+            Geometry::LineString(_)
+            | Geometry::Polygon(_)
+            | Geometry::MultiPoint(_)
+            | Geometry::MultiLineString(_)
+            | Geometry::MultiPolygon(_)
+            | Geometry::GeometryCollection(_) => presenter.text(None),
         },
     );
 
@@ -332,7 +332,7 @@ fn create_station_row(
     ]
 }
 
-impl DefaultPresentation for ObservationStationCollectionGeoJson {
+impl DefaultPresentation for FeatureCollection<ObservationStation> {
     fn present_default(
         &self,
         presenter: &DefaultPresenter,
@@ -343,7 +343,7 @@ impl DefaultPresentation for ObservationStationCollectionGeoJson {
     }
 }
 
-impl DefaultPresentation for ObservationStationGeoJson {
+impl DefaultPresentation for Feature<ObservationStation> {
     fn present_default(
         &self,
         presenter: &DefaultPresenter,
@@ -354,7 +354,7 @@ impl DefaultPresentation for ObservationStationGeoJson {
     }
 }
 
-impl DefaultPresentation for ObservationGeoJson {
+impl DefaultPresentation for Feature<Observation> {
     fn present_default(
         &self,
         presenter: &DefaultPresenter,
@@ -365,7 +365,7 @@ impl DefaultPresentation for ObservationGeoJson {
     }
 }
 
-impl DefaultPresentation for ObservationCollectionGeoJson {
+impl DefaultPresentation for FeatureCollection<Observation> {
     fn present_default(
         &self,
         presenter: &DefaultPresenter,

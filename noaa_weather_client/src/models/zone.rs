@@ -3,8 +3,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Zone {
-    #[serde(rename = "@context", skip_serializing_if = "Option::is_none")]
-    pub at_context: Option<Box<models::JsonLdContext>>,
     /// A geometry represented in Well-Known Text (WKT) format.
     #[serde(
         rename = "geometry",
@@ -32,6 +30,12 @@ pub struct Zone {
     pub state: Option<Box<models::ZoneState>>,
     #[serde(rename = "forecastOffice", skip_serializing_if = "Option::is_none")]
     pub forecast_office: Option<String>,
+    /// Forecast office identifiers responsible for the zone.
+    #[serde(rename = "cwa", skip_serializing_if = "Option::is_none")]
+    pub cwa: Option<Vec<String>>,
+    /// API URLs for forecast offices responsible for the zone.
+    #[serde(rename = "forecastOffices", skip_serializing_if = "Option::is_none")]
+    pub forecast_offices: Option<Vec<String>>,
     #[serde(rename = "gridIdentifier", skip_serializing_if = "Option::is_none")]
     pub grid_identifier: Option<String>,
     #[serde(
@@ -58,7 +62,6 @@ pub struct Zone {
 impl Zone {
     pub fn new() -> Zone {
         Zone {
-            at_context: None,
             geometry: None,
             at_id: None,
             at_type: None,
@@ -69,6 +72,8 @@ impl Zone {
             expiration_date: None,
             state: None,
             forecast_office: None,
+            cwa: None,
+            forecast_offices: None,
             grid_identifier: None,
             awips_location_identifier: None,
             time_zone: None,
@@ -83,7 +88,7 @@ mod tests {
     use super::Zone;
 
     #[test]
-    fn ignores_removed_office_keys_while_preserving_current_office() {
+    fn preserves_all_office_keys() {
         let zone: Zone = serde_json::from_str(
             r#"{"forecastOffice":"https://api.weather.gov/offices/PSR","cwa":["PSR"],"forecastOffices":["https://api.weather.gov/offices/PSR"]}"#,
         )
@@ -93,8 +98,11 @@ mod tests {
             Some("https://api.weather.gov/offices/PSR")
         );
         let serialized = serde_json::to_value(zone).unwrap();
-        assert!(serialized.get("cwa").is_none());
-        assert!(serialized.get("forecastOffices").is_none());
+        assert_eq!(serialized["cwa"], serde_json::json!(["PSR"]));
+        assert_eq!(
+            serialized["forecastOffices"],
+            serde_json::json!(["https://api.weather.gov/offices/PSR"])
+        );
     }
 }
 #[derive(

@@ -26,6 +26,7 @@ use serde::{Deserialize, Serialize};
 
 use super::Error;
 use crate::client::{Client, http};
+use crate::geo::{Feature, FeatureCollection};
 use crate::ids::{AtsuId, CwsuId};
 use crate::models;
 
@@ -134,7 +135,7 @@ impl Aviation<'_> {
     pub async fn cwas(
         &self,
         cwsu: &CwsuId,
-    ) -> Result<models::CenterWeatherAdvisoryCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::CenterWeatherAdvisory>, Error> {
         self.cwsu_request(cwsu)
             .literal_path("cwas")
             .json(http::JsonMedia::GeoJson)
@@ -168,7 +169,7 @@ impl Aviation<'_> {
         cwsu: &CwsuId,
         date: Date,
         sequence: u32,
-    ) -> Result<models::CenterWeatherAdvisoryGeoJson, Error> {
+    ) -> Result<Feature<models::CenterWeatherAdvisory>, Error> {
         self.cwsu_request(cwsu)
             .literal_path("cwas")
             .path_segment(date)
@@ -205,7 +206,7 @@ impl Aviation<'_> {
     pub async fn sigmets(
         &self,
         query: &SigmetsQuery,
-    ) -> Result<models::SigmetCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::Sigmet>, Error> {
         http::request(self.client, "/aviation/sigmets")
             .query(query)
             .json(http::JsonMedia::GeoJson)
@@ -235,7 +236,7 @@ impl Aviation<'_> {
     pub async fn sigmets_for_atsu(
         &self,
         atsu: &AtsuId,
-    ) -> Result<models::SigmetCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::Sigmet>, Error> {
         self.atsu_request(atsu).json(http::JsonMedia::GeoJson).await
     }
 
@@ -267,7 +268,7 @@ impl Aviation<'_> {
         &self,
         atsu: &AtsuId,
         date: Date,
-    ) -> Result<models::SigmetCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::Sigmet>, Error> {
         self.atsu_request(atsu)
             .path_segment(date)
             .json(http::JsonMedia::GeoJson)
@@ -303,7 +304,7 @@ impl Aviation<'_> {
         &self,
         atsu: &AtsuId,
         issued: Timestamp,
-    ) -> Result<models::SigmetGeoJson, Error> {
+    ) -> Result<Feature<models::Sigmet>, Error> {
         self.atsu_request(atsu)
             .path_segment(issued.strftime("%Y-%m-%d"))
             .path_segment(issued.strftime("%H%M"))

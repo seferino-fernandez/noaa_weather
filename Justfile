@@ -59,6 +59,10 @@ example-alerts:
 # Run all examples
 examples: example-basic example-alerts
 
+# Capture representative live NOAA responses for completeness tests
+fixtures:
+    noaa_weather_client/tests/fixtures/capture.sh
+
 # Run the pull request validation acceptance gate
 verify:
     cargo fmt --all --check

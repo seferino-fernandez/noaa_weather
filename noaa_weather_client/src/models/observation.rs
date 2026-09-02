@@ -5,8 +5,6 @@ use super::ValueUnit;
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Observation {
-    #[serde(rename = "@context", skip_serializing_if = "Option::is_none")]
-    pub at_context: Option<Box<models::JsonLdContext>>,
     /// A geometry represented in Well-Known Text (WKT) format.
     #[serde(
         rename = "geometry",
@@ -33,6 +31,9 @@ pub struct Observation {
     pub raw_message: Option<String>,
     #[serde(rename = "textDescription", skip_serializing_if = "Option::is_none")]
     pub text_description: Option<String>,
+    /// URL for an icon representing the observed conditions.
+    #[serde(rename = "icon", skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
     #[serde(rename = "presentWeather", skip_serializing_if = "Option::is_none")]
     pub present_weather: Option<Vec<models::MetarPhenomenon>>,
     #[serde(rename = "temperature", skip_serializing_if = "Option::is_none")]
@@ -94,7 +95,6 @@ pub struct Observation {
 impl Observation {
     pub fn new() -> Observation {
         Observation {
-            at_context: None,
             geometry: None,
             at_id: None,
             at_type: None,
@@ -105,6 +105,7 @@ impl Observation {
             timestamp: None,
             raw_message: None,
             text_description: None,
+            icon: None,
             present_weather: None,
             temperature: None,
             dewpoint: None,
@@ -132,17 +133,15 @@ mod tests {
     use super::Observation;
 
     #[test]
-    fn ignores_removed_icon_key_while_preserving_observation_fields() {
+    fn preserves_icon_key_with_observation_fields() {
         let observation: Observation = serde_json::from_str(
             r#"{"stationId":"KPHX","icon":"https://example.test/legacy.png"}"#,
         )
         .unwrap();
         assert_eq!(observation.station_id.as_deref(), Some("KPHX"));
-        assert!(
-            serde_json::to_value(observation)
-                .unwrap()
-                .get("icon")
-                .is_none()
+        assert_eq!(
+            serde_json::to_value(observation).unwrap()["icon"],
+            "https://example.test/legacy.png"
         );
     }
 }

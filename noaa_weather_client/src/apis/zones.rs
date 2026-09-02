@@ -21,8 +21,8 @@ use serde::{Deserialize, Serialize};
 
 use super::Error;
 use crate::client::{Client, http};
-use crate::geo::Coordinates;
-use crate::ids::ZoneId;
+use crate::geo::{Coordinates, Feature, FeatureCollection};
+use crate::ids::{Cursor, ZoneId};
 use crate::models::{self, AreaCode, RegionCode};
 
 /// The kind of zone a `/zones/{type}/...` path addresses.
@@ -133,9 +133,10 @@ pub struct ZoneStationsQuery {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "schemars", schemars(range(min = 1, max = 500)))]
     pub limit: Option<u16>,
-    /// Opaque pagination cursor from a previous page.
+    /// Opaque pagination cursor from a previous page. The parameter is in
+    /// NOAA's specification, but see [`Zones::stations`] before using it.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub cursor: Option<String>,
+    pub cursor: Option<Cursor>,
 }
 
 impl http::QueryParams for ZoneStationsQuery {
@@ -192,7 +193,7 @@ impl Zones<'_> {
         zone_type: ZoneType,
         zone: &ZoneId,
         query: &ZoneQuery,
-    ) -> Result<models::ZoneGeoJson, Error> {
+    ) -> Result<Feature<models::Zone>, Error> {
         http::request(self.client, "/zones")
             .path_segment(zone_type)
             .path_segment(zone)
@@ -225,7 +226,7 @@ impl Zones<'_> {
         &self,
         zone_type: ZoneType,
         zone: &ZoneId,
-    ) -> Result<models::ZoneForecastGeoJson, Error> {
+    ) -> Result<Feature<models::ZoneForecast>, Error> {
         http::request(self.client, "/zones")
             .path_segment(zone_type)
             .path_segment(zone)
@@ -260,7 +261,7 @@ impl Zones<'_> {
     ///
     /// Returns an [`Error`] if the request fails or the response cannot be
     /// decoded.
-    pub async fn list(&self, query: &ZonesQuery) -> Result<models::ZoneCollectionGeoJson, Error> {
+    pub async fn list(&self, query: &ZonesQuery) -> Result<FeatureCollection<models::Zone>, Error> {
         http::request(self.client, "/zones")
             .query(query)
             .json(http::JsonMedia::GeoJson)
@@ -297,7 +298,7 @@ impl Zones<'_> {
         &self,
         zone_type: ZoneType,
         query: &ZonesQuery,
-    ) -> Result<models::ZoneCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::Zone>, Error> {
         http::request(self.client, "/zones")
             .path_segment(zone_type)
             .query(query)
@@ -324,6 +325,15 @@ impl Zones<'_> {
     /// # }
     /// ```
     ///
+    /// # Paging
+    ///
+    /// NOAA's `pagination.next` on this operation is wrong: it points at one
+    /// station's `/stations/{id}/observations` rather than at the zone. Do
+    /// not feed the token from `next_cursor()` back into a zone request;
+    /// [`ZoneObservationsQuery`] has no `cursor` for that reason. Use
+    /// [`Stations::observations_all`](crate::apis::stations::Stations::observations_all)
+    /// per station for history.
+    ///
     /// # Errors
     ///
     /// Returns an [`Error`] if the request fails or the response cannot be
@@ -332,7 +342,7 @@ impl Zones<'_> {
         &self,
         zone: &ZoneId,
         query: &ZoneObservationsQuery,
-    ) -> Result<models::ObservationCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::Observation>, Error> {
         self.forecast_zone(zone)
             .literal_path("observations")
             .query(query)
@@ -359,6 +369,14 @@ impl Zones<'_> {
     /// # }
     /// ```
     ///
+    /// # Paging
+    ///
+    /// NOAA's `pagination.next` on this operation is wrong: it points at
+    /// `/stations?id[]=…&cursor=…`, which returns an empty page, rather than
+    /// at the zone. Do not feed the token from `next_cursor()` back into
+    /// [`ZoneStationsQuery::cursor`]; the field exists only because NOAA's
+    /// specification lists the parameter. Raise `limit` instead.
+    ///
     /// # Errors
     ///
     /// Returns an [`Error`] if the request fails or the response cannot be
@@ -367,7 +385,7 @@ impl Zones<'_> {
         &self,
         zone: &ZoneId,
         query: &ZoneStationsQuery,
-    ) -> Result<models::ObservationStationCollectionGeoJson, Error> {
+    ) -> Result<FeatureCollection<models::ObservationStation>, Error> {
         self.forecast_zone(zone)
             .literal_path("stations")
             .query(query)
@@ -536,7 +554,7 @@ mod tests {
                 &azz540(),
                 &ZoneStationsQuery {
                     limit: Some(15),
-                    cursor: Some("abc".to_owned()),
+                    cursor: Some("abc".parse().unwrap()),
                 },
             )
             .await

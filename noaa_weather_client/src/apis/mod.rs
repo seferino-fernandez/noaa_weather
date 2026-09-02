@@ -10,9 +10,13 @@
 //! (`Query { limit: Some(10), ..Default::default() }`).
 //!
 //! Every operation returns a model from [`crate::models`] or the shared
-//! [`Error`] type. The crate README lists all 64 NOAA operations, plus the
-//! composed `points().forecast_for`, with the handle
-//! method that serves each NOAA path.
+//! [`Error`] type. GeoJSON operations return the model inside a
+//! [`Feature`](crate::geo::Feature) or [`FeatureCollection`](crate::geo::FeatureCollection)
+//! envelope; JSON-LD operations return the model directly. The crate README
+//! lists all 64 NOAA operations, plus the composed `points().forecast_for`
+//! and the three bounded multi-page helpers (`alerts().list_all`,
+//! `stations().list_all`, `stations().observations_all`), with the handle
+//! method that serves each NOAA path: 68 methods in all.
 
 use std::{borrow::Cow, error, fmt, time::Duration};
 
@@ -510,6 +514,7 @@ pub mod aviation;
 pub mod glossary;
 pub mod gridpoints;
 pub mod offices;
+mod pagination;
 pub mod points;
 pub mod products;
 pub mod radar;

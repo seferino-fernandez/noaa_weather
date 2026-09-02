@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use super::{JsonLdContext, PaginationInfo};
+use super::JsonLdContext;
+use crate::geo::Pagination;
 
 /// Metadata for one NOAA Weather Radio transmitter.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
@@ -56,7 +57,7 @@ pub struct RadioTransmitterCollection {
     pub transmitters: Vec<RadioTransmitter>,
     /// Pagination links when more transmitters are available.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub pagination: Option<PaginationInfo>,
+    pub pagination: Option<Pagination>,
 }
 
 #[cfg(test)]

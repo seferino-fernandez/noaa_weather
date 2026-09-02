@@ -20,7 +20,6 @@ pub struct ValueUnit {
     #[serde(rename = "unitCode", skip_serializing_if = "Option::is_none")]
     pub unit_code: Option<UnitCodeType>,
     /// The numerical value. Using f64 to accommodate both integers and floating-point numbers.
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<f64>,
     /// The maximum value of a range of measured values
     #[serde(rename = "maxValue", skip_serializing_if = "Option::is_none")]

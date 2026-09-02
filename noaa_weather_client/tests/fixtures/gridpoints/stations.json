@@ -1,0 +1,237 @@
+{
+  "@context": [
+    "https://geojson.org/geojson-ld/geojson-context.jsonld",
+    {
+      "@version": "1.1",
+      "wx": "https://api.weather.gov/ontology#",
+      "s": "https://schema.org/",
+      "geo": "http://www.opengis.net/ont/geosparql#",
+      "unit": "http://codes.wmo.int/common/unit/",
+      "@vocab": "https://api.weather.gov/ontology#",
+      "geometry": {
+        "@id": "s:GeoCoordinates",
+        "@type": "geo:wktLiteral"
+      },
+      "city": "s:addressLocality",
+      "state": "s:addressRegion",
+      "distance": {
+        "@id": "s:Distance",
+        "@type": "s:QuantitativeValue"
+      },
+      "bearing": {
+        "@type": "s:QuantitativeValue"
+      },
+      "value": {
+        "@id": "s:value"
+      },
+      "unitCode": {
+        "@id": "s:unitCode",
+        "@type": "@id"
+      },
+      "forecastOffice": {
+        "@type": "@id"
+      },
+      "forecastGridData": {
+        "@type": "@id"
+      },
+      "publicZone": {
+        "@type": "@id"
+      },
+      "county": {
+        "@type": "@id"
+      },
+      "observationStations": {
+        "@container": "@list",
+        "@type": "@id"
+      }
+    }
+  ],
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "id": "https://api.weather.gov/stations/KMYZ",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -96.6306,
+          39.8553
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/stations/KMYZ",
+        "@type": "wx:ObservationStation",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 391.0584
+        },
+        "stationIdentifier": "KMYZ",
+        "name": "Marysville Municipal Airport",
+        "timeZone": "America/Chicago",
+        "provider": "OTHER-MTR",
+        "subProvider": "",
+        "distance": {
+          "unitCode": "wmoUnit:m",
+          "value": 44163.245334519
+        },
+        "bearing": {
+          "unitCode": "wmoUnit:degree_(angle)",
+          "value": 71
+        },
+        "forecast": "https://api.weather.gov/zones/forecast/KSZ010",
+        "county": "https://api.weather.gov/zones/county/KSC117",
+        "fireWeatherZone": "https://api.weather.gov/zones/fire/KSZ010"
+      }
+    },
+    {
+      "id": "https://api.weather.gov/stations/KCNK",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -97.65056,
+          39.55139
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/stations/KCNK",
+        "@type": "wx:ObservationStation",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 452.9328
+        },
+        "stationIdentifier": "KCNK",
+        "name": "Concordia, Blosser Municipal Airport",
+        "timeZone": "America/Chicago",
+        "provider": "ASOS-HFM",
+        "subProvider": "",
+        "distance": {
+          "unitCode": "wmoUnit:m",
+          "value": 49534.826695825
+        },
+        "bearing": {
+          "unitCode": "wmoUnit:degree_(angle)",
+          "value": 246
+        },
+        "forecast": "https://api.weather.gov/zones/forecast/KSZ020",
+        "county": "https://api.weather.gov/zones/county/KSC029",
+        "fireWeatherZone": "https://api.weather.gov/zones/fire/KSZ020"
+      }
+    },
+    {
+      "id": "https://api.weather.gov/stations/KHJH",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -97.58694,
+          40.15222
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/stations/KHJH",
+        "@type": "wx:ObservationStation",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 447.1416
+        },
+        "stationIdentifier": "KHJH",
+        "name": "Hebron, Hebron Municipal Airport",
+        "timeZone": "America/Chicago",
+        "provider": "OTHER-MTR",
+        "subProvider": "",
+        "distance": {
+          "unitCode": "wmoUnit:m",
+          "value": 61103.760604162
+        },
+        "bearing": {
+          "unitCode": "wmoUnit:degree_(angle)",
+          "value": 319
+        },
+        "forecast": "https://api.weather.gov/zones/forecast/NEZ087",
+        "county": "https://api.weather.gov/zones/county/NEC169",
+        "fireWeatherZone": "https://api.weather.gov/zones/fire/NEZ087"
+      }
+    },
+    {
+      "id": "https://api.weather.gov/stations/KBIE",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -96.75,
+          40.3
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/stations/KBIE",
+        "@type": "wx:ObservationStation",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 402.9456
+        },
+        "stationIdentifier": "KBIE",
+        "name": "Beatrice Municipal",
+        "timeZone": "America/Chicago",
+        "provider": "OTHER-MTR",
+        "subProvider": "",
+        "distance": {
+          "unitCode": "wmoUnit:m",
+          "value": 70525.693320052
+        },
+        "bearing": {
+          "unitCode": "wmoUnit:degree_(angle)",
+          "value": 26
+        },
+        "forecast": "https://api.weather.gov/zones/forecast/NEZ089",
+        "county": "https://api.weather.gov/zones/county/NEC067",
+        "fireWeatherZone": "https://api.weather.gov/zones/fire/NEZ089"
+      }
+    },
+    {
+      "id": "https://api.weather.gov/stations/KMHK",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -96.67778,
+          39.13528
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/stations/KMHK",
+        "@type": "wx:ObservationStation",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 320.9544
+        },
+        "stationIdentifier": "KMHK",
+        "name": "Manhattan, Manhattan Municipal Airport",
+        "timeZone": "America/Chicago",
+        "provider": "ASOS-HFM",
+        "subProvider": "",
+        "distance": {
+          "unitCode": "wmoUnit:m",
+          "value": 76717.805983599
+        },
+        "bearing": {
+          "unitCode": "wmoUnit:degree_(angle)",
+          "value": 149
+        },
+        "forecast": "https://api.weather.gov/zones/forecast/KSZ022",
+        "county": "https://api.weather.gov/zones/county/KSC161",
+        "fireWeatherZone": "https://api.weather.gov/zones/fire/KSZ022"
+      }
+    }
+  ],
+  "observationStations": [
+    "https://api.weather.gov/stations/KMYZ",
+    "https://api.weather.gov/stations/KCNK",
+    "https://api.weather.gov/stations/KHJH",
+    "https://api.weather.gov/stations/KBIE",
+    "https://api.weather.gov/stations/KMHK"
+  ],
+  "pagination": {
+    "next": "https://api.weather.gov/stations?id%5B0%5D=KAAO&id%5B1%5D=KBIE&id%5B2%5D=KCNK&id%5B3%5D=KEMP&id%5B4%5D=KEWK&id%5B5%5D=KFNB&id%5B6%5D=KFOE&id%5B7%5D=KHJH&id%5B8%5D=KHUT&id%5B9%5D=KIXD&id%5B10%5D=KK88&id%5B11%5D=KLWC&id%5B12%5D=KMCI&id%5B13%5D=KMHK&id%5B14%5D=KMKC&id%5B15%5D=KMYZ&id%5B16%5D=KOJC&id%5B17%5D=KOWI&id%5B18%5D=KSLN&id%5B19%5D=KSTJ&id%5B20%5D=KTOP&cursor=eyJzIjo1MDB9"
+  }
+}
