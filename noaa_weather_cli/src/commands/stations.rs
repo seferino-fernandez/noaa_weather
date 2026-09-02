@@ -1,10 +1,13 @@
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use clap::Subcommand;
-use noaa_weather_client::Client;
-use noaa_weather_client::apis::stations as station_api;
-use noaa_weather_client::models::{AreaCode, StateTerritoryCode};
-use std::str::FromStr as _;
+use jiff::Timestamp;
+use noaa_weather_client::apis::stations::{
+    LatestObservationQuery, ObservationsQuery, StationsQuery,
+};
+use noaa_weather_client::models::AreaCode;
+use noaa_weather_client::{Client, StationId};
 
+use super::parse;
 use crate::output::Output;
 
 /// Access data related to NWS observation stations.
@@ -16,7 +19,7 @@ pub enum StationCommands {
     Metadata {
         /// Station ID (e.g., KPHX, KDEN).
         #[arg(short, long)]
-        id: String,
+        id: StationId,
     },
 
     /// List observation stations, optionally filtered.
@@ -25,13 +28,13 @@ pub enum StationCommands {
     List {
         /// Optional: Filter by station ID(s) (comma-separated).
         #[arg(long, value_delimiter = ',')]
-        id: Option<Vec<String>>,
-        /// Optional: Filter by US state/territory abbreviation(s) (comma-separated, e.g., AZ,CA).
+        id: Vec<StationId>,
+        /// Optional: Filter by US state/territory or marine area code(s) (comma-separated, e.g., AZ,CA).
         #[arg(long, value_delimiter = ',')]
-        state: Option<Vec<String>>,
-        /// Optional: Limit the number of observation stations returned by the API.
-        #[arg(long, value_parser = clap::value_parser!(i32).range(1..=500))]
-        limit: Option<i32>,
+        state: Vec<AreaCode>,
+        /// Optional: Limit the number of observation stations returned by the API (1 to 500).
+        #[arg(long, value_parser = clap::value_parser!(u16).range(1..=500))]
+        limit: Option<u16>,
     },
 
     /// Get the latest observation for a specific station.
@@ -40,7 +43,7 @@ pub enum StationCommands {
     LatestObservation {
         /// Station ID (e.g., KPHX, KDEN).
         #[arg(short = 's', long)]
-        station_id: String,
+        station_id: StationId,
         /// Optional: Only return quality controlled data.
         #[arg(long, default_value_t = false)]
         require_quality_controlled: bool,
@@ -49,63 +52,58 @@ pub enum StationCommands {
     /// List recent observations for a specific station, optionally filtered by time.
     ///
     /// Example: `noaa-weather stations observations --station-id KPHX --limit 5`
-    /// Example: `noaa-weather stations observations --station-id KPHX --start "-PT2H" --end "-PT1H"`
+    /// Example: `noaa-weather stations observations --station-id KPHX --start 2h --end 1h`
     Observations {
         /// Station ID (e.g., KPHX).
         #[arg(long)]
-        station_id: String,
-        /// Optional: Start time (ISO 8601 format or relative duration like "-PT1H").
-        #[arg(long)]
-        start: Option<String>,
-        /// Optional: End time (ISO 8601 format or relative duration like "-PT1H").
-        #[arg(long)]
-        end: Option<String>,
-        /// Optional: Limit the number of observations returned by the API.
-        #[arg(long, value_parser = clap::value_parser!(i32).range(1..=500))]
-        limit: Option<i32>,
+        station_id: StationId,
+        /// Optional: Start time (RFC 3339 timestamp or relative age such as 6h).
+        #[arg(long, value_parser = parse::time, value_name = "TIME", long_help = parse::TIME_HELP)]
+        start: Option<Timestamp>,
+        /// Optional: End time (RFC 3339 timestamp or relative age such as 1h).
+        #[arg(long, value_parser = parse::time, value_name = "TIME", long_help = parse::TIME_HELP)]
+        end: Option<Timestamp>,
+        /// Optional: Limit the number of observations returned by the API (1 to 500).
+        #[arg(long, value_parser = clap::value_parser!(u16).range(1..=500))]
+        limit: Option<u16>,
     },
     /// Get a single observation for a station at a specific time.
     ///
-    /// Requires an exact ISO 8601 timestamp matching an observation time.
+    /// Requires an exact timestamp matching an observation time.
     /// Example: `noaa-weather stations observation --station-id KPHX --time "2023-10-27T18:53:00+00:00"`
     Observation {
         /// Station ID (e.g., KPHX).
         #[arg(long)]
-        station_id: String,
-        /// Exact observation time (ISO 8601 format).
-        #[arg(long)]
-        time: String,
+        station_id: StationId,
+        /// Exact observation time (RFC 3339 timestamp; sent to NOAA in UTC).
+        #[arg(long, value_parser = parse::time, value_name = "TIME", long_help = parse::TIME_HELP)]
+        time: Timestamp,
     },
     /// Get the metadata for Terminal Aerodrome Forecasts (TAFs) for an airport station.
     ///
     /// Example: `noaa-weather stations terminal-aerodrome-forecasts --station-id KPHX`
-    #[cfg(feature = "xml")]
     TerminalAerodromeForecasts {
         /// Airport Station ID (typically ICAO identifier, e.g., KPHX, KLAX).
         #[arg(long)]
-        station_id: String,
+        station_id: StationId,
     },
-    /// Get a specific Terminal Aerodrome Forecast (TAF) by date and time.
+    /// Get a specific Terminal Aerodrome Forecast (TAF) by its issue time.
     ///
-    /// Example: `noaa-weather stations terminal-aerodrome-forecast --station-id KPHX --date 2025-05-03 --time 1800`
-    #[cfg(feature = "xml")]
+    /// Example: `noaa-weather stations terminal-aerodrome-forecast --station-id KPHX --issued 2025-05-03T18:00:00Z`
     TerminalAerodromeForecast {
         /// Airport Station ID (e.g., KPHX).
         #[arg(long)]
-        station_id: String,
-        /// Date of the TAF (YYYY-MM-DD).
-        #[arg(long)]
-        date: String,
-        /// Time of the TAF (HHMM format, UTC).
-        #[arg(long)]
-        time: String,
+        station_id: StationId,
+        /// Issue time of the TAF (RFC 3339 timestamp). NOAA addresses a TAF by its UTC date and HHMM minute, so seconds are dropped.
+        #[arg(long, value_parser = parse::time, value_name = "TIME", long_help = parse::TIME_HELP)]
+        issued: Timestamp,
     },
 }
 
 /// Handles the execution of station-related subcommands.
 ///
-/// Dispatches the command to the appropriate API function based on the
-/// provided `StationCommands` variant and arguments.
+/// Dispatches the command to the matching `client.stations()` method based
+/// on the provided `StationCommands` variant and arguments.
 ///
 /// # Arguments
 ///
@@ -118,59 +116,35 @@ pub async fn handle_command(
     output: &Output,
     client: &Client,
 ) -> Result<()> {
+    let stations = client.stations();
     match command {
         StationCommands::Metadata { id } => {
             output
-                .show(
-                    format!("getting station {id} metadata"),
-                    station_api::get_observation_station(client, id),
-                )
+                .show(format!("getting station {id} metadata"), stations.get(id))
                 .await
         }
         StationCommands::List { id, state, limit } => {
-            // Parse state strings into StateTerritoryCode enums, then wrap in AreaCode
-            let states_parsed = state
-                .as_ref()
-                .map(|states| {
-                    states
-                        .iter()
-                        .map(|state_code| StateTerritoryCode::from_str(state_code))
-                        .collect::<Result<Vec<_>, _>>()
-                        .map(|stc_vec| {
-                            stc_vec
-                                .into_iter()
-                                .map(AreaCode::StateTerritoryCode)
-                                .collect()
-                        })
-                })
-                .transpose()
-                .map_err(|error| anyhow!("Invalid state code provided: {error}"))?;
-
+            let query = StationsQuery {
+                id: id.clone(),
+                state: state.clone(),
+                limit: *limit,
+                cursor: None,
+            };
             output
-                .show(
-                    "listing observation stations",
-                    station_api::get_observation_stations(
-                        client,
-                        id.clone(),
-                        states_parsed,
-                        *limit,
-                        None,
-                    ),
-                )
+                .show("listing observation stations", stations.list(&query))
                 .await
         }
         StationCommands::LatestObservation {
             station_id,
             require_quality_controlled,
         } => {
+            let query = LatestObservationQuery {
+                require_qc: Some(*require_quality_controlled),
+            };
             output
                 .show(
                     format!("getting latest observation for station {station_id}"),
-                    station_api::get_latest_observations(
-                        client,
-                        station_id,
-                        Some(*require_quality_controlled),
-                    ),
+                    stations.latest_observation(station_id, &query),
                 )
                 .await
         }
@@ -180,17 +154,16 @@ pub async fn handle_command(
             end,
             limit,
         } => {
+            let query = ObservationsQuery {
+                start: *start,
+                end: *end,
+                limit: *limit,
+                cursor: None,
+            };
             output
                 .show(
                     format!("listing observations for station {station_id}"),
-                    station_api::get_observations(
-                        client,
-                        station_id,
-                        start.clone(),
-                        end.clone(),
-                        *limit,
-                        None,
-                    ),
+                    stations.observations(station_id, &query),
                 )
                 .await
         }
@@ -198,29 +171,23 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting observation for station {station_id} at {time}"),
-                    station_api::get_observation_by_time(client, station_id, time.clone()),
+                    stations.observation_at(station_id, *time),
                 )
                 .await
         }
-        #[cfg(feature = "xml")]
         StationCommands::TerminalAerodromeForecasts { station_id } => {
             output
                 .show(
                     format!("getting TAFs for station {station_id}"),
-                    station_api::get_terminal_aerodrome_forecasts(client, station_id),
+                    stations.tafs(station_id),
                 )
                 .await
         }
-        #[cfg(feature = "xml")]
-        StationCommands::TerminalAerodromeForecast {
-            station_id,
-            date,
-            time,
-        } => {
+        StationCommands::TerminalAerodromeForecast { station_id, issued } => {
             output
                 .show(
-                    format!("getting TAF for station {station_id} on {date} at {time}"),
-                    station_api::get_terminal_aerodrome_forecast(client, station_id, date, time),
+                    format!("getting TAF for station {station_id} issued at {issued}"),
+                    stations.taf(station_id, *issued),
                 )
                 .await
         }

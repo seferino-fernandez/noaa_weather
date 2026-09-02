@@ -986,7 +986,7 @@ mod tests {
     }
 
     // Run with:
-    // cargo test -p noaa_weather_client --no-default-features --features xml --release \
+    // cargo test -p noaa_weather_client --release \
     //   models::terminal_aerodrome_forecast::decode::tests::semantic_decode_performance_receipt \
     //   -- --ignored --exact --nocapture --test-threads=1
     #[test]

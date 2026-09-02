@@ -1,6 +1,6 @@
 # Offices
 
-Office IDs accept forecast offices plus regional headquarters (`ARH`, `CRH`, `ERH`, `PRH`, `SRH`, `WRH`) and national headquarters (`NWS`), matching NOAA's `NWSOfficeId` union.
+Office IDs are 3 or 4 letter NWS codes. Forecast offices plus regional headquarters (`ARH`, `CRH`, `ERH`, `PRH`, `SRH`, `WRH`) and national headquarters (`NWS`) are accepted; `--help` lists the known forecast offices as a hint without restricting the value. A malformed code is a usage error (exit code 2).
 
 ## Get metadata for a NWS office
 

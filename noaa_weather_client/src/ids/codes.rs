@@ -114,10 +114,10 @@ const PRODUCT_TYPE: Rule = Rule {
 const RADAR_STATION: Rule = Rule {
     kind: ValueKind::RadarStationId,
     min: 4,
-    max: 4,
+    max: 5,
     chars: Chars::Alnum,
     case: Case::Upper,
-    reason: "must be exactly 4 ASCII letters or digits",
+    reason: "must be 4 to 5 ASCII letters or digits",
 };
 
 const PRODUCT: Rule = Rule {
@@ -259,20 +259,23 @@ str_id! {
 }
 
 str_id! {
-    /// A radar station identifier such as `KABX`.
+    /// A radar station identifier such as `KABX` or the wind profiler
+    /// `HWPA2`.
     ///
-    /// Used by `/radar/stations/{stationId}`. Accepts exactly 4 ASCII
-    /// letters or digits and uppercase-normalizes them.
+    /// Used by `/radar/stations/{stationId}`. NOAA's station list mixes
+    /// 4-character NEXRAD and TDWR sites with 5-character profilers, so 4 to
+    /// 5 ASCII letters or digits are accepted and uppercase-normalized.
     ///
     /// ```
     /// use noaa_weather_client::RadarStationId;
     ///
     /// assert_eq!("kabx".parse::<RadarStationId>()?.as_str(), "KABX");
+    /// assert_eq!("hwpa2".parse::<RadarStationId>()?.as_str(), "HWPA2");
     /// # Ok::<(), noaa_weather_client::InvalidValue>(())
     /// ```
     RadarStationId, parse_radar_station,
-    "Radar station identifier, exactly 4 ASCII letters or digits (for example KABX).",
-    "^[A-Za-z0-9]{4}$"
+    "Radar station identifier, 4 to 5 ASCII letters or digits (for example KABX or HWPA2).",
+    "^[A-Za-z0-9]{4,5}$"
 }
 
 str_id! {
@@ -414,14 +417,15 @@ mod tests {
     }
 
     #[test]
-    fn radar_station_id_requires_exactly_four() {
+    fn radar_station_id_accepts_four_or_five() {
         assert_eq!("kabx".parse::<RadarStationId>().unwrap().as_str(), "KABX");
+        assert_eq!("hwpa2".parse::<RadarStationId>().unwrap().as_str(), "HWPA2");
         assert_eq!(
             rejected::<RadarStationId>("ABX").kind(),
             ValueKind::RadarStationId
         );
         assert_eq!(
-            rejected::<RadarStationId>("KABXX").kind(),
+            rejected::<RadarStationId>("KABXXX").kind(),
             ValueKind::RadarStationId
         );
     }

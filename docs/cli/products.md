@@ -1,5 +1,7 @@
 # Products
 
+Product type codes (`AFD`, `HWO`, ...) and issuance locations (`LWX`, `PSR`, ...) are validated before any request is made; a malformed value is a usage error (exit code 2). Location `--help` lists the known forecast offices as a hint without restricting the value.
+
 ## Get text products by specific location
 
 ```bash
@@ -30,10 +32,12 @@ noaa-weather products type --type-id <TYPE_ID>
 noaa-weather products types-by-location --type-id <TYPE_ID> --location-id <LOCATION_ID>
 ```
 
-## Get all text products
+## Query text products
+
+`--start-time` and `--end-time` accept an RFC 3339 timestamp or a relative age such as `2d`.
 
 ```bash
-noaa-weather products list
+noaa-weather products list [--location-ids <ID,...>] [--office-ids <ID,...>] [--wmo-ids <ID,...>] [--product-type-codes <TYPE,...>] [--start-time <TIME>] [--end-time <TIME>] [--limit <1-500>]
 ```
 
 ## Get all locations by product type

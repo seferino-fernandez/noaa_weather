@@ -7,7 +7,6 @@ use output::{Output, OutputArgs};
 mod commands;
 mod output;
 
-#[cfg(feature = "radio")]
 use commands::radio;
 use commands::{
     Commands, alerts, aviation, glossary, gridpoints, offices, points, products, radar, stations,
@@ -72,7 +71,6 @@ async fn try_main() -> Result<()> {
         Commands::Products { command } => {
             products::handle_command(command, &output, &client).await?;
         }
-        #[cfg(feature = "radio")]
         Commands::Radio { command } => {
             radio::handle_command(command, &output, &client).await?;
         }

@@ -19,7 +19,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 bytes.workspace = true
 jiff.workspace = true
 mime.workspace = true
-quick-xml = { workspace = true, features = ["serde", "serialize"], optional = true }
+quick-xml = { workspace = true, features = ["serde", "serialize"] }
 reqwest = { workspace = true, features = ["gzip", "json", "query"] }
 schemars = { workspace = true, optional = true }
 serde = { workspace = true, features = ["derive"] }
@@ -30,9 +30,7 @@ tracing.workspace = true
 url.workspace = true
 
 [features]
-default = ["radio"]
-radio = ["xml"]
-xml = ["dep:quick-xml"]
+default = []
 schemars = ["dep:schemars"]
 
 [dev-dependencies]

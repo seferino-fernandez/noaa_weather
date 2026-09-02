@@ -26,6 +26,8 @@ use super::{
 };
 use crate::apis::{BinaryPayload, Error, ProtocolError, ResponseContent};
 
+pub(crate) use crate::time::RFC3339_SECONDS;
+
 const CORRELATION_ID_HEADER: &str = "X-Correlation-Id";
 const REQUEST_ID_HEADER: &str = "X-Request-Id";
 
@@ -82,43 +84,60 @@ impl ContractRequest<'_> {
         self
     }
 
-    /// Appends an optional scalar query value using HTML form encoding.
-    pub(crate) fn query_scalar<T: fmt::Display>(
-        mut self,
-        name: &'static str,
-        value: Option<T>,
-    ) -> Self {
-        if let Some(value) = value {
-            let ContractRequest {
-                url, value_buffer, ..
-            } = &mut self;
-            let value = render_display(value_buffer, value);
-            url.query_pairs_mut().append_pair(name, value);
-        }
+    /// Appends every parameter described by one operation's query struct.
+    pub(crate) fn query(mut self, params: &impl QueryParams) -> Self {
+        params.append_to(&mut self);
         self
     }
 
-    /// Appends an optional CSV query as a single HTML-form-encoded value.
-    pub(crate) fn query_csv<I, T>(mut self, name: &'static str, values: Option<I>) -> Self
+    /// Appends one optional scalar in place; `None` appends nothing.
+    pub(crate) fn scalar<T: fmt::Display>(&mut self, name: &'static str, value: Option<&T>) {
+        if let Some(value) = value {
+            self.push_scalar(name, value);
+        }
+    }
+
+    /// Appends one optional instant as an RFC 3339 UTC timestamp with whole
+    /// seconds, which is the only form NOAA accepts; `None` appends nothing.
+    pub(crate) fn instant(&mut self, name: &'static str, value: Option<&Timestamp>) {
+        if let Some(value) = value {
+            self.push_scalar(name, &value.strftime(RFC3339_SECONDS));
+        }
+    }
+
+    /// Appends a list as one CSV value in place; an empty list appends
+    /// nothing.
+    pub(crate) fn list<T: fmt::Display>(&mut self, name: &'static str, values: &[T]) {
+        if !values.is_empty() {
+            self.push_csv(name, values);
+        }
+    }
+
+    fn push_scalar<T: fmt::Display>(&mut self, name: &'static str, value: &T) {
+        let ContractRequest {
+            url, value_buffer, ..
+        } = self;
+        let value = render_display(value_buffer, value);
+        url.query_pairs_mut().append_pair(name, value);
+    }
+
+    fn push_csv<I, T>(&mut self, name: &'static str, values: I)
     where
         I: IntoIterator<Item = T>,
         T: fmt::Display,
     {
-        if let Some(values) = values {
-            let ContractRequest {
-                url, value_buffer, ..
-            } = &mut self;
-            let value_buffer = value_buffer.get_or_insert_with(|| String::with_capacity(256));
-            value_buffer.clear();
-            for (index, value) in values.into_iter().enumerate() {
-                if index != 0 {
-                    value_buffer.push(',');
-                }
-                write!(value_buffer, "{value}").expect("writing to String cannot fail");
+        let ContractRequest {
+            url, value_buffer, ..
+        } = self;
+        let value_buffer = value_buffer.get_or_insert_with(|| String::with_capacity(256));
+        value_buffer.clear();
+        for (index, value) in values.into_iter().enumerate() {
+            if index != 0 {
+                value_buffer.push(',');
             }
-            url.query_pairs_mut().append_pair(name, value_buffer);
+            write!(value_buffer, "{value}").expect("writing to String cannot fail");
         }
-        self
+        url.query_pairs_mut().append_pair(name, value_buffer);
     }
 
     /// Selects the closed set of forecast feature flags NOAA supports.
@@ -138,7 +157,6 @@ impl ContractRequest<'_> {
     }
 
     /// Requests, validates, and decodes one XML media family.
-    #[cfg(feature = "xml")]
     pub(crate) async fn xml<T: DeserializeOwned>(self, media: XmlMedia) -> Result<T, Error> {
         let response = self.send(media.accept()).await?;
         ensure_content_type(&response, media.expected(), |mime| media.matches(mime))?;
@@ -146,7 +164,6 @@ impl ContractRequest<'_> {
     }
 
     /// Requests and validates one XML media family without decoding it.
-    #[cfg(feature = "xml")]
     pub(crate) async fn xml_bytes(self, media: XmlMedia) -> Result<Bytes, Error> {
         let response = self.send(media.accept()).await?;
         ensure_content_type(&response, media.expected(), |mime| media.matches(mime))?;
@@ -181,6 +198,16 @@ impl ContractRequest<'_> {
         });
         execute(self.client.inner(), self.url, accept, feature_flags).await
     }
+}
+
+/// The optional parameters of one NOAA operation, encoded onto a request.
+///
+/// Each handle module implements this once per `*Query` struct so that the
+/// wire names (`message_type`, `reportingHost`, ...) and the CSV and RFC 3339
+/// encodings live next to the struct, while serde derives on the same struct
+/// stay free for JSON and MCP schemas.
+pub(crate) trait QueryParams {
+    fn append_to(&self, request: &mut ContractRequest<'_>);
 }
 
 fn render_display<T: fmt::Display>(buffer: &mut Option<String>, value: T) -> &str {
@@ -243,20 +270,16 @@ impl JsonMedia {
     }
 }
 
-#[cfg(feature = "xml")]
 #[derive(Clone, Copy)]
 pub(crate) enum XmlMedia {
     Iwxxm,
-    #[cfg(feature = "radio")]
     Ssml,
 }
 
-#[cfg(feature = "xml")]
 impl XmlMedia {
     const fn accept(self) -> &'static str {
         match self {
             Self::Iwxxm => "application/vnd.wmo.iwxxm+xml",
-            #[cfg(feature = "radio")]
             Self::Ssml => "application/ssml+xml",
         }
     }
@@ -553,7 +576,7 @@ fn protocol(error: ProtocolError) -> Error {
     Error::Protocol(Box::new(error))
 }
 
-#[cfg(all(test, feature = "xml"))]
+#[cfg(test)]
 pub(crate) use tests::measure_allocations;
 
 #[cfg(test)]
@@ -574,14 +597,10 @@ mod tests {
         matchers::{header, method, path},
     };
 
-    #[cfg(feature = "xml")]
     use super::XmlMedia;
     use super::{BinaryMedia, FeatureFlag, JsonMedia, request};
-    #[cfg(feature = "radio")]
-    use crate::apis::radio;
     use crate::{
         Client, Error, ProtocolError,
-        apis::alerts,
         client::{
             redirect::{HopHeaders, hop_request},
             test_support::{USER_AGENT, builder_for, client_for, client_with_base},
@@ -692,7 +711,7 @@ mod tests {
             .api_key("secret")
             .build()
             .unwrap();
-        let response = alerts::get_alert_types(&client).await.unwrap();
+        let response = client.alerts().types().await.unwrap();
         assert_eq!(response.event_types.unwrap(), ["Test Warning"]);
     }
 
@@ -708,9 +727,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        alerts::get_alert_types(&client(&server, "/prefix/"))
-            .await
-            .unwrap();
+        client(&server, "/prefix/").alerts().types().await.unwrap();
     }
 
     #[tokio::test]
@@ -728,9 +745,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let error = alerts::get_alert_types(&client_for(&server))
-            .await
-            .unwrap_err();
+        let error = client_for(&server).alerts().types().await.unwrap_err();
         assert_eq!(error.status().map(|status| status.as_u16()), Some(400));
         assert_eq!(error.attempts(), 1);
         assert!(!error.is_retryable());
@@ -758,9 +773,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let error = alerts::get_alert_types(&client_for(&server))
-            .await
-            .unwrap_err();
+        let error = client_for(&server).alerts().types().await.unwrap_err();
         assert!(error.is_retryable());
         assert_eq!(error.attempts(), 1);
         let Error::Response(response) = error else {
@@ -774,7 +787,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[cfg(feature = "radio")]
     async fn malformed_success_documents_keep_decode_sources() {
         let server = MockServer::start().await;
         Mock::given(path("/alerts/types"))
@@ -782,7 +794,7 @@ mod tests {
             .mount(&server)
             .await;
         assert!(matches!(
-            alerts::get_alert_types(&client_for(&server)).await,
+            client_for(&server).alerts().types().await,
             Err(Error::Json(_))
         ));
 
@@ -794,7 +806,10 @@ mod tests {
             .mount(&server)
             .await;
         assert!(matches!(
-            radio::get_area_radio(&client_for(&server), "KEC94").await,
+            client_for(&server)
+                .radio()
+                .broadcast(&"KEC94".parse().unwrap())
+                .await,
             Err(Error::Xml(_))
         ));
     }
@@ -818,9 +833,7 @@ mod tests {
                 .mount(&server)
                 .await;
 
-            let Error::Protocol(protocol) = alerts::get_alert_types(&client_for(&server))
-                .await
-                .unwrap_err()
+            let Error::Protocol(protocol) = client_for(&server).alerts().types().await.unwrap_err()
             else {
                 panic!("expected protocol error");
             };
@@ -905,7 +918,7 @@ mod tests {
             .retry(crate::RetryPolicy::default().base_delay(std::time::Duration::from_millis(1)))
             .build()
             .unwrap();
-        let error = alerts::get_alert_types(&client).await.unwrap_err();
+        let error = client.alerts().types().await.unwrap_err();
         assert!(!error.is_retryable());
         assert_eq!(error.attempts(), 1);
         let Error::Protocol(protocol) = error else {
@@ -933,7 +946,7 @@ mod tests {
             .await;
 
         let client = builder_for(&server).max_response_bytes(16).build().unwrap();
-        let error = alerts::get_alert_types(&client).await.unwrap_err();
+        let error = client.alerts().types().await.unwrap_err();
         assert!(!error.is_retryable());
         assert!(matches!(
             error,
@@ -1010,10 +1023,12 @@ mod tests {
             .mount(&server)
             .await;
 
-        request(&client_for(&server), "/test")
-            .query_scalar::<&str>("omitted", None)
-            .query_scalar("empty", Some(""))
-            .query_scalar("value", Some("space,slash/value"))
+        let client = client_for(&server);
+        let mut contract = request(&client, "/test");
+        contract.scalar::<&str>("omitted", None);
+        contract.scalar("empty", Some(&""));
+        contract.scalar("value", Some(&"space,slash/value"));
+        contract
             .json::<serde_json::Value>(JsonMedia::GeoJson)
             .await
             .unwrap();
@@ -1026,7 +1041,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn contract_request_serializes_optional_csv_as_one_form_value() {
+    async fn contract_request_serializes_a_list_as_one_form_value_or_nothing() {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
             .respond_with(ResponseTemplate::new(200).set_body_raw("{}", "application/geo+json"))
@@ -1034,10 +1049,11 @@ mod tests {
             .mount(&server)
             .await;
 
-        request(&client_for(&server), "/test")
-            .query_csv::<[&str; 0], &str>("omitted", None)
-            .query_csv("empty", Some([] as [&str; 0]))
-            .query_csv("event", Some(["Flood Watch", "Wind/Warning"]))
+        let client = client_for(&server);
+        let mut contract = request(&client, "/test");
+        contract.list::<&str>("empty", &[]);
+        contract.list("event", &["Flood Watch", "Wind/Warning"]);
+        contract
             .json::<serde_json::Value>(JsonMedia::GeoJson)
             .await
             .unwrap();
@@ -1045,7 +1061,7 @@ mod tests {
         let requests = server.received_requests().await.unwrap();
         assert_eq!(
             requests[0].url.query(),
-            Some("empty=&event=Flood+Watch%2CWind%2FWarning")
+            Some("event=Flood+Watch%2CWind%2FWarning")
         );
         assert_eq!(
             requests[0]
@@ -1078,7 +1094,6 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "xml")]
     #[tokio::test]
     async fn contract_xml_media_atomically_sets_accept_and_validates_response() {
         #[derive(Debug, serde::Deserialize)]
@@ -1414,16 +1429,15 @@ mod tests {
     }
 
     fn contract_scalar_request(client: &Client) -> reqwest::Request {
-        let contract = request(client, "/radar/queues")
-            .path_segment("rds")
-            .query_scalar("limit", Some(50_000))
-            .query_scalar("arrived", Some("2026-08-30T12:34:56+00:00"))
-            .query_scalar("created", Some("2026-08-30T12:30:00+00:00"))
-            .query_scalar("published", Some("2026-08-30T12:35:00+00:00"))
-            .query_scalar("station", Some("KPHX"))
-            .query_scalar("type", Some("NEXRAD"))
-            .query_scalar("feed", Some("level2"))
-            .query_scalar("resolution", Some(1_i32));
+        let mut contract = request(client, "/radar/queues").path_segment("rds");
+        contract.scalar("limit", Some(&50_000));
+        contract.scalar("arrived", Some(&"2026-08-30T12:34:56+00:00"));
+        contract.scalar("created", Some(&"2026-08-30T12:30:00+00:00"));
+        contract.scalar("published", Some(&"2026-08-30T12:35:00+00:00"));
+        contract.scalar("station", Some(&"KPHX"));
+        contract.scalar("type", Some(&"NEXRAD"));
+        contract.scalar("feed", Some(&"level2"));
+        contract.scalar("resolution", Some(&1_i32));
         first_hop(client, contract, JsonMedia::JsonLd.accept())
     }
 
@@ -1447,12 +1461,10 @@ mod tests {
     }
 
     fn contract_csv_request(client: &Client, values: &[&str]) -> reqwest::Request {
-        let contract = request(client, "/alerts/active")
-            .query_csv("area", Some(values.iter().copied()))
-            .query_csv("event", Some(values.iter().copied()))
-            .query_csv("message_type", Some(values.iter().copied()))
-            .query_csv("severity", Some(values.iter().copied()))
-            .query_csv("urgency", Some(values.iter().copied()));
+        let mut contract = request(client, "/alerts/active");
+        for name in ["area", "event", "message_type", "severity", "urgency"] {
+            contract.list(name, values);
+        }
         first_hop(client, contract, JsonMedia::GeoJson.accept())
     }
 

@@ -1,36 +1,23 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::Client;
-use noaa_weather_client::apis::gridpoints as gridpoints_api;
-use noaa_weather_client::models::{GridpointForecastUnits, NwsForecastOfficeId};
+use noaa_weather_client::apis::gridpoints::{ForecastQuery, ForecastUnits, GridpointStationsQuery};
+use noaa_weather_client::{Client, GridpointId};
 
 use crate::output::Output;
 
-/// Common arguments for identifying a specific NWS gridpoint.
+/// The grid cell every gridpoint command addresses.
 #[derive(Args, Debug, Clone)]
 pub struct GridpointLocationArgs {
-    /// NWS forecast office ID (e.g., TOP, LWX).
-    /// Use the `points` command to find the office for a location.
-    #[arg(long, value_enum)]
-    forecast_office_id: NwsForecastOfficeId,
-
-    /// Grid X coordinate.
-    /// Use the `points` command to find grid coordinates.
-    /// The grid coordinates must be greater than 0.
-    #[arg(short, long, value_parser = clap::value_parser!(i32).range(1..))]
-    x: i32,
-
-    /// Grid Y coordinate.
-    /// Use the `points` command to find grid coordinates.
-    /// The grid coordinates must be greater than 0.
-    #[arg(short, long, value_parser = clap::value_parser!(i32).range(1..))]
-    y: i32,
+    /// Grid cell as OFFICE/X,Y (e.g., TOP/31,80).
+    /// Use the `points metadata` command to find the office and grid coordinates for a location.
+    #[arg(value_name = "OFFICE/X,Y")]
+    gridpoint: GridpointId,
 }
 
 /// Access forecast data for specific NWS gridpoints.
 ///
 /// Gridpoints represent a 2.5km square area used by the NWS for forecasts.
-/// Use the `points` command to find the correct gridpoint (office ID, X, Y)
+/// Use the `points` command to find the correct gridpoint (OFFICE/X,Y)
 /// for a given latitude/longitude.
 #[derive(Subcommand, Debug, Clone)]
 pub enum GridpointCommands {
@@ -38,7 +25,7 @@ pub enum GridpointCommands {
     ///
     /// Returns detailed data like temperature, humidity, wind speed, etc.,
     /// for various time intervals.
-    /// Example: `noaa-weather gridpoints gridpoint --forecast-office-id TOP -x 31 -y 80`
+    /// Example: `noaa-weather gridpoints gridpoint TOP/31,80`
     Gridpoint {
         #[clap(flatten)]
         location: GridpointLocationArgs,
@@ -46,42 +33,42 @@ pub enum GridpointCommands {
     /// Get the multi-day textual forecast for a gridpoint.
     ///
     /// Returns a human-readable forecast summary broken down into periods (e.g., "Tonight", "Thursday").
-    /// Example: `noaa-weather gridpoints forecast --forecast-office-id PSR -x 159 -y 100 --units si`
+    /// Example: `noaa-weather gridpoints forecast PSR/159,100 --units si`
     Forecast {
         #[clap(flatten)]
         location: GridpointLocationArgs,
         /// Specify units for forecast data (`us` for US customary, `si` for Metric).
-        #[arg(long, value_enum)]
-        units: Option<GridpointForecastUnits>,
+        #[arg(long)]
+        units: Option<ForecastUnits>,
     },
     /// Get the hourly textual forecast for a gridpoint.
     ///
     /// Returns a human-readable forecast summary broken down by hour.
-    /// Example: `noaa-weather gridpoints hourly --forecast-office-id PSR -x 159 -y 100`
+    /// Example: `noaa-weather gridpoints forecast-hourly PSR/159,100`
     ForecastHourly {
         #[clap(flatten)]
         location: GridpointLocationArgs,
         /// Specify units for forecast data (`us` for US customary, `si` for Metric).
-        #[arg(long, value_enum)]
-        units: Option<GridpointForecastUnits>,
+        #[arg(long)]
+        units: Option<ForecastUnits>,
     },
     /// List observation stations usable for retrieving observations for a gridpoint.
     ///
     /// Returns a list of nearby stations that can provide current weather conditions.
-    /// Example: `noaa-weather gridpoints stations --forecast-office-id PSR -x 159 -y 100 --limit 5`
+    /// Example: `noaa-weather gridpoints stations PSR/159,100 --limit 5`
     Stations {
         #[clap(flatten)]
         location: GridpointLocationArgs,
-        /// Limit the number of observation stations returned by the API.
-        #[arg(long, value_parser = clap::value_parser!(i32).range(1..=500))]
-        limit: Option<i32>,
+        /// Limit the number of observation stations returned by the API (1 to 500).
+        #[arg(long, value_parser = clap::value_parser!(u16).range(1..=500))]
+        limit: Option<u16>,
     },
 }
 
 /// Handles the execution of gridpoint-related subcommands.
 ///
-/// Dispatches the command to the appropriate API function based on the
-/// provided `GridpointCommands` variant and arguments.
+/// Dispatches the command to the matching `client.gridpoints()` method based
+/// on the provided `GridpointCommands` variant and arguments.
 ///
 /// # Arguments
 ///
@@ -94,62 +81,46 @@ pub async fn handle_command(
     output: &Output,
     client: &Client,
 ) -> Result<()> {
+    let gridpoints = client.gridpoints();
     match command {
         GridpointCommands::Gridpoint { location } => {
             output
                 .show(
-                    "getting raw gridpoint data",
-                    gridpoints_api::get_gridpoint(
-                        client,
-                        location.forecast_office_id,
-                        location.x,
-                        location.y,
-                    ),
+                    format!("getting raw gridpoint data for {}", location.gridpoint),
+                    gridpoints.get(&location.gridpoint),
                 )
-                .await?;
+                .await
         }
         GridpointCommands::Forecast { location, units } => {
             output
                 .show(
-                    "getting gridpoint forecast",
-                    gridpoints_api::get_gridpoint_forecast(
-                        client,
-                        location.forecast_office_id,
-                        location.x,
-                        location.y,
-                        *units,
-                    ),
+                    format!("getting gridpoint forecast for {}", location.gridpoint),
+                    gridpoints.forecast(&location.gridpoint, &ForecastQuery { units: *units }),
                 )
-                .await?;
+                .await
         }
         GridpointCommands::ForecastHourly { location, units } => {
             output
                 .show(
-                    "getting hourly gridpoint forecast",
-                    gridpoints_api::get_gridpoint_forecast_hourly(
-                        client,
-                        location.forecast_office_id,
-                        location.x,
-                        location.y,
-                        *units,
+                    format!(
+                        "getting hourly gridpoint forecast for {}",
+                        location.gridpoint
                     ),
+                    gridpoints
+                        .forecast_hourly(&location.gridpoint, &ForecastQuery { units: *units }),
                 )
-                .await?;
+                .await
         }
         GridpointCommands::Stations { location, limit } => {
             output
                 .show(
-                    "getting gridpoint stations",
-                    gridpoints_api::get_gridpoint_stations(
-                        client,
-                        location.forecast_office_id,
-                        location.x,
-                        location.y,
-                        *limit,
+                    format!("getting gridpoint stations for {}", location.gridpoint),
+                    gridpoints.stations(
+                        &location.gridpoint,
+                        &GridpointStationsQuery { limit: *limit },
                     ),
                 )
-                .await?;
+                .await
         }
     }
-    Ok(())
 }

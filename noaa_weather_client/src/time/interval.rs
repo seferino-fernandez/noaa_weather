@@ -32,9 +32,12 @@ enum Bounds {
 /// | length and end   | [`Interval::ending`]   | `PT6H/2024-01-02T00:00:00Z`                |
 /// | length only      | [`Interval::lasting`]  | `PT6H`                                     |
 ///
-/// Timestamps are written as RFC 3339 in UTC and durations in ISO 8601
-/// form, exactly as NOAA's `interval`, `arrived`, `created`, and `published`
-/// query parameters expect.
+/// Timestamps are truncated to whole seconds at construction (never
+/// rounded, because NOAA rejects fractional seconds), so equality, the text
+/// form, and serde all describe the same instant. They are written as
+/// RFC 3339 in UTC and durations in ISO 8601 form, exactly as NOAA's
+/// `interval`, `arrived`, `created`, and `published` query parameters
+/// expect.
 ///
 /// ```
 /// use noaa_weather_client::Interval;
@@ -61,6 +64,7 @@ impl Interval {
     ///
     /// Returns [`InvalidValue`] when `end` is before `start`.
     pub fn between(start: Timestamp, end: Timestamp) -> Result<Self, InvalidValue> {
+        let (start, end) = (whole_seconds(start), whole_seconds(end));
         if end < start {
             return Err(InvalidValue::new(
                 ValueKind::Interval,
@@ -77,6 +81,7 @@ impl Interval {
     ///
     /// Returns [`InvalidValue`] when `span` is negative.
     pub fn starting(start: Timestamp, span: Span) -> Result<Self, InvalidValue> {
+        let start = whole_seconds(start);
         check_span(span, || format!("{start}/{span}"))?;
         Ok(Self(Bounds::Starting { start, span }))
     }
@@ -87,6 +92,7 @@ impl Interval {
     ///
     /// Returns [`InvalidValue`] when `span` is negative.
     pub fn ending(span: Span, end: Timestamp) -> Result<Self, InvalidValue> {
+        let end = whole_seconds(end);
         check_span(span, || format!("{span}/{end}"))?;
         Ok(Self(Bounds::Ending { span, end }))
     }
@@ -104,7 +110,8 @@ impl Interval {
         Ok(Self(Bounds::Lasting { span }))
     }
 
-    /// Returns the explicit start instant, if this form has one.
+    /// Returns the explicit start instant, truncated to whole seconds, if
+    /// this form has one.
     #[must_use]
     pub const fn start(&self) -> Option<Timestamp> {
         match self.0 {
@@ -113,7 +120,8 @@ impl Interval {
         }
     }
 
-    /// Returns the explicit end instant, if this form has one.
+    /// Returns the explicit end instant, truncated to whole seconds, if this
+    /// form has one.
     #[must_use]
     pub const fn end(&self) -> Option<Timestamp> {
         match self.0 {
@@ -132,6 +140,12 @@ impl Interval {
             Bounds::Between { .. } => None,
         }
     }
+}
+
+/// Drops sub-second precision without rounding, the only timestamp form
+/// NOAA accepts.
+fn whole_seconds(instant: Timestamp) -> Timestamp {
+    Timestamp::from_second(instant.as_second()).unwrap_or(instant)
 }
 
 fn check_span(span: Span, input: impl FnOnce() -> String) -> Result<(), InvalidValue> {
@@ -183,10 +197,13 @@ impl fmt::Debug for Interval {
 
 impl fmt::Display for Interval {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let seconds = |instant: Timestamp| instant.strftime(super::RFC3339_SECONDS);
         match self.0 {
-            Bounds::Between { start, end } => write!(formatter, "{start}/{end}"),
-            Bounds::Starting { start, span } => write!(formatter, "{start}/{span}"),
-            Bounds::Ending { span, end } => write!(formatter, "{span}/{end}"),
+            Bounds::Between { start, end } => {
+                write!(formatter, "{}/{}", seconds(start), seconds(end))
+            }
+            Bounds::Starting { start, span } => write!(formatter, "{}/{span}", seconds(start)),
+            Bounds::Ending { span, end } => write!(formatter, "{span}/{}", seconds(end)),
             Bounds::Lasting { span } => write!(formatter, "{span}"),
         }
     }
@@ -238,9 +255,11 @@ impl FromStr for Interval {
                 Self::between(start, end).map_err(|error| reject(error.reason()))
             }
             (Part::Instant(start), Part::Duration(span)) => {
-                Ok(Self(Bounds::Starting { start, span }))
+                Self::starting(start, span).map_err(|error| reject(error.reason()))
             }
-            (Part::Duration(span), Part::Instant(end)) => Ok(Self(Bounds::Ending { span, end })),
+            (Part::Duration(span), Part::Instant(end)) => {
+                Self::ending(span, end).map_err(|error| reject(error.reason()))
+            }
             (Part::Duration(_), Part::Duration(_)) => Err(reject(ANCHOR)),
         }
     }
@@ -444,6 +463,61 @@ mod tests {
         assert_eq!(String::from(interval), "2024-01-01T00:00:00Z/PT6H");
         let error = serde_json::from_str::<Interval>("\"PT1H/PT2H\"").unwrap_err();
         assert!(error.to_string().contains("invalid interval"), "{error}");
+    }
+
+    #[test]
+    fn display_truncates_sub_second_precision() {
+        let start = at("2024-01-01T00:00:00.999999999Z");
+        let end = at("2024-01-01T06:00:00.5Z");
+        assert_eq!(
+            Interval::between(start, end).unwrap().to_string(),
+            "2024-01-01T00:00:00Z/2024-01-01T06:00:00Z"
+        );
+        assert_eq!(
+            Interval::starting(start, span("PT6H")).unwrap().to_string(),
+            "2024-01-01T00:00:00Z/PT6H"
+        );
+        assert_eq!(
+            Interval::ending(span("PT6H"), end).unwrap().to_string(),
+            "PT6H/2024-01-01T06:00:00Z"
+        );
+    }
+
+    #[test]
+    fn fractional_input_round_trips_to_the_truncated_form() {
+        let parsed: Interval = "2024-01-01T00:00:00.25Z/PT6H".parse().unwrap();
+        assert_eq!(parsed.to_string(), "2024-01-01T00:00:00Z/PT6H");
+        let again: Interval = parsed.to_string().parse().unwrap();
+        assert_eq!(again, parsed);
+        assert_eq!(String::from(parsed), "2024-01-01T00:00:00Z/PT6H");
+        assert_eq!(parsed.start(), Some(at("2024-01-01T00:00:00Z")));
+
+        let json = serde_json::to_string(&parsed).unwrap();
+        assert_eq!(json, "\"2024-01-01T00:00:00Z/PT6H\"");
+        assert_eq!(serde_json::from_str::<Interval>(&json).unwrap(), parsed);
+        assert_eq!(
+            Interval::starting(at("2024-01-01T00:00:00.999Z"), span("PT6H")).unwrap(),
+            parsed
+        );
+
+        let between: Interval = "2024-01-01T00:00:00.25Z/2024-01-01T06:00:00.75Z"
+            .parse()
+            .unwrap();
+        let built = Interval::between(
+            at("2024-01-01T00:00:00.123456789Z"),
+            at("2024-01-01T06:00:00.999999999Z"),
+        )
+        .unwrap();
+        assert_eq!(between, built);
+        assert_eq!(built.start(), Some(at("2024-01-01T00:00:00Z")));
+        assert_eq!(built.end(), Some(at("2024-01-01T06:00:00Z")));
+        assert_eq!(
+            serde_json::from_str::<Interval>(&serde_json::to_string(&built).unwrap()).unwrap(),
+            built
+        );
+        let ending = Interval::ending(span("PT6H"), at("2024-01-01T06:00:00.5Z")).unwrap();
+        assert_eq!(ending.end(), Some(at("2024-01-01T06:00:00Z")));
+        assert_eq!(ending, "PT6H/2024-01-01T06:00:00Z".parse().unwrap());
     }
 
     #[cfg(feature = "schemars")]

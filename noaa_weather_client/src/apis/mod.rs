@@ -1,9 +1,18 @@
-//! API endpoint modules for the NOAA Weather API.
+//! Endpoint handles for the NOAA Weather API, one per family.
 //!
-//! Each submodule corresponds to a family of endpoints on
-//! [`api.weather.gov`](https://api.weather.gov). All async functions accept a
-//! [`Client`](crate::Client) as their first argument and return a model or
-//! the shared [`Error`] type.
+//! Each submodule covers one family of endpoints on
+//! [`api.weather.gov`](https://api.weather.gov) and exposes a borrowed,
+//! `Copy` handle obtained from the [`Client`](crate::Client):
+//! `client.alerts()`, `client.points()`, and so on. Required path values are
+//! positional typed arguments ([`crate::ids`], [`crate::geo`], `jiff` times);
+//! every operation with optional parameters takes one `*Query` struct that
+//! lives next to its handle and is built with struct-update syntax
+//! (`Query { limit: Some(10), ..Default::default() }`).
+//!
+//! Every operation returns a model from [`crate::models`] or the shared
+//! [`Error`] type. The crate README lists all 64 NOAA operations, plus the
+//! composed `points().forecast_for`, with the handle
+//! method that serves each NOAA path.
 
 use std::{borrow::Cow, error, fmt, time::Duration};
 
@@ -316,7 +325,7 @@ impl fmt::Display for ProtocolError {
 
 impl error::Error for ProtocolError {}
 
-/// Errors returned by NOAA API functions.
+/// Errors returned by every handle method.
 ///
 /// The type is compact and non-generic; HTTP response and protocol details
 /// are boxed. Helper methods such as [`Error::status`],
@@ -335,10 +344,8 @@ pub enum Error {
     /// A JSON success body could not be decoded.
     Json(serde_json::Error),
     /// An XML success body could not be decoded.
-    #[cfg(feature = "xml")]
     Xml(quick_xml::DeError),
     /// An IWXXM TAF body could not be normalized into forecast meaning.
-    #[cfg(feature = "xml")]
     TerminalAerodromeForecast(Box<crate::models::terminal_aerodrome_forecast::TafDecodeError>),
     /// The server returned a non-success HTTP status.
     Response(Box<ResponseContent>),
@@ -431,9 +438,7 @@ impl fmt::Display for Error {
                 )
             }
             Self::Json(source) => write!(formatter, "JSON decode error: {source}"),
-            #[cfg(feature = "xml")]
             Self::Xml(source) => write!(formatter, "XML decode error: {source}"),
-            #[cfg(feature = "xml")]
             Self::TerminalAerodromeForecast(source) => {
                 write!(formatter, "TAF decode error: {source}")
             }
@@ -455,9 +460,7 @@ impl error::Error for Error {
         match self {
             Self::Transport { source, .. } => Some(source),
             Self::Json(source) => Some(source),
-            #[cfg(feature = "xml")]
             Self::Xml(source) => Some(source),
-            #[cfg(feature = "xml")]
             Self::TerminalAerodromeForecast(source) => Some(source.as_ref()),
             Self::Response(_) => None,
             Self::Protocol(source) => Some(source.as_ref()),
@@ -490,14 +493,12 @@ impl From<crate::ids::InvalidValue> for Error {
     }
 }
 
-#[cfg(feature = "xml")]
 impl From<quick_xml::DeError> for Error {
     fn from(source: quick_xml::DeError) -> Self {
         Self::Xml(source)
     }
 }
 
-#[cfg(feature = "xml")]
 impl From<crate::models::terminal_aerodrome_forecast::TafDecodeError> for Error {
     fn from(source: crate::models::terminal_aerodrome_forecast::TafDecodeError) -> Self {
         Self::TerminalAerodromeForecast(Box::new(source))
@@ -512,10 +513,24 @@ pub mod offices;
 pub mod points;
 pub mod products;
 pub mod radar;
-#[cfg(feature = "radio")]
 pub mod radio;
 pub mod stations;
 pub mod zones;
+
+pub use alerts::{ActiveAlertsQuery, Alerts, AlertsQuery, RegionType};
+pub use aviation::{Aviation, SigmetsQuery};
+pub use glossary::Glossary;
+pub use gridpoints::{ForecastQuery, ForecastUnits, GridpointStationsQuery, Gridpoints};
+pub use offices::Offices;
+pub use points::Points;
+pub use products::{Products, ProductsQuery};
+pub use radar::{
+    Radar, RadarQueueQuery, RadarServerQuery, RadarServersQuery, RadarStationQuery,
+    RadarStationsQuery, SpgdsQuery, WindProfilerQuery,
+};
+pub use radio::{Radio, TransmittersQuery};
+pub use stations::{LatestObservationQuery, ObservationsQuery, Stations, StationsQuery};
+pub use zones::{ZoneObservationsQuery, ZoneQuery, ZoneStationsQuery, ZoneType, Zones, ZonesQuery};
 
 #[cfg(test)]
 mod tests {

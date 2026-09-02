@@ -43,6 +43,48 @@ fn test_stations_list_command_with_ids_filter_success() {
 }
 
 #[test]
+fn test_stations_observations_accept_relative_times() {
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.args([
+        "stations",
+        "observations",
+        "--station-id",
+        "KPHX",
+        "--start",
+        "6h",
+        "--end",
+        "1h",
+        "--limit",
+        "3",
+    ]);
+    cmd.assert().success();
+}
+
+#[test]
+fn test_stations_reject_malformed_station_id_and_time() {
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.args(["stations", "metadata", "--id", "K PHX"]);
+    let output = cmd.output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(stderr.contains("invalid station id"), "{stderr}");
+
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.args([
+        "stations",
+        "observations",
+        "--station-id",
+        "KPHX",
+        "--start",
+        "yesterday",
+    ]);
+    let output = cmd.output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(stderr.contains("RFC 3339"), "{stderr}");
+}
+
+#[test]
 fn test_latest_observation_command_success() {
     let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("stations");
@@ -52,7 +94,6 @@ fn test_latest_observation_command_success() {
     cmd.assert().success();
 }
 
-#[cfg(feature = "xml")]
 #[test]
 fn test_stations_tafs_success() {
     let mut cmd = Command::new(cargo_bin!("noaa-weather"));
@@ -63,7 +104,6 @@ fn test_stations_tafs_success() {
     cmd.assert().success();
 }
 
-#[cfg(feature = "xml")]
 #[test]
 fn test_stations_taf_success() {
     let metadata = Command::new(cargo_bin!("noaa-weather"))
@@ -90,6 +130,8 @@ fn test_stations_taf_success() {
     let mut segments = id.trim_end_matches('/').rsplit('/');
     let time = segments.next().expect("TAF identifier time segment");
     let date = segments.next().expect("TAF identifier date segment");
+    let (hours, minutes) = time.split_at(2);
+    let issued = format!("{date}T{hours}:{minutes}:00Z");
 
     let output = Command::new(cargo_bin!("noaa-weather"))
         .args([
@@ -97,10 +139,8 @@ fn test_stations_taf_success() {
             "terminal-aerodrome-forecast",
             "--station-id",
             "KPHX",
-            "--date",
-            date,
-            "--time",
-            time,
+            "--issued",
+            &issued,
         ])
         .output()
         .unwrap();
@@ -113,48 +153,4 @@ fn test_stations_taf_success() {
     let table = String::from_utf8(output.stdout).unwrap();
     assert!(table.contains("KPHX"));
     assert!(table.contains("Report state"));
-}
-
-#[cfg(not(feature = "xml"))]
-#[test]
-fn terminal_aerodrome_forecasts_is_rejected_without_xml() {
-    let output = Command::new(cargo_bin!("noaa-weather"))
-        .args([
-            "stations",
-            "terminal-aerodrome-forecasts",
-            "--station-id",
-            "KPHX",
-        ])
-        .output()
-        .unwrap();
-
-    assert_eq!(output.status.code(), Some(2));
-    assert!(
-        String::from_utf8_lossy(&output.stderr)
-            .contains("unrecognized subcommand 'terminal-aerodrome-forecasts'")
-    );
-}
-
-#[cfg(not(feature = "xml"))]
-#[test]
-fn terminal_aerodrome_forecast_is_rejected_without_xml() {
-    let output = Command::new(cargo_bin!("noaa-weather"))
-        .args([
-            "stations",
-            "terminal-aerodrome-forecast",
-            "--station-id",
-            "KPHX",
-            "--date",
-            "2026-08-30",
-            "--time",
-            "1800",
-        ])
-        .output()
-        .unwrap();
-
-    assert_eq!(output.status.code(), Some(2));
-    assert!(
-        String::from_utf8_lossy(&output.stderr)
-            .contains("unrecognized subcommand 'terminal-aerodrome-forecast'")
-    );
 }

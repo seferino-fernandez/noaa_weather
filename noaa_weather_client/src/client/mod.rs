@@ -18,7 +18,7 @@ mod secret;
 pub use retry::RetryPolicy;
 use secret::Secret;
 
-#[cfg(all(test, feature = "xml"))]
+#[cfg(test)]
 pub(crate) use http::measure_allocations;
 
 const DEFAULT_BASE_URL: &str = "https://api.weather.gov";

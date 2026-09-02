@@ -1,335 +1,481 @@
-//! Aviation weather products: SIGMETs and Center Weather Advisories (CWAs).
+//! Aviation hazards: Center Weather Advisories and SIGMETs, the `/aviation`
+//! family.
 //!
-//! Covers the `/aviation` endpoints for in-flight weather hazard reports
-//! issued by Air Traffic Service Units and Center Weather Service Units.
+//! Obtain the handle with [`Client::aviation`]. Center Weather Service Units
+//! are addressed by [`CwsuId`] and Air Traffic Service Units by [`AtsuId`].
+//! Date-only path segments take a [`jiff::civil::Date`]; the SIGMET
+//! date-plus-time segment takes a [`jiff::Timestamp`] split in UTC.
+//!
+//! ```no_run
+//! use noaa_weather_client::{AtsuId, Client, apis::aviation::SigmetsQuery};
+//!
+//! # async fn run() -> Result<(), noaa_weather_client::Error> {
+//! let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+//! let kkci: AtsuId = "KKCI".parse()?;
+//! let sigmets = client
+//!     .aviation()
+//!     .sigmets(&SigmetsQuery { atsu: Some(kkci), ..Default::default() })
+//!     .await?;
+//! # let _ = sigmets;
+//! # Ok(())
+//! # }
+//! ```
+
+use jiff::{Timestamp, civil::Date};
+use serde::{Deserialize, Serialize};
 
 use super::Error;
 use crate::client::{Client, http};
+use crate::ids::{AtsuId, CwsuId};
 use crate::models;
 
-/// Returns a specific Center Weather Advisory (CWA) identified by CWSU, date, and sequence number.
-///
-/// Corresponds to the `/aviation/cwsus/{center_weather_service_unit_id}/cwas/{date}/{sequence}` endpoint.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `center_weather_service_unit_id`: The ID of the issuing Center Weather Service Unit (CWSU).
-/// * `date`: The date of the advisory in `YYYY-MM-DD` format.
-/// * `sequence`: The sequence number of the advisory (must be >= 100).
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::CenterWeatherAdvisoryGeoJson`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response
-/// cannot be parsed.
-pub async fn get_center_weather_advisories_by_date_and_sequence(
-    client: &Client,
-    center_weather_service_unit_id: models::NwsCenterWeatherServiceUnitId,
-    date: String,
-    sequence: i32,
-) -> Result<models::CenterWeatherAdvisoryGeoJson, Error> {
-    http::request(client, "/aviation/cwsus")
-        .path_segment(center_weather_service_unit_id)
-        .literal_path("cwas")
-        .path_segment(date)
-        .path_segment(sequence)
-        .json(http::JsonMedia::GeoJson)
-        .await
+/// Filters for [`Aviation::sigmets`].
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", default)]
+pub struct SigmetsQuery {
+    /// Earliest issuance time to include.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
+    pub start: Option<Timestamp>,
+    /// Latest issuance time to include.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
+    pub end: Option<Timestamp>,
+    /// Only products issued on this UTC date.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
+    pub date: Option<Date>,
+    /// Only products from this Air Traffic Service Unit.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub atsu: Option<AtsuId>,
+    /// Only products with this server-assigned sequence (for example `52C`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sequence: Option<String>,
 }
 
-/// Returns a collection of current Center Weather Advisories (CWAs) for a specific Center Weather Service Unit (CWSU).
-///
-/// Corresponds to the `/aviation/cwsus/{center_weather_service_unit_id}/cwas` endpoint.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `center_weather_service_unit_id`: The ID of the Center Weather Service Unit (CWSU).
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::CenterWeatherAdvisoryCollectionGeoJson`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response
-/// cannot be parsed.
-pub async fn get_center_weather_advisories(
-    client: &Client,
-    center_weather_service_unit_id: models::NwsCenterWeatherServiceUnitId,
-) -> Result<models::CenterWeatherAdvisoryCollectionGeoJson, Error> {
-    http::request(client, "/aviation/cwsus")
-        .path_segment(center_weather_service_unit_id)
-        .literal_path("cwas")
-        .json(http::JsonMedia::GeoJson)
-        .await
+impl http::QueryParams for SigmetsQuery {
+    fn append_to(&self, request: &mut http::ContractRequest<'_>) {
+        request.instant("start", self.start.as_ref());
+        request.instant("end", self.end.as_ref());
+        request.scalar("date", self.date.as_ref());
+        request.scalar("atsu", self.atsu.as_ref());
+        request.scalar("sequence", self.sequence.as_ref());
+    }
 }
 
-/// Returns metadata about a specific Center Weather Service Unit (CWSU).
-///
-/// Corresponds to the `/aviation/cwsus/{center_weather_service_unit_id}` endpoint.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `center_weather_service_unit_id`: The ID of the Center Weather Service Unit (CWSU).
-///
-/// # Returns
-///
-/// A `Result` containing [`models::Office`] metadata on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response
-/// cannot be parsed.
-pub async fn get_center_weather_service_unit(
-    client: &Client,
-    center_weather_service_unit_id: models::NwsCenterWeatherServiceUnitId,
-) -> Result<models::CwsuOffice, Error> {
-    http::request(client, "/aviation/cwsus")
-        .path_segment(center_weather_service_unit_id)
-        .json(http::JsonMedia::JsonLd)
-        .await
+/// The `/aviation` endpoints, obtained from [`Client::aviation`].
+#[derive(Clone, Copy, Debug)]
+pub struct Aviation<'a> {
+    client: &'a Client,
 }
 
-/// Returns a specific SIGMET or AIRMET product.
-///
-/// Corresponds to the `/aviation/sigmets/{air_traffic_service_unit}/{date}/{time}` endpoint.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `air_traffic_service_unit`: The identifier of the issuing Air Traffic Service Unit (ATSU).
-/// * `date`: The date of issuance in `YYYY-MM-DD` format.
-/// * `time`: The time of issuance in `HHMM` format (UTC).
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::SigmetGeoJson`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response cannot be parsed.
-pub async fn get_sigmet(
-    client: &Client,
-    air_traffic_service_unit: &str,
-    date: String,
-    time: &str,
-) -> Result<models::SigmetGeoJson, Error> {
-    http::request(client, "/aviation/sigmets")
-        .path_segment(air_traffic_service_unit)
-        .path_segment(date)
-        .path_segment(time)
-        .json(http::JsonMedia::GeoJson)
-        .await
+impl Client {
+    /// Returns the handle for the `/aviation` endpoints.
+    #[must_use]
+    pub fn aviation(&self) -> Aviation<'_> {
+        Aviation { client: self }
+    }
 }
 
-/// Returns a collection of SIGMET/AIRMET products based on query parameters.
-///
-/// Corresponds to the `/aviation/sigmets` endpoint.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `start`: Optional start time for the query period (ISO 8601 format).
-/// * `end`: Optional end time for the query period (ISO 8601 format).
-/// * `date`: Optional date filter (`YYYY-MM-DD` format).
-/// * `air_traffic_service_unit`: Optional Air Traffic Service Unit (ATSU) identifier filter.
-/// * `sequence`: Optional sequence number filter.
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::SigmetCollectionGeoJson`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response cannot be parsed.
-pub async fn get_sigmets(
-    client: &Client,
-    start: Option<String>,
-    end: Option<String>,
-    date: Option<String>,
-    air_traffic_service_unit: Option<&str>,
-    sequence: Option<&str>,
-) -> Result<models::SigmetCollectionGeoJson, Error> {
-    http::request(client, "/aviation/sigmets")
-        .query_scalar("start", start)
-        .query_scalar("end", end)
-        .query_scalar("date", date)
-        .query_scalar("atsu", air_traffic_service_unit)
-        .query_scalar("sequence", sequence)
-        .json(http::JsonMedia::GeoJson)
-        .await
-}
+impl Aviation<'_> {
+    fn cwsu_request(&self, cwsu: &CwsuId) -> http::ContractRequest<'_> {
+        http::request(self.client, "/aviation/cwsus").path_segment(cwsu)
+    }
 
-/// Returns a collection of SIGMET/AIRMET products for a specific Air Traffic Service Unit (ATSU).
-///
-/// Corresponds to the `/aviation/sigmets/{air_traffic_service_unit}` endpoint.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `air_traffic_service_unit`: The identifier of the Air Traffic Service Unit (ATSU).
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::SigmetCollectionGeoJson`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response cannot be parsed.
-pub async fn get_sigmets_by_air_traffic_service_unit(
-    client: &Client,
-    air_traffic_service_unit: &str,
-) -> Result<models::SigmetCollectionGeoJson, Error> {
-    http::request(client, "/aviation/sigmets")
-        .path_segment(air_traffic_service_unit)
-        .json(http::JsonMedia::GeoJson)
-        .await
-}
+    fn atsu_request(&self, atsu: &AtsuId) -> http::ContractRequest<'_> {
+        http::request(self.client, "/aviation/sigmets").path_segment(atsu)
+    }
 
-/// Returns a collection of SIGMET/AIRMET products for a specific Air Traffic Service Unit (ATSU) on a specific date.
-///
-/// Corresponds to the `/aviation/sigmets/{air_traffic_service_unit}/{date}` endpoint.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `air_traffic_service_unit`: The identifier of the Air Traffic Service Unit (ATSU).
-/// * `date`: The date filter in `YYYY-MM-DD` format.
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::SigmetCollectionGeoJson`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response cannot be parsed.
-pub async fn get_sigmets_by_air_traffic_service_unit_and_date(
-    client: &Client,
-    air_traffic_service_unit: &str,
-    date: String,
-) -> Result<models::SigmetCollectionGeoJson, Error> {
-    http::request(client, "/aviation/sigmets")
-        .path_segment(air_traffic_service_unit)
-        .path_segment(date)
-        .json(http::JsonMedia::GeoJson)
-        .await
+    /// Returns metadata for one Center Weather Service Unit.
+    ///
+    /// `GET /aviation/cwsus/{cwsuId}`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, CwsuId};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let zab: CwsuId = "ZAB".parse()?;
+    /// let unit = client.aviation().cwsu(&zab).await?;
+    /// # let _ = unit;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn cwsu(&self, cwsu: &CwsuId) -> Result<models::CwsuOffice, Error> {
+        self.cwsu_request(cwsu).json(http::JsonMedia::JsonLd).await
+    }
+
+    /// Returns the current Center Weather Advisories from one unit.
+    ///
+    /// `GET /aviation/cwsus/{cwsuId}/cwas`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, CwsuId};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let zab: CwsuId = "ZAB".parse()?;
+    /// let advisories = client.aviation().cwas(&zab).await?;
+    /// # let _ = advisories;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn cwas(
+        &self,
+        cwsu: &CwsuId,
+    ) -> Result<models::CenterWeatherAdvisoryCollectionGeoJson, Error> {
+        self.cwsu_request(cwsu)
+            .literal_path("cwas")
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns one Center Weather Advisory by issue date and sequence number
+    /// (NOAA numbers them from 100).
+    ///
+    /// `GET /aviation/cwsus/{cwsuId}/cwas/{date}/{sequence}`
+    ///
+    /// ```no_run
+    /// use jiff::civil::date;
+    /// use noaa_weather_client::{Client, CwsuId};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let zab: CwsuId = "ZAB".parse()?;
+    /// let advisory = client.aviation().cwa(&zab, date(2026, 8, 30), 101).await?;
+    /// # let _ = advisory;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails, the advisory is unknown, or
+    /// the response cannot be decoded.
+    pub async fn cwa(
+        &self,
+        cwsu: &CwsuId,
+        date: Date,
+        sequence: u32,
+    ) -> Result<models::CenterWeatherAdvisoryGeoJson, Error> {
+        self.cwsu_request(cwsu)
+            .literal_path("cwas")
+            .path_segment(date)
+            .path_segment(sequence)
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns SIGMET and AIRMET products matching `query`.
+    ///
+    /// `GET /aviation/sigmets`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, apis::aviation::SigmetsQuery};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let products = client
+    ///     .aviation()
+    ///     .sigmets(&SigmetsQuery {
+    ///         start: Some("2026-08-30T00:00:00Z".parse().unwrap()),
+    ///         ..Default::default()
+    ///     })
+    ///     .await?;
+    /// # let _ = products;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn sigmets(
+        &self,
+        query: &SigmetsQuery,
+    ) -> Result<models::SigmetCollectionGeoJson, Error> {
+        http::request(self.client, "/aviation/sigmets")
+            .query(query)
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns SIGMET and AIRMET products from one Air Traffic Service Unit.
+    ///
+    /// `GET /aviation/sigmets/{atsu}`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{AtsuId, Client};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let kkci: AtsuId = "KKCI".parse()?;
+    /// let products = client.aviation().sigmets_for_atsu(&kkci).await?;
+    /// # let _ = products;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn sigmets_for_atsu(
+        &self,
+        atsu: &AtsuId,
+    ) -> Result<models::SigmetCollectionGeoJson, Error> {
+        self.atsu_request(atsu).json(http::JsonMedia::GeoJson).await
+    }
+
+    /// Returns SIGMET and AIRMET products from one unit on one UTC date.
+    ///
+    /// `GET /aviation/sigmets/{atsu}/{date}`
+    ///
+    /// ```no_run
+    /// use jiff::civil::date;
+    /// use noaa_weather_client::{AtsuId, Client};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let kkci: AtsuId = "KKCI".parse()?;
+    /// let products = client
+    ///     .aviation()
+    ///     .sigmets_for_atsu_on(&kkci, date(2026, 8, 30))
+    ///     .await?;
+    /// # let _ = products;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn sigmets_for_atsu_on(
+        &self,
+        atsu: &AtsuId,
+        date: Date,
+    ) -> Result<models::SigmetCollectionGeoJson, Error> {
+        self.atsu_request(atsu)
+            .path_segment(date)
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns one SIGMET or AIRMET by its unit and issue instant.
+    ///
+    /// `GET /aviation/sigmets/{atsu}/{date}/{time}`
+    ///
+    /// NOAA addresses the product by its issue date and `HHMM` time in UTC,
+    /// so `issued` is split into those two segments in UTC and any seconds
+    /// are dropped (minute precision).
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{AtsuId, Client};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let kkci: AtsuId = "KKCI".parse()?;
+    /// let issued = "2026-08-30T14:30:00Z".parse().unwrap();
+    /// let product = client.aviation().sigmet(&kkci, issued).await?;
+    /// # let _ = product;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails, the product is unknown, or
+    /// the response cannot be decoded.
+    pub async fn sigmet(
+        &self,
+        atsu: &AtsuId,
+        issued: Timestamp,
+    ) -> Result<models::SigmetGeoJson, Error> {
+        self.atsu_request(atsu)
+            .path_segment(issued.strftime("%Y-%m-%d"))
+            .path_segment(issued.strftime("%H%M"))
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use jiff::civil::date;
     use wiremock::{
         Mock, MockServer, ResponseTemplate,
         matchers::{header, method, path},
     };
 
-    use super::{
-        get_center_weather_advisories_by_date_and_sequence, get_center_weather_service_unit,
-        get_sigmet, get_sigmets,
-    };
-    use crate::{client::test_support::client_for, models::NwsCenterWeatherServiceUnitId};
+    use super::SigmetsQuery;
+    use crate::client::test_support::client_for;
 
-    #[tokio::test]
-    async fn sigmet_identifiers_date_and_time_are_distinct_encoded_geo_json_segments() {
-        let server = MockServer::start().await;
+    const FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{}}"#;
+    const COLLECTION: &str = r#"{"type":"FeatureCollection","features":[]}"#;
+
+    async fn mount(server: &MockServer, route: &str, body: &'static str, media: &'static str) {
         Mock::given(method("GET"))
-            .and(path(
-                "/aviation/sigmets/WA%2FFC%201/2026%2F08%2030/12:30%2FZ",
-            ))
-            .and(header("Accept", "application/geo+json"))
-            .respond_with(ResponseTemplate::new(200).set_body_raw(
-                r#"{"type":"Feature","geometry":null,"properties":{}}"#,
-                "application/geo+json",
-            ))
+            .and(path(route))
+            .and(header("Accept", media))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(body, media))
             .expect(1)
-            .mount(&server)
+            .mount(server)
             .await;
-
-        get_sigmet(
-            &client_for(&server),
-            "WA/FC 1",
-            "2026/08 30".to_owned(),
-            "12:30/Z",
-        )
-        .await
-        .unwrap();
     }
 
     #[tokio::test]
-    async fn cwa_typed_identifier_date_and_sequence_are_distinct_geo_json_segments() {
+    async fn sigmet_splits_the_issue_instant_into_utc_date_and_hhmm() {
         let server = MockServer::start().await;
-        Mock::given(method("GET"))
-            .and(path("/aviation/cwsus/ZAB/cwas/2026%2F08%2030/101"))
-            .and(header("Accept", "application/geo+json"))
-            .respond_with(ResponseTemplate::new(200).set_body_raw(
-                r#"{"type":"Feature","geometry":null,"properties":{}}"#,
-                "application/geo+json",
-            ))
-            .expect(1)
-            .mount(&server)
-            .await;
-
-        get_center_weather_advisories_by_date_and_sequence(
-            &client_for(&server),
-            NwsCenterWeatherServiceUnitId::Zab,
-            "2026/08 30".to_owned(),
-            101,
+        mount(
+            &server,
+            "/aviation/sigmets/KKCI/2026-08-31/0030",
+            FEATURE,
+            "application/geo+json",
         )
-        .await
-        .unwrap();
-    }
+        .await;
 
-    #[tokio::test]
-    async fn cwsu_metadata_is_requested_as_json_ld() {
-        let server = MockServer::start().await;
-        Mock::given(method("GET"))
-            .and(path("/aviation/cwsus/ZAB"))
-            .and(header("Accept", "application/ld+json"))
-            .respond_with(ResponseTemplate::new(200).set_body_raw("{}", "application/ld+json"))
-            .expect(1)
-            .mount(&server)
-            .await;
-
-        get_center_weather_service_unit(&client_for(&server), NwsCenterWeatherServiceUnitId::Zab)
+        // 19:30:59 in UTC-5 is 00:30 UTC the next day; seconds are dropped.
+        client_for(&server)
+            .aviation()
+            .sigmet(
+                &"kkci".parse().unwrap(),
+                "2026-08-30T19:30:59-05:00".parse().unwrap(),
+            )
             .await
             .unwrap();
     }
 
     #[tokio::test]
-    async fn sigmet_filters_preserve_order_encoding_empty_and_omitted_values() {
+    async fn cwa_places_typed_id_iso_date_and_sequence_in_the_path() {
         let server = MockServer::start().await;
-        Mock::given(method("GET"))
-            .and(path("/aviation/sigmets"))
-            .and(header("Accept", "application/geo+json"))
-            .respond_with(ResponseTemplate::new(200).set_body_raw(
-                r#"{"type":"FeatureCollection","features":[]}"#,
-                "application/geo+json",
-            ))
-            .expect(1)
-            .mount(&server)
-            .await;
-
-        get_sigmets(
-            &client_for(&server),
-            Some("2026-08-30T00:00:00+00:00".to_owned()),
-            None,
-            Some(String::new()),
-            Some("WA/FC 1"),
-            Some("2/3"),
+        mount(
+            &server,
+            "/aviation/cwsus/ZAB/cwas/2026-08-30/101",
+            FEATURE,
+            "application/geo+json",
         )
-        .await
-        .unwrap();
+        .await;
+
+        client_for(&server)
+            .aviation()
+            .cwa(&"zab".parse().unwrap(), date(2026, 8, 30), 101)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn cwsu_routes_request_their_media_types() {
+        let server = MockServer::start().await;
+        mount(&server, "/aviation/cwsus/ZAB", "{}", "application/ld+json").await;
+        mount(
+            &server,
+            "/aviation/cwsus/ZAB/cwas",
+            COLLECTION,
+            "application/geo+json",
+        )
+        .await;
+
+        let client = client_for(&server);
+        let zab = "ZAB".parse().unwrap();
+        client.aviation().cwsu(&zab).await.unwrap();
+        client.aviation().cwas(&zab).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn atsu_routes_place_the_unit_and_date_in_the_path() {
+        let server = MockServer::start().await;
+        mount(
+            &server,
+            "/aviation/sigmets/KKCI",
+            COLLECTION,
+            "application/geo+json",
+        )
+        .await;
+        mount(
+            &server,
+            "/aviation/sigmets/KKCI/2026-08-30",
+            COLLECTION,
+            "application/geo+json",
+        )
+        .await;
+
+        let client = client_for(&server);
+        let kkci = "KKCI".parse().unwrap();
+        client.aviation().sigmets_for_atsu(&kkci).await.unwrap();
+        client
+            .aviation()
+            .sigmets_for_atsu_on(&kkci, date(2026, 8, 30))
+            .await
+            .unwrap();
+        for request in server.received_requests().await.unwrap() {
+            assert_eq!(request.url.query(), None);
+        }
+    }
+
+    #[tokio::test]
+    async fn sigmets_query_encodes_every_field_in_order() {
+        let server = MockServer::start().await;
+        mount(
+            &server,
+            "/aviation/sigmets",
+            COLLECTION,
+            "application/geo+json",
+        )
+        .await;
+
+        client_for(&server)
+            .aviation()
+            .sigmets(&SigmetsQuery {
+                start: Some("2026-08-30T00:00:00+00:00".parse().unwrap()),
+                end: Some("2026-08-30T12:00:00Z".parse().unwrap()),
+                date: Some(date(2026, 8, 30)),
+                atsu: Some("kkci".parse().unwrap()),
+                sequence: Some("52C".to_owned()),
+            })
+            .await
+            .unwrap();
 
         let requests = server.received_requests().await.unwrap();
         assert_eq!(
             requests[0].url.query(),
-            Some("start=2026-08-30T00%3A00%3A00%2B00%3A00&date=&atsu=WA%2FFC+1&sequence=2%2F3")
+            Some(
+                "start=2026-08-30T00%3A00%3A00Z&end=2026-08-30T12%3A00%3A00Z&date=2026-08-30\
+                 &atsu=KKCI&sequence=52C"
+            )
         );
-        assert!(!requests[0].url.query_pairs().any(|(name, _)| name == "end"));
+    }
+
+    #[tokio::test]
+    async fn sigmets_default_query_sends_nothing() {
+        let server = MockServer::start().await;
+        mount(
+            &server,
+            "/aviation/sigmets",
+            COLLECTION,
+            "application/geo+json",
+        )
+        .await;
+
+        client_for(&server)
+            .aviation()
+            .sigmets(&SigmetsQuery::default())
+            .await
+            .unwrap();
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.query(), None);
     }
 }

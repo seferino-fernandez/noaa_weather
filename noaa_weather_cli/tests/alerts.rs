@@ -70,6 +70,33 @@ fn test_alerts_command_area_failure_invalid_area() {
 }
 
 #[test]
+fn test_alerts_active_accepts_point_and_zone_filters() {
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.args(["alerts", "active", "--point", "39.7456,-97.0892"]);
+    cmd.assert().success();
+
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.args(["alerts", "active", "--zone", "AZC013,azz540"]);
+    cmd.assert().success();
+}
+
+#[test]
+fn test_alerts_list_accepts_relative_times_and_rejects_malformed_zone() {
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.args([
+        "alerts", "list", "--start", "6h", "--end", "1h", "--limit", "5",
+    ]);
+    cmd.assert().success();
+
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.args(["alerts", "zone", "--zone-id", "CAZ 043"]);
+    let output = cmd.output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(stderr.contains("invalid zone id"), "{stderr}");
+}
+
+#[test]
 fn test_alerts_command_count_success() {
     let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("alerts");

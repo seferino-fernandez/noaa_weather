@@ -1,292 +1,394 @@
-//! NWS forecast zones and zone-level forecasts and observations.
+//! Forecast, public, fire, county, and marine zones: the `/zones` family.
 //!
-//! Covers the `/zones` endpoints for listing zones by type, retrieving
-//! zone metadata, current zone forecasts, and zone observation data.
+//! Obtain the handle with [`Client::zones`]. Zone metadata and forecasts are
+//! addressed by a [`ZoneType`] plus a [`ZoneId`]; observations and stations
+//! are only defined for forecast zones and take the id alone.
+//!
+//! ```no_run
+//! use noaa_weather_client::{Client, ZoneId, apis::zones::ZoneType};
+//!
+//! # async fn run() -> Result<(), noaa_weather_client::Error> {
+//! let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+//! let zone: ZoneId = "AZZ540".parse()?;
+//! let forecast = client.zones().forecast(ZoneType::Forecast, &zone).await?;
+//! # let _ = forecast;
+//! # Ok(())
+//! # }
+//! ```
+
+use jiff::Timestamp;
+use serde::{Deserialize, Serialize};
 
 use super::Error;
 use crate::client::{Client, http};
-use crate::models;
+use crate::geo::Coordinates;
+use crate::ids::ZoneId;
+use crate::models::{self, AreaCode, RegionCode};
 
-/// Parameters for the [`get_zones`] function.
-#[derive(Clone, Debug, Default)]
-pub struct GetZonesParams<'a> {
-    /// Optional list of zone IDs to filter by.
-    pub id: Option<Vec<String>>,
-    /// Optional list of area codes ([`models::AreaCode`]) to filter by.
-    pub area: Option<Vec<models::AreaCode>>,
-    /// Optional list of region codes ([`models::RegionCode`]) to filter by.
-    pub region: Option<Vec<models::RegionCode>>,
-    /// Optional list of zone types ([`models::NwsZoneType`]) to filter by.
-    pub r#type: Option<Vec<models::NwsZoneType>>,
-    /// Optional point (latitude,longitude string) to find zones containing this point.
-    pub point: Option<&'a str>,
-    /// Optional flag to include geometry in the response (defaults to false).
-    pub include_geometry: Option<bool>,
-    /// Optional limit on the number of results returned.
-    pub limit: Option<i32>,
-    /// Optional effective date/time (ISO 8601 string) to filter zones active at this time.
-    pub effective: Option<String>,
+/// The kind of zone a `/zones/{type}/...` path addresses.
+///
+/// This is the response model's zone type under its request-side name,
+/// since zone responses report the same value.
+pub use crate::models::NwsZoneType as ZoneType;
+
+/// Options for [`Zones::get`].
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", default)]
+pub struct ZoneQuery {
+    /// Return the zone boundaries in effect at this instant.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
+    pub effective: Option<Timestamp>,
 }
 
-impl GetZonesParams<'_> {
-    /// Creates a new [`GetZonesParams`] with default values.
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
+impl http::QueryParams for ZoneQuery {
+    fn append_to(&self, request: &mut http::ContractRequest<'_>) {
+        request.instant("effective", self.effective.as_ref());
     }
 }
 
-/// Parameters for the [`get_zones_by_type`] function.
-#[derive(Clone, Debug, Default)]
-pub struct GetZonesByTypeParams<'a> {
-    /// Optional list of zone IDs to filter by.
-    pub id: Option<Vec<String>>,
-    /// Optional list of area codes ([`models::AreaCode`]) to filter by.
-    pub area: Option<Vec<models::AreaCode>>,
-    /// Optional list of region codes ([`models::RegionCode`]) to filter by.
-    pub region: Option<Vec<models::RegionCode>>,
-    // Note: The primary 'type' is a path parameter in the function signature.
-    // This 'type_filter' corresponds to the optional 'type' query parameter.
-    /// Optional *additional* list of zone types ([`models::NwsZoneType`]) to filter by.
-    /// The primary type filter is passed as a path parameter to [`get_zones_by_type`].
-    pub type_filter: Option<Vec<models::NwsZoneType>>,
-    /// Optional point (latitude,longitude string) to find zones containing this point.
-    pub point: Option<&'a str>,
-    /// Optional flag to include geometry in the response (defaults to false).
+/// Filters for [`Zones::list`] and [`Zones::list_of_type`].
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", default)]
+pub struct ZonesQuery {
+    /// Zone identifiers to include.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub id: Vec<ZoneId>,
+    /// State/territory or marine area codes to include.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
+    pub area: Vec<AreaCode>,
+    /// Land or marine region codes to include.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
+    pub region: Vec<RegionCode>,
+    /// Zone types to include (`type` on the wire).
+    #[serde(rename = "type", skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
+    pub types: Vec<ZoneType>,
+    /// Only zones containing this point.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub point: Option<Coordinates>,
+    /// Include zone geometry, which can be large. NOAA defaults to `false`.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub include_geometry: Option<bool>,
-    /// Optional limit on the number of results returned.
-    pub limit: Option<i32>,
-    /// Optional effective date/time (ISO 8601 string) to filter zones active at this time.
-    pub effective: Option<String>,
+    /// Maximum number of zones to return (1 to 500).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(range(min = 1, max = 500)))]
+    pub limit: Option<u16>,
+    /// Only zones in effect at this instant.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
+    pub effective: Option<Timestamp>,
 }
 
-impl GetZonesByTypeParams<'_> {
-    /// Creates a new [`GetZonesByTypeParams`] with default values.
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
+impl http::QueryParams for ZonesQuery {
+    fn append_to(&self, request: &mut http::ContractRequest<'_>) {
+        request.list("id", &self.id);
+        request.list("area", &self.area);
+        request.list("region", &self.region);
+        request.list("type", &self.types);
+        request.scalar("point", self.point.as_ref());
+        request.scalar("include_geometry", self.include_geometry.as_ref());
+        request.scalar("limit", self.limit.as_ref());
+        request.instant("effective", self.effective.as_ref());
     }
 }
 
-/// Returns metadata about a given zone
-///
-/// Corresponds to the `/zones/{type}/{zoneId}` endpoint.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `r#type`: The type of NWS zone (e.g., Forecast, Public, Fire).
-/// * `id`: The ID of the zone (e.g., "AZZ540", "WVC001").
-/// * `effective`: Optional effective date/time (ISO 8601 string) for historical zone boundaries.
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::ZoneGeoJson`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails (e.g., zone not found) or the response cannot be parsed.
-pub async fn get_zone(
-    client: &Client,
-    r#type: models::NwsZoneType,
-    id: &str,
-    effective: Option<String>,
-) -> Result<models::ZoneGeoJson, Error> {
-    http::request(client, "/zones")
-        .path_segment(r#type)
-        .path_segment(id)
-        .query_scalar("effective", effective)
-        .json(http::JsonMedia::GeoJson)
-        .await
+/// Filters for [`Zones::observations`].
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", default)]
+pub struct ZoneObservationsQuery {
+    /// Earliest observation time to include.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
+    pub start: Option<Timestamp>,
+    /// Latest observation time to include.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
+    pub end: Option<Timestamp>,
+    /// Maximum number of observations to return (1 to 500).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(range(min = 1, max = 500)))]
+    pub limit: Option<u16>,
 }
 
-/// Returns the current zone forecast for a given zone
-///
-/// Corresponds to the `/zones/{type}/{zoneId}/forecast` endpoint.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `r#type`: The type of NWS zone as a string slice (e.g., "forecast", "public").
-/// * `id`: The ID of the zone (e.g., "AZZ540", "WVC001").
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::ZoneForecastGeoJson`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response cannot be parsed.
-pub async fn get_current_zone_forecast(
-    client: &Client,
-    r#type: &str,
-    id: &str,
-) -> Result<models::ZoneForecastGeoJson, Error> {
-    http::request(client, "/zones")
-        .path_segment(r#type)
-        .path_segment(id)
-        .literal_path("forecast")
-        .json(http::JsonMedia::GeoJson)
-        .await
+impl http::QueryParams for ZoneObservationsQuery {
+    fn append_to(&self, request: &mut http::ContractRequest<'_>) {
+        request.instant("start", self.start.as_ref());
+        request.instant("end", self.end.as_ref());
+        request.scalar("limit", self.limit.as_ref());
+    }
 }
 
-/// Returns a list of zones
-///
-/// Corresponds to the `/zones` endpoint.
-/// Supports filtering by various criteria specified in [`GetZonesParams`].
-/// Supports pagination via `limit` (implicitly handled by API if cursor used).
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `params`: A [`GetZonesParams`] struct containing query parameters.
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::ZoneCollectionGeoJson`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response cannot be parsed.
-pub async fn get_zones(
-    client: &Client,
-    params: GetZonesParams<'_>,
-) -> Result<models::ZoneCollectionGeoJson, Error> {
-    http::request(client, "/zones")
-        .query_csv("id", params.id)
-        .query_csv("area", params.area)
-        .query_csv("region", params.region)
-        .query_csv("type", params.r#type)
-        .query_scalar("point", params.point)
-        .query_scalar("include_geometry", params.include_geometry)
-        .query_scalar("limit", params.limit)
-        .query_scalar("effective", params.effective)
-        .json(http::JsonMedia::GeoJson)
-        .await
+/// Paging for [`Zones::stations`].
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", default)]
+pub struct ZoneStationsQuery {
+    /// Maximum number of stations per page (1 to 500).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(range(min = 1, max = 500)))]
+    pub limit: Option<u16>,
+    /// Opaque pagination cursor from a previous page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cursor: Option<String>,
 }
 
-/// Returns a list of zones of a given type
-///
-/// Corresponds to the `/zones/{type}` endpoint.
-/// Supports filtering by various criteria specified in [`GetZonesByTypeParams`].
-/// Supports pagination via `limit` (implicitly handled by API if cursor used).
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `r#type`: The primary type of NWS zone to retrieve (e.g., Forecast, Public).
-/// * `params`: A [`GetZonesByTypeParams`] struct containing additional query parameters.
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::ZoneCollectionGeoJson`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response cannot be parsed.
-pub async fn get_zones_by_type(
-    client: &Client,
-    r#type: models::NwsZoneType,
-    params: GetZonesByTypeParams<'_>,
-) -> Result<models::ZoneCollectionGeoJson, Error> {
-    http::request(client, "/zones")
-        .path_segment(r#type)
-        .query_csv("id", params.id)
-        .query_csv("area", params.area)
-        .query_csv("region", params.region)
-        .query_csv("type", params.type_filter)
-        .query_scalar("point", params.point)
-        .query_scalar("include_geometry", params.include_geometry)
-        .query_scalar("limit", params.limit)
-        .query_scalar("effective", params.effective)
-        .json(http::JsonMedia::GeoJson)
-        .await
+impl http::QueryParams for ZoneStationsQuery {
+    fn append_to(&self, request: &mut http::ContractRequest<'_>) {
+        request.scalar("limit", self.limit.as_ref());
+        request.scalar("cursor", self.cursor.as_ref());
+    }
 }
 
-/// Returns a list of observations for a given zone
-///
-/// Corresponds to the `/zones/forecast/{zoneId}/observations` endpoint.
-/// Note: This endpoint appears limited to *forecast* zones only based on the path.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `id`: The ID of the forecast zone (e.g., "AZZ540").
-/// * `start`: Optional start time (ISO 8601 format or relative duration).
-/// * `end`: Optional end time (ISO 8601 format or relative duration).
-/// * `limit`: Optional limit on the number of observations returned.
-///
-/// # Returns
-///
-/// A `Result` containing an [`models::ObservationCollectionGeoJson`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response cannot be parsed.
-pub async fn get_zone_observations(
-    client: &Client,
-    id: &str,
-    start: Option<String>,
-    end: Option<String>,
-    limit: Option<i32>,
-) -> Result<models::ObservationCollectionGeoJson, Error> {
-    http::request(client, "/zones/forecast")
-        .path_segment(id)
-        .literal_path("observations")
-        .query_scalar("start", start)
-        .query_scalar("end", end)
-        .query_scalar("limit", limit)
-        .json(http::JsonMedia::GeoJson)
-        .await
+/// The `/zones` endpoints, obtained from [`Client::zones`].
+#[derive(Clone, Copy, Debug)]
+pub struct Zones<'a> {
+    client: &'a Client,
 }
 
-/// Returns a list of observation stations for a given zone
-///
-/// Corresponds to the `/zones/forecast/{zoneId}/stations` endpoint.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `id`: The ID of the forecast zone (e.g., "AZZ540").
-/// * `limit`: Optional limit on the number of stations returned.
-/// * `cursor`: Optional pagination cursor for paginated results.
-///
-/// # Returns
-///
-/// A `Result` containing an [`models::ObservationStationCollectionGeoJson`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response cannot be parsed.
-pub async fn get_stations_by_zone(
-    client: &Client,
-    id: &str,
-    limit: Option<i32>,
-    cursor: Option<&str>,
-) -> Result<models::ObservationStationCollectionGeoJson, Error> {
-    http::request(client, "/zones/forecast")
-        .path_segment(id)
-        .literal_path("stations")
-        .query_scalar("limit", limit)
-        .query_scalar("cursor", cursor)
-        .json(http::JsonMedia::GeoJson)
-        .await
+impl Client {
+    /// Returns the handle for the `/zones` endpoints.
+    #[must_use]
+    pub fn zones(&self) -> Zones<'_> {
+        Zones { client: self }
+    }
+}
+
+impl Zones<'_> {
+    fn forecast_zone(&self, zone: &ZoneId) -> http::ContractRequest<'_> {
+        http::request(self.client, "/zones/forecast").path_segment(zone)
+    }
+
+    /// Returns metadata for one zone.
+    ///
+    /// `GET /zones/{type}/{zoneId}`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, ZoneId, apis::zones::{ZoneQuery, ZoneType}};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let zone: ZoneId = "AZZ540".parse()?;
+    /// let metadata = client
+    ///     .zones()
+    ///     .get(ZoneType::Public, &zone, &ZoneQuery::default())
+    ///     .await?;
+    /// # let _ = metadata;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails, the zone is unknown, or the
+    /// response cannot be decoded.
+    pub async fn get(
+        &self,
+        zone_type: ZoneType,
+        zone: &ZoneId,
+        query: &ZoneQuery,
+    ) -> Result<models::ZoneGeoJson, Error> {
+        http::request(self.client, "/zones")
+            .path_segment(zone_type)
+            .path_segment(zone)
+            .query(query)
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns the current text forecast for one zone.
+    ///
+    /// `GET /zones/{type}/{zoneId}/forecast`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, ZoneId, apis::zones::ZoneType};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let zone: ZoneId = "AZZ540".parse()?;
+    /// let forecast = client.zones().forecast(ZoneType::Forecast, &zone).await?;
+    /// # let _ = forecast;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn forecast(
+        &self,
+        zone_type: ZoneType,
+        zone: &ZoneId,
+    ) -> Result<models::ZoneForecastGeoJson, Error> {
+        http::request(self.client, "/zones")
+            .path_segment(zone_type)
+            .path_segment(zone)
+            .literal_path("forecast")
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns zones of every type matching `query`.
+    ///
+    /// `GET /zones`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, apis::zones::{ZoneType, ZonesQuery}};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let zones = client
+    ///     .zones()
+    ///     .list(&ZonesQuery {
+    ///         area: vec!["AZ".parse().unwrap()],
+    ///         types: vec![ZoneType::Forecast, ZoneType::Fire],
+    ///         ..Default::default()
+    ///     })
+    ///     .await?;
+    /// # let _ = zones;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn list(&self, query: &ZonesQuery) -> Result<models::ZoneCollectionGeoJson, Error> {
+        http::request(self.client, "/zones")
+            .query(query)
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns zones of one type matching `query`. The `types` filter in
+    /// `query` further narrows within that type, as NOAA allows.
+    ///
+    /// `GET /zones/{type}`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, apis::zones::{ZoneType, ZonesQuery}};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let counties = client
+    ///     .zones()
+    ///     .list_of_type(ZoneType::County, &ZonesQuery {
+    ///         area: vec!["AZ".parse().unwrap()],
+    ///         ..Default::default()
+    ///     })
+    ///     .await?;
+    /// # let _ = counties;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn list_of_type(
+        &self,
+        zone_type: ZoneType,
+        query: &ZonesQuery,
+    ) -> Result<models::ZoneCollectionGeoJson, Error> {
+        http::request(self.client, "/zones")
+            .path_segment(zone_type)
+            .query(query)
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns recent observations from stations in one forecast zone.
+    ///
+    /// `GET /zones/forecast/{zoneId}/observations`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, ZoneId, apis::zones::ZoneObservationsQuery};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let zone: ZoneId = "AZZ540".parse()?;
+    /// let observations = client
+    ///     .zones()
+    ///     .observations(&zone, &ZoneObservationsQuery { limit: Some(20), ..Default::default() })
+    ///     .await?;
+    /// # let _ = observations;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn observations(
+        &self,
+        zone: &ZoneId,
+        query: &ZoneObservationsQuery,
+    ) -> Result<models::ObservationCollectionGeoJson, Error> {
+        self.forecast_zone(zone)
+            .literal_path("observations")
+            .query(query)
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns the observation stations in one forecast zone.
+    ///
+    /// `GET /zones/forecast/{zoneId}/stations`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, ZoneId, apis::zones::ZoneStationsQuery};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let zone: ZoneId = "AZZ540".parse()?;
+    /// let stations = client
+    ///     .zones()
+    ///     .stations(&zone, &ZoneStationsQuery::default())
+    ///     .await?;
+    /// # let _ = stations;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn stations(
+        &self,
+        zone: &ZoneId,
+        query: &ZoneStationsQuery,
+    ) -> Result<models::ObservationStationCollectionGeoJson, Error> {
+        self.forecast_zone(zone)
+            .literal_path("stations")
+            .query(query)
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 
-    use super::{
-        GetZonesByTypeParams, GetZonesParams, get_current_zone_forecast, get_stations_by_zone,
-        get_zone, get_zone_observations, get_zones, get_zones_by_type,
-    };
+    use super::{ZoneObservationsQuery, ZoneQuery, ZoneStationsQuery, ZoneType, ZonesQuery};
     use crate::{
+        ZoneId,
         client::test_support::client_for,
-        models::{AreaCode, NwsZoneType},
+        models::{LandRegionCode, RegionCode},
     };
 
     const FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{}}"#;
+    const COLLECTION: &str = r#"{"type":"FeatureCollection","features":[]}"#;
 
     async fn mount_geo_json(server: &MockServer, body: &'static str) {
         Mock::given(method("GET"))
@@ -295,145 +397,176 @@ mod tests {
             .await;
     }
 
+    fn azz540() -> ZoneId {
+        "azz540".parse().unwrap()
+    }
+
     #[tokio::test]
-    async fn current_forecast_encodes_dynamic_segments_and_requests_geo_json() {
+    async fn forecast_places_type_and_normalized_id_in_the_path() {
         let server = MockServer::start().await;
         mount_geo_json(&server, FEATURE).await;
 
-        get_current_zone_forecast(&client_for(&server), "public zone/type", "AZ Z/540")
+        client_for(&server)
+            .zones()
+            .forecast(ZoneType::Public, &azz540())
             .await
             .unwrap();
 
         let requests = server.received_requests().await.unwrap();
-        assert_eq!(
-            requests[0].url.path(),
-            "/zones/public%20zone%2Ftype/AZ%20Z%2F540/forecast"
-        );
+        assert_eq!(requests[0].url.path(), "/zones/public/AZZ540/forecast");
+        assert_eq!(requests[0].url.query(), None);
         assert_eq!(requests[0].headers["accept"], "application/geo+json");
     }
 
     #[tokio::test]
-    async fn zone_metadata_encodes_id_and_preserves_empty_effective() {
+    async fn get_encodes_effective_as_rfc_3339_or_nothing() {
         let server = MockServer::start().await;
         mount_geo_json(&server, FEATURE).await;
+        let client = client_for(&server);
 
-        get_zone(
-            &client_for(&server),
-            NwsZoneType::Forecast,
-            "AZ Z/540",
-            Some(String::new()),
-        )
-        .await
-        .unwrap();
+        client
+            .zones()
+            .get(
+                ZoneType::Forecast,
+                &azz540(),
+                &ZoneQuery {
+                    effective: Some("2026-08-30T00:00:00Z".parse().unwrap()),
+                },
+            )
+            .await
+            .unwrap();
+        client
+            .zones()
+            .get(ZoneType::Forecast, &azz540(), &ZoneQuery::default())
+            .await
+            .unwrap();
 
         let requests = server.received_requests().await.unwrap();
-        assert_eq!(requests[0].url.path(), "/zones/forecast/AZ%20Z%2F540");
-        assert_eq!(requests[0].url.query(), Some("effective="));
+        assert_eq!(requests[0].url.path(), "/zones/forecast/AZZ540");
+        assert_eq!(
+            requests[0].url.query(),
+            Some("effective=2026-08-30T00%3A00%3A00Z")
+        );
+        assert_eq!(requests[1].url.query(), None);
     }
 
     #[tokio::test]
-    async fn zones_preserve_csv_and_scalar_empty_and_omission_contracts() {
+    async fn list_encodes_every_filter_in_declaration_order() {
         let server = MockServer::start().await;
-        mount_geo_json(&server, r#"{"type":"FeatureCollection","features":[]}"#).await;
+        mount_geo_json(&server, COLLECTION).await;
 
-        get_zones(
-            &client_for(&server),
-            GetZonesParams {
-                id: Some(vec!["AZ Z/1".to_owned(), "AZZ2".to_owned()]),
-                area: Some(Vec::<AreaCode>::new()),
-                region: None,
-                r#type: Some(vec![NwsZoneType::Forecast, NwsZoneType::Public]),
-                point: Some(""),
+        client_for(&server)
+            .zones()
+            .list(&ZonesQuery {
+                id: vec!["AZZ540".parse().unwrap(), "AZC013".parse().unwrap()],
+                area: vec!["AZ".parse().unwrap()],
+                region: vec![RegionCode::Land(LandRegionCode::Wr)],
+                types: vec![ZoneType::Forecast, ZoneType::Public],
+                point: Some("33.4484,-112.074".parse().unwrap()),
                 include_geometry: Some(false),
-                limit: None,
-                effective: Some("2026 / now".to_owned()),
-            },
-        )
-        .await
-        .unwrap();
+                limit: Some(10),
+                effective: Some("2026-08-30T00:00:00Z".parse().unwrap()),
+            })
+            .await
+            .unwrap();
 
         let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.path(), "/zones");
         assert_eq!(
             requests[0].url.query(),
             Some(
-                "id=AZ+Z%2F1%2CAZZ2&area=&type=forecast%2Cpublic&point=&include_geometry=false&effective=2026+%2F+now"
+                "id=AZZ540%2CAZC013&area=AZ&region=WR&type=forecast%2Cpublic\
+                 &point=33.4484%2C-112.074&include_geometry=false&limit=10\
+                 &effective=2026-08-30T00%3A00%3A00Z"
             )
         );
-        assert_eq!(requests[0].headers["accept"], "application/geo+json");
     }
 
     #[tokio::test]
-    async fn zones_by_type_preserve_literal_path_and_type_filter_name() {
+    async fn list_of_type_keeps_the_type_path_and_optional_type_filter() {
         let server = MockServer::start().await;
-        mount_geo_json(&server, r#"{"type":"FeatureCollection","features":[]}"#).await;
+        mount_geo_json(&server, COLLECTION).await;
+        let client = client_for(&server);
 
-        get_zones_by_type(
-            &client_for(&server),
-            NwsZoneType::Public,
-            GetZonesByTypeParams {
-                id: Some(Vec::new()),
-                type_filter: Some(vec![NwsZoneType::Fire, NwsZoneType::County]),
-                limit: Some(0),
-                ..GetZonesByTypeParams::default()
-            },
-        )
-        .await
-        .unwrap();
+        client
+            .zones()
+            .list_of_type(
+                ZoneType::Public,
+                &ZonesQuery {
+                    types: vec![ZoneType::Fire, ZoneType::County],
+                    limit: Some(1),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        client
+            .zones()
+            .list_of_type(ZoneType::Public, &ZonesQuery::default())
+            .await
+            .unwrap();
 
         let requests = server.received_requests().await.unwrap();
         assert_eq!(requests[0].url.path(), "/zones/public");
-        assert_eq!(
-            requests[0].url.query(),
-            Some("id=&type=fire%2Ccounty&limit=0")
-        );
-        assert_eq!(requests[0].headers["accept"], "application/geo+json");
+        assert_eq!(requests[0].url.query(), Some("type=fire%2Ccounty&limit=1"));
+        assert_eq!(requests[1].url.query(), None);
     }
 
     #[tokio::test]
-    async fn zone_observations_keep_forecast_literal_and_query_contract() {
+    async fn observations_and_stations_use_the_forecast_literal() {
         let server = MockServer::start().await;
-        mount_geo_json(&server, r#"{"type":"FeatureCollection","features":[]}"#).await;
+        mount_geo_json(&server, COLLECTION).await;
+        let client = client_for(&server);
 
-        get_zone_observations(
-            &client_for(&server),
-            "AZ Z/540",
-            Some(String::new()),
-            None,
-            Some(12),
-        )
-        .await
-        .unwrap();
-
-        let requests = server.received_requests().await.unwrap();
-        assert_eq!(
-            requests[0].url.path(),
-            "/zones/forecast/AZ%20Z%2F540/observations"
-        );
-        assert_eq!(requests[0].url.query(), Some("start=&limit=12"));
-        assert_eq!(requests[0].headers["accept"], "application/geo+json");
-    }
-
-    #[tokio::test]
-    async fn zone_stations_preserves_query_and_omits_feature_flags() {
-        let server = MockServer::start().await;
-        Mock::given(method("GET"))
-            .respond_with(ResponseTemplate::new(200).set_body_raw(
-                r#"{"type":"FeatureCollection","features":[]}"#,
-                "application/geo+json",
-            ))
-            .mount(&server)
-            .await;
-        get_stations_by_zone(&client_for(&server), "AZ Z/540", Some(15), Some(""))
+        client
+            .zones()
+            .observations(
+                &azz540(),
+                &ZoneObservationsQuery {
+                    start: Some("2026-08-30T00:00:00Z".parse().unwrap()),
+                    end: Some("2026-08-30T06:00:00Z".parse().unwrap()),
+                    limit: Some(12),
+                },
+            )
+            .await
+            .unwrap();
+        client
+            .zones()
+            .stations(
+                &azz540(),
+                &ZoneStationsQuery {
+                    limit: Some(15),
+                    cursor: Some("abc".to_owned()),
+                },
+            )
             .await
             .unwrap();
 
         let requests = server.received_requests().await.unwrap();
         assert_eq!(
             requests[0].url.path(),
-            "/zones/forecast/AZ%20Z%2F540/stations"
+            "/zones/forecast/AZZ540/observations"
         );
-        assert_eq!(requests[0].url.query(), Some("limit=15&cursor="));
-        assert_eq!(requests[0].headers["accept"], "application/geo+json");
-        assert!(!requests[0].headers.contains_key("feature-flags"));
+        assert_eq!(
+            requests[0].url.query(),
+            Some("start=2026-08-30T00%3A00%3A00Z&end=2026-08-30T06%3A00%3A00Z&limit=12")
+        );
+        assert_eq!(requests[1].url.path(), "/zones/forecast/AZZ540/stations");
+        assert_eq!(requests[1].url.query(), Some("limit=15&cursor=abc"));
+        assert!(!requests[1].headers.contains_key("feature-flags"));
+    }
+
+    #[test]
+    fn zones_query_serializes_types_under_the_wire_name() {
+        let json = serde_json::to_value(ZonesQuery {
+            types: vec![ZoneType::Fire],
+            include_geometry: Some(true),
+            ..Default::default()
+        })
+        .unwrap();
+        assert_eq!(
+            json,
+            serde_json::json!({"type": ["fire"], "includeGeometry": true})
+        );
     }
 }

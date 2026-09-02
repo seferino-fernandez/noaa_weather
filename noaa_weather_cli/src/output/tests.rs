@@ -8,7 +8,6 @@ use anyhow::Result;
 use comfy_table::Table;
 use serde::ser::Error as _;
 use serde::{Serialize, Serializer};
-#[cfg(feature = "xml")]
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path},
@@ -167,10 +166,9 @@ async fn json_is_pretty_and_has_one_trailing_newline() {
     );
 }
 
-#[cfg(feature = "xml")]
 #[tokio::test]
 async fn normalized_taf_meaning_flows_through_the_default_output_seam() {
-    use noaa_weather_client::{Client, apis::stations};
+    use noaa_weather_client::{Client, StationId};
 
     let server = MockServer::start().await;
     Mock::given(method("GET"))
@@ -190,7 +188,10 @@ async fn normalized_taf_meaning_flows_through_the_default_output_seam() {
     output
         .show(
             "showing semantic TAF",
-            stations::get_terminal_aerodrome_forecast(&client, "KXYZ", "2026-08-30", "1200"),
+            client.stations().taf(
+                &"KXYZ".parse::<StationId>().unwrap(),
+                "2026-08-30T12:00:00Z".parse().unwrap(),
+            ),
         )
         .await
         .unwrap();
@@ -217,10 +218,9 @@ async fn normalized_taf_meaning_flows_through_the_default_output_seam() {
     assert!(!rendered.ends_with("\n\n"));
 }
 
-#[cfg(feature = "xml")]
 #[tokio::test]
 async fn normalized_taf_json_flows_through_the_output_seam() {
-    use noaa_weather_client::{Client, apis::stations};
+    use noaa_weather_client::{Client, StationId};
 
     let server = MockServer::start().await;
     Mock::given(method("GET"))
@@ -240,7 +240,10 @@ async fn normalized_taf_json_flows_through_the_output_seam() {
     output
         .show(
             "showing semantic TAF JSON",
-            stations::get_terminal_aerodrome_forecast(&client, "KCXL", "2026-08-30", "1500"),
+            client.stations().taf(
+                &"KCXL".parse::<StationId>().unwrap(),
+                "2026-08-30T15:00:00Z".parse().unwrap(),
+            ),
         )
         .await
         .unwrap();

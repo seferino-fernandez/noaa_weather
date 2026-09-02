@@ -1,6 +1,6 @@
 use super::codes::{Case, Chars, Rule};
 use super::{InvalidValue, ValueKind};
-use crate::models::NwsForecastOfficeId;
+use crate::models::{NwsForecastOfficeId, NwsOfficeId};
 
 const OFFICE: Rule = Rule {
     kind: ValueKind::OfficeId,
@@ -73,6 +73,18 @@ impl From<NwsForecastOfficeId> for OfficeId {
 
 impl From<&NwsForecastOfficeId> for OfficeId {
     fn from(office: &NwsForecastOfficeId) -> Self {
+        Self::from(*office)
+    }
+}
+
+impl From<NwsOfficeId> for OfficeId {
+    fn from(office: NwsOfficeId) -> Self {
+        Self(office.to_string().into_boxed_str())
+    }
+}
+
+impl From<&NwsOfficeId> for OfficeId {
+    fn from(office: &NwsOfficeId) -> Self {
         Self::from(*office)
     }
 }
@@ -151,6 +163,14 @@ mod tests {
         assert_eq!(office.as_str(), "TOP");
         assert_eq!(OfficeId::from(&NwsForecastOfficeId::Bou).as_str(), "BOU");
         assert!(office.is_known());
+    }
+
+    #[test]
+    fn converts_from_any_office_enum() {
+        let regional = NwsOfficeId::from(crate::models::NwsRegionalHqid::Wrh);
+        assert_eq!(OfficeId::from(regional).as_str(), "WRH");
+        assert_eq!(OfficeId::from(&regional).as_str(), "WRH");
+        assert!(!OfficeId::from(regional).is_known());
     }
 
     #[test]

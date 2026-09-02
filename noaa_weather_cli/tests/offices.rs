@@ -51,11 +51,20 @@ fn test_regional_headquarters_office_command_success() {
 #[test]
 fn test_offices_command_failure_invalid_office_id() {
     let mut cmd = Command::new(cargo_bin!("noaa-weather"));
-    cmd.arg("offices");
-    cmd.arg("metadata");
-    cmd.arg("--id");
-    cmd.arg("invalid");
-    cmd.assert().failure();
+    cmd.args(["offices", "metadata", "--id", "invalid"]);
+    let output = cmd.output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(stderr.contains("invalid office id"), "{stderr}");
+}
+
+#[test]
+fn test_offices_help_lists_known_codes_without_restricting() {
+    let output = run(&["offices", "metadata", "--help"]);
+    assert_success(&output);
+    let help = String::from_utf8_lossy(&output.stdout);
+    assert!(help.contains("Known forecast offices"), "{help}");
+    assert!(help.contains("PSR"), "{help}");
 }
 
 #[test]

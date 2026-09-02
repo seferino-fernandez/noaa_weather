@@ -1,17 +1,16 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::Client;
-use noaa_weather_client::apis::offices as offices_api;
-use noaa_weather_client::models::NwsOfficeId;
+use noaa_weather_client::{Client, OfficeId};
 
+use super::parse;
 use crate::output::Output;
 
 /// Arguments requiring a NWS office ID.
 #[derive(Args, Debug, Clone)]
 pub struct OfficeIdArgs {
     /// NWS office ID (three-letter identifier, e.g., PSR, WRH, NWS).
-    #[arg(long)]
-    id: NwsOfficeId,
+    #[arg(long, long_help = parse::office_long_help("NWS office ID"))]
+    id: OfficeId,
 }
 
 /// Access metadata and headlines for NWS offices.
@@ -63,8 +62,8 @@ pub enum OfficeCommands {
 
 /// Handles the execution of office-related subcommands.
 ///
-/// Dispatches the command to the appropriate API function based on the
-/// provided `OfficeCommands` variant and arguments.
+/// Dispatches the command to the matching `client.offices()` method based on
+/// the provided `OfficeCommands` variant and arguments.
 ///
 /// # Arguments
 ///
@@ -77,12 +76,13 @@ pub async fn handle_command(
     output: &Output,
     client: &Client,
 ) -> Result<()> {
+    let offices = client.offices();
     match command {
         OfficeCommands::Metadata(args) => {
             output
                 .show(
                     format!("getting NWS forecast office {} metadata", args.id),
-                    offices_api::get_forecast_office(client, &args.id),
+                    offices.get(&args.id),
                 )
                 .await
         }
@@ -90,7 +90,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting NWS forecast office {} headlines", args.id),
-                    offices_api::get_forecast_office_headlines(client, &args.id),
+                    offices.headlines(&args.id),
                 )
                 .await
         }
@@ -104,7 +104,7 @@ pub async fn handle_command(
                         "getting headline {headline_id} for NWS forecast office {}",
                         office_args.id
                     ),
-                    offices_api::get_forecast_office_headline(client, &office_args.id, headline_id),
+                    offices.headline(&office_args.id, headline_id),
                 )
                 .await
         }
@@ -112,7 +112,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting NWS forecast office {} briefing", args.id),
-                    offices_api::get_forecast_office_briefing(client, &args.id),
+                    offices.briefing(&args.id),
                 )
                 .await
         }
@@ -126,11 +126,7 @@ pub async fn handle_command(
                         "downloading briefing document {document_id} for NWS forecast office {}",
                         office_args.id
                     ),
-                    offices_api::get_forecast_office_briefing_document(
-                        client,
-                        &office_args.id,
-                        document_id,
-                    ),
+                    offices.briefing_document(&office_args.id, document_id),
                 )
                 .await
         }
@@ -141,7 +137,7 @@ pub async fn handle_command(
                         "downloading latest briefing document for NWS forecast office {}",
                         args.id
                     ),
-                    offices_api::get_latest_forecast_office_briefing_document(client, &args.id),
+                    offices.latest_briefing_document(&args.id),
                 )
                 .await
         }
@@ -149,7 +145,7 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting NWS forecast office {} weather stories", args.id),
-                    offices_api::get_forecast_office_weather_stories(client, &args.id),
+                    offices.weather_stories(&args.id),
                 )
                 .await
         }
@@ -163,11 +159,7 @@ pub async fn handle_command(
                         "downloading weather-story image {story_id} for NWS forecast office {}",
                         office_args.id
                     ),
-                    offices_api::get_forecast_office_weather_story_image(
-                        client,
-                        &office_args.id,
-                        story_id,
-                    ),
+                    offices.weather_story_image(&office_args.id, story_id),
                 )
                 .await
         }

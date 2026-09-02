@@ -100,6 +100,34 @@ fn test_products_latest_success() {
     cmd.assert().success();
 }
 
+#[test]
+fn test_products_reject_malformed_type_code() {
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.args(["products", "type", "--type-id", "AFDX"]);
+    let output = cmd.output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(stderr.contains("invalid product type code"), "{stderr}");
+}
+
+#[test]
+fn test_products_list_accepts_relative_start_time() {
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.args([
+        "products",
+        "list",
+        "--location-ids",
+        "PSR",
+        "--product-type-codes",
+        "AFD",
+        "--start-time",
+        "2d",
+        "--limit",
+        "2",
+    ]);
+    cmd.assert().success();
+}
+
 #[ignore = "Update to dynamically get a product id"]
 #[test]
 fn test_product_success() {

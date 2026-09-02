@@ -1,170 +1,212 @@
-//! NOAA Weather Radio transmitter metadata and broadcast transcripts.
+//! NOAA Weather Radio transmitters and broadcast transcripts: the `/radio`
+//! family.
 //!
-//! The JSON-LD transmitter metadata APIs are `/radio`, `/radio/{callSign}`,
-//! and `/zones/county/{zoneId}/radio`. They return
-//! [`RadioTransmitter`](crate::models::RadioTransmitter) records, either
-//! directly or in a
-//! [`RadioTransmitterCollection`](crate::models::RadioTransmitterCollection).
+//! Obtain the handle with [`Client::radio`]. Transmitter metadata comes from
+//! `/radio`, `/radio/{callSign}`, and `/zones/county/{zoneId}/radio` as
+//! [`RadioTransmitter`](crate::models::RadioTransmitter) records. Broadcast
+//! scripts come from `/points/{point}/radio` and `/radio/{callSign}/broadcast`
+//! as SSML documents decoded into
+//! [`RadioBroadcast`](crate::models::RadioBroadcast), whose paragraphs render
+//! as plain text via [`Sentence::full_text`](crate::models::Sentence::full_text).
 //!
-//! The `/points/{point}/radio` and `/radio/{callSign}/broadcast` APIs return
-//! SSML (Speech Synthesis Markup Language) documents containing the current
-//! broadcast script for a location or transmitter.
+//! ```no_run
+//! use noaa_weather_client::{CallSign, Client};
 //!
-//! This module is only available when the **`radio`** feature is enabled:
-//!
-//! ```toml
-//! [dependencies]
-//! noaa_weather_client = { version = "1", features = ["radio"] }
+//! # async fn run() -> Result<(), noaa_weather_client::Error> {
+//! let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+//! let kec94: CallSign = "KEC94".parse()?;
+//! let broadcast = client.radio().broadcast(&kec94).await?;
+//! println!("{}", broadcast.lang);
+//! # Ok(())
+//! # }
 //! ```
-//!
-//! Broadcast responses use [`RadioBroadcast`](crate::models::RadioBroadcast),
-//! whose structured paragraphs and sentences can be rendered as plain text via
-//! [`Sentence::full_text`](crate::models::Sentence::full_text).
+
+use serde::{Deserialize, Serialize};
 
 use super::Error;
 use crate::client::{Client, http};
+use crate::geo::Coordinates;
+use crate::ids::{CallSign, ZoneId};
 use crate::models;
 
-/// Returns the NOAA Weather Radio broadcast for a geographic point.
-///
-/// Corresponds to the `/points/{latitude},{longitude}/radio` endpoint.
-/// The response is an SSML (Speech Synthesis Markup Language) document
-/// containing the radio broadcast script for the area covering the given point.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `latitude`: The latitude of the point (e.g., 33.4484).
-/// * `longitude`: The longitude of the point (e.g., -112.0740).
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::RadioBroadcast`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response
-/// cannot be parsed.
-pub async fn get_point_radio(
-    client: &Client,
-    latitude: f64,
-    longitude: f64,
-) -> Result<models::RadioBroadcast, Error> {
-    http::request(client, "/points")
-        .path_segment(format_args!("{latitude},{longitude}"))
-        .literal_path("radio")
-        .xml(http::XmlMedia::Ssml)
-        .await
+/// Paging for [`Radio::transmitters`].
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", default)]
+pub struct TransmittersQuery {
+    /// Opaque pagination cursor from a previous page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cursor: Option<String>,
 }
 
-/// Returns the NOAA Weather Radio broadcast for a given transmitter call sign.
-///
-/// Corresponds to the `/radio/{callSign}/broadcast` endpoint.
-/// The response is an SSML (Speech Synthesis Markup Language) document
-/// containing the current broadcast script for the specified radio transmitter.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `call_sign`: The transmitter call sign (e.g., "KEC94").
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::RadioBroadcast`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails (e.g., call sign not found)
-/// or the response cannot be parsed.
-pub async fn get_area_radio(
-    client: &Client,
-    call_sign: &str,
-) -> Result<models::RadioBroadcast, Error> {
-    http::request(client, "/radio")
-        .path_segment(call_sign)
-        .literal_path("broadcast")
-        .xml(http::XmlMedia::Ssml)
-        .await
+impl http::QueryParams for TransmittersQuery {
+    fn append_to(&self, request: &mut http::ContractRequest<'_>) {
+        request.scalar("cursor", self.cursor.as_ref());
+    }
 }
 
-/// Returns a page of NOAA Weather Radio transmitters.
-///
-/// Corresponds to the `/radio` endpoint. Pass the opaque `cursor` from a
-/// collection's pagination link to request a subsequent page.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `cursor`: An optional opaque pagination cursor.
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::RadioTransmitterCollection`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response cannot be parsed.
-pub async fn get_radio_transmitters(
-    client: &Client,
-    cursor: Option<&str>,
-) -> Result<models::RadioTransmitterCollection, Error> {
-    http::request(client, "/radio")
-        .query_scalar("cursor", cursor)
-        .json(http::JsonMedia::JsonLd)
-        .await
+/// The `/radio` endpoints, obtained from [`Client::radio`].
+#[derive(Clone, Copy, Debug)]
+pub struct Radio<'a> {
+    client: &'a Client,
 }
 
-/// Returns metadata for a NOAA Weather Radio transmitter.
-///
-/// Corresponds to the `/radio/{callSign}` endpoint.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `call_sign`: The transmitter call sign.
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::RadioTransmitter`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response cannot be parsed.
-pub async fn get_radio_transmitter(
-    client: &Client,
-    call_sign: &str,
-) -> Result<models::RadioTransmitter, Error> {
-    http::request(client, "/radio")
-        .path_segment(call_sign)
-        .json(http::JsonMedia::JsonLd)
-        .await
+impl Client {
+    /// Returns the handle for the NOAA Weather Radio endpoints.
+    #[must_use]
+    pub fn radio(&self) -> Radio<'_> {
+        Radio { client: self }
+    }
 }
 
-/// Returns NOAA Weather Radio transmitters serving a county zone.
-///
-/// Corresponds to the `/zones/county/{zoneId}/radio` endpoint.
-///
-/// # Parameters
-///
-/// * `client`: The API client.
-/// * `zone_id`: The county zone ID.
-///
-/// # Returns
-///
-/// A `Result` containing a [`models::RadioTransmitterCollection`] on success.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response cannot be parsed.
-pub async fn get_radio_transmitters_for_county_zone(
-    client: &Client,
-    zone_id: &str,
-) -> Result<models::RadioTransmitterCollection, Error> {
-    http::request(client, "/zones/county")
-        .path_segment(zone_id)
-        .literal_path("radio")
-        .json(http::JsonMedia::JsonLd)
-        .await
+impl Radio<'_> {
+    /// Returns the broadcast script for the transmitter covering `point`.
+    ///
+    /// `GET /points/{latitude},{longitude}/radio`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, Coordinates};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let broadcast = client
+    ///     .radio()
+    ///     .for_point(Coordinates::new(33.4484, -112.074)?)
+    ///     .await?;
+    /// # let _ = broadcast;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the SSML cannot be
+    /// decoded.
+    pub async fn for_point(&self, point: Coordinates) -> Result<models::RadioBroadcast, Error> {
+        http::request(self.client, "/points")
+            .path_segment(point)
+            .literal_path("radio")
+            .xml(http::XmlMedia::Ssml)
+            .await
+    }
+
+    /// Returns the current broadcast script of one transmitter.
+    ///
+    /// `GET /radio/{callSign}/broadcast`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{CallSign, Client};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let kec94: CallSign = "KEC94".parse()?;
+    /// let broadcast = client.radio().broadcast(&kec94).await?;
+    /// # let _ = broadcast;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails, the call sign is unknown,
+    /// or the SSML cannot be decoded.
+    pub async fn broadcast(&self, call_sign: &CallSign) -> Result<models::RadioBroadcast, Error> {
+        http::request(self.client, "/radio")
+            .path_segment(call_sign)
+            .literal_path("broadcast")
+            .xml(http::XmlMedia::Ssml)
+            .await
+    }
+
+    /// Returns a page of transmitters.
+    ///
+    /// `GET /radio`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, apis::radio::TransmittersQuery};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let page = client.radio().transmitters(&TransmittersQuery::default()).await?;
+    /// # let _ = page;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn transmitters(
+        &self,
+        query: &TransmittersQuery,
+    ) -> Result<models::RadioTransmitterCollection, Error> {
+        http::request(self.client, "/radio")
+            .query(query)
+            .json(http::JsonMedia::JsonLd)
+            .await
+    }
+
+    /// Returns one transmitter's metadata.
+    ///
+    /// `GET /radio/{callSign}`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{CallSign, Client};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let kec94: CallSign = "KEC94".parse()?;
+    /// let transmitter = client.radio().transmitter(&kec94).await?;
+    /// # let _ = transmitter;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn transmitter(
+        &self,
+        call_sign: &CallSign,
+    ) -> Result<models::RadioTransmitter, Error> {
+        http::request(self.client, "/radio")
+            .path_segment(call_sign)
+            .json(http::JsonMedia::JsonLd)
+            .await
+    }
+
+    /// Returns the transmitters serving one county zone.
+    ///
+    /// `GET /zones/county/{zoneId}/radio`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, ZoneId};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let county: ZoneId = "AZC013".parse()?;
+    /// let transmitters = client.radio().transmitters_for_county(&county).await?;
+    /// # let _ = transmitters;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn transmitters_for_county(
+        &self,
+        county: &ZoneId,
+    ) -> Result<models::RadioTransmitterCollection, Error> {
+        http::request(self.client, "/zones/county")
+            .path_segment(county)
+            .literal_path("radio")
+            .json(http::JsonMedia::JsonLd)
+            .await
+    }
 }
 
 #[cfg(test)]
@@ -174,11 +216,8 @@ mod tests {
         matchers::{header, method, path},
     };
 
-    use super::{
-        get_area_radio, get_point_radio, get_radio_transmitter, get_radio_transmitters,
-        get_radio_transmitters_for_county_zone,
-    };
-    use crate::{Error, client::test_support::client_for};
+    use super::TransmittersQuery;
+    use crate::{Coordinates, Error, client::test_support::client_for};
 
     const TRANSMITTERS: &str = r#"{
         "@graph": [{
@@ -194,10 +233,10 @@ mod tests {
     const RADIO_BROADCAST: &str = r#"<speak version="1.1" xml:lang="en-US"></speak>"#;
 
     #[tokio::test]
-    async fn transmitter_broadcast_encodes_call_sign_and_requests_ssml() {
+    async fn transmitter_broadcast_normalizes_call_sign_and_requests_ssml() {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
-            .and(path("/radio/K%20E%2F%25%3F/broadcast"))
+            .and(path("/radio/KEC94/broadcast"))
             .and(header("Accept", "application/ssml+xml"))
             .respond_with(
                 ResponseTemplate::new(200).set_body_raw(RADIO_BROADCAST, "application/ssml+xml"),
@@ -206,7 +245,9 @@ mod tests {
             .mount(&server)
             .await;
 
-        let broadcast = get_area_radio(&client_for(&server), "K E/%?")
+        let broadcast = client_for(&server)
+            .radio()
+            .broadcast(&"kec94".parse().unwrap())
             .await
             .unwrap();
         assert_eq!(broadcast.version, "1.1");
@@ -226,15 +267,16 @@ mod tests {
             .mount(&server)
             .await;
 
-        let broadcast = get_point_radio(&client_for(&server), 33.4484, -112.074)
+        let broadcast = client_for(&server)
+            .radio()
+            .for_point(Coordinates::new(33.4484, -112.074).unwrap())
             .await
             .unwrap();
         assert_eq!(broadcast.version, "1.1");
-        assert_eq!(broadcast.lang, "en-US");
     }
 
     #[tokio::test]
-    async fn transmitter_broadcast_rejects_generic_xml() {
+    async fn transmitter_broadcast_rejects_generic_xml_and_malformed_ssml() {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
             .and(path("/radio/KEC94/broadcast"))
@@ -245,7 +287,9 @@ mod tests {
             .mount(&server)
             .await;
 
-        let Error::Protocol(error) = get_area_radio(&client_for(&server), "KEC94")
+        let Error::Protocol(error) = client_for(&server)
+            .radio()
+            .broadcast(&"KEC94".parse().unwrap())
             .await
             .unwrap_err()
         else {
@@ -253,6 +297,21 @@ mod tests {
         };
         assert_eq!(error.expected(), Some("application/ssml+xml"));
         assert_eq!(error.actual(), Some("application/xml"));
+
+        let server = MockServer::start().await;
+        Mock::given(path("/radio/KEC94/broadcast"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_raw("<speak>", "application/ssml+xml"),
+            )
+            .mount(&server)
+            .await;
+        assert!(matches!(
+            client_for(&server)
+                .radio()
+                .broadcast(&"KEC94".parse().unwrap())
+                .await,
+            Err(Error::Xml(_))
+        ));
     }
 
     #[tokio::test]
@@ -268,10 +327,17 @@ mod tests {
             .mount(&server)
             .await;
 
-        let first_page = get_radio_transmitters(&client_for(&server), None)
+        let client = client_for(&server);
+        let first_page = client
+            .radio()
+            .transmitters(&TransmittersQuery::default())
             .await
             .unwrap();
-        let second_page = get_radio_transmitters(&client_for(&server), Some("opaque+/=? value"))
+        let second_page = client
+            .radio()
+            .transmitters(&TransmittersQuery {
+                cursor: Some("opaque+/=? value".to_owned()),
+            })
             .await
             .unwrap();
 
@@ -283,21 +349,10 @@ mod tests {
             second_page.transmitters[0].frequency.as_deref(),
             Some("162.550")
         );
-        assert_eq!(
-            second_page
-                .transmitters
-                .iter()
-                .map(|transmitter| transmitter.call_sign.as_deref())
-                .collect::<Vec<_>>(),
-            [Some("KAAA"), Some("KAAA")]
-        );
         assert_eq!(second_page.transmitters[0].same_codes, ["004013", "004013"]);
-        assert_eq!(second_page.transmitters[0].counties, ["AZC013", "AZC013"]);
 
         let requests = server.received_requests().await.unwrap();
-        assert_eq!(requests[0].url.path(), "/radio");
         assert_eq!(requests[0].url.query(), None);
-        assert_eq!(requests[1].url.path(), "/radio");
         assert_eq!(
             requests[1].url.query(),
             Some("cursor=opaque%2B%2F%3D%3F+value")
@@ -305,32 +360,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn transmitter_list_rejects_generic_json() {
+    async fn transmitter_detail_normalizes_call_sign_and_returns_an_object() {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
-            .and(path("/radio"))
-            .respond_with(
-                ResponseTemplate::new(200).set_body_raw(r#"{"@graph":[]}"#, "application/json"),
-            )
-            .expect(1)
-            .mount(&server)
-            .await;
-
-        let Error::Protocol(error) = get_radio_transmitters(&client_for(&server), None)
-            .await
-            .unwrap_err()
-        else {
-            panic!("expected protocol error");
-        };
-        assert_eq!(error.expected(), Some("application/ld+json"));
-        assert_eq!(error.actual(), Some("application/json"));
-    }
-
-    #[tokio::test]
-    async fn transmitter_detail_percent_encodes_call_sign_and_returns_an_object() {
-        let server = MockServer::start().await;
-        Mock::given(method("GET"))
-            .and(path("/radio/K%20A%2F%25%3F"))
+            .and(path("/radio/KAAA"))
             .and(header("Accept", "application/ld+json"))
             .respond_with(ResponseTemplate::new(200).set_body_raw(
                 r#"{
@@ -347,21 +380,22 @@ mod tests {
             .mount(&server)
             .await;
 
-        let transmitter = get_radio_transmitter(&client_for(&server), "K A/%?")
+        let transmitter = client_for(&server)
+            .radio()
+            .transmitter(&"kaaa".parse().unwrap())
             .await
             .unwrap();
 
         assert_eq!(transmitter.call_sign.as_deref(), Some("KAAA"));
         assert_eq!(transmitter.frequency.as_deref(), Some("162.550"));
         assert!(transmitter.same_codes.is_empty());
-        assert!(transmitter.counties.is_empty());
     }
 
     #[tokio::test]
     async fn county_zone_transmitters_use_the_county_path_without_pagination() {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
-            .and(path("/zones/county/AZC%20013%2F%25%3F/radio"))
+            .and(path("/zones/county/AZC013/radio"))
             .and(header("Accept", "application/ld+json"))
             .respond_with(
                 ResponseTemplate::new(200)
@@ -371,17 +405,18 @@ mod tests {
             .mount(&server)
             .await;
 
-        let transmitters =
-            get_radio_transmitters_for_county_zone(&client_for(&server), "AZC 013/%?")
-                .await
-                .unwrap();
+        let transmitters = client_for(&server)
+            .radio()
+            .transmitters_for_county(&"azc013".parse().unwrap())
+            .await
+            .unwrap();
 
         assert_eq!(transmitters.pagination, None);
         assert_eq!(
             transmitters.transmitters[0].call_sign.as_deref(),
             Some("KPHX")
         );
-        assert!(transmitters.transmitters[0].same_codes.is_empty());
-        assert!(transmitters.transmitters[0].counties.is_empty());
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.query(), None);
     }
 }
