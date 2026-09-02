@@ -12,7 +12,9 @@ jiff = { version = "0.2.35", features = ["serde"] }
 mime = "0.3.17"
 noaa_weather_client = { path = "noaa_weather_client", default-features = false }
 quick-xml = "0.42.0"
+regex = "1.13.1"
 reqwest = "0.13.4"
+schemars = "1.2.2"
 serde = "1.0.229"
 serde_json = "1.0.151"
 serde_with = "3.22.0"

@@ -344,6 +344,8 @@ pub enum Error {
     Response(Box<ResponseContent>),
     /// The response violated the client's protocol expectations.
     Protocol(Box<ProtocolError>),
+    /// A request value failed validation before any request was made.
+    Invalid(crate::ids::InvalidValue),
 }
 
 impl Error {
@@ -443,6 +445,7 @@ impl fmt::Display for Error {
                 response.text()
             ),
             Self::Protocol(source) => source.fmt(formatter),
+            Self::Invalid(source) => write!(formatter, "invalid input: {source}"),
         }
     }
 }
@@ -458,6 +461,7 @@ impl error::Error for Error {
             Self::TerminalAerodromeForecast(source) => Some(source.as_ref()),
             Self::Response(_) => None,
             Self::Protocol(source) => Some(source.as_ref()),
+            Self::Invalid(source) => Some(source),
         }
     }
 }
@@ -477,6 +481,12 @@ impl From<ProtocolError> for Error {
 impl From<ResponseContent> for Error {
     fn from(response: ResponseContent) -> Self {
         Self::Response(Box::new(response))
+    }
+}
+
+impl From<crate::ids::InvalidValue> for Error {
+    fn from(source: crate::ids::InvalidValue) -> Self {
+        Self::Invalid(source)
     }
 }
 
@@ -515,5 +525,20 @@ mod tests {
     fn error_remains_compact() {
         let size = std::mem::size_of::<Error>();
         assert!(size <= 48, "Error occupied {size} bytes");
+    }
+
+    #[test]
+    fn invalid_value_converts_and_displays() {
+        let invalid = "kslc!".parse::<crate::StationId>().unwrap_err();
+        let error = Error::from(invalid.clone());
+        assert_eq!(
+            error.to_string(),
+            "invalid input: invalid station id \"kslc!\": must be 3 to 16 ASCII letters or digits"
+        );
+        assert!(matches!(&error, Error::Invalid(source) if *source == invalid));
+        assert!(std::error::Error::source(&error).is_some());
+        assert!(!error.is_retryable());
+        assert_eq!(error.attempts(), 1);
+        assert!(error.status().is_none());
     }
 }

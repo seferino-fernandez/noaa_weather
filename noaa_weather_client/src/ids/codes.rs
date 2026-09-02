@@ -1,0 +1,492 @@
+//! Structurally validated ASCII identifiers.
+//!
+//! NOAA does not publish a closed list for most of these identifiers, so
+//! validation is structural: the input must be ASCII of a known shape and
+//! length. Letters are uppercase-normalized where NOAA treats codes as
+//! case-insensitive and preserved where the server issues mixed-case ids.
+
+use super::{InvalidValue, ValueKind};
+
+/// Which ASCII characters an identifier admits.
+#[derive(Clone, Copy)]
+pub(super) enum Chars {
+    /// ASCII letters and digits.
+    Alnum,
+    /// ASCII letters only.
+    Letters,
+    /// ASCII letters, digits, and `-`.
+    AlnumHyphen,
+    /// Printable ASCII other than space (`!` through `~`).
+    Printable,
+}
+
+impl Chars {
+    const fn admits(self, byte: u8) -> bool {
+        match self {
+            Self::Alnum => byte.is_ascii_alphanumeric(),
+            Self::Letters => byte.is_ascii_alphabetic(),
+            Self::AlnumHyphen => byte.is_ascii_alphanumeric() || byte == b'-',
+            Self::Printable => byte.is_ascii_graphic(),
+        }
+    }
+}
+
+/// How letter case is treated on input.
+#[derive(Clone, Copy)]
+pub(super) enum Case {
+    /// ASCII letters are converted to uppercase.
+    Upper,
+    /// Input is kept exactly as given.
+    Preserve,
+}
+
+/// The shape of one identifier family.
+pub(super) struct Rule {
+    pub(super) kind: ValueKind,
+    pub(super) min: usize,
+    pub(super) max: usize,
+    pub(super) chars: Chars,
+    pub(super) case: Case,
+    pub(super) reason: &'static str,
+}
+
+impl Rule {
+    /// Validates `input` against this rule and returns the normalized form.
+    pub(super) fn parse(&self, input: &str) -> Result<Box<str>, InvalidValue> {
+        let length = input.len();
+        let shape_ok = (self.min..=self.max).contains(&length)
+            && input.bytes().all(|byte| self.chars.admits(byte));
+        if !shape_ok {
+            return Err(InvalidValue::new(self.kind, input, self.reason));
+        }
+        Ok(match self.case {
+            Case::Upper => input.to_ascii_uppercase().into_boxed_str(),
+            Case::Preserve => Box::from(input),
+        })
+    }
+}
+
+const STATION: Rule = Rule {
+    kind: ValueKind::StationId,
+    min: 3,
+    max: 16,
+    chars: Chars::Alnum,
+    case: Case::Upper,
+    reason: "must be 3 to 16 ASCII letters or digits",
+};
+
+const CWSU: Rule = Rule {
+    kind: ValueKind::CwsuId,
+    min: 3,
+    max: 4,
+    chars: Chars::Alnum,
+    case: Case::Upper,
+    reason: "must be 3 to 4 ASCII letters or digits",
+};
+
+const ATSU: Rule = Rule {
+    kind: ValueKind::AtsuId,
+    min: 4,
+    max: 4,
+    chars: Chars::Alnum,
+    case: Case::Upper,
+    reason: "must be exactly 4 ASCII letters or digits",
+};
+
+const CALL_SIGN: Rule = Rule {
+    kind: ValueKind::CallSign,
+    min: 3,
+    max: 8,
+    chars: Chars::Alnum,
+    case: Case::Upper,
+    reason: "must be 3 to 8 ASCII letters or digits",
+};
+
+const PRODUCT_TYPE: Rule = Rule {
+    kind: ValueKind::ProductTypeCode,
+    min: 2,
+    max: 3,
+    chars: Chars::Letters,
+    case: Case::Upper,
+    reason: "must be 2 to 3 ASCII letters",
+};
+
+const RADAR_STATION: Rule = Rule {
+    kind: ValueKind::RadarStationId,
+    min: 4,
+    max: 4,
+    chars: Chars::Alnum,
+    case: Case::Upper,
+    reason: "must be exactly 4 ASCII letters or digits",
+};
+
+const PRODUCT: Rule = Rule {
+    kind: ValueKind::ProductId,
+    min: 1,
+    max: 64,
+    chars: Chars::AlnumHyphen,
+    case: Case::Preserve,
+    reason: "must be 1 to 64 ASCII letters, digits, or hyphens",
+};
+
+const ALERT: Rule = Rule {
+    kind: ValueKind::AlertId,
+    min: 1,
+    max: 256,
+    chars: Chars::Printable,
+    case: Case::Preserve,
+    reason: "must be 1 to 256 printable ASCII characters with no whitespace",
+};
+
+fn parse_station(input: &str) -> Result<Box<str>, InvalidValue> {
+    STATION.parse(input)
+}
+
+fn parse_cwsu(input: &str) -> Result<Box<str>, InvalidValue> {
+    CWSU.parse(input)
+}
+
+fn parse_atsu(input: &str) -> Result<Box<str>, InvalidValue> {
+    ATSU.parse(input)
+}
+
+fn parse_call_sign(input: &str) -> Result<Box<str>, InvalidValue> {
+    CALL_SIGN.parse(input)
+}
+
+fn parse_product_type(input: &str) -> Result<Box<str>, InvalidValue> {
+    PRODUCT_TYPE.parse(input)
+}
+
+fn parse_radar_station(input: &str) -> Result<Box<str>, InvalidValue> {
+    RADAR_STATION.parse(input)
+}
+
+fn parse_product(input: &str) -> Result<Box<str>, InvalidValue> {
+    PRODUCT.parse(input)
+}
+
+fn parse_alert(input: &str) -> Result<Box<str>, InvalidValue> {
+    ALERT.parse(input)
+}
+
+str_id! {
+    /// An observation station identifier such as `KSLC` or `KDEN`.
+    ///
+    /// Used by `/stations/{stationId}` and its observation and TAF
+    /// sub-resources. Accepts 3 to 16 ASCII letters or digits and
+    /// uppercase-normalizes them.
+    ///
+    /// ```
+    /// use noaa_weather_client::StationId;
+    ///
+    /// let station: StationId = "kslc".parse()?;
+    /// assert_eq!(station.as_str(), "KSLC");
+    /// assert!("K SLC".parse::<StationId>().is_err());
+    /// # Ok::<(), noaa_weather_client::InvalidValue>(())
+    /// ```
+    StationId, parse_station,
+    "Observation station identifier, 3 to 16 ASCII letters or digits (for example KSLC).",
+    "^[A-Za-z0-9]{3,16}$"
+}
+
+str_id! {
+    /// A Center Weather Service Unit identifier such as `ZAB`.
+    ///
+    /// Used by `/aviation/cwsus/{cwsuId}`. Accepts 3 to 4 ASCII letters or
+    /// digits and uppercase-normalizes them.
+    ///
+    /// ```
+    /// use noaa_weather_client::CwsuId;
+    ///
+    /// assert_eq!("zab".parse::<CwsuId>()?.as_str(), "ZAB");
+    /// # Ok::<(), noaa_weather_client::InvalidValue>(())
+    /// ```
+    CwsuId, parse_cwsu,
+    "Center Weather Service Unit identifier, 3 to 4 ASCII letters or digits (for example ZAB).",
+    "^[A-Za-z0-9]{3,4}$"
+}
+
+str_id! {
+    /// An Air Traffic Service Unit identifier such as `KKCI`.
+    ///
+    /// Used by `/aviation/sigmets/{atsu}`. Accepts exactly 4 ASCII letters
+    /// or digits and uppercase-normalizes them.
+    ///
+    /// ```
+    /// use noaa_weather_client::AtsuId;
+    ///
+    /// assert_eq!("kkci".parse::<AtsuId>()?.as_str(), "KKCI");
+    /// # Ok::<(), noaa_weather_client::InvalidValue>(())
+    /// ```
+    AtsuId, parse_atsu,
+    "Air Traffic Service Unit identifier, exactly 4 ASCII letters or digits (for example KKCI).",
+    "^[A-Za-z0-9]{4}$"
+}
+
+str_id! {
+    /// A NOAA Weather Radio transmitter call sign such as `WXK27`.
+    ///
+    /// Used by `/radio/{callSign}`. Accepts 3 to 8 ASCII letters or digits
+    /// and uppercase-normalizes them.
+    ///
+    /// ```
+    /// use noaa_weather_client::CallSign;
+    ///
+    /// assert_eq!("wxk27".parse::<CallSign>()?.as_str(), "WXK27");
+    /// # Ok::<(), noaa_weather_client::InvalidValue>(())
+    /// ```
+    CallSign, parse_call_sign,
+    "NOAA Weather Radio call sign, 3 to 8 ASCII letters or digits (for example WXK27).",
+    "^[A-Za-z0-9]{3,8}$"
+}
+
+str_id! {
+    /// A text product type code such as `AFD` or `ZFP`.
+    ///
+    /// Used by `/products/types/{typeId}`. Accepts 2 to 3 ASCII letters and
+    /// uppercase-normalizes them.
+    ///
+    /// ```
+    /// use noaa_weather_client::ProductTypeCode;
+    ///
+    /// assert_eq!("afd".parse::<ProductTypeCode>()?.as_str(), "AFD");
+    /// # Ok::<(), noaa_weather_client::InvalidValue>(())
+    /// ```
+    ProductTypeCode, parse_product_type,
+    "Text product type code, 2 to 3 ASCII letters (for example AFD).",
+    "^[A-Za-z]{2,3}$"
+}
+
+str_id! {
+    /// A radar station identifier such as `KABX`.
+    ///
+    /// Used by `/radar/stations/{stationId}`. Accepts exactly 4 ASCII
+    /// letters or digits and uppercase-normalizes them.
+    ///
+    /// ```
+    /// use noaa_weather_client::RadarStationId;
+    ///
+    /// assert_eq!("kabx".parse::<RadarStationId>()?.as_str(), "KABX");
+    /// # Ok::<(), noaa_weather_client::InvalidValue>(())
+    /// ```
+    RadarStationId, parse_radar_station,
+    "Radar station identifier, exactly 4 ASCII letters or digits (for example KABX).",
+    "^[A-Za-z0-9]{4}$"
+}
+
+str_id! {
+    /// A server-issued text product identifier.
+    ///
+    /// Used by `/products/{productId}`. NOAA issues UUID-like ids such as
+    /// `0b5e9b3a-1c2d-4e5f-8a9b-0c1d2e3f4a5b`; this accepts 1 to 64 ASCII
+    /// letters, digits, or hyphens and preserves case.
+    ///
+    /// ```
+    /// use noaa_weather_client::ProductId;
+    ///
+    /// let id: ProductId = "0b5e9b3a-1c2d-4e5f-8a9b-0c1d2e3f4a5b".parse()?;
+    /// assert_eq!(id.as_str(), "0b5e9b3a-1c2d-4e5f-8a9b-0c1d2e3f4a5b");
+    /// # Ok::<(), noaa_weather_client::InvalidValue>(())
+    /// ```
+    ProductId, parse_product,
+    "Text product identifier, 1 to 64 ASCII letters, digits, or hyphens.",
+    "^[A-Za-z0-9-]{1,64}$"
+}
+
+str_id! {
+    /// A server-issued alert identifier.
+    ///
+    /// Used by `/alerts/{id}`. NOAA issues URN-like ids such as
+    /// `urn:oid:2.49.0.1.840.0.1234`; this accepts 1 to 256 printable ASCII
+    /// characters with no whitespace and preserves case.
+    ///
+    /// ```
+    /// use noaa_weather_client::AlertId;
+    ///
+    /// let id: AlertId = "urn:oid:2.49.0.1.840.0.1234".parse()?;
+    /// assert_eq!(id.to_string(), "urn:oid:2.49.0.1.840.0.1234");
+    /// # Ok::<(), noaa_weather_client::InvalidValue>(())
+    /// ```
+    AlertId, parse_alert,
+    "Alert identifier, 1 to 256 printable ASCII characters with no whitespace (URN-like).",
+    "^[!-~]{1,256}$"
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn rejected<T: std::str::FromStr<Err = InvalidValue>>(input: &str) -> InvalidValue {
+        match input.parse::<T>() {
+            Ok(_) => panic!("{input:?} should be rejected"),
+            Err(error) => error,
+        }
+    }
+
+    #[test]
+    fn station_id_normalizes_and_bounds() {
+        let station: StationId = "kslc".parse().unwrap();
+        assert_eq!(station.as_str(), "KSLC");
+        assert_eq!(station, "KSLC".parse().unwrap());
+        assert_eq!(format!("{station:?}"), "\"KSLC\"");
+        assert_eq!(station.to_string(), "KSLC");
+        assert_eq!(StationId::try_from("KSLC").unwrap(), station);
+        assert_eq!(StationId::try_from(String::from("KSLC")).unwrap(), station);
+        assert_eq!(String::from(station.clone()), "KSLC");
+        assert_eq!(station.as_ref(), "KSLC");
+        assert!("ABCDEFGHIJKLMNOP".parse::<StationId>().is_ok());
+    }
+
+    #[test]
+    fn station_id_rejections_name_the_rule() {
+        for input in [
+            "",
+            "KS",
+            "ABCDEFGHIJKLMNOPQ",
+            "kslc!",
+            "K SLC",
+            " KSLC",
+            "KSLÇ",
+            "KS-LC",
+        ] {
+            let error = rejected::<StationId>(input);
+            assert_eq!(error.kind(), ValueKind::StationId, "{input:?}");
+            assert_eq!(error.input(), input);
+            assert_eq!(error.reason(), "must be 3 to 16 ASCII letters or digits");
+        }
+        assert_eq!(
+            rejected::<StationId>("kslc!").to_string(),
+            "invalid station id \"kslc!\": must be 3 to 16 ASCII letters or digits"
+        );
+    }
+
+    #[test]
+    fn cwsu_id_accepts_three_or_four_characters() {
+        assert_eq!("zab".parse::<CwsuId>().unwrap().as_str(), "ZAB");
+        assert_eq!("kzab".parse::<CwsuId>().unwrap().as_str(), "KZAB");
+        assert_eq!(rejected::<CwsuId>("ZA").kind(), ValueKind::CwsuId);
+        assert_eq!(rejected::<CwsuId>("ZABCD").kind(), ValueKind::CwsuId);
+        assert_eq!(rejected::<CwsuId>("Z-B").kind(), ValueKind::CwsuId);
+    }
+
+    #[test]
+    fn atsu_id_requires_exactly_four() {
+        assert_eq!("kkci".parse::<AtsuId>().unwrap().as_str(), "KKCI");
+        assert_eq!(rejected::<AtsuId>("KKC").kind(), ValueKind::AtsuId);
+        assert_eq!(rejected::<AtsuId>("KKCII").kind(), ValueKind::AtsuId);
+        assert_eq!(rejected::<AtsuId>("").kind(), ValueKind::AtsuId);
+    }
+
+    #[test]
+    fn call_sign_bounds() {
+        assert_eq!("wxk27".parse::<CallSign>().unwrap().as_str(), "WXK27");
+        assert!("WXK".parse::<CallSign>().is_ok());
+        assert!("WXK27ABC".parse::<CallSign>().is_ok());
+        assert_eq!(rejected::<CallSign>("WX").kind(), ValueKind::CallSign);
+        assert_eq!(
+            rejected::<CallSign>("WXK27ABCD").kind(),
+            ValueKind::CallSign
+        );
+        assert_eq!(rejected::<CallSign>("WXK 27").kind(), ValueKind::CallSign);
+    }
+
+    #[test]
+    fn product_type_code_is_letters_only() {
+        assert_eq!("afd".parse::<ProductTypeCode>().unwrap().as_str(), "AFD");
+        assert!("ZF".parse::<ProductTypeCode>().is_ok());
+        assert_eq!(
+            rejected::<ProductTypeCode>("A").kind(),
+            ValueKind::ProductTypeCode
+        );
+        assert_eq!(
+            rejected::<ProductTypeCode>("AFDX").kind(),
+            ValueKind::ProductTypeCode
+        );
+        assert_eq!(
+            rejected::<ProductTypeCode>("AF1").kind(),
+            ValueKind::ProductTypeCode
+        );
+        assert_eq!(
+            rejected::<ProductTypeCode>("AF1").reason(),
+            "must be 2 to 3 ASCII letters"
+        );
+    }
+
+    #[test]
+    fn radar_station_id_requires_exactly_four() {
+        assert_eq!("kabx".parse::<RadarStationId>().unwrap().as_str(), "KABX");
+        assert_eq!(
+            rejected::<RadarStationId>("ABX").kind(),
+            ValueKind::RadarStationId
+        );
+        assert_eq!(
+            rejected::<RadarStationId>("KABXX").kind(),
+            ValueKind::RadarStationId
+        );
+    }
+
+    #[test]
+    fn product_id_preserves_case_and_allows_hyphens() {
+        let id: ProductId = "0b5E9b3a-1c2d-4e5f-8a9b-0c1d2e3f4a5b".parse().unwrap();
+        assert_eq!(id.as_str(), "0b5E9b3a-1c2d-4e5f-8a9b-0c1d2e3f4a5b");
+        assert!("a".parse::<ProductId>().is_ok());
+        assert!("a".repeat(64).parse::<ProductId>().is_ok());
+        assert_eq!(rejected::<ProductId>("").kind(), ValueKind::ProductId);
+        assert_eq!(
+            rejected::<ProductId>(&"a".repeat(65)).kind(),
+            ValueKind::ProductId
+        );
+        assert_eq!(
+            rejected::<ProductId>("abc_def").kind(),
+            ValueKind::ProductId
+        );
+        assert_eq!(
+            rejected::<ProductId>("abc def").kind(),
+            ValueKind::ProductId
+        );
+    }
+
+    #[test]
+    fn alert_id_accepts_urns_and_rejects_whitespace() {
+        let id: AlertId = "urn:oid:2.49.0.1.840.0.1234".parse().unwrap();
+        assert_eq!(id.as_str(), "urn:oid:2.49.0.1.840.0.1234");
+        assert!("!".repeat(256).parse::<AlertId>().is_ok());
+        assert_eq!(rejected::<AlertId>("").kind(), ValueKind::AlertId);
+        assert_eq!(
+            rejected::<AlertId>(&"!".repeat(257)).kind(),
+            ValueKind::AlertId
+        );
+        assert_eq!(rejected::<AlertId>("urn:oid: 1").kind(), ValueKind::AlertId);
+        assert_eq!(
+            rejected::<AlertId>("urn:oid:1\n").kind(),
+            ValueKind::AlertId
+        );
+        assert_eq!(rejected::<AlertId>("urn:oïd:1").kind(), ValueKind::AlertId);
+    }
+
+    #[test]
+    fn serde_round_trips_through_strings() {
+        let station: StationId = "KSLC".parse().unwrap();
+        let json = serde_json::to_string(&station).unwrap();
+        assert_eq!(json, "\"KSLC\"");
+        let parsed: StationId = serde_json::from_str("\"kslc\"").unwrap();
+        assert_eq!(parsed, station);
+        let error = serde_json::from_str::<StationId>("\"k!\"").unwrap_err();
+        assert!(error.to_string().contains("invalid station id"), "{error}");
+
+        let alert: AlertId = "urn:oid:2.49.0.1.840.0.1234".parse().unwrap();
+        let json = serde_json::to_string(&alert).unwrap();
+        assert_eq!(serde_json::from_str::<AlertId>(&json).unwrap(), alert);
+    }
+
+    #[test]
+    fn ordering_and_hashing_follow_the_normalized_string() {
+        use std::collections::HashSet;
+        let a: StationId = "kden".parse().unwrap();
+        let b: StationId = "KSLC".parse().unwrap();
+        assert!(a < b);
+        let set: HashSet<StationId> = ["KDEN".parse().unwrap(), a.clone()].into_iter().collect();
+        assert_eq!(set.len(), 1);
+    }
+}

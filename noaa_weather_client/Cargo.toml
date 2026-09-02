@@ -21,6 +21,7 @@ jiff.workspace = true
 mime.workspace = true
 quick-xml = { workspace = true, features = ["serde", "serialize"], optional = true }
 reqwest = { workspace = true, features = ["gzip", "json", "query"] }
+schemars = { workspace = true, optional = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 serde_with.workspace = true
@@ -32,8 +33,10 @@ url.workspace = true
 default = ["radio"]
 radio = ["xml"]
 xml = ["dep:quick-xml"]
+schemars = ["dep:schemars"]
 
 [dev-dependencies]
+regex.workspace = true
 stats_alloc.workspace = true
 wiremock.workspace = true
 tokio = { workspace = true, features = ["full"] }
