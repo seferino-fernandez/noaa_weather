@@ -79,6 +79,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   List fields are `Vec<T>` (sent as one comma-separated value), instants are `Option<jiff::Timestamp>` (sent as RFC 3339), periods are `Option<Interval>` (ISO 8601 intervals), limits are `Option<u16>`. Query structs also derive `Serialize`/`Deserialize` in camelCase for JSON tooling; the wire encoding is separate and never produced from serde.
 - **Date and time segments.** `stations().taf(&station, issued)` and `aviation().sigmet(&atsu, issued)` take one `jiff::Timestamp` and send its UTC date and `HHMM` minute (seconds are dropped). `stations().observation_at` sends RFC 3339 UTC. `aviation().cwa` and `sigmets_for_atsu_on` take a `jiff::civil::Date`.
+- **Timestamps.** Timestamps inside responses are `OffsetDateTime`: the instant plus the UTC offset NOAA wrote it in, so `alert.sent` reads back and re-serializes as exactly `2026-09-02T03:48:00-04:00` while comparing equal to the same instant in any offset. `timestamp()` gives the plain `jiff::Timestamp`, `in_tz(&TimeZone)` a `jiff::Zoned`. `FeatureCollection::updated` uses it too (NOAA sends `+00:00`).
+- **Curated models.** The alerts family is hand-written: `Alert` has typed `id: AlertId`, `geocode.ugc: Vec<ZoneId>`, non-`Option` fields where CAP requires a value, empty lists and maps instead of `None`, `parameters: BTreeMap<String, Vec<String>>` with `parameter("VTEC")`, `affected_zone_ids()`, and the `replaced_by`/`replaced_at` pair NOAA adds to superseded alerts. `alerts().active_count()` returns `ActiveAlertCounts`; `alerts().types()` returns `AlertEventTypes`. Other families are still generated from the OpenAPI document and will follow the same rules.
 - **Composition.** `points().forecast_for(coordinates)` is the one composed convenience: it calls `points().get`, converts the response to a `GridpointId`, and calls `gridpoints().forecast`. A point without grid coordinates is `Error::Invalid`.
 
 ## Pagination
@@ -100,7 +102,7 @@ let mut query = AlertsQuery {
 loop {
     let page = client.alerts().search(&query).await?;
     for alert in &page {
-        println!("{}", alert.event.as_deref().unwrap_or("unknown alert"));
+        println!("{} (sent {})", alert.event, alert.sent);
     }
     let Some(cursor) = page.next_cursor() else {
         break;

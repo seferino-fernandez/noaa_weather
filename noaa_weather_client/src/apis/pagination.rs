@@ -75,7 +75,23 @@ mod tests {
                     "id": format!("https://api.weather.gov/alerts/{event}"),
                     "type": "Feature",
                     "geometry": null,
-                    "properties": {"event": event}
+                    "properties": {
+                        "id": format!("urn:oid:2.49.0.1.840.0.{event}.001.1"),
+                        "areaDesc": "Kent",
+                        "sent": "2026-09-02T03:48:00-04:00",
+                        "effective": "2026-09-02T03:48:00-04:00",
+                        "expires": "2026-09-02T04:45:00-04:00",
+                        "status": "Actual",
+                        "messageType": "Alert",
+                        "category": "Met",
+                        "severity": "Moderate",
+                        "certainty": "Observed",
+                        "urgency": "Expected",
+                        "event": event,
+                        "sender": "w-nws.webmaster@noaa.gov",
+                        "senderName": "NWS Grand Rapids MI",
+                        "scope": "Public"
+                    }
                 })
             })
             .collect();
@@ -132,7 +148,7 @@ mod tests {
     fn events(collection: &FeatureCollection<Alert>) -> Vec<&str> {
         collection
             .iter()
-            .map(|alert| alert.event.as_deref().unwrap())
+            .map(|alert| alert.event.as_str())
             .collect()
     }
 

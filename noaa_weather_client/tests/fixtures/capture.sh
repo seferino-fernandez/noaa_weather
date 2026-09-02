@@ -16,10 +16,13 @@ pretty_print() {
     fi
 }
 
+# capture <relative path> <url> [feature flags] [accept]
+# `accept` defaults to GeoJSON; JSON-LD endpoints pass application/ld+json.
 capture() {
     local relative_path="$1"
     local url="$2"
     local feature_flags="${3:-}"
+    local accept="${4:-application/geo+json}"
     local destination="$FIXTURE_DIR/$relative_path"
     local -a curl_args=(
         --fail
@@ -27,7 +30,7 @@ capture() {
         --show-error
         --location
         --header "User-Agent: $USER_AGENT"
-        --header "Accept: application/geo+json"
+        --header "Accept: $accept"
         --output "$TEMP_RESPONSE"
     )
 
@@ -61,6 +64,8 @@ capture "alerts/list.json" "$BASE_URL/alerts?limit=5"
 alert_id="$(first_property "$FIXTURE_DIR/alerts/list.json" id)"
 encoded_alert_id="$(python3 -c 'import sys; from urllib.parse import quote; print(quote(sys.argv[1], safe=""))' "$alert_id")"
 capture "alerts/single.json" "$BASE_URL/alerts/$encoded_alert_id"
+capture "alerts/count.json" "$BASE_URL/alerts/active/count" "" "application/ld+json"
+capture "alerts/types.json" "$BASE_URL/alerts/types" "" "application/ld+json"
 
 capture "stations/list.json" "$BASE_URL/stations?limit=5"
 capture "stations/single.json" "$BASE_URL/stations/KSLC"

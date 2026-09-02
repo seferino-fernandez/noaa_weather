@@ -1,4 +1,4 @@
-//! Time values for NOAA requests.
+//! Time values for NOAA requests and responses.
 //!
 //! NOAA query parameters that name one instant (`start`, `end`, `time`) take
 //! an RFC 3339 timestamp, and the type for them throughout this crate is
@@ -10,6 +10,11 @@
 //! `published`) take an [`Interval`], an ISO 8601 time interval in any of
 //! its four forms: `start/end`, `start/duration`, `duration/end`, or a bare
 //! `duration`.
+//!
+//! Timestamps inside responses are [`OffsetDateTime`]: the instant plus the
+//! UTC offset NOAA wrote it in, so `2026-09-02T03:48:00-04:00` reads back
+//! and prints as exactly that text while comparing equal to the same
+//! instant in any other offset.
 //!
 //! ```
 //! use noaa_weather_client::Interval;
@@ -23,8 +28,10 @@
 //! ```
 
 mod interval;
+mod offset_date_time;
 
 pub use interval::Interval;
+pub use offset_date_time::OffsetDateTime;
 
 /// RFC 3339 in UTC with whole seconds, the only timestamp form NOAA accepts
 /// in query parameters and path segments. Formatting with it truncates any

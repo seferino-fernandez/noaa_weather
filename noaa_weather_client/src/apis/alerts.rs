@@ -84,11 +84,9 @@ impl FromStr for RegionType {
 pub struct ActiveAlertsQuery {
     /// Alert statuses (actual, exercise, system, test, draft).
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
     pub status: Vec<AlertStatus>,
     /// Message types (alert, update, cancel).
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
     pub message_type: Vec<AlertMessageType>,
     /// Event names such as `Tornado Warning` or `Flood Watch`.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -115,15 +113,12 @@ pub struct ActiveAlertsQuery {
     pub zone: Vec<ZoneId>,
     /// Alert urgencies.
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
     pub urgency: Vec<AlertUrgency>,
     /// Alert severities.
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
     pub severity: Vec<AlertSeverity>,
     /// Alert certainties.
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
     pub certainty: Vec<AlertCertainty>,
 }
 
@@ -161,11 +156,9 @@ pub struct AlertsQuery {
     pub end: Option<Timestamp>,
     /// Alert statuses (actual, exercise, system, test, draft).
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
     pub status: Vec<AlertStatus>,
     /// Message types (alert, update, cancel).
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
     pub message_type: Vec<AlertMessageType>,
     /// Event names such as `Tornado Warning`.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -192,15 +185,12 @@ pub struct AlertsQuery {
     pub zone: Vec<ZoneId>,
     /// Alert urgencies.
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
     pub urgency: Vec<AlertUrgency>,
     /// Alert severities.
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
     pub severity: Vec<AlertSeverity>,
     /// Alert certainties.
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
     pub certainty: Vec<AlertCertainty>,
     /// Maximum number of alerts per page (1 to 500).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -396,7 +386,7 @@ impl Alerts<'_> {
     /// # async fn run() -> Result<(), noaa_weather_client::Error> {
     /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
     /// let count = client.alerts().active_count().await?;
-    /// println!("{:?} active alerts", count.total);
+    /// println!("{} active alerts, {} on land", count.total, count.land);
     /// # Ok(())
     /// # }
     /// ```
@@ -405,7 +395,7 @@ impl Alerts<'_> {
     ///
     /// Returns an [`Error`] if the request fails or the response cannot be
     /// decoded.
-    pub async fn active_count(&self) -> Result<models::ActiveAlertsCountResponse, Error> {
+    pub async fn active_count(&self) -> Result<models::ActiveAlertCounts, Error> {
         http::request(self.client, "/alerts/active/count")
             .json(http::JsonMedia::JsonLd)
             .await
@@ -535,7 +525,7 @@ impl Alerts<'_> {
     /// # async fn run() -> Result<(), noaa_weather_client::Error> {
     /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
     /// let types = client.alerts().types().await?;
-    /// # let _ = types;
+    /// println!("{} event types", types.event_types.len());
     /// # Ok(())
     /// # }
     /// ```
@@ -544,7 +534,7 @@ impl Alerts<'_> {
     ///
     /// Returns an [`Error`] if the request fails or the response cannot be
     /// decoded.
-    pub async fn types(&self) -> Result<models::AlertTypesResponse, Error> {
+    pub async fn types(&self) -> Result<models::AlertEventTypes, Error> {
         http::request(self.client, "/alerts/types")
             .json(http::JsonMedia::JsonLd)
             .await
@@ -566,7 +556,15 @@ mod tests {
     };
 
     const COLLECTION: &str = r#"{"type":"FeatureCollection","features":[]}"#;
-    const FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{}}"#;
+    const FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{
+        "id":"urn:oid:2.49.0.1.840.0.abc.001.1","areaDesc":"Kent",
+        "sent":"2026-09-02T03:48:00-04:00","effective":"2026-09-02T03:48:00-04:00",
+        "expires":"2026-09-02T04:45:00-04:00","status":"Actual","messageType":"Alert",
+        "category":"Met","severity":"Moderate","certainty":"Observed","urgency":"Expected",
+        "event":"Special Weather Statement","sender":"w-nws.webmaster@noaa.gov",
+        "senderName":"NWS Grand Rapids MI","scope":"Public"}}"#;
+    const COUNTS: &str = r#"{"total":1,"land":1,"marine":0,"areas":{"MI":1}}"#;
+    const TYPES: &str = r#"{"eventTypes":["Special Weather Statement"]}"#;
 
     async fn mount(server: &MockServer, route: &str, body: &'static str, media: &'static str) {
         Mock::given(method("GET"))
@@ -722,22 +720,36 @@ mod tests {
         )
         .await;
 
-        client_for(&server)
+        let alert = client_for(&server)
             .alerts()
             .get(&"urn:oid:2.49.0.1.840.0.abc.001.1".parse().unwrap())
             .await
             .unwrap();
+        assert_eq!(
+            alert.properties.id.as_str(),
+            "urn:oid:2.49.0.1.840.0.abc.001.1"
+        );
+        assert_eq!(alert.sent.to_string(), "2026-09-02T03:48:00-04:00");
     }
 
     #[tokio::test]
     async fn count_and_types_are_requested_as_json_ld() {
         let server = MockServer::start().await;
-        mount(&server, "/alerts/active/count", "{}", "application/ld+json").await;
-        mount(&server, "/alerts/types", "{}", "application/ld+json").await;
+        mount(
+            &server,
+            "/alerts/active/count",
+            COUNTS,
+            "application/ld+json",
+        )
+        .await;
+        mount(&server, "/alerts/types", TYPES, "application/ld+json").await;
 
         let client = client_for(&server);
-        client.alerts().active_count().await.unwrap();
-        client.alerts().types().await.unwrap();
+        let counts = client.alerts().active_count().await.unwrap();
+        assert_eq!((counts.total, counts.land, counts.marine), (1, 1, 0));
+        assert_eq!(counts.areas["MI"], 1);
+        let types = client.alerts().types().await.unwrap();
+        assert_eq!(types.event_types, ["Special Weather Statement"]);
     }
 
     #[tokio::test]
@@ -793,6 +805,30 @@ mod tests {
             "\"marine\""
         );
         assert!("ocean".parse::<RegionType>().is_err());
+    }
+
+    #[cfg(feature = "schemars")]
+    #[test]
+    fn query_schemas_list_the_alert_vocabularies_inline() {
+        let schema = schemars::schema_for!(ActiveAlertsQuery);
+        let value = schema.as_value();
+        // Documented variants become a `oneOf` of string `const`s.
+        let variants = |field: &str| -> Vec<String> {
+            let items = &value["properties"][field]["items"];
+            items["oneOf"]
+                .as_array()
+                .unwrap_or_else(|| panic!("{field} items should be a oneOf: {items}"))
+                .iter()
+                .map(|variant| variant["const"].as_str().unwrap().to_owned())
+                .collect()
+        };
+        assert_eq!(value["properties"]["severity"]["type"], "array", "{value}");
+        assert_eq!(
+            variants("severity"),
+            ["Extreme", "Severe", "Moderate", "Minor", "Unknown"]
+        );
+        assert!(variants("status").contains(&"Actual".to_owned()));
+        assert!(value.get("$defs").is_none(), "{value}");
     }
 
     #[test]

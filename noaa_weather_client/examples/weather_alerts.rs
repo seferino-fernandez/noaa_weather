@@ -25,17 +25,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 1. Get count of all active alerts
     println!("[1] Getting alert count...");
     match alerts.active_count().await {
-        Ok(count_response) => {
-            println!(
-                "  Total active alerts: {}",
-                count_response.total.unwrap_or(0)
-            );
-            if let Some(land) = count_response.land {
-                println!("  Land alerts: {}", land);
-            }
-            if let Some(marine) = count_response.marine {
-                println!("  Marine alerts: {}", marine);
-            }
+        Ok(counts) => {
+            println!("  Total active alerts: {}", counts.total);
+            println!("  Land alerts: {}", counts.land);
+            println!("  Marine alerts: {}", counts.marine);
+            println!("  States/territories with alerts: {}", counts.areas.len());
         }
         Err(error) => {
             eprintln!("  Error getting alert count: {}", error);
@@ -53,32 +47,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             for (index, alert) in ca_alerts.iter().take(3).enumerate() {
                 println!("\n    Alert #{}", index + 1);
-                println!("    Event: {}", alert.event.as_deref().unwrap_or("Unknown"));
+                println!("    Event: {}", alert.event);
                 println!(
                     "    Headline: {}",
-                    alert
-                        .headline
-                        .as_ref()
-                        .and_then(|h| h.as_ref())
-                        .map(|s| s.as_str())
-                        .unwrap_or("No headline")
+                    alert.headline.as_deref().unwrap_or("No headline")
                 );
-                println!(
-                    "    Areas: {}",
-                    alert.area_desc.as_deref().unwrap_or("Unknown")
-                );
-
-                if let Some(severity) = &alert.severity {
-                    println!("    Severity: {}", severity);
-                }
-
-                if let Some(urgency) = &alert.urgency {
-                    println!("    Urgency: {}", urgency);
-                }
-
-                if let Some(expires) = &alert.expires {
-                    println!("    Expires: {}", expires);
-                }
+                println!("    Areas: {}", alert.area_desc);
+                println!("    Severity: {}", alert.severity);
+                println!("    Urgency: {}", alert.urgency);
+                // `expires` is an OffsetDateTime: it prints with the offset
+                // NOAA sent, such as 2026-09-02T04:45:00-07:00.
+                println!("    Expires: {}", alert.expires);
+                let zones: Vec<String> = alert
+                    .affected_zone_ids()
+                    .map(|zone| zone.to_string())
+                    .collect();
+                println!("    Zones: {}", zones.join(", "));
             }
         }
         Err(error) => {
@@ -89,15 +73,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 3. Get available alert types
     println!("\n[3] Getting available alert types...");
     match alerts.types().await {
-        Ok(types_response) => {
-            if let Some(event_types) = &types_response.event_types {
-                println!("  Available alert types ({} total):", event_types.len());
-                for alert_type in event_types.iter().take(10) {
-                    println!("    - {}", alert_type);
-                }
-                if event_types.len() > 10 {
-                    println!("    ... and {} more", event_types.len() - 10);
-                }
+        Ok(types) => {
+            let event_types = &types.event_types;
+            println!("  Available alert types ({} total):", event_types.len());
+            for alert_type in event_types.iter().take(10) {
+                println!("    - {}", alert_type);
+            }
+            if event_types.len() > 10 {
+                println!("    ... and {} more", event_types.len() - 10);
             }
         }
         Err(error) => {
@@ -122,16 +105,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("  Found {} high-severity alerts", severe_alerts.len());
 
             for (index, alert) in severe_alerts.iter().enumerate() {
-                println!(
-                    "    {}. {} - {}",
-                    index + 1,
-                    alert.event.as_deref().unwrap_or("Unknown"),
-                    alert
-                        .severity
-                        .as_ref()
-                        .map(|s| s.to_string())
-                        .unwrap_or("Unknown severity".to_string())
-                );
+                println!("    {}. {} - {}", index + 1, alert.event, alert.severity);
             }
         }
         Err(error) => {
@@ -144,25 +118,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match alerts.active(&ActiveAlertsQuery::default()).await {
         Ok(any_alerts) => {
             // `feature.id` is the NOAA self-link URL; the URN NOAA accepts
-            // in `/alerts/{id}` is the `id` inside `properties`.
-            let first_id = any_alerts
+            // in `/alerts/{id}` is the typed `AlertId` inside `properties`.
+            let first_id: Option<&AlertId> = any_alerts
                 .features
                 .first()
-                .and_then(|alert| alert.properties.id.as_deref())
-                .map(str::parse::<AlertId>);
+                .map(|alert| &alert.properties.id);
             match first_id {
-                Some(Ok(alert_id)) => {
+                Some(alert_id) => {
                     println!("  Getting details for alert: {}", alert_id);
 
-                    match alerts.get(&alert_id).await {
+                    match alerts.get(alert_id).await {
                         Ok(detailed_alert) => {
                             let props = &detailed_alert.properties;
                             println!("    Alert Details:");
-                            println!("    Event: {}", props.event.as_deref().unwrap_or("Unknown"));
-                            println!(
-                                "    Sender: {}",
-                                props.sender_name.as_deref().unwrap_or("Unknown")
-                            );
+                            println!("    Event: {}", props.event);
+                            println!("    Sender: {}", props.sender_name);
+                            println!("    Sent: {}", props.sent);
 
                             if let Some(description) = &props.description {
                                 let short_desc = if description.len() > 200 {
@@ -173,7 +144,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 println!("    Description: {}", short_desc);
                             }
 
-                            if let Some(Some(instruction)) = &props.instruction {
+                            if let Some(instruction) = &props.instruction {
                                 let short_instruction = if instruction.len() > 200 {
                                     format!("{}...", &instruction[..200])
                                 } else {
@@ -181,14 +152,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 };
                                 println!("    Instructions: {}", short_instruction);
                             }
+
+                            if let Some(replaced_by) = &props.replaced_by {
+                                println!("    Replaced by: {}", replaced_by);
+                            }
                         }
                         Err(error) => {
                             eprintln!("    Error getting alert details: {}", error);
                         }
                     }
-                }
-                Some(Err(error)) => {
-                    eprintln!("  NOAA returned an alert id this client rejects: {error}");
                 }
                 None => println!("  No alerts currently available for detailed lookup"),
             }

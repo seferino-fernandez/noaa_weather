@@ -33,6 +33,9 @@ pub enum ValueKind {
     Coordinates,
     /// An ISO 8601 time interval.
     Interval,
+    /// An RFC 3339 timestamp with a UTC offset such as
+    /// `2026-09-02T03:48:00-04:00`.
+    Timestamp,
     /// An opaque pagination cursor such as `eyJzIjo1MDB9`.
     Cursor,
 }
@@ -55,6 +58,7 @@ impl ValueKind {
             Self::GridpointId => "gridpoint id",
             Self::Coordinates => "coordinates",
             Self::Interval => "interval",
+            Self::Timestamp => "timestamp",
             Self::Cursor => "cursor",
         }
     }
@@ -165,6 +169,7 @@ mod tests {
             ValueKind::GridpointId,
             ValueKind::Coordinates,
             ValueKind::Interval,
+            ValueKind::Timestamp,
             ValueKind::Cursor,
         ] {
             let name = kind.to_string();

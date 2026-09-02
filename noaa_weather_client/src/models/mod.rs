@@ -10,37 +10,11 @@
 pub mod astronomical_data;
 pub use self::astronomical_data::AstronomicalData;
 pub mod alert;
-pub use self::alert::Alert;
-pub mod alert_atom_entry;
-pub use self::alert_atom_entry::AlertAtomEntry;
-pub mod alert_atom_entry_author;
-pub use self::alert_atom_entry_author::AlertAtomEntryAuthor;
-pub mod alert_atom_feed;
-pub use self::alert_atom_feed::AlertAtomFeed;
-pub mod alert_atom_feed_author;
-pub use self::alert_atom_feed_author::AlertAtomFeedAuthor;
-pub mod alert_certainty;
-pub use self::alert_certainty::AlertCertainty;
-pub mod alert_geocode;
-pub use self::alert_geocode::AlertGeocode;
-pub mod alert_message_type;
-pub use self::alert_message_type::AlertMessageType;
-pub mod alert_references_inner;
-pub use self::alert_references_inner::AlertReferencesInner;
-pub mod alert_severity;
-pub use self::alert_severity::AlertSeverity;
-pub mod alert_status;
-pub use self::alert_status::AlertStatus;
-pub mod alert_urgency;
-pub use self::alert_urgency::AlertUrgency;
-pub mod alert_scope;
-pub use self::alert_scope::AlertScope;
-pub mod alert_xml_parameter;
-pub use self::alert_xml_parameter::AlertXmlParameter;
-pub mod active_alerts_count_response;
-pub use self::active_alerts_count_response::ActiveAlertsCountResponse;
-pub mod alert_types_response;
-pub use self::alert_types_response::AlertTypesResponse;
+pub use self::alert::{
+    ActiveAlertCounts, Alert, AlertCategory, AlertCertainty, AlertEventTypes, AlertGeocode,
+    AlertMessageType, AlertReference, AlertResponse, AlertScope, AlertSeverity, AlertStatus,
+    AlertUrgency,
+};
 pub mod area_code;
 pub use self::area_code::AreaCode;
 pub mod center_weather_advisory;

@@ -71,14 +71,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             // `Feature<Alert>` dereferences to `Alert`, so properties read
             // directly off the feature.
             for (index, alert) in alerts_data.iter().take(3).enumerate() {
-                println!(
-                    "    {}. {}",
-                    index + 1,
-                    alert.event.as_deref().unwrap_or("Unknown Event")
-                );
-                if let Some(areas) = &alert.area_desc {
-                    println!("       Areas: {}", areas);
-                }
+                println!("    {}. {}", index + 1, alert.event);
+                println!("       Areas: {}", alert.area_desc);
+                // Timestamps keep the offset NOAA sent, e.g. -04:00.
+                println!("       Expires: {}", alert.expires);
             }
         }
         Err(error) => {
