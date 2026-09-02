@@ -1,0 +1,350 @@
+---
+source: noaa_weather_summary/tests/alerts.rs
+expression: types().summarize()
+---
+title: Alert event types
+subtitle: 111 types
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: Event type
+          key: eventTypes
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Text: 911 Telephone Outage
+            emphasis: None
+        - - value:
+              Text: Administrative Message
+            emphasis: None
+        - - value:
+              Text: Air Quality Alert
+            emphasis: None
+        - - value:
+              Text: Air Stagnation Advisory
+            emphasis: None
+        - - value:
+              Text: Ashfall Advisory
+            emphasis: None
+        - - value:
+              Text: Ashfall Warning
+            emphasis: None
+        - - value:
+              Text: Avalanche Advisory
+            emphasis: None
+        - - value:
+              Text: Avalanche Warning
+            emphasis: None
+        - - value:
+              Text: Avalanche Watch
+            emphasis: None
+        - - value:
+              Text: Beach Hazards Statement
+            emphasis: None
+        - - value:
+              Text: Blizzard Warning
+            emphasis: None
+        - - value:
+              Text: Blowing Dust Advisory
+            emphasis: None
+        - - value:
+              Text: Blowing Dust Warning
+            emphasis: None
+        - - value:
+              Text: Blue Alert
+            emphasis: None
+        - - value:
+              Text: Brisk Wind Advisory
+            emphasis: None
+        - - value:
+              Text: Child Abduction Emergency
+            emphasis: None
+        - - value:
+              Text: Civil Danger Warning
+            emphasis: None
+        - - value:
+              Text: Civil Emergency Message
+            emphasis: None
+        - - value:
+              Text: Coastal Flood Advisory
+            emphasis: None
+        - - value:
+              Text: Coastal Flood Statement
+            emphasis: None
+        - - value:
+              Text: Coastal Flood Warning
+            emphasis: None
+        - - value:
+              Text: Coastal Flood Watch
+            emphasis: None
+        - - value:
+              Text: Cold Weather Advisory
+            emphasis: None
+        - - value:
+              Text: Dense Fog Advisory
+            emphasis: None
+        - - value:
+              Text: Dense Smoke Advisory
+            emphasis: None
+        - - value:
+              Text: Dust Advisory
+            emphasis: None
+        - - value:
+              Text: Dust Storm Warning
+            emphasis: None
+        - - value:
+              Text: Earthquake Warning
+            emphasis: None
+        - - value:
+              Text: Evacuation Immediate
+            emphasis: None
+        - - value:
+              Text: Extreme Heat Warning
+            emphasis: None
+        - - value:
+              Text: Extreme Heat Watch
+            emphasis: None
+        - - value:
+              Text: Extreme Cold Warning
+            emphasis: None
+        - - value:
+              Text: Extreme Cold Watch
+            emphasis: None
+        - - value:
+              Text: Extreme Fire Danger
+            emphasis: None
+        - - value:
+              Text: Extreme Wind Warning
+            emphasis: None
+        - - value:
+              Text: Fire Warning
+            emphasis: None
+        - - value:
+              Text: Fire Weather Watch
+            emphasis: None
+        - - value:
+              Text: Flash Flood Statement
+            emphasis: None
+        - - value:
+              Text: Flash Flood Warning
+            emphasis: None
+        - - value:
+              Text: Flash Flood Watch
+            emphasis: None
+        - - value:
+              Text: Flood Advisory
+            emphasis: None
+        - - value:
+              Text: Flood Statement
+            emphasis: None
+        - - value:
+              Text: Flood Warning
+            emphasis: None
+        - - value:
+              Text: Flood Watch
+            emphasis: None
+        - - value:
+              Text: Freeze Warning
+            emphasis: None
+        - - value:
+              Text: Freeze Watch
+            emphasis: None
+        - - value:
+              Text: Freezing Fog Advisory
+            emphasis: None
+        - - value:
+              Text: Freezing Spray Advisory
+            emphasis: None
+        - - value:
+              Text: Frost Advisory
+            emphasis: None
+        - - value:
+              Text: Gale Warning
+            emphasis: None
+        - - value:
+              Text: Gale Watch
+            emphasis: None
+        - - value:
+              Text: Hazardous Materials Warning
+            emphasis: None
+        - - value:
+              Text: Hazardous Seas Warning
+            emphasis: None
+        - - value:
+              Text: Hazardous Seas Watch
+            emphasis: None
+        - - value:
+              Text: Hazardous Weather Outlook
+            emphasis: None
+        - - value:
+              Text: Heat Advisory
+            emphasis: None
+        - - value:
+              Text: Heavy Freezing Spray Warning
+            emphasis: None
+        - - value:
+              Text: Heavy Freezing Spray Watch
+            emphasis: None
+        - - value:
+              Text: High Surf Advisory
+            emphasis: None
+        - - value:
+              Text: High Surf Warning
+            emphasis: None
+        - - value:
+              Text: High Wind Warning
+            emphasis: None
+        - - value:
+              Text: High Wind Watch
+            emphasis: None
+        - - value:
+              Text: Hurricane Force Wind Warning
+            emphasis: None
+        - - value:
+              Text: Hurricane Force Wind Watch
+            emphasis: None
+        - - value:
+              Text: Hurricane Warning
+            emphasis: None
+        - - value:
+              Text: Hurricane Watch
+            emphasis: None
+        - - value:
+              Text: Hydrologic Outlook
+            emphasis: None
+        - - value:
+              Text: Ice Storm Warning
+            emphasis: None
+        - - value:
+              Text: Lake Effect Snow Warning
+            emphasis: None
+        - - value:
+              Text: Lake Wind Advisory
+            emphasis: None
+        - - value:
+              Text: Lakeshore Flood Advisory
+            emphasis: None
+        - - value:
+              Text: Lakeshore Flood Statement
+            emphasis: None
+        - - value:
+              Text: Lakeshore Flood Warning
+            emphasis: None
+        - - value:
+              Text: Lakeshore Flood Watch
+            emphasis: None
+        - - value:
+              Text: Law Enforcement Warning
+            emphasis: None
+        - - value:
+              Text: Local Area Emergency
+            emphasis: None
+        - - value:
+              Text: Low Water Advisory
+            emphasis: None
+        - - value:
+              Text: Marine Weather Statement
+            emphasis: None
+        - - value:
+              Text: Nuclear Power Plant Warning
+            emphasis: None
+        - - value:
+              Text: Radiological Hazard Warning
+            emphasis: None
+        - - value:
+              Text: Red Flag Warning
+            emphasis: None
+        - - value:
+              Text: Rip Current Statement
+            emphasis: None
+        - - value:
+              Text: Severe Thunderstorm Warning
+            emphasis: None
+        - - value:
+              Text: Severe Thunderstorm Watch
+            emphasis: None
+        - - value:
+              Text: Severe Weather Statement
+            emphasis: None
+        - - value:
+              Text: Shelter In Place Warning
+            emphasis: None
+        - - value:
+              Text: Short Term Forecast
+            emphasis: None
+        - - value:
+              Text: Small Craft Advisory
+            emphasis: None
+        - - value:
+              Text: Snow Squall Warning
+            emphasis: None
+        - - value:
+              Text: Special Marine Warning
+            emphasis: None
+        - - value:
+              Text: Special Weather Statement
+            emphasis: None
+        - - value:
+              Text: Storm Surge Warning
+            emphasis: None
+        - - value:
+              Text: Storm Surge Watch
+            emphasis: None
+        - - value:
+              Text: Storm Warning
+            emphasis: None
+        - - value:
+              Text: Storm Watch
+            emphasis: None
+        - - value:
+              Text: Test
+            emphasis: None
+        - - value:
+              Text: Tornado Warning
+            emphasis: None
+        - - value:
+              Text: Tornado Watch
+            emphasis: None
+        - - value:
+              Text: Tropical Cyclone Local Statement
+            emphasis: None
+        - - value:
+              Text: Tropical Storm Warning
+            emphasis: None
+        - - value:
+              Text: Tropical Storm Watch
+            emphasis: None
+        - - value:
+              Text: Tsunami Advisory
+            emphasis: None
+        - - value:
+              Text: Tsunami Warning
+            emphasis: None
+        - - value:
+              Text: Tsunami Watch
+            emphasis: None
+        - - value:
+              Text: Typhoon Warning
+            emphasis: None
+        - - value:
+              Text: Typhoon Watch
+            emphasis: None
+        - - value:
+              Text: Volcano Warning
+            emphasis: None
+        - - value:
+              Text: Wind Advisory
+            emphasis: None
+        - - value:
+              Text: Winter Storm Warning
+            emphasis: None
+        - - value:
+              Text: Winter Storm Watch
+            emphasis: None
+        - - value:
+              Text: Winter Weather Advisory
+            emphasis: None
+notes: []

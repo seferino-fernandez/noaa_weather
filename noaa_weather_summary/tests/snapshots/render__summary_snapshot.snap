@@ -1,0 +1,183 @@
+---
+source: noaa_weather_summary/tests/render.rs
+expression: synthetic_summary()
+---
+title: Severe Thunderstorm Warning
+subtitle: "Severe Thunderstorm Warning issued for Wayne County until 7:00 AM EDT"
+emphasis: Danger
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: ID
+          key: id
+          also: []
+          value:
+            Identifier: "urn:oid:2.49.0.1.840.0.abc"
+          emphasis: None
+        - label: Area
+          key: areaDesc
+          also: []
+          value:
+            Text: "Wayne, MI"
+          emphasis: None
+        - label: Sent
+          key: sent
+          also: []
+          value:
+            Timestamp: "2026-09-02T03:48:00-04:00"
+          emphasis: None
+        - label: Effective
+          key: effective
+          also:
+            - expires
+          value:
+            Interval:
+              start: "2026-09-02T03:48:00-04:00"
+              end: "2026-09-02T07:00:00-04:00"
+          emphasis: None
+        - label: Ends
+          key: ends
+          also: []
+          value:
+            Interval:
+              start: "2026-09-02T03:48:00-04:00"
+              end: ~
+          emphasis: None
+        - label: Severity
+          key: severity
+          also: []
+          value:
+            Text: Severe
+          emphasis: Danger
+        - label: Urgency
+          key: urgency
+          also: []
+          value:
+            Text: Expected
+          emphasis: Warning
+        - label: Certainty
+          key: certainty
+          also: []
+          value:
+            Text: Likely
+          emphasis: Info
+        - label: Headline
+          key: headline
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Wind gust
+          key: maxWindGust
+          also: []
+          value:
+            Quantity:
+              value: 60
+              unit: mph
+              precision: 0
+          emphasis: None
+        - label: Hail size
+          key: maxHailSize
+          also: []
+          value: Invalid
+          emphasis: None
+        - label: Ratio
+          key: ~
+          also: []
+          value:
+            Quantity:
+              value: 0.5
+              unit: ~
+              precision: 2
+          emphasis: None
+        - label: Chance of rain
+          key: ~
+          also: []
+          value:
+            Percent: 39.6
+          emphasis: None
+        - label: Zones
+          key: ~
+          also: []
+          value:
+            Count: 3
+          emphasis: None
+        - label: Payload
+          key: ~
+          also: []
+          value:
+            Bytes: 1536000
+          emphasis: None
+        - label: Replaced
+          key: ~
+          also: []
+          value:
+            YesNo: false
+          emphasis: None
+        - label: Location
+          key: ~
+          also: []
+          value:
+            Coordinates:
+              lat: 42.331427
+              lon: -83.045754
+          emphasis: None
+        - label: Affected zones
+          key: affectedZones
+          also: []
+          value:
+            List:
+              - Identifier: MIZ044
+              - Identifier: MIC163
+          emphasis: None
+  - Table:
+      heading: By area
+      columns:
+        - title: Area
+          key: areas
+          also:
+            - areaNames
+          align: Left
+        - title: Alerts
+          key: ~
+          also: []
+          align: Right
+        - title: Marine
+          key: ~
+          also: []
+          align: Center
+      rows:
+        - - value:
+              Text: MI
+            emphasis: None
+          - value:
+              Count: 12
+            emphasis: Danger
+          - value:
+              YesNo: true
+            emphasis: None
+        - - value:
+              Text: OH | WV
+            emphasis: None
+          - value:
+              Count: 3
+            emphasis: Info
+          - value:
+              YesNo: false
+            emphasis: None
+        - - value: Missing
+            emphasis: None
+          - value: Invalid
+            emphasis: None
+          - value: Missing
+            emphasis: None
+  - Prose:
+      heading: Description
+      key: description
+      text: "At 348 AM EDT, a severe thunderstorm was located over Detroit, moving east at 40 mph."
+  - Empty:
+      key: instruction
+      message: No instructions
+notes:
+  - More alerts available
+  - Zone counts are in --json

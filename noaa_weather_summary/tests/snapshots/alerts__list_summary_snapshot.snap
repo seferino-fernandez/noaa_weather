@@ -1,0 +1,139 @@
+---
+source: noaa_weather_summary/tests/alerts.rs
+expression: list().summarize()
+---
+title: "Watches, warnings, and advisories"
+subtitle: 5 alerts
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: Alert
+          key: senderName
+          also:
+            - headline
+          align: Left
+        - title: Areas Affected
+          key: areaDesc
+          also: []
+          align: Left
+        - title: Effective
+          key: effective
+          also:
+            - expires
+          align: Left
+        - title: Severity
+          key: severity
+          also: []
+          align: Left
+        - title: Instructions
+          key: instruction
+          also: []
+          align: Left
+        - title: ID
+          key: id
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Text: "NWS Grand Rapids MI\nSpecial Weather Statement issued September 2 at 3:48AM EDT by NWS Grand Rapids MI"
+            emphasis: None
+          - value:
+              Text: Newaygo; Montcalm; Kent
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T03:48:00-04:00"
+                end: "2026-09-02T04:45:00-04:00"
+            emphasis: None
+          - value:
+              Text: Moderate
+            emphasis: Warning
+          - value:
+              Text: "If outdoors, consider seeking shelter inside a building."
+            emphasis: None
+          - value:
+              Identifier: "urn:oid:2.49.0.1.840.0.af7e0442df8bfed7953cb5cae6e4661304cc1f49.001.1"
+            emphasis: None
+        - - value:
+              Text: "NWS\nN/A"
+            emphasis: None
+          - value:
+              Text: Montgomery
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T07:47:16+00:00"
+                end: "2026-09-02T07:57:16+00:00"
+            emphasis: None
+          - value:
+              Text: Unknown
+            emphasis: None
+          - value:
+              Text: Monitoring message only. Please disregard.
+            emphasis: None
+          - value:
+              Identifier: "urn:oid:2.49.0.1.840.0-KEEPALIVE-51140"
+            emphasis: None
+        - - value:
+              Text: "NWS Milwaukee/Sullivan WI\nSpecial Weather Statement issued September 2 at 2:46AM CDT by NWS Milwaukee/Sullivan WI"
+            emphasis: None
+          - value:
+              Text: Fond Du Lac
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T02:46:00-05:00"
+                end: "2026-09-02T03:30:00-05:00"
+            emphasis: None
+          - value:
+              Text: Moderate
+            emphasis: Warning
+          - value:
+              Text: "If outdoors, consider seeking shelter inside a building.\n\nFrequent cloud to ground lightning is occurring with this storm.\nLightning can strike 10 miles away from a thunderstorm. Seek a safe\nshelter inside a building or vehicle."
+            emphasis: None
+          - value:
+              Identifier: "urn:oid:2.49.0.1.840.0.eac0148b2838ef4c3a0fdb45fc4ca6d60a01ea27.001.1"
+            emphasis: None
+        - - value:
+              Text: "NWS La Crosse WI\nThe Severe Thunderstorm Warning has been cancelled."
+            emphasis: None
+          - value:
+              Text: "Buffalo, WI"
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T02:42:00-05:00"
+                end: "2026-09-02T02:57:58-05:00"
+            emphasis: None
+          - value:
+              Text: Minor
+            emphasis: Info
+          - value: Missing
+            emphasis: None
+          - value:
+              Identifier: "urn:oid:2.49.0.1.840.0.d0de060466dc387307cc0a44dbed836b1d20c5e5.001.1"
+            emphasis: None
+        - - value:
+              Text: "NWS La Crosse WI\nSevere Thunderstorm Warning issued September 2 at 2:42AM CDT until September 2 at 3:15AM CDT by NWS La Crosse WI"
+            emphasis: None
+          - value:
+              Text: "Jackson, WI; La Crosse, WI; Monroe, WI; Trempealeau, WI"
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T02:42:00-05:00"
+                end: "2026-09-02T03:15:00-05:00"
+            emphasis: None
+          - value:
+              Text: Severe
+            emphasis: Danger
+          - value:
+              Text: "For your protection move to an interior room on the lowest floor of a\nbuilding."
+            emphasis: None
+          - value:
+              Identifier: "urn:oid:2.49.0.1.840.0.d0de060466dc387307cc0a44dbed836b1d20c5e5.002.1"
+            emphasis: None
+notes:
+  - More alerts available

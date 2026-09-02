@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["noaa_weather_client", "noaa_weather_cli"]
+members = ["noaa_weather_client", "noaa_weather_cli", "noaa_weather_summary"]
 
 [workspace.dependencies]
 anyhow = "1.0.104"
@@ -8,6 +8,7 @@ assert_cmd = "2.2.2"
 bytes = "1.12.1"
 clap = "4.6.6"
 comfy-table = "8.0.0"
+insta = "1.48.0"
 jiff = { version = "0.2.35", features = ["serde"] }
 mime = "0.3.17"
 noaa_weather_client = { path = "noaa_weather_client", default-features = false }
