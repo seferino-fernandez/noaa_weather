@@ -12,7 +12,10 @@ pub mod models;
 pub mod time;
 pub mod utils;
 
-pub use apis::{BinaryPayload, Error, ProtocolError, RedirectReason, ResponseContent};
+pub use apis::{
+    Alerts, Aviation, BinaryPayload, Error, Glossary, Gridpoints, Offices, Points, Products,
+    ProtocolError, Radar, Radio, RedirectReason, ResponseContent, Stations, Zones,
+};
 pub use client::{BuildError, Client, ClientBuilder, RetryPolicy};
 pub use geo::Coordinates;
 pub use ids::{

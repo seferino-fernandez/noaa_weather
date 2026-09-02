@@ -9,8 +9,8 @@ use std::{
 };
 
 use noaa_weather_client::{
-    BuildError, Client, ClientBuilder, Error, ProtocolError, RedirectReason, RetryPolicy,
-    apis::{alerts, points},
+    BuildError, Client, ClientBuilder, Coordinates, Error, ProtocolError, RedirectReason,
+    RetryPolicy,
 };
 use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
 use wiremock::{
@@ -39,7 +39,11 @@ fn point_response() -> ResponseTemplate {
 }
 
 async fn get_point(client: &Client) -> Result<(), Error> {
-    points::get_point(client, 39.7456, -97.0892).await.map(drop)
+    client
+        .points()
+        .get(Coordinates::new(39.7456, -97.0892).expect("valid coordinates"))
+        .await
+        .map(drop)
 }
 
 #[tokio::test]
@@ -362,7 +366,7 @@ async fn a_no_retry_policy_fails_on_the_first_server_error() {
         .await;
 
     let client = builder_for(&server).build().unwrap();
-    let error = alerts::get_alert_types(&client).await.unwrap_err();
+    let error = client.alerts().types().await.unwrap_err();
     assert_eq!(error.attempts(), 1);
     assert_eq!(error.status().map(|status| status.as_u16()), Some(503));
 }

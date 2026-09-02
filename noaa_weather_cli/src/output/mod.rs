@@ -60,7 +60,6 @@ impl From<String> for Operation {
 /// A successful default presentation before destination-specific rendering.
 pub(crate) enum PresentationDocument {
     Table(Box<Table>),
-    #[cfg(any(feature = "radio", test))]
     Text(String),
 }
 
@@ -229,7 +228,6 @@ impl Output {
                 }
                 self.write_document(move |writer| write_table(writer, &table))
             }
-            #[cfg(any(feature = "radio", test))]
             PresentationDocument::Text(text) => {
                 self.write_document(move |writer| write_text(writer, &text))
             }
@@ -288,7 +286,6 @@ fn write_table(writer: &mut dyn io::Write, table: &Table) -> Result<()> {
     Ok(())
 }
 
-#[cfg(any(feature = "radio", test))]
 fn write_text(writer: &mut dyn io::Write, text: &str) -> Result<()> {
     let content = text.trim_end_matches(['\r', '\n']);
     writer

@@ -19,7 +19,7 @@ A Rust-idiomatic client library and command-line interface for version 3.11.0 of
 - **Text Products** - Area Forecast Discussions, watches, and all NWS text products
 - **Zone Information** - Forecast zones, counties, and geographic areas
 - **Point Data** - Get weather data for any latitude/longitude coordinate
-- **NOAA Weather Radio** - Transmitter metadata and broadcast transcripts (enabled by default; opt out with `default-features = false`)
+- **NOAA Weather Radio** - Transmitter metadata and broadcast transcripts
 - **Glossary** - Typed NWS glossary terms
 
 ## Quick Start
@@ -49,10 +49,10 @@ cargo install --path noaa_weather_cli
 cargo add noaa_weather_client
 ```
 
-The default features include NOAA Weather Radio support. To build only the JSON API surface, disable default features:
+Every endpoint is always compiled in. The client exposes one handle per NOAA family (`client.alerts()`, `client.points()`, ...) with typed identifiers and one query struct per operation; add the optional `schemars` feature to publish the request surface as JSON Schema:
 
 ```bash
-cargo add noaa_weather_client --no-default-features
+cargo add noaa_weather_client --features schemars
 ```
 
 ## Documentation

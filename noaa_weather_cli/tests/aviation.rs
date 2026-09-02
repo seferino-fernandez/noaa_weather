@@ -18,6 +18,32 @@ fn test_aviation_cwa_success() {
 }
 
 #[test]
+fn test_aviation_cwa_rejects_malformed_date_and_cwsu() {
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.args([
+        "aviation",
+        "cwa",
+        "--cwsu-id",
+        "ZLA",
+        "--date",
+        "2025-13-40",
+        "--sequence",
+        "101",
+    ]);
+    let output = cmd.output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(stderr.contains("--date"), "{stderr}");
+
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.args(["aviation", "cwas", "--cwsu-id", "Z"]);
+    let output = cmd.output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(stderr.contains("invalid CWSU id"), "{stderr}");
+}
+
+#[test]
 fn test_aviation_cwa_failure_sequence_too_low() {
     let mut cmd = Command::new(cargo_bin!("noaa-weather"));
     cmd.arg("aviation");
@@ -106,16 +132,42 @@ fn test_aviation_sigmets_sequence_only_success() {
 }
 
 #[test]
-#[ignore = "Ignore this test for now since the date needs to be updated dynamically"]
+fn test_aviation_sigmets_relative_start_success() {
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.args(["aviation", "sigmets", "--atsu", "KKCI", "--start", "6h"]);
+    cmd.assert().success();
+}
+
+#[test]
+fn test_aviation_sigmet_rejects_removed_date_and_time_flags() {
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    cmd.args([
+        "aviation",
+        "sigmet",
+        "--atsu",
+        "KKCI",
+        "--date",
+        "2025-04-19",
+        "--time",
+        "0001",
+    ]);
+    let output = cmd.output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(stderr.contains("unexpected argument '--date'"), "{stderr}");
+}
+
+#[test]
+#[ignore = "Ignore this test for now since the issue time needs to be updated dynamically"]
 fn test_aviation_sigmet_success() {
     let mut cmd = Command::new(cargo_bin!("noaa-weather"));
-    cmd.arg("aviation");
-    cmd.arg("sigmet");
-    cmd.arg("--date");
-    cmd.arg("2025-04-19");
-    cmd.arg("--atsu");
-    cmd.arg("KKCI");
-    cmd.arg("--time");
-    cmd.arg("0001");
+    cmd.args([
+        "aviation",
+        "sigmet",
+        "--atsu",
+        "KKCI",
+        "--issued",
+        "2025-04-19T00:01:00Z",
+    ]);
     cmd.assert().success();
 }

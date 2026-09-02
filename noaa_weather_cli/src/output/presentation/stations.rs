@@ -278,10 +278,8 @@ fn create_stations_observations_table(
     Ok(table)
 }
 
-#[cfg(feature = "xml")]
 mod taf;
 
-#[cfg(feature = "xml")]
 use taf::{create_stations_taf_table, create_stations_tafs_metadata_table};
 
 /// Creates a row for a single observation station.
@@ -378,7 +376,6 @@ impl DefaultPresentation for ObservationCollectionGeoJson {
     }
 }
 
-#[cfg(feature = "xml")]
 impl DefaultPresentation for noaa_weather_client::models::TerminalAerodromeForecastsResponse {
     fn present_default(
         &self,
@@ -390,7 +387,6 @@ impl DefaultPresentation for noaa_weather_client::models::TerminalAerodromeForec
     }
 }
 
-#[cfg(feature = "xml")]
 impl DefaultPresentation for noaa_weather_client::models::TerminalAerodromeForecast {
     fn present_default(
         &self,

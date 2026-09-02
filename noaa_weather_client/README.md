@@ -1,6 +1,6 @@
 # NOAA Weather Client Library
 
-An asynchronous, typed Rust client for version 3.11.0 of the [NOAA Weather API](https://www.weather.gov/documentation/services-web-api). The default feature set exposes 64 public `get_*` endpoint functions for forecasts, alerts, observations, offices, radar, aviation, text products, zones, glossary terms, and NOAA Weather Radio.
+An asynchronous, typed Rust client for version 3.11.0 of the [NOAA Weather API](https://www.weather.gov/documentation/services-web-api). One `Client` exposes eleven endpoint handles (`client.alerts()`, `client.points()`, ...) covering all 64 NOAA operations (65 methods including the composed `points().forecast_for`): forecasts, alerts, observations, offices, radar, aviation, text products, zones, glossary terms, and NOAA Weather Radio.
 
 This project uses NOAA/NWS data but is not an official NOAA/NWS library.
 
@@ -10,43 +10,161 @@ This project uses NOAA/NWS data but is not an official NOAA/NWS library.
 cargo add noaa_weather_client
 ```
 
-The 1.3 client had an empty default feature set. This release changes the client default to `radio`, which also enables XML support for broadcast transcripts and Terminal Aerodrome Forecasts (TAFs). For a smaller JSON-only build:
+Every endpoint, including NOAA Weather Radio and Terminal Aerodrome Forecasts, is always compiled in; there are no endpoint features. The one optional feature is `schemars`, which derives `JsonSchema` for every query struct and typed value so the request surface can be published as JSON Schema (for example to an MCP server):
 
 ```bash
-cargo add noaa_weather_client --no-default-features
+cargo add noaa_weather_client --features schemars
 ```
 
-The complete feature matrix is:
+## Quick start
 
-- Default: `radio` enables transmitter metadata, broadcasts, both TAF APIs, and `xml`/`quick-xml`.
-- `default-features = false`: omits radio, both TAF APIs, and `quick-xml`.
-- `default-features = false, features = ["xml"]`: retains both TAF APIs and `quick-xml` without radio.
+```rust,no_run
+use noaa_weather_client::{Client, Coordinates, apis::alerts::ActiveAlertsQuery};
 
-For TAF support without radio:
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;
 
-```bash
-cargo add noaa_weather_client --no-default-features --features xml
+    // One call resolves the point to its grid cell and fetches the forecast.
+    let forecast = client
+        .points()
+        .forecast_for(Coordinates::new(39.7456, -97.0892)?)
+        .await?;
+    for period in forecast.properties.periods.iter().flatten().take(3) {
+        println!("{:?}: {:?}", period.name, period.short_forecast);
+    }
+
+    let active = client
+        .alerts()
+        .active(&ActiveAlertsQuery {
+            area: vec!["KS".parse()?],
+            ..Default::default()
+        })
+        .await?;
+    println!("Active alerts in Kansas: {}", active.features.len());
+
+    Ok(())
+}
 ```
+
+## How requests are shaped
+
+- **Handles.** `Client::alerts()`, `points()`, `gridpoints()`, `stations()`, `zones()`, `offices()`, `products()`, `aviation()`, `radar()`, `radio()`, and `glossary()` return borrowed `Copy` handles. Each method is one NOAA operation and documents the path it calls.
+- **Typed path values.** Required path segments are typed: `StationId`, `OfficeId`, `ZoneId`, `GridpointId` (`OFFICE/x,y`), `CwsuId`, `AtsuId`, `CallSign`, `ProductId`, `ProductTypeCode`, `RadarStationId`, `AlertId`, and `Coordinates`. They validate on `parse()` and report an `InvalidValue` before any request is made. Server-issued ids (headline, briefing, image, radar server, profiler) stay `&str`.
+- **Query structs.** Every operation with optional parameters takes one `*Query` struct with plain `pub` fields. Build it with struct-update syntax so unset filters stay absent:
+
+  ```rust,no_run
+  use noaa_weather_client::{Client, StationId, apis::stations::ObservationsQuery};
+
+  # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+  let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;
+  let station: StationId = "KPHX".parse()?;
+  let recent = client
+      .stations()
+      .observations(&station, &ObservationsQuery {
+          start: Some("2026-08-30T00:00:00Z".parse()?),
+          limit: Some(12),
+          ..Default::default()
+      })
+      .await?;
+  # let _ = recent;
+  # Ok(())
+  # }
+  ```
+
+  List fields are `Vec<T>` (sent as one comma-separated value), instants are `Option<jiff::Timestamp>` (sent as RFC 3339), periods are `Option<Interval>` (ISO 8601 intervals), limits are `Option<u16>`. Query structs also derive `Serialize`/`Deserialize` in camelCase for JSON tooling; the wire encoding is separate and never produced from serde.
+- **Date and time segments.** `stations().taf(&station, issued)` and `aviation().sigmet(&atsu, issued)` take one `jiff::Timestamp` and send its UTC date and `HHMM` minute (seconds are dropped). `stations().observation_at` sends RFC 3339 UTC. `aviation().cwa` and `sigmets_for_atsu_on` take a `jiff::civil::Date`.
+- **Composition.** `points().forecast_for(coordinates)` is the one composed convenience: it calls `points().get`, converts the response to a `GridpointId`, and calls `gridpoints().forecast`. A point without grid coordinates is `Error::Invalid`.
+
+## NOAA path → handle method
+
+| NOAA path | Handle method |
+| --- | --- |
+| `GET /alerts` | `alerts().search(&AlertsQuery)` |
+| `GET /alerts/active` | `alerts().active(&ActiveAlertsQuery)` |
+| `GET /alerts/active/count` | `alerts().active_count()` |
+| `GET /alerts/active/zone/{zoneId}` | `alerts().active_for_zone(&ZoneId)` |
+| `GET /alerts/active/area/{area}` | `alerts().active_for_area(&AreaCode)` |
+| `GET /alerts/active/region/{region}` | `alerts().active_for_marine_region(MarineRegionCode)` |
+| `GET /alerts/types` | `alerts().types()` |
+| `GET /alerts/{id}` | `alerts().get(&AlertId)` |
+| `GET /aviation/cwsus/{cwsuId}` | `aviation().cwsu(&CwsuId)` |
+| `GET /aviation/cwsus/{cwsuId}/cwas` | `aviation().cwas(&CwsuId)` |
+| `GET /aviation/cwsus/{cwsuId}/cwas/{date}/{sequence}` | `aviation().cwa(&CwsuId, Date, u32)` |
+| `GET /aviation/sigmets` | `aviation().sigmets(&SigmetsQuery)` |
+| `GET /aviation/sigmets/{atsu}` | `aviation().sigmets_for_atsu(&AtsuId)` |
+| `GET /aviation/sigmets/{atsu}/{date}` | `aviation().sigmets_for_atsu_on(&AtsuId, Date)` |
+| `GET /aviation/sigmets/{atsu}/{date}/{time}` | `aviation().sigmet(&AtsuId, Timestamp)` |
+| `GET /glossary` | `glossary().terms()` |
+| `GET /gridpoints/{wfo}/{x},{y}` | `gridpoints().get(&GridpointId)` |
+| `GET /gridpoints/{wfo}/{x},{y}/forecast` | `gridpoints().forecast(&GridpointId, &ForecastQuery)` |
+| `GET /gridpoints/{wfo}/{x},{y}/forecast/hourly` | `gridpoints().forecast_hourly(&GridpointId, &ForecastQuery)` |
+| `GET /gridpoints/{wfo}/{x},{y}/stations` | `gridpoints().stations(&GridpointId, &GridpointStationsQuery)` |
+| `GET /offices/{officeId}` | `offices().get(&OfficeId)` |
+| `GET /offices/{officeId}/headlines` | `offices().headlines(&OfficeId)` |
+| `GET /offices/{officeId}/headlines/{headlineId}` | `offices().headline(&OfficeId, &str)` |
+| `GET /offices/{officeId}/briefing` | `offices().briefing(&OfficeId)` |
+| `GET /offices/{officeId}/briefing/download/latest` | `offices().latest_briefing_document(&OfficeId)` |
+| `GET /offices/{officeId}/briefing/download/{briefingId}` | `offices().briefing_document(&OfficeId, &str)` |
+| `GET /offices/{officeId}/weatherstories` | `offices().weather_stories(&OfficeId)` |
+| `GET /offices/{officeId}/weatherstories/download/{imageId}` | `offices().weather_story_image(&OfficeId, &str)` |
+| `GET /points/{point}` | `points().get(Coordinates)` |
+| `GET /points/{point}` + `/gridpoints/.../forecast` | `points().forecast_for(Coordinates)` |
+| `GET /points/{point}/radio` | `radio().for_point(Coordinates)` |
+| `GET /products` | `products().search(&ProductsQuery)` |
+| `GET /products/locations` | `products().locations()` |
+| `GET /products/types` | `products().types()` |
+| `GET /products/{productId}` | `products().get(&ProductId)` |
+| `GET /products/types/{typeId}` | `products().by_type(&ProductTypeCode)` |
+| `GET /products/types/{typeId}/locations` | `products().locations_for_type(&ProductTypeCode)` |
+| `GET /products/locations/{locationId}/types` | `products().types_for_location(&OfficeId)` |
+| `GET /products/types/{typeId}/locations/{locationId}` | `products().by_type_and_location(&ProductTypeCode, &OfficeId)` |
+| `GET /products/types/{typeId}/locations/{locationId}/latest` | `products().latest(&ProductTypeCode, &OfficeId)` |
+| `GET /radar/servers` | `radar().servers(&RadarServersQuery)` |
+| `GET /radar/servers/{id}` | `radar().server(&str, &RadarServerQuery)` |
+| `GET /radar/stations` | `radar().stations(&RadarStationsQuery)` |
+| `GET /radar/stations/{stationId}` | `radar().station(&RadarStationId, &RadarStationQuery)` |
+| `GET /radar/stations/{stationId}/alarms` | `radar().station_alarms(&RadarStationId)` |
+| `GET /radar/queues/{host}` | `radar().queue(&RadarQueueHost, &RadarQueueQuery)` |
+| `GET /radar/profilers/{stationId}` | `radar().wind_profiler(&str, &WindProfilerQuery)` |
+| `GET /radar/spgds` | `radar().spgds(&SpgdsQuery)` |
+| `GET /radio` | `radio().transmitters(&TransmittersQuery)` |
+| `GET /radio/{callSign}` | `radio().transmitter(&CallSign)` |
+| `GET /radio/{callSign}/broadcast` | `radio().broadcast(&CallSign)` |
+| `GET /zones/county/{zoneId}/radio` | `radio().transmitters_for_county(&ZoneId)` |
+| `GET /stations` | `stations().list(&StationsQuery)` |
+| `GET /stations/{stationId}` | `stations().get(&StationId)` |
+| `GET /stations/{stationId}/observations` | `stations().observations(&StationId, &ObservationsQuery)` |
+| `GET /stations/{stationId}/observations/latest` | `stations().latest_observation(&StationId, &LatestObservationQuery)` |
+| `GET /stations/{stationId}/observations/{time}` | `stations().observation_at(&StationId, Timestamp)` |
+| `GET /stations/{stationId}/tafs` | `stations().tafs(&StationId)` |
+| `GET /stations/{stationId}/tafs/{date}/{time}` | `stations().taf(&StationId, Timestamp)` |
+| `GET /zones` | `zones().list(&ZonesQuery)` |
+| `GET /zones/{type}` | `zones().list_of_type(ZoneType, &ZonesQuery)` |
+| `GET /zones/{type}/{zoneId}` | `zones().get(ZoneType, &ZoneId, &ZoneQuery)` |
+| `GET /zones/{type}/{zoneId}/forecast` | `zones().forecast(ZoneType, &ZoneId)` |
+| `GET /zones/forecast/{zoneId}/observations` | `zones().observations(&ZoneId, &ZoneObservationsQuery)` |
+| `GET /zones/forecast/{zoneId}/stations` | `zones().stations(&ZoneId, &ZoneStationsQuery)` |
+
+The deprecated `/points/{point}/stations` operation is intentionally not exposed. Use `points().get` to obtain the gridpoint, then `gridpoints().stations`, or query the station endpoints directly.
 
 ## Semantic TAF forecasts
 
-`stations::get_terminal_aerodrome_forecast` decodes NOAA's IWXXM XML privately and returns forecast meaning rather than the XML element tree. The model provides typed timestamps, ordered base/change groups, canonical meters/knots/feet/Celsius values, exact weather codes plus parsed phenomena, cloud types, temperatures, and explicit forecast, cancellation, missing, CAVOK, unchanged, and unavailable states. Serializing the result produces semantic JSON without namespace or XML-wrapper fields.
+`stations().taf` decodes NOAA's IWXXM XML privately and returns forecast meaning rather than the XML element tree. The model provides typed timestamps, ordered base/change groups, canonical meters/knots/feet/Celsius values, exact weather codes plus parsed phenomena, cloud types, temperatures, and explicit forecast, cancellation, missing, CAVOK, unchanged, and unavailable states. Serializing the result produces semantic JSON without namespace or XML-wrapper fields.
 
 ```rust,no_run
-use noaa_weather_client::{Client, apis::stations};
+use noaa_weather_client::{Client, StationId};
 use noaa_weather_client::models::terminal_aerodrome_forecast::{
     ForecastReport, ForecastWeather,
 };
 
 # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;
-let taf = stations::get_terminal_aerodrome_forecast(
-    &client,
-    "KPHX",
-    "2026-08-30",
-    "2254",
-)
-.await?;
+let station: StationId = "KPHX".parse()?;
+let taf = client
+    .stations()
+    .taf(&station, "2026-08-30T22:54:00Z".parse()?)
+    .await?;
 
 if let ForecastReport::Forecast { valid_period, .. } = taf.report() {
     println!("valid from {} to {}", valid_period.start(), valid_period.end());
@@ -64,85 +182,21 @@ if let Some(base) = taf.base_forecast() {
 
 The IWXXM wire structs and decoder are implementation details. Consumers should use the accessors and non-exhaustive semantic enums under `models::terminal_aerodrome_forecast`.
 
-## Quick start
-
-```rust,no_run
-use noaa_weather_client::{Client, apis::{alerts, points}};
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;
-
-    let point = points::get_point(&client, 39.7456, -97.0892).await?;
-    println!("Forecast office: {:?}", point.properties.forecast_office);
-
-    let active = alerts::get_active_alerts(
-        &client,
-        alerts::ActiveAlertsParams::default(),
-    )
-    .await?;
-    println!("Active alerts: {}", active.features.len());
-
-    Ok(())
-}
-```
-
 ## Forecast values in 3.11
 
-Textual forecasts always request NOAA's quantitative temperature and wind formats. Callers no longer pass feature flags, and `temperature`, `wind_speed`, and `wind_gust` use `QuantitativeValue` models.
+Textual forecasts always request NOAA's quantitative temperature and wind formats. Callers never pass feature flags, and `temperature`, `wind_speed`, and `wind_gust` use `QuantitativeValue` models.
 
 ```rust,no_run
-use noaa_weather_client::{Client, apis::gridpoints};
-use noaa_weather_client::models::{GridpointForecastUnits, NwsForecastOfficeId};
+use noaa_weather_client::{Client, GridpointId, apis::gridpoints::{ForecastQuery, ForecastUnits}};
 
 # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;
-let forecast = gridpoints::get_gridpoint_forecast(
-    &client,
-    NwsForecastOfficeId::Top,
-    31,
-    80,
-    Some(GridpointForecastUnits::Us),
-)
-.await?;
+let grid: GridpointId = "TOP/31,80".parse()?;
+let forecast = client
+    .gridpoints()
+    .forecast(&grid, &ForecastQuery { units: Some(ForecastUnits::Us) })
+    .await?;
 # let _ = forecast;
-# Ok(())
-# }
-```
-
-## New 3.11 data families
-
-```rust,no_run
-use noaa_weather_client::{Client, apis::{glossary, offices, radar}};
-use noaa_weather_client::models::{NwsForecastOfficeId, NwsOfficeId};
-
-# async fn example() -> Result<(), Box<dyn std::error::Error>> {
-let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;
-
-let terms = glossary::get_glossary(&client).await?;
-let briefing = offices::get_forecast_office_briefing(
-    &client,
-    &NwsOfficeId::NwsForecastOfficeId(NwsForecastOfficeId::Psr),
-)
-.await?;
-let spgds = radar::get_radar_spgds(&client, None).await?;
-# let _ = (terms, briefing, spgds);
-# Ok(())
-# }
-```
-
-With the default `radio` feature, transmitter metadata is also typed:
-
-```rust,no_run
-# #[cfg(feature = "radio")]
-use noaa_weather_client::{Client, apis::radio};
-
-# #[cfg(feature = "radio")]
-# async fn example() -> Result<(), Box<dyn std::error::Error>> {
-let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;
-let transmitters = radio::get_radio_transmitters(&client, None).await?;
-let station = radio::get_radio_transmitter(&client, "KEC94").await?;
-# let _ = (transmitters, station);
 # Ok(())
 # }
 ```
@@ -152,16 +206,12 @@ let station = radio::get_radio_transmitter(&client, "KEC94").await?;
 Briefing documents and weather-story images return `BinaryPayload`. It retains reference-counted `Bytes`, the validated media type, and the final URL after redirects without decoding the body as text.
 
 ```rust,no_run
-use noaa_weather_client::{Client, apis::offices};
-use noaa_weather_client::models::{NwsForecastOfficeId, NwsOfficeId};
+use noaa_weather_client::{Client, OfficeId};
 
 # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;
-let pdf = offices::get_latest_forecast_office_briefing_document(
-    &client,
-    &NwsOfficeId::NwsForecastOfficeId(NwsForecastOfficeId::Psr),
-)
-.await?;
+let office: OfficeId = "PSR".parse()?;
+let pdf = client.offices().latest_briefing_document(&office).await?;
 tokio::fs::write("briefing.pdf", pdf.as_bytes()).await?;
 # Ok(())
 # }
@@ -169,18 +219,20 @@ tokio::fs::write("briefing.pdf", pdf.as_bytes()).await?;
 
 The client follows up to five redirects itself, refuses `https` to `http` downgrades, and drops the API key when a hop leaves the configured origin. A redirect that cannot be followed is `Error::Protocol` with `ProtocolError::Redirect`.
 
+`OfficeId` accepts forecast offices, regional headquarters (`ARH`, `CRH`, `ERH`, `PRH`, `SRH`, `WRH`), and national headquarters (`NWS`); `OfficeId::KNOWN` lists the forecast offices for completion hints without restricting the value.
+
 ## Error handling
 
-Every endpoint returns the same compact, non-generic `Error` type. HTTP response and protocol details are boxed so the common result type stays small. `ResponseContent` retains status, URL, raw `Bytes`, content type, a parsed NOAA `ProblemDetail` when available, the `Retry-After` delay, the `X-Correlation-Id` and `X-Request-Id` headers, and how many attempts were made.
+Every handle method returns the same compact, non-generic `Error` type. HTTP response and protocol details are boxed so the common result type stays small. `ResponseContent` retains status, URL, raw `Bytes`, content type, a parsed NOAA `ProblemDetail` when available, the `Retry-After` delay, the `X-Correlation-Id` and `X-Request-Id` headers, and how many attempts were made. `Error::Invalid` carries the `InvalidValue` from a typed value that failed validation.
 
 Helpers on `Error` answer the common questions without matching variants: `status()`, `is_not_found()`, `is_rate_limited()`, `retry_after()`, `problem()`, `is_retryable()`, and `attempts()`.
 
 ```rust,no_run
-use noaa_weather_client::{Client, Error, apis::points};
+use noaa_weather_client::{Client, Coordinates, Error};
 
 # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;
-match points::get_point(&client, 0.0, 0.0).await {
+match client.points().get(Coordinates::new(0.0, 0.0)?).await {
     Ok(point) => println!("{point:?}"),
     Err(error) if error.is_not_found() => eprintln!("no forecast for that point"),
     Err(Error::Response(response)) => {
@@ -199,28 +251,6 @@ match points::get_point(&client, 0.0, 0.0).await {
 # Ok(())
 # }
 ```
-
-## API coverage
-
-| Module | Selected functions |
-| --- | --- |
-| `alerts` | `get_active_alerts`, `get_alerts`, `get_alert` |
-| `aviation` | `get_sigmets`, `get_center_weather_advisories` |
-| `glossary` | `get_glossary` |
-| `gridpoints` | `get_gridpoint_forecast`, `get_gridpoint_forecast_hourly` |
-| `offices` | `get_forecast_office_briefing`, `get_forecast_office_weather_stories` |
-| `points` | `get_point` |
-| `products` | `get_products_query`, `get_latest_product_by_type_and_location` |
-| `radar` | `get_radar_stations`, `get_radar_data_queue`, `get_radar_spgds` |
-| `radio`* | `get_radio_transmitters`, `get_radio_transmitter`, `get_area_radio` |
-| `stations` | `get_observation_station`, `get_latest_observations` |
-| `zones` | `get_zone`, `get_zone_forecast`, `get_stations_by_zone` |
-
-\* Requires the `radio` feature.
-
-The deprecated `/points/{latitude},{longitude}/stations` operation is intentionally not exposed. Use point metadata to obtain the gridpoint, then call `gridpoints::get_gridpoint_stations`, or query the station endpoints directly.
-
-All eight `/offices/{officeId}` functions accept `NwsOfficeId`, covering forecast offices, regional headquarters (`ARH`, `CRH`, `ERH`, `PRH`, `SRH`, `WRH`), and national headquarters (`NWS`).
 
 ## Client configuration and authentication
 

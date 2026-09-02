@@ -2,10 +2,12 @@
 
 The deprecated `active` query flag on the general alerts endpoint is not exposed. Use the dedicated active-alert commands below.
 
+Zone ids (`--zone`, `--zone-id`) and points (`--point <LAT,LON>`) are validated before any request is made; a malformed value is a usage error (exit code 2).
+
 ## List Active Alerts
 
 ```sh
-noaa-weather alerts active
+noaa-weather alerts active [--area <CODE,...>] [--point <LAT,LON>] [--zone <ID,...>] [--severity <LEVEL,...>] ...
 ```
 
 ## Get Active Alerts for a Specific Area (State/Territory or Marine Area)
@@ -30,6 +32,15 @@ noaa-weather alerts marine-region --marine-region <REGION>
 
 ```sh
 noaa-weather alerts zone --zone-id <ZONE_ID>
+```
+
+## List Alerts, Including Past Ones
+
+`--start` and `--end` accept an RFC 3339 timestamp or a relative age such as `6h`, `30m`, or `2d`, resolved when the command starts.
+
+```sh
+noaa-weather alerts list [--start <TIME>] [--end <TIME>] [--limit <1-500>] ...
+noaa-weather alerts list --start 6h --status actual
 ```
 
 ## Get a Single Alert by ID

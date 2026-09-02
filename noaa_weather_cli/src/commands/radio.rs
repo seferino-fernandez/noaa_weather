@@ -1,24 +1,23 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::Client;
-use noaa_weather_client::apis::radio as radio_api;
+use noaa_weather_client::apis::radio::TransmittersQuery;
+use noaa_weather_client::{CallSign, Client, Coordinates, ZoneId};
 
 use crate::output::Output;
 
 /// Arguments for getting the radio broadcast for a geographic point.
 #[derive(Args, Debug, Clone)]
 pub struct PointRadioArgs {
-    /// Latitude of the point (e.g., 33.4484).
-    pub latitude: f64,
-    /// Longitude of the point (e.g., -112.0740).
-    pub longitude: f64,
+    /// Point as LAT,LON in decimal degrees (e.g., 33.4484,-112.0740).
+    #[arg(value_name = "LAT,LON")]
+    pub point: Coordinates,
 }
 
 /// Arguments for getting the radio broadcast for a transmitter station.
 #[derive(Args, Debug, Clone)]
 pub struct StationRadioArgs {
     /// Transmitter call sign (e.g., KEC94).
-    pub call_sign: String,
+    pub call_sign: CallSign,
 }
 
 /// Arguments for listing NOAA Weather Radio transmitters.
@@ -33,7 +32,7 @@ pub struct RadioTransmittersArgs {
 #[derive(Args, Debug, Clone)]
 pub struct RadioZoneArgs {
     /// NWS county zone identifier (for example, AZC013).
-    zone_id: String,
+    zone_id: ZoneId,
 }
 
 /// Access NOAA Weather Radio broadcast information.
@@ -47,7 +46,7 @@ pub enum RadioCommands {
     Zone(RadioZoneArgs),
     /// Get the NOAA Weather Radio broadcast for a geographic point.
     ///
-    /// Example: `noaa-weather radio point 33.4484 -- -112.0740`
+    /// Example: `noaa-weather radio point 33.4484,-112.0740`
     #[clap(name = "point")]
     Point(PointRadioArgs),
     /// Get the NOAA Weather Radio broadcast for a transmitter station.
@@ -59,8 +58,8 @@ pub enum RadioCommands {
 
 /// Handles the execution of radio-related subcommands.
 ///
-/// Dispatches the command to the appropriate API function based on the
-/// provided `RadioCommands` variant and arguments.
+/// Dispatches the command to the matching `client.radio()` method based on
+/// the provided `RadioCommands` variant and arguments.
 ///
 /// # Arguments
 ///
@@ -73,15 +72,13 @@ pub async fn handle_command(
     output: &Output,
     client: &Client,
 ) -> Result<()> {
+    let radio = client.radio();
     match command {
         RadioCommands::Point(args) => {
             output
                 .show(
-                    format!(
-                        "getting radio broadcast for point {},{}",
-                        args.latitude, args.longitude
-                    ),
-                    radio_api::get_point_radio(client, args.latitude, args.longitude),
+                    format!("getting radio broadcast for point {}", args.point),
+                    radio.for_point(args.point),
                 )
                 .await
         }
@@ -89,23 +86,23 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting radio broadcast for station {}", args.call_sign),
-                    radio_api::get_area_radio(client, &args.call_sign),
+                    radio.broadcast(&args.call_sign),
                 )
                 .await
         }
         RadioCommands::Transmitters(args) => {
+            let query = TransmittersQuery {
+                cursor: args.cursor.clone(),
+            };
             output
-                .show(
-                    "listing radio transmitters",
-                    radio_api::get_radio_transmitters(client, args.cursor.as_deref()),
-                )
+                .show("listing radio transmitters", radio.transmitters(&query))
                 .await
         }
         RadioCommands::Transmitter(args) => {
             output
                 .show(
                     format!("getting radio transmitter {}", args.call_sign),
-                    radio_api::get_radio_transmitter(client, &args.call_sign),
+                    radio.transmitter(&args.call_sign),
                 )
                 .await
         }
@@ -116,7 +113,7 @@ pub async fn handle_command(
                         "listing radio transmitters for county zone {}",
                         args.zone_id
                     ),
-                    radio_api::get_radio_transmitters_for_county_zone(client, &args.zone_id),
+                    radio.transmitters_for_county(&args.zone_id),
                 )
                 .await
         }

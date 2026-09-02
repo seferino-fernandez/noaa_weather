@@ -60,11 +60,10 @@ fn test_radar_servers_success() {
 
 #[test]
 fn test_radar_station_success() {
+    // NOAA's station list mixes 4-character NEXRAD sites with 5-character
+    // profilers such as HWPA2; both shapes must reach the API.
     let mut cmd = Command::new(cargo_bin!("noaa-weather"));
-    cmd.arg("radar")
-        .arg("station")
-        .arg("--station-id")
-        .arg("HWPA2");
+    cmd.args(["radar", "station", "--station-id", "hwpa2"]);
     cmd.assert().success();
 }
 
@@ -108,7 +107,13 @@ fn test_radar_spgds_supports_table_json_and_published_filter() {
 
     let mut json = Command::new(cargo_bin!("noaa-weather"));
     let output = json
-        .args(["radar", "spgds", "--published", "PT1H/NOW", "--json"])
+        .args([
+            "radar",
+            "spgds",
+            "--published",
+            "2026-08-30T00:00:00Z/2026-08-30T01:00:00Z",
+            "--json",
+        ])
         .output()
         .unwrap();
     assert!(
@@ -133,4 +138,30 @@ fn test_radar_spgds_error_preserves_operation_and_http_detail() {
     assert!(stderr.contains("getting radar SPGDS telemetry"), "{stderr}");
     assert!(stderr.contains("HTTP 400 Bad Request"), "{stderr}");
     assert!(stderr.contains("query.published"), "{stderr}");
+}
+
+#[test]
+fn test_radar_spgds_rejects_malformed_interval_as_usage_error() {
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    let output = cmd
+        .args(["radar", "spgds", "--published", "PT1H/NOW"])
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(stderr.contains("invalid interval"), "{stderr}");
+}
+
+#[test]
+fn test_radar_station_rejects_malformed_station_id() {
+    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
+    let output = cmd
+        .args(["radar", "station", "--station-id", "KAB"])
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(stderr.contains("invalid radar station id"), "{stderr}");
 }

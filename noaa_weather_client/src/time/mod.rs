@@ -25,3 +25,8 @@
 mod interval;
 
 pub use interval::Interval;
+
+/// RFC 3339 in UTC with whole seconds, the only timestamp form NOAA accepts
+/// in query parameters and path segments. Formatting with it truncates any
+/// sub-second precision.
+pub(crate) const RFC3339_SECONDS: &str = "%Y-%m-%dT%H:%M:%SZ";

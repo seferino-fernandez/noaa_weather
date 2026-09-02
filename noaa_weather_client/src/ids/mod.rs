@@ -140,8 +140,8 @@ pub(crate) mod schema_tests {
             &["", "A", "AFDX", "AF1"],
         );
         assert_pattern_matches_parser::<RadarStationId>(
-            &["KABX", "kabx", "K1B2"],
-            &["", "ABX", "KABXX", "KA-X"],
+            &["KABX", "kabx", "K1B2", "HWPA2", "tlka2"],
+            &["", "ABX", "KABXXX", "KA-X", "HWPA 2"],
         );
         assert_pattern_matches_parser::<ProductId>(
             &[

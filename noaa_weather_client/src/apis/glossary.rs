@@ -1,18 +1,50 @@
-//! NWS glossary terms.
+//! NWS glossary terms: the `/glossary` endpoint.
+//!
+//! Obtain the handle with [`Client::glossary`].
 
 use super::Error;
 use crate::client::{Client, http};
 use crate::models::GlossaryResponse;
 
-/// Returns the NWS glossary.
-///
-/// # Errors
-///
-/// Returns an [`Error`] if the request fails or the response cannot be parsed.
-pub async fn get_glossary(client: &Client) -> Result<GlossaryResponse, Error> {
-    http::request(client, "/glossary")
-        .json(http::JsonMedia::JsonLd)
-        .await
+/// The `/glossary` endpoint, obtained from [`Client::glossary`].
+#[derive(Clone, Copy, Debug)]
+pub struct Glossary<'a> {
+    client: &'a Client,
+}
+
+impl Client {
+    /// Returns the handle for the `/glossary` endpoint.
+    #[must_use]
+    pub fn glossary(&self) -> Glossary<'_> {
+        Glossary { client: self }
+    }
+}
+
+impl Glossary<'_> {
+    /// Returns every glossary term and its definition.
+    ///
+    /// `GET /glossary`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::Client;
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let glossary = client.glossary().terms().await?;
+    /// println!("{} terms", glossary.glossary.len());
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn terms(&self) -> Result<GlossaryResponse, Error> {
+        http::request(self.client, "/glossary")
+            .json(http::JsonMedia::JsonLd)
+            .await
+    }
 }
 
 #[cfg(test)]
@@ -22,7 +54,6 @@ mod tests {
         matchers::{header, method, path},
     };
 
-    use super::get_glossary;
     use crate::{Error, client::test_support::client_for};
 
     #[tokio::test]
@@ -39,12 +70,14 @@ mod tests {
             .mount(&server)
             .await;
 
-        let response = get_glossary(&client_for(&server)).await.unwrap();
+        let response = client_for(&server).glossary().terms().await.unwrap();
         assert_eq!(response.glossary[0].term.as_deref(), Some("Virga"));
         assert_eq!(
             response.glossary[0].definition.as_deref(),
             Some("Precipitation that evaporates before reaching the ground.")
         );
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].url.query(), None);
     }
 
     #[tokio::test]
@@ -59,7 +92,8 @@ mod tests {
             .mount(&server)
             .await;
 
-        let Error::Protocol(error) = get_glossary(&client_for(&server)).await.unwrap_err() else {
+        let Error::Protocol(error) = client_for(&server).glossary().terms().await.unwrap_err()
+        else {
             panic!("expected protocol error");
         };
         assert_eq!(error.expected(), Some("application/ld+json"));
@@ -79,7 +113,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let error = get_glossary(&client_for(&server)).await.unwrap_err();
+        let error = client_for(&server).glossary().terms().await.unwrap_err();
         let Error::Response(response) = error else {
             panic!("expected response error");
         };

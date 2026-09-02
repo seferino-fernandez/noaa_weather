@@ -1,13 +1,19 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::Client;
-use noaa_weather_client::apis::radar as radar_api;
-use noaa_weather_client::apis::radar::RadarDataQueueQueryParams;
+use noaa_weather_client::apis::radar::{
+    RadarQueueQuery, RadarServerQuery, RadarServersQuery, RadarStationQuery, RadarStationsQuery,
+    SpgdsQuery, WindProfilerQuery,
+};
 use noaa_weather_client::models::RadarQueueHost;
+use noaa_weather_client::{Client, Interval, RadarStationId};
 
 use crate::output::Output;
 
-const DEFAULT_RADAR_DATA_QUEUE_LIMIT: i32 = 10;
+const DEFAULT_RADAR_DATA_QUEUE_LIMIT: u16 = 10;
+
+const INTERVAL_HELP: &str = "An ISO 8601 time interval in any of its four forms: start/end, \
+    start/duration, duration/end, or a bare duration, with RFC 3339 timestamps and ISO 8601 \
+    durations (for example 2026-08-30T00:00:00Z/PT1H or PT1H).";
 
 /// Subcommands for interacting with NWS radar data endpoints.
 #[derive(Subcommand, Debug, Clone)]
@@ -37,9 +43,9 @@ pub enum RadarCommand {
 /// Arguments for the `spgds` subcommand.
 #[derive(Args, Debug, Clone)]
 pub struct RadarSpgdsArgs {
-    /// Publication interval accepted by the NWS API.
-    #[arg(long)]
-    published: Option<String>,
+    /// Publication interval (ISO 8601 interval, e.g., "2026-08-30T00:00:00Z/PT1H").
+    #[arg(long, value_name = "INTERVAL", long_help = INTERVAL_HELP)]
+    published: Option<Interval>,
 }
 
 /// Arguments for the `profiler` subcommand.
@@ -50,44 +56,44 @@ pub struct RadarWindProfilerArgs {
     #[arg(long, required = true)]
     id: String,
 
-    /// Optional: Specify a time interval (ISO 8601 duration format, e.g., "PT1H").
-    #[arg(long)]
-    interval: Option<String>,
+    /// Optional: Sampling interval of the data (ISO 8601 interval, e.g., "PT1H").
+    #[arg(long, value_name = "INTERVAL", long_help = INTERVAL_HELP)]
+    interval: Option<Interval>,
 
-    /// Optional: Specify a time for the data (ISO 8601 format or relative time like "-1hour").
-    #[arg(long)]
-    time: Option<String>,
+    /// Optional: Time range of the data (ISO 8601 interval, e.g., "2026-08-30T00:00:00Z/PT1H").
+    #[arg(long, value_name = "INTERVAL", long_help = INTERVAL_HELP)]
+    time: Option<Interval>,
 }
 
 /// Arguments for the `data-queue` subcommand.
 #[derive(Args, Debug, Clone)]
 #[command(about = "Get metadata and entries for a radar data queue.")]
 pub struct RadarDataQueueArgs {
-    /// Optional: Filter by arrival time range (ISO 8601 interval, e.g., "start/end", "start/", "/end").
-    #[arg(long)]
-    arrived: Option<String>,
+    /// Optional: Filter by arrival time range (ISO 8601 interval, e.g., "2026-08-30T00:00:00Z/PT1H").
+    #[arg(long, value_name = "INTERVAL", long_help = INTERVAL_HELP)]
+    arrived: Option<Interval>,
 
-    /// The host name of the radar queue server (e.g., "rds").
-    #[arg(long, required = true, value_enum)]
+    /// The host name of the radar queue server (rds or tds).
+    #[arg(long, required = true)]
     host: RadarQueueHost,
 
     /// Optional: Limit the number of queue entries returned (1 through 50,000).
     /// A limit is required or the API will return an error.
     /// Default is 10.
-    #[arg(long, value_parser = clap::value_parser!(i32).range(1..=50_000))]
-    limit: Option<i32>,
+    #[arg(long, value_parser = clap::value_parser!(u16).range(1..=50_000))]
+    limit: Option<u16>,
 
     /// Optional: Filter by creation time range (ISO 8601 interval).
-    #[arg(long)]
-    created: Option<String>,
+    #[arg(long, value_name = "INTERVAL", long_help = INTERVAL_HELP)]
+    created: Option<Interval>,
 
     /// Optional: Filter by publication time range (ISO 8601 interval).
-    #[arg(long)]
-    published: Option<String>,
+    #[arg(long, value_name = "INTERVAL", long_help = INTERVAL_HELP)]
+    published: Option<Interval>,
 
     /// Optional: Filter by radar station ID (e.g., "KIWA").
     #[arg(long)]
-    station: Option<String>,
+    station: Option<RadarStationId>,
 
     /// Optional: Filter by data type (e.g., "LEVEL2").
     #[arg(long)]
@@ -99,7 +105,7 @@ pub struct RadarDataQueueArgs {
 
     /// Optional: Filter by data resolution.
     #[arg(long)]
-    resolution: Option<i32>,
+    resolution: Option<u32>,
 }
 
 /// Arguments for the `server` subcommand.
@@ -128,16 +134,16 @@ pub struct RadarServersArgs {
 #[derive(Args, Debug, Clone)]
 #[command(about = "Get metadata for a specific radar station.")]
 pub struct RadarStationArgs {
-    /// The ID of the radar station (e.g., "KABQ", "HWPA2").
+    /// The ID of the radar station (four or five letters or digits, e.g., "KFSX" or the profiler "HWPA2").
     #[arg(long, required = true)]
-    station_id: String,
+    station_id: RadarStationId,
 
     /// Optional: Filter by reporting host.
     #[arg(long)]
     reporting_host: Option<String>,
 
-    /// Optional: Filter by host server.
-    #[arg(long, value_enum)]
+    /// Optional: Filter by host server (rds or tds).
+    #[arg(long)]
     host: Option<RadarQueueHost>,
 }
 
@@ -147,7 +153,7 @@ pub struct RadarStationArgs {
 pub struct RadarStationAlarmsArgs {
     /// The ID of the radar station (e.g., "KABQ").
     #[arg(long, required = true)]
-    station_id: String,
+    station_id: RadarStationId,
 }
 
 /// Arguments for the `stations` subcommand.
@@ -156,21 +162,21 @@ pub struct RadarStationAlarmsArgs {
 pub struct RadarStationsArgs {
     /// Optional: Filter by station type(s) (e.g., "WSR-88D", "TDWR"). Can be specified multiple times.
     #[arg(long)]
-    station_type: Option<Vec<String>>,
+    station_type: Vec<String>,
 
     /// Optional: Filter by reporting host.
     #[arg(long)]
     reporting_host: Option<String>,
 
-    /// Optional: Filter by host server.
+    /// Optional: Filter by host server (rds or tds).
     #[arg(long)]
     host: Option<RadarQueueHost>,
 }
 
 /// Handles the execution of radar-related subcommands.
 ///
-/// Dispatches the command to the appropriate API function based on the
-/// provided `RadarCommand` variant and arguments.
+/// Dispatches the command to the matching `client.radar()` method based on
+/// the provided `RadarCommand` variant and arguments.
 ///
 /// # Arguments
 ///
@@ -183,65 +189,66 @@ pub async fn handle_command(
     output: &Output,
     client: &Client,
 ) -> Result<()> {
+    let radar = client.radar();
     match command {
         RadarCommand::WindProfiler(args) => {
+            let query = WindProfilerQuery {
+                time: args.time,
+                interval: args.interval,
+            };
             output
                 .raw_json(
                     format!("getting radar wind-profiler data for {}", args.id),
-                    radar_api::get_radar_wind_profiler(
-                        client,
-                        &args.id,
-                        args.time.as_deref(),
-                        args.interval.as_deref(),
-                    ),
+                    radar.wind_profiler(&args.id, &query),
                 )
                 .await
         }
         RadarCommand::DataQueue(args) => {
-            let limit = args.limit.unwrap_or(DEFAULT_RADAR_DATA_QUEUE_LIMIT);
-            let params = RadarDataQueueQueryParams {
-                limit: Some(limit),
-                arrived: args.arrived.as_deref(),
-                created: args.created.as_deref(),
-                published: args.published.as_deref(),
-                station: args.station.as_deref(),
-                r#type: args.r#type.as_deref(),
-                feed: args.feed.as_deref(),
+            let query = RadarQueueQuery {
+                limit: Some(args.limit.unwrap_or(DEFAULT_RADAR_DATA_QUEUE_LIMIT)),
+                arrived: args.arrived,
+                created: args.created,
+                published: args.published,
+                station: args.station.clone(),
+                data_type: args.r#type.clone(),
+                feed: args.feed.clone(),
                 resolution: args.resolution,
             };
             output
                 .show(
                     format!("getting radar data queue for host {}", args.host),
-                    radar_api::get_radar_data_queue(client, &args.host, params),
+                    radar.queue(&args.host, &query),
                 )
                 .await
         }
         RadarCommand::Server(args) => {
+            let query = RadarServerQuery {
+                reporting_host: args.reporting_host.clone(),
+            };
             output
                 .show(
                     format!("getting radar server {}", args.id),
-                    radar_api::get_radar_server(client, &args.id, args.reporting_host.as_deref()),
+                    radar.server(&args.id, &query),
                 )
                 .await
         }
         RadarCommand::Servers(args) => {
+            let query = RadarServersQuery {
+                reporting_host: args.reporting_host.clone(),
+            };
             output
-                .show(
-                    "listing radar servers",
-                    radar_api::get_radar_servers(client, args.reporting_host.as_deref()),
-                )
+                .show("listing radar servers", radar.servers(&query))
                 .await
         }
         RadarCommand::Station(args) => {
+            let query = RadarStationQuery {
+                reporting_host: args.reporting_host.clone(),
+                host: args.host.clone(),
+            };
             output
                 .show(
                     format!("getting radar station {}", args.station_id),
-                    radar_api::get_radar_station(
-                        client,
-                        &args.station_id,
-                        args.reporting_host.as_deref(),
-                        args.host.as_ref(),
-                    ),
+                    radar.station(&args.station_id, &query),
                 )
                 .await
         }
@@ -249,29 +256,26 @@ pub async fn handle_command(
             output
                 .show(
                     format!("getting alarms for radar station {}", args.station_id),
-                    radar_api::get_radar_station_alarms(client, &args.station_id),
+                    radar.station_alarms(&args.station_id),
                 )
                 .await
         }
         RadarCommand::Stations(args) => {
+            let query = RadarStationsQuery {
+                station_type: args.station_type.clone(),
+                reporting_host: args.reporting_host.clone(),
+                host: args.host.clone(),
+            };
             output
-                .show(
-                    "listing radar stations",
-                    radar_api::get_radar_stations(
-                        client,
-                        args.station_type.clone(),
-                        args.reporting_host.as_deref(),
-                        args.host.as_ref(),
-                    ),
-                )
+                .show("listing radar stations", radar.stations(&query))
                 .await
         }
         RadarCommand::Spgds(args) => {
+            let query = SpgdsQuery {
+                published: args.published,
+            };
             output
-                .show(
-                    "getting radar SPGDS telemetry",
-                    radar_api::get_radar_spgds(client, args.published.as_deref()),
-                )
+                .show("getting radar SPGDS telemetry", radar.spgds(&query))
                 .await
         }
     }

@@ -231,8 +231,6 @@ pub use self::radar_spgds::{
 };
 pub mod region_code;
 pub use self::region_code::RegionCode;
-pub mod region_type;
-pub use self::region_type::RegionType;
 pub mod relative_location;
 pub use self::relative_location::RelativeLocation;
 pub mod relative_location_geo_json;
@@ -247,9 +245,7 @@ pub mod sigmet_geo_json;
 pub use self::sigmet_geo_json::SigmetGeoJson;
 pub mod state_territory_code;
 pub use self::state_territory_code::StateTerritoryCode;
-#[cfg(feature = "xml")]
 pub mod terminal_aerodrome_forecast;
-#[cfg(feature = "xml")]
 pub use self::terminal_aerodrome_forecast::TerminalAerodromeForecast;
 pub mod terminal_aerodrome_forecasts_response;
 pub use self::terminal_aerodrome_forecasts_response::TerminalAerodromeForecastsResponse;
@@ -283,11 +279,7 @@ pub mod zone_geo_json;
 pub use self::zone_geo_json::ZoneGeoJson;
 pub mod zone_state;
 pub use self::zone_state::ZoneState;
-#[cfg(feature = "radio")]
 pub mod radio_broadcast;
-#[cfg(feature = "radio")]
 pub use self::radio_broadcast::*;
-#[cfg(feature = "radio")]
 pub mod radio_transmitter;
-#[cfg(feature = "radio")]
 pub use self::radio_transmitter::{RadioTransmitter, RadioTransmitterCollection};
