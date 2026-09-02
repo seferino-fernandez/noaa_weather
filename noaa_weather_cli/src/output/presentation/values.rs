@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::fmt::Display;
 
 use jiff::Timestamp;
+use noaa_weather_client::OffsetDateTime;
 use noaa_weather_client::models::radar::RadarMeasurement;
 use noaa_weather_client::models::{QuantitativeValue, UnitCodeType, ValueUnit};
 
@@ -75,6 +76,17 @@ impl DefaultPresenter {
                     .to_string()
             },
         )
+    }
+
+    /// Renders a response timestamp in the presenter's time zone, exactly
+    /// as [`DefaultPresenter::parsed_timestamp`] renders its instant; the
+    /// offset NOAA sent is not shown.
+    pub(super) fn offset_date_time(&self, value: &OffsetDateTime) -> String {
+        self.parsed_timestamp(Some(value.timestamp()))
+    }
+
+    pub(super) fn optional_offset_date_time(&self, value: Option<&OffsetDateTime>) -> String {
+        value.map_or_else(|| MISSING.to_owned(), |value| self.offset_date_time(value))
     }
 
     pub(super) fn resource_identifier(&self, value: Option<&str>) -> String {

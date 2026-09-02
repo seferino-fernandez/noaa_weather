@@ -1,8 +1,6 @@
 use comfy_table::presets::{UTF8_FULL, UTF8_FULL_CONDENSED};
 use comfy_table::{Attribute, Cell, CellAlignment, Color, ContentArrangement, Table};
-use noaa_weather_client::models::{
-    ActiveAlertsCountResponse, Alert, AlertSeverity, AlertTypesResponse,
-};
+use noaa_weather_client::models::{ActiveAlertCounts, Alert, AlertEventTypes, AlertSeverity};
 use noaa_weather_client::{Feature, FeatureCollection};
 
 use super::{DefaultPresentation, DefaultPresenter, PresentationError};
@@ -13,7 +11,7 @@ use crate::output::PresentationDocument;
 fn create_alerts_table(
     alerts_data: &FeatureCollection<Alert>,
     presenter: &DefaultPresenter,
-) -> Result<Table, PresentationError> {
+) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -44,70 +42,46 @@ fn create_alerts_table(
                 .add_attribute(comfy_table::Attribute::Bold)
                 .set_alignment(CellAlignment::Center),
         ]);
-        return Ok(table);
+        return table;
     }
 
     for feature in &alerts_data.features {
         let alert_properties = &feature.properties;
 
-        let severity = alert_properties.severity.map(|value| value.to_string());
-        let mut severity_cell = Cell::new(presenter.text(severity.as_deref()));
-        if let Some(severity_value) = alert_properties.severity {
-            match severity_value {
-                AlertSeverity::Extreme => {
-                    severity_cell = severity_cell.fg(Color::Red).add_attribute(Attribute::Bold);
-                }
-                AlertSeverity::Severe => severity_cell = severity_cell.fg(Color::Red),
-                AlertSeverity::Moderate => severity_cell = severity_cell.fg(Color::Yellow),
-                AlertSeverity::Minor => severity_cell = severity_cell.fg(Color::Green),
-                AlertSeverity::Unknown => {}
+        let mut severity_cell = Cell::new(alert_properties.severity.to_string());
+        match alert_properties.severity {
+            AlertSeverity::Extreme => {
+                severity_cell = severity_cell.fg(Color::Red).add_attribute(Attribute::Bold);
             }
+            AlertSeverity::Severe => severity_cell = severity_cell.fg(Color::Red),
+            AlertSeverity::Moderate => severity_cell = severity_cell.fg(Color::Yellow),
+            AlertSeverity::Minor => severity_cell = severity_cell.fg(Color::Green),
+            AlertSeverity::Unknown => {}
         }
 
         let event_headline = format!(
             "{}\n\n{}",
-            presenter.text(alert_properties.sender_name.as_deref()),
-            presenter.text(
-                alert_properties
-                    .headline
-                    .as_ref()
-                    .and_then(Option::as_deref)
-            )
+            presenter.text(Some(&alert_properties.sender_name)),
+            presenter.text(alert_properties.headline.as_deref())
         );
-        let effective_date = presenter.timestamp(
-            "alerts.features[].properties.effective",
-            alert_properties.effective.as_deref(),
-        )?;
-        let expires_date = presenter.timestamp(
-            "alerts.features[].properties.expires",
-            alert_properties.expires.as_deref(),
-        )?;
+        let effective_date = presenter.offset_date_time(&alert_properties.effective);
+        let expires_date = presenter.offset_date_time(&alert_properties.expires);
 
         let effective_date = format!("{effective_date}\nto\n{expires_date}");
         table.add_row(vec![
             Cell::new(event_headline),
-            Cell::new(presenter.text(alert_properties.area_desc.as_deref())),
+            Cell::new(presenter.text(Some(&alert_properties.area_desc))),
             Cell::new(effective_date),
             severity_cell,
-            Cell::new(
-                presenter.text(
-                    alert_properties
-                        .instruction
-                        .as_ref()
-                        .and_then(Option::as_deref),
-                ),
-            ),
-            Cell::new(presenter.text(alert_properties.id.as_deref())),
+            Cell::new(presenter.text(alert_properties.instruction.as_deref())),
+            Cell::new(presenter.text(Some(alert_properties.id.as_str()))),
         ]);
     }
-    Ok(table)
+    table
 }
 
 /// Formats a single alert's details into a comfy table.
-fn create_single_alert_table(
-    alert_data: &Feature<Alert>,
-    presenter: &DefaultPresenter,
-) -> Result<Table, PresentationError> {
+fn create_single_alert_table(alert_data: &Feature<Alert>, presenter: &DefaultPresenter) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -124,103 +98,63 @@ fn create_single_alert_table(
 
     // Collect all details as strings
     let mut details = vec![
-        format!("ID: {}", presenter.text(alert.id.as_deref())),
-        format!("Event: {}", presenter.text(alert.event.as_deref())),
-        format!(
-            "Headline: {}",
-            presenter.text(alert.headline.as_ref().and_then(Option::as_deref))
-        ),
+        format!("ID: {}", presenter.text(Some(alert.id.as_str()))),
+        format!("Event: {}", presenter.text(Some(&alert.event))),
+        format!("Headline: {}", presenter.text(alert.headline.as_deref())),
         format!(
             "Area Description: {}",
-            presenter.text(alert.area_desc.as_deref())
+            presenter.text(Some(&alert.area_desc))
         ),
-        format!(
-            "Sender Name: {}",
-            presenter.text(alert.sender_name.as_deref())
-        ),
-        format!(
-            "Sent: {}",
-            presenter.timestamp("alert.properties.sent", alert.sent.as_deref())?
-        ),
+        format!("Sender Name: {}", presenter.text(Some(&alert.sender_name))),
+        format!("Sent: {}", presenter.offset_date_time(&alert.sent)),
         format!(
             "Effective: {}",
-            presenter.timestamp("alert.properties.effective", alert.effective.as_deref())?
+            presenter.offset_date_time(&alert.effective)
         ),
         format!(
             "Onset: {}",
-            presenter.timestamp(
-                "alert.properties.onset",
-                alert.onset.as_ref().and_then(Option::as_deref),
-            )?
+            presenter.optional_offset_date_time(alert.onset.as_ref())
         ),
-        format!(
-            "Expires: {}",
-            presenter.timestamp("alert.properties.expires", alert.expires.as_deref())?
-        ),
+        format!("Expires: {}", presenter.offset_date_time(&alert.expires)),
         format!(
             "Ends: {}",
-            presenter.timestamp(
-                "alert.properties.ends",
-                alert.ends.as_ref().and_then(Option::as_deref),
-            )?
+            presenter.optional_offset_date_time(alert.ends.as_ref())
         ),
-        format!(
-            "Status: {}",
-            presenter.text(alert.status.map(|value| value.to_string()).as_deref())
-        ),
-        format!(
-            "Message Type: {}",
-            presenter.text(alert.message_type.map(|value| value.to_string()).as_deref())
-        ),
-        format!(
-            "Category: {}",
-            presenter.text(alert.category.map(|value| value.to_string()).as_deref())
-        ),
-        format!(
-            "Severity: {}",
-            presenter.text(alert.severity.map(|value| value.to_string()).as_deref())
-        ),
-        format!(
-            "Certainty: {}",
-            presenter.text(alert.certainty.map(|value| value.to_string()).as_deref())
-        ),
-        format!(
-            "Urgency: {}",
-            presenter.text(alert.urgency.map(|value| value.to_string()).as_deref())
-        ),
+        format!("Status: {}", alert.status),
+        format!("Message Type: {}", alert.message_type),
+        format!("Category: {}", alert.category),
+        format!("Severity: {}", alert.severity),
+        format!("Certainty: {}", alert.certainty),
+        format!("Urgency: {}", alert.urgency),
         format!(
             "Instruction: {}",
-            presenter.text(alert.instruction.as_ref().and_then(Option::as_deref))
+            presenter.text(alert.instruction.as_deref())
         ),
         format!(
             "Response: {}",
             presenter.text(alert.response.map(|value| value.to_string()).as_deref())
         ),
     ];
-    let affected_zones = alert.affected_zones.as_ref().map(|zones| {
-        zones
-            .iter()
-            .map(|zone| presenter.resource_identifier(Some(zone)))
-            .collect::<Vec<_>>()
-            .join(", ")
-    });
-    let formatted_affected_zones = presenter.text(affected_zones.as_deref());
+    let affected_zones = alert
+        .affected_zones
+        .iter()
+        .map(|zone| presenter.resource_identifier(Some(zone)))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let formatted_affected_zones = presenter.text(Some(&affected_zones));
 
     details.push(format!("Affected Zones: {formatted_affected_zones}"));
-    if let Some(Some(note)) = &alert.note {
+    if let Some(note) = &alert.note {
         details.push(format!("Note: {note}"));
     }
     let description = presenter.text(alert.description.as_deref());
 
     table.add_row(vec![Cell::new(details.join("\n")), Cell::new(description)]);
-    Ok(table)
+    table
 }
 
 /// Formats the active alerts count into a comfy table.
-fn create_alert_count_table(
-    count_data: &ActiveAlertsCountResponse,
-    presenter: &DefaultPresenter,
-) -> Table {
+fn create_alert_count_table(count_data: &ActiveAlertCounts) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -241,35 +175,21 @@ fn create_alert_count_table(
 
     let active_alerts_summary_data = format!(
         "Total Active Alerts: {}\nLand Alerts: {}\nMarine Alerts: {}",
-        presenter.integer(count_data.total),
-        presenter.integer(count_data.land),
-        presenter.integer(count_data.marine)
+        count_data.total, count_data.land, count_data.marine
     );
     let mut active_alerts_by_area_data = String::new();
-    if let Some(areas_map) = &count_data.areas
-        && !areas_map.is_empty()
-    {
-        for (area_key, count_val) in areas_map {
-            active_alerts_by_area_data.push_str(&format!("{area_key}: {count_val}\n"));
-        }
+    for (area_key, count_val) in &count_data.areas {
+        active_alerts_by_area_data.push_str(&format!("{area_key}: {count_val}\n"));
     }
 
     let mut active_alerts_by_marine_region_data = String::new();
-    if let Some(regions_map) = &count_data.regions
-        && !regions_map.is_empty()
-    {
-        for (region_key, count_val) in regions_map {
-            active_alerts_by_marine_region_data.push_str(&format!("{region_key}: {count_val}\n"));
-        }
+    for (region_key, count_val) in &count_data.regions {
+        active_alerts_by_marine_region_data.push_str(&format!("{region_key}: {count_val}\n"));
     }
 
     let mut active_alerts_by_zone_data = String::new();
-    if let Some(zones_map) = &count_data.zones
-        && !zones_map.is_empty()
-    {
-        for (zone_key, count_val) in zones_map {
-            active_alerts_by_zone_data.push_str(&format!("{zone_key}: {count_val}\n"));
-        }
+    for (zone_key, count_val) in &count_data.zones {
+        active_alerts_by_zone_data.push_str(&format!("{zone_key}: {count_val}\n"));
     }
 
     table.add_row(vec![
@@ -282,7 +202,7 @@ fn create_alert_count_table(
 }
 
 /// Formats the list of alert types into a comfy table.
-fn create_alert_types_table(types_data: &AlertTypesResponse) -> Table {
+fn create_alert_types_table(types_data: &AlertEventTypes) -> Table {
     let mut table = Table::new();
     table.load_style(UTF8_FULL_CONDENSED);
     table.set_content_arrangement(ContentArrangement::Dynamic);
@@ -292,16 +212,12 @@ fn create_alert_types_table(types_data: &AlertTypesResponse) -> Table {
             .set_alignment(CellAlignment::Center),
     ]);
 
-    if let Some(event_types_vec) = &types_data.event_types {
-        if event_types_vec.is_empty() {
-            table.add_row(vec![Cell::new("No event types found.")]);
-        } else {
-            for event_type_str in event_types_vec {
-                table.add_row(vec![Cell::new(event_type_str)]);
-            }
-        }
+    if types_data.event_types.is_empty() {
+        table.add_row(vec![Cell::new("No event types found.")]);
     } else {
-        table.add_row(vec![Cell::new("No event types available.")]);
+        for event_type_str in &types_data.event_types {
+            table.add_row(vec![Cell::new(event_type_str)]);
+        }
     }
     table
 }
@@ -313,7 +229,7 @@ impl DefaultPresentation for FeatureCollection<Alert> {
     ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(create_alerts_table(
             self, presenter,
-        )?))
+        )))
     }
 }
 
@@ -324,22 +240,20 @@ impl DefaultPresentation for Feature<Alert> {
     ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::table(create_single_alert_table(
             self, presenter,
-        )?))
-    }
-}
-
-impl DefaultPresentation for ActiveAlertsCountResponse {
-    fn present_default(
-        &self,
-        presenter: &DefaultPresenter,
-    ) -> Result<PresentationDocument, PresentationError> {
-        Ok(PresentationDocument::table(create_alert_count_table(
-            self, presenter,
         )))
     }
 }
 
-impl DefaultPresentation for AlertTypesResponse {
+impl DefaultPresentation for ActiveAlertCounts {
+    fn present_default(
+        &self,
+        _presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::table(create_alert_count_table(self)))
+    }
+}
+
+impl DefaultPresentation for AlertEventTypes {
     fn present_default(
         &self,
         _presenter: &DefaultPresenter,

@@ -712,7 +712,7 @@ mod tests {
             .build()
             .unwrap();
         let response = client.alerts().types().await.unwrap();
-        assert_eq!(response.event_types.unwrap(), ["Test Warning"]);
+        assert_eq!(response.event_types, ["Test Warning"]);
     }
 
     #[tokio::test]

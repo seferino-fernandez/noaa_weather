@@ -1,9 +1,9 @@
-use jiff::Timestamp;
 use serde::{Deserialize, Serialize, Serializer, ser::SerializeStruct as _};
 use url::Url;
 
 use super::Feature;
 use crate::ids::Cursor;
+use crate::time::OffsetDateTime;
 
 /// A GeoJSON `FeatureCollection`: NOAA's envelope around a list of resources.
 ///
@@ -57,9 +57,10 @@ pub struct FeatureCollection<T> {
     /// A title for the collection; `/alerts` sends one.
     #[serde(default)]
     pub title: Option<String>,
-    /// When the collection last changed; `/alerts` sends one.
+    /// When the collection last changed; `/alerts` sends one, in UTC
+    /// (`+00:00`).
     #[serde(default)]
-    pub updated: Option<Timestamp>,
+    pub updated: Option<OffsetDateTime>,
     /// The link to the next page, when NOAA offered one.
     #[serde(default)]
     pub pagination: Option<Pagination>,
@@ -167,7 +168,7 @@ impl<T: schemars::JsonSchema> schemars::JsonSchema for FeatureCollection<T> {
                 "type": {"type": "string", "const": "FeatureCollection"},
                 "features": {"type": "array", "items": generator.subschema_for::<Feature<T>>()},
                 "title": {"type": "string"},
-                "updated": {"type": "string", "format": "date-time"},
+                "updated": generator.subschema_for::<OffsetDateTime>(),
                 "pagination": generator.subschema_for::<Pagination>(),
             },
             "required": ["type", "features"],
@@ -228,7 +229,7 @@ mod tests {
         );
         assert_eq!(
             collection.updated.unwrap().to_string(),
-            "2026-09-02T02:05:00Z"
+            "2026-09-02T02:05:00+00:00"
         );
         assert_eq!(collection.next_cursor().unwrap().as_str(), "eyJ0IjoxfQ==");
         assert_eq!(collection.iter().next().unwrap().name, "a");
@@ -266,10 +267,10 @@ mod tests {
         let text = serde_json::to_string(&decorated).unwrap();
         assert!(text.starts_with(r#"{"type":"FeatureCollection","features":["#));
         assert!(text.ends_with(
-            r#"],"title":"Stations","updated":"2026-09-02T02:05:00Z","pagination":{"next":"https://api.weather.gov/stations?cursor=abc"}}"#
+            r#"],"title":"Stations","updated":"2026-09-02T02:05:00+00:00","pagination":{"next":"https://api.weather.gov/stations?cursor=abc"}}"#
         ));
         let value: serde_json::Value = serde_json::from_str(&text).unwrap();
-        assert_eq!(value["updated"], "2026-09-02T02:05:00Z");
+        assert_eq!(value["updated"], "2026-09-02T02:05:00+00:00");
         assert_eq!(
             value["pagination"],
             json!({"next": "https://api.weather.gov/stations?cursor=abc"})

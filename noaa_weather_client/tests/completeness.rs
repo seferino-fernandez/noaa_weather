@@ -3,8 +3,9 @@ use std::fs;
 use std::path::Path;
 
 use noaa_weather_client::models::{
-    Alert, CenterWeatherAdvisory, Gridpoint, Gridpoint12hForecast, GridpointHourlyForecast,
-    Observation, ObservationStation, Point, Sigmet, Zone, ZoneForecast,
+    ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, Gridpoint,
+    Gridpoint12hForecast, GridpointHourlyForecast, Observation, ObservationStation, Point, Sigmet,
+    Zone, ZoneForecast,
 };
 use noaa_weather_client::{Feature, FeatureCollection};
 use serde::Serialize;
@@ -133,6 +134,8 @@ fn captured_responses_preserve_every_non_whitelisted_key_path() {
     fixtures!(
         ("alerts/list.json", FeatureCollection<Alert>),
         ("alerts/single.json", Feature<Alert>),
+        ("alerts/count.json", ActiveAlertCounts),
+        ("alerts/types.json", AlertEventTypes),
         ("stations/list.json", FeatureCollection<ObservationStation>),
         ("stations/single.json", Feature<ObservationStation>),
         ("stations/observations.json", FeatureCollection<Observation>),
