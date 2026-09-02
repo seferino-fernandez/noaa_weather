@@ -1,0 +1,373 @@
+---
+source: noaa_weather_summary/tests/alerts.rs
+expression: count().summarize()
+---
+title: Active alerts
+subtitle: ~
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: Total
+          key: total
+          also: []
+          value:
+            Count: 303
+          emphasis: None
+        - label: Land
+          key: land
+          also: []
+          value:
+            Count: 137
+          emphasis: None
+        - label: Marine
+          key: marine
+          also: []
+          value:
+            Count: 166
+          emphasis: None
+  - Table:
+      heading: By area
+      columns:
+        - title: Area
+          key: areas
+          also: []
+          align: Left
+        - title: Alerts
+          key: ~
+          also: []
+          align: Right
+      rows:
+        - - value:
+              Text: AK
+            emphasis: None
+          - value:
+              Count: 3
+            emphasis: None
+        - - value:
+              Text: AL
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: AN
+            emphasis: None
+          - value:
+              Count: 4
+            emphasis: None
+        - - value:
+              Text: AR
+            emphasis: None
+          - value:
+              Count: 8
+            emphasis: None
+        - - value:
+              Text: AZ
+            emphasis: None
+          - value:
+              Count: 1
+            emphasis: None
+        - - value:
+              Text: CA
+            emphasis: None
+          - value:
+              Count: 7
+            emphasis: None
+        - - value:
+              Text: CO
+            emphasis: None
+          - value:
+              Count: 1
+            emphasis: None
+        - - value:
+              Text: DC
+            emphasis: None
+          - value:
+              Count: 1
+            emphasis: None
+        - - value:
+              Text: DE
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: FL
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: GA
+            emphasis: None
+          - value:
+              Count: 1
+            emphasis: None
+        - - value:
+              Text: GM
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: GU
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: HI
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: IA
+            emphasis: None
+          - value:
+              Count: 5
+            emphasis: None
+        - - value:
+              Text: ID
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: IL
+            emphasis: None
+          - value:
+              Count: 9
+            emphasis: None
+        - - value:
+              Text: IN
+            emphasis: None
+          - value:
+              Count: 7
+            emphasis: None
+        - - value:
+              Text: KS
+            emphasis: None
+          - value:
+              Count: 7
+            emphasis: None
+        - - value:
+              Text: KY
+            emphasis: None
+          - value:
+              Count: 6
+            emphasis: None
+        - - value:
+              Text: LA
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: MD
+            emphasis: None
+          - value:
+              Count: 6
+            emphasis: None
+        - - value:
+              Text: MI
+            emphasis: None
+          - value:
+              Count: 4
+            emphasis: None
+        - - value:
+              Text: MO
+            emphasis: None
+          - value:
+              Count: 9
+            emphasis: None
+        - - value:
+              Text: MP
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: MS
+            emphasis: None
+          - value:
+              Count: 3
+            emphasis: None
+        - - value:
+              Text: MT
+            emphasis: None
+          - value:
+              Count: 6
+            emphasis: None
+        - - value:
+              Text: NC
+            emphasis: None
+          - value:
+              Count: 11
+            emphasis: None
+        - - value:
+              Text: NE
+            emphasis: None
+          - value:
+              Count: 3
+            emphasis: None
+        - - value:
+              Text: NJ
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: NV
+            emphasis: None
+          - value:
+              Count: 1
+            emphasis: None
+        - - value:
+              Text: NY
+            emphasis: None
+          - value:
+              Count: 3
+            emphasis: None
+        - - value:
+              Text: OH
+            emphasis: None
+          - value:
+              Count: 9
+            emphasis: None
+        - - value:
+              Text: OK
+            emphasis: None
+          - value:
+              Count: 9
+            emphasis: None
+        - - value:
+              Text: OR
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: PA
+            emphasis: None
+          - value:
+              Count: 6
+            emphasis: None
+        - - value:
+              Text: PH
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: PK
+            emphasis: None
+          - value:
+              Count: 142
+            emphasis: None
+        - - value:
+              Text: PR
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: PZ
+            emphasis: None
+          - value:
+              Count: 16
+            emphasis: None
+        - - value:
+              Text: SC
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: TN
+            emphasis: None
+          - value:
+              Count: 5
+            emphasis: None
+        - - value:
+              Text: TX
+            emphasis: None
+          - value:
+              Count: 19
+            emphasis: None
+        - - value:
+              Text: VA
+            emphasis: None
+          - value:
+              Count: 8
+            emphasis: None
+        - - value:
+              Text: VI
+            emphasis: None
+          - value:
+              Count: 1
+            emphasis: None
+        - - value:
+              Text: WA
+            emphasis: None
+          - value:
+              Count: 5
+            emphasis: None
+        - - value:
+              Text: WV
+            emphasis: None
+          - value:
+              Count: 4
+            emphasis: None
+        - - value:
+              Text: WY
+            emphasis: None
+          - value:
+              Count: 1
+            emphasis: None
+  - Table:
+      heading: By region
+      columns:
+        - title: Region
+          key: regions
+          also: []
+          align: Left
+        - title: Alerts
+          key: ~
+          also: []
+          align: Right
+      rows:
+        - - value:
+              Text: AL
+            emphasis: None
+          - value:
+              Count: 142
+            emphasis: None
+        - - value:
+              Text: AT
+            emphasis: None
+          - value:
+              Count: 4
+            emphasis: None
+        - - value:
+              Text: GM
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+        - - value:
+              Text: PA
+            emphasis: None
+          - value:
+              Count: 16
+            emphasis: None
+        - - value:
+              Text: PI
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+notes:
+  - 2935 zones have active alerts

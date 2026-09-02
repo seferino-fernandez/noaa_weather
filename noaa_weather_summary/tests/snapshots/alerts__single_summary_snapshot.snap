@@ -1,0 +1,133 @@
+---
+source: noaa_weather_summary/tests/alerts.rs
+expression: single().summarize()
+---
+title: Special Weather Statement
+subtitle: "Special Weather Statement issued September 2 at 3:48AM EDT by NWS Grand Rapids MI"
+emphasis: Warning
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: ID
+          key: id
+          also: []
+          value:
+            Identifier: "urn:oid:2.49.0.1.840.0.af7e0442df8bfed7953cb5cae6e4661304cc1f49.001.1"
+          emphasis: None
+        - label: Area
+          key: areaDesc
+          also: []
+          value:
+            Text: Newaygo; Montcalm; Kent
+          emphasis: None
+        - label: Sender name
+          key: senderName
+          also: []
+          value:
+            Text: NWS Grand Rapids MI
+          emphasis: None
+        - label: Sent
+          key: sent
+          also: []
+          value:
+            Timestamp: "2026-09-02T03:48:00-04:00"
+          emphasis: None
+        - label: Effective
+          key: effective
+          also: []
+          value:
+            Timestamp: "2026-09-02T03:48:00-04:00"
+          emphasis: None
+        - label: Onset
+          key: onset
+          also: []
+          value:
+            Timestamp: "2026-09-02T03:48:00-04:00"
+          emphasis: None
+        - label: Expires
+          key: expires
+          also: []
+          value:
+            Timestamp: "2026-09-02T04:45:00-04:00"
+          emphasis: None
+        - label: Ends
+          key: ends
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Status
+          key: status
+          also: []
+          value:
+            Text: actual
+          emphasis: None
+        - label: Message type
+          key: messageType
+          also: []
+          value:
+            Text: Alert
+          emphasis: None
+        - label: Category
+          key: category
+          also: []
+          value:
+            Text: Met
+          emphasis: None
+        - label: Severity
+          key: severity
+          also: []
+          value:
+            Text: Moderate
+          emphasis: Warning
+        - label: Certainty
+          key: certainty
+          also: []
+          value:
+            Text: Observed
+          emphasis: None
+        - label: Urgency
+          key: urgency
+          also: []
+          value:
+            Text: Expected
+          emphasis: None
+        - label: Response
+          key: response
+          also: []
+          value:
+            Text: Execute
+          emphasis: None
+        - label: Affected zones
+          key: affectedZones
+          also: []
+          value:
+            List:
+              - Identifier: MIZ044
+              - Identifier: MIZ051
+              - Identifier: MIZ057
+          emphasis: None
+        - label: Note
+          key: note
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Replaced by
+          key: replacedBy
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Replaced at
+          key: replacedAt
+          also: []
+          value: Missing
+          emphasis: None
+  - Prose:
+      heading: Description
+      key: description
+      text: "At 347 AM EDT, Doppler radar was tracking strong thunderstorms along\na line extending from near Howard City to 9 miles northeast of\nSparta. Movement was east at 30 mph.\n\nHAZARD...Winds in excess of 40 mph and penny size hail.\n\nSOURCE...Radar indicated.\n\nIMPACT...Gusty winds could knock down tree limbs and blow around\nunsecured objects. Minor damage to outdoor objects is\npossible.\n\nLocations impacted include...\nStanton...             Howard City...         Edmore...\nLakeview...            Cedar Springs...       Crystal...\nSidney...              Sand Lake...           Casnovia...\nMcBride...             Pierson...             Westville...\nGowen...               Cedar Lake...          Entrican...\nAmble...               Indian Lake...         Vestaburg...\nWyman...               Langston..."
+  - Prose:
+      heading: Instruction
+      key: instruction
+      text: "If outdoors, consider seeking shelter inside a building."
+notes: []

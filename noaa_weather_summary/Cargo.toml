@@ -1,0 +1,20 @@
+[package]
+name = "noaa_weather_summary"
+version = "0.1.0"
+edition = "2024"
+description = "Format-independent human summaries of NOAA weather.gov API responses"
+license = "MIT"
+repository = "https://github.com/seferino-fernandez/noaa_weather"
+keywords = ["weather", "noaa", "nws", "summary"]
+categories = ["api-bindings", "value-formatting"]
+homepage = "https://github.com/seferino-fernandez/noaa_weather"
+readme = "README.md"
+
+[dependencies]
+jiff.workspace = true
+noaa_weather_client = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+
+[dev-dependencies]
+insta = { workspace = true, features = ["yaml"] }
