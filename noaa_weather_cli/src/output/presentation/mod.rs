@@ -69,7 +69,10 @@ macro_rules! summarized {
                     _presenter: &DefaultPresenter,
                 ) -> Result<PresentationDocument, PresentationError> {
                     Ok(PresentationDocument::Summary(Box::new(
-                        noaa_weather_summary::Summarize::summarize(self),
+                        noaa_weather_summary::Summarize::summarize(
+                            self,
+                            &noaa_weather_summary::SummaryOptions::default(),
+                        ),
                     )))
                 }
             }

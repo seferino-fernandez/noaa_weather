@@ -2,7 +2,11 @@
 
 use crate::{Align, Section, Summary};
 
-use super::{RenderOptions, format_value, heading_or_empty};
+use super::{RangeStyle, RenderOptions, format_value, heading_or_empty};
+
+/// Plain text goes to a terminal, where a dash next to a negative bound is
+/// ambiguous, so a range spells its join out.
+const RANGE: RangeStyle = RangeStyle::Words;
 
 /// Renders a summary as plain text.
 ///
@@ -51,7 +55,7 @@ fn render_section(section: &Section, options: &RenderOptions) -> String {
                 lines.push(format!(
                     "{}: {}",
                     fact.label,
-                    format_value(&fact.value, options)
+                    format_value(&fact.value, options, RANGE)
                 ));
             }
         }
@@ -69,7 +73,7 @@ fn render_section(section: &Section, options: &RenderOptions) -> String {
                 .iter()
                 .map(|row| {
                     row.iter()
-                        .map(|cell| format_value(&cell.value, options).replace('\n', "; "))
+                        .map(|cell| format_value(&cell.value, options, RANGE).replace('\n', "; "))
                         .collect()
                 })
                 .collect();

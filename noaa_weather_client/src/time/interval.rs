@@ -140,6 +140,39 @@ impl Interval {
         }
     }
 
+    /// Returns the end instant, computing it for the forms that carry a
+    /// length instead of an explicit end.
+    ///
+    /// [`Interval::end`] answers only for the two forms that store an end,
+    /// but NOAA writes `validTimes` as start-and-length, so a gridpoint's
+    /// covered interval has an end only once the span is added to the start.
+    /// [`Interval::lasting`] has no anchor to add it to, so it has no end.
+    ///
+    /// ```
+    /// use noaa_weather_client::Interval;
+    ///
+    /// let start: jiff::Timestamp = "2024-01-01T00:00:00Z".parse().unwrap();
+    /// let six_hours: jiff::Span = "PT6H".parse().unwrap();
+    ///
+    /// let valid_times = Interval::starting(start, six_hours)?;
+    /// assert_eq!(valid_times.end(), None);
+    /// assert_eq!(
+    ///     valid_times.resolved_end(),
+    ///     Some("2024-01-01T06:00:00Z".parse()?),
+    /// );
+    ///
+    /// assert_eq!(Interval::lasting(six_hours)?.resolved_end(), None);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    #[must_use]
+    pub fn resolved_end(&self) -> Option<Timestamp> {
+        match self.0 {
+            Bounds::Between { end, .. } | Bounds::Ending { end, .. } => Some(end),
+            Bounds::Starting { start, span } => start.checked_add(span).ok(),
+            Bounds::Lasting { .. } => None,
+        }
+    }
+
     /// Returns the explicit duration, if this form has one.
     #[must_use]
     pub const fn span(&self) -> Option<Span> {
@@ -360,6 +393,39 @@ mod tests {
         assert!(interval.start().is_none());
         assert!(interval.end().is_none());
         assert_eq!(format!("{interval:?}"), "Interval(PT1H)");
+    }
+
+    #[test]
+    fn resolved_end_answers_for_every_form_that_has_one() {
+        let start = at("2024-01-01T00:00:00Z");
+        let end = at("2024-01-02T00:00:00Z");
+        assert_eq!(
+            Interval::between(start, end).unwrap().resolved_end(),
+            Some(end)
+        );
+        assert_eq!(
+            Interval::ending(span("PT1H"), end).unwrap().resolved_end(),
+            Some(end)
+        );
+        assert_eq!(
+            Interval::starting(start, span("PT6H"))
+                .unwrap()
+                .resolved_end(),
+            Some(at("2024-01-01T06:00:00Z"))
+        );
+        assert_eq!(
+            Interval::lasting(span("PT6H")).unwrap().resolved_end(),
+            None
+        );
+    }
+
+    /// A span whose length depends on a calendar has no fixed number of
+    /// seconds to add to an instant, so it resolves to nothing rather than
+    /// to a guess.
+    #[test]
+    fn resolved_end_declines_a_span_with_calendar_units() {
+        let month = Interval::starting(at("2024-01-01T00:00:00Z"), span("P1M")).unwrap();
+        assert_eq!(month.resolved_end(), None);
     }
 
     #[test]

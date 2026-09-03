@@ -34,6 +34,16 @@ fn synthetic_summary() -> Summary {
                 Fact::new("Wind gust", Some("maxWindGust"), Value::number(Some(60.0), 0, Some("mph"))),
                 Fact::new("Hail size", Some("maxHailSize"), Value::number(Some(f64::NAN), 2, Some("in"))),
                 Fact::new("Ratio", None, Value::number(Some(0.5), 2, None)),
+                Fact::new(
+                    "Wind",
+                    Some("windSpeed"),
+                    Value::range(Some(10.0), Some(20.0), 0, Some("mph")),
+                ),
+                Fact::new(
+                    "Wind chill",
+                    None,
+                    Value::range(Some(-5.0), Some(3.0), 0, Some("\u{b0}C")),
+                ),
                 Fact::new("Chance of rain", None, Value::percent(Some(39.6))),
                 Fact::new("Zones", None, Value::count(3)),
                 Fact::new("Payload", None, Value::bytes(1_536_000)),

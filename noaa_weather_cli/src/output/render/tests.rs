@@ -9,7 +9,7 @@
 use noaa_weather_client::models::{ActiveAlertCounts, Alert, AlertEventTypes};
 use noaa_weather_client::{Feature, FeatureCollection, OffsetDateTime};
 use noaa_weather_summary::{
-    Align, Cell, Column, Emphasis, Fact, Section, Summarize, Summary, Value,
+    Align, Cell, Column, Emphasis, Fact, Section, Summarize, Summary, SummaryOptions, Value,
 };
 
 use super::{ColorMode, RenderOptions, TimeZoneChoice};
@@ -74,6 +74,16 @@ fn synthetic_summary() -> Summary {
                     "Hail size",
                     Some("maxHailSize"),
                     Value::number(Some(f64::NAN), 2, Some("in")),
+                ),
+                Fact::new(
+                    "Wind",
+                    Some("windSpeed"),
+                    Value::range(Some(10.0), Some(20.0), 0, Some("mph")),
+                ),
+                Fact::new(
+                    "Wind chill",
+                    None,
+                    Value::range(Some(-5.0), Some(3.0), 0, Some("\u{b0}C")),
                 ),
                 Fact::new("Chance of rain", None, Value::percent(Some(39.6))),
                 Fact::new("Zones", None, Value::count(3)),
@@ -239,7 +249,9 @@ fn unlimited_width_disables_arrangement() {
 #[test]
 fn list_of_alerts() {
     let alerts: FeatureCollection<Alert> = serde_json::from_str(LIST).expect("list.json decodes");
-    insta::assert_snapshot!(options(ColorMode::Never, 100).render(&alerts.summarize()));
+    insta::assert_snapshot!(
+        options(ColorMode::Never, 100).render(&alerts.summarize(&SummaryOptions::default()))
+    );
 }
 
 /// The threshold in [`super::table`]: a 69-character alert URN, five other
@@ -249,7 +261,8 @@ fn list_of_alerts() {
 #[test]
 fn list_of_alerts_at_the_identifier_threshold() {
     let alerts: FeatureCollection<Alert> = serde_json::from_str(LIST).expect("list.json decodes");
-    let rendered = options(ColorMode::Never, 128).render(&alerts.summarize());
+    let rendered =
+        options(ColorMode::Never, 128).render(&alerts.summarize(&SummaryOptions::default()));
     assert!(
         rendered.contains("urn:oid:2.49.0.1.840.0.af7e0442df8bfed7953cb5cae6e4661304cc1f49.001.1"),
         "at the threshold the URN must appear whole on one line"
@@ -260,7 +273,8 @@ fn list_of_alerts_at_the_identifier_threshold() {
 #[test]
 fn list_of_alerts_one_column_below_the_identifier_threshold() {
     let alerts: FeatureCollection<Alert> = serde_json::from_str(LIST).expect("list.json decodes");
-    let rendered = options(ColorMode::Never, 127).render(&alerts.summarize());
+    let rendered =
+        options(ColorMode::Never, 127).render(&alerts.summarize(&SummaryOptions::default()));
     assert!(
         !rendered.contains("urn:oid:2.49.0.1.840.0.af7e0442df8bfed7953cb5cae6e4661304cc1f49.001.1"),
         "one column below the threshold the URN must wrap instead of starving the row"
@@ -271,19 +285,25 @@ fn list_of_alerts_one_column_below_the_identifier_threshold() {
 #[test]
 fn single_alert() {
     let alert: Feature<Alert> = serde_json::from_str(SINGLE).expect("single.json decodes");
-    insta::assert_snapshot!(options(ColorMode::Never, 100).render(&alert.summarize()));
+    insta::assert_snapshot!(
+        options(ColorMode::Never, 100).render(&alert.summarize(&SummaryOptions::default()))
+    );
 }
 
 #[test]
 fn active_alert_counts() {
     let counts: ActiveAlertCounts = serde_json::from_str(COUNT).expect("count.json decodes");
-    insta::assert_snapshot!(options(ColorMode::Never, 100).render(&counts.summarize()));
+    insta::assert_snapshot!(
+        options(ColorMode::Never, 100).render(&counts.summarize(&SummaryOptions::default()))
+    );
 }
 
 #[test]
 fn alert_event_types() {
     let types: AlertEventTypes = serde_json::from_str(TYPES).expect("types.json decodes");
-    insta::assert_snapshot!(options(ColorMode::Never, 100).render(&types.summarize()));
+    insta::assert_snapshot!(
+        options(ColorMode::Never, 100).render(&types.summarize(&SummaryOptions::default()))
+    );
 }
 
 #[test]

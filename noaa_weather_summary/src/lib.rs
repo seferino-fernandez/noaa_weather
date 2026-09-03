@@ -9,9 +9,12 @@ use serde::Serialize;
 pub mod alerts;
 pub mod audit;
 pub mod render;
+pub mod units;
 mod value;
+pub mod vtec;
 
 pub use audit::coverage_gaps;
+pub use units::QuantityKind;
 
 /// A NOAA response that knows how to describe itself to a person.
 ///
@@ -20,12 +23,38 @@ pub use audit::coverage_gaps;
 /// the renderers in [`render`].
 pub trait Summarize: Serialize {
     /// Builds the human summary of this value.
-    fn summarize(&self) -> Summary;
+    fn summarize(&self, options: &SummaryOptions) -> Summary;
 
     /// NOAA property keys deliberately absent from the summary, each with the
     /// reason. [`coverage_gaps`] treats these keys as accounted for, so every
     /// property is either shown, listed here, or reported as a gap.
     const OMITTED: &'static [(&'static str, &'static str)] = &[];
+}
+
+/// Meaning choices a caller may make.
+///
+/// The counterpart of [`RenderOptions`](render::RenderOptions), and the split
+/// between them is what each choice changes: a time zone changes how an
+/// instant is *printed*, a unit system changes *which number exists*. So a
+/// unit choice shows up in the [`Summary`] itself and a zone choice does not.
+#[derive(Clone, Debug, Default)]
+pub struct SummaryOptions {
+    /// The units measurements are converted to before they are shown.
+    pub units: UnitSystem,
+}
+
+/// The system a measurement is shown in.
+///
+/// NOAA's own wire units are not a system — it sends `degC` alongside
+/// `km_h-1` — so there is no third "as sent" choice here; `--json` is where
+/// the untouched numbers live.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum UnitSystem {
+    /// Customary US units: °F, mph, feet, miles, inches, inches of mercury.
+    #[default]
+    Us,
+    /// Metric units: °C, km/h, metres, kilometres, millimetres, hectopascals.
+    Si,
 }
 
 /// The complete human view of one response.
@@ -297,6 +326,18 @@ pub enum Value {
         /// Unit label to print after the magnitude, if any.
         unit: Option<String>,
         /// Decimal places to show.
+        precision: u8,
+    },
+    /// A measurement NOAA gave as bounds rather than a single number, such as
+    /// the twelve-hour wind speed.
+    Range {
+        /// The low bound.
+        min: f64,
+        /// The high bound.
+        max: f64,
+        /// Unit label to print after the bounds, if any.
+        unit: Option<String>,
+        /// Decimal places to show on each bound.
         precision: u8,
     },
     /// A percentage in the range 0 to 100.
