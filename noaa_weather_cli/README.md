@@ -21,7 +21,7 @@ Every command group, including NOAA Weather Radio and Terminal Aerodrome Forecas
 
 ## Output contract
 
-Structured commands render concise tables by default. Use the global `--json` flag for pretty JSON or `--output <PATH>` to write output to a file. Use `--output -` to select standard output explicitly:
+Structured commands render concise tables by default. Use the global `--json` flag (or `--format json`) for pretty JSON, or `--output <PATH>` to write output to a file. Use `--output -` to select standard output explicitly. `--color`, `--width` and `--time-zone` are global too; [the documentation](../docs/README.md) lists what each accepts.
 
 ```bash
 noaa-weather glossary

@@ -1,0 +1,105 @@
+---
+source: noaa_weather_cli/src/output/render/tests.rs
+expression: rendered
+---
+Watches, warnings, and advisories
+5 alerts
+
+┌──────────┬──────────┬──────────┬──────────┬──────────┬───────────────────────────────────────────────────────────────────────┐
+│ Alert    ┆ Areas    ┆ Effectiv ┆ Severity ┆ Instruct ┆ ID                                                                    │
+│          ┆ Affected ┆ e        ┆          ┆ ions     ┆                                                                       │
+╞══════════╪══════════╪══════════╪══════════╪══════════╪═══════════════════════════════════════════════════════════════════════╡
+│ NWS      ┆ Newaygo; ┆ 2026-09- ┆ Moderate ┆ If outdo ┆ urn:oid:2.49.0.1.840.0.af7e0442df8bfed7953cb5cae6e4661304cc1f49.001.1 │
+│ Grand    ┆ Montcalm ┆ 02 03:48 ┆          ┆ ors,     ┆                                                                       │
+│ Rapids   ┆ ; Kent   ┆ -04:00 – ┆          ┆ consider ┆                                                                       │
+│ MI       ┆          ┆ 2026-09- ┆          ┆ seeking  ┆                                                                       │
+│ Special  ┆          ┆ 02 04:45 ┆          ┆ shelter  ┆                                                                       │
+│ Weather  ┆          ┆ -04:00   ┆          ┆ inside a ┆                                                                       │
+│ Statemen ┆          ┆          ┆          ┆ building ┆                                                                       │
+│ t issued ┆          ┆          ┆          ┆ .        ┆                                                                       │
+│ Septembe ┆          ┆          ┆          ┆          ┆                                                                       │
+│ r 2 at   ┆          ┆          ┆          ┆          ┆                                                                       │
+│ 3:48AM   ┆          ┆          ┆          ┆          ┆                                                                       │
+│ EDT by   ┆          ┆          ┆          ┆          ┆                                                                       │
+│ NWS      ┆          ┆          ┆          ┆          ┆                                                                       │
+│ Grand    ┆          ┆          ┆          ┆          ┆                                                                       │
+│ Rapids   ┆          ┆          ┆          ┆          ┆                                                                       │
+│ MI       ┆          ┆          ┆          ┆          ┆                                                                       │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ NWS      ┆ Montgome ┆ 2026-09- ┆ Unknown  ┆ Monitori ┆ urn:oid:2.49.0.1.840.0-KEEPALIVE-51140                                │
+│ N/A      ┆ ry       ┆ 02 07:47 ┆          ┆ ng       ┆                                                                       │
+│          ┆          ┆ +00:00 – ┆          ┆ message  ┆                                                                       │
+│          ┆          ┆ 2026-09- ┆          ┆ only.    ┆                                                                       │
+│          ┆          ┆ 02 07:57 ┆          ┆ Please   ┆                                                                       │
+│          ┆          ┆ +00:00   ┆          ┆ disregar ┆                                                                       │
+│          ┆          ┆          ┆          ┆ d.       ┆                                                                       │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ NWS Milw ┆ Fond Du  ┆ 2026-09- ┆ Moderate ┆ If outdo ┆ urn:oid:2.49.0.1.840.0.eac0148b2838ef4c3a0fdb45fc4ca6d60a01ea27.001.1 │
+│ aukee/Su ┆ Lac      ┆ 02 02:46 ┆          ┆ ors,     ┆                                                                       │
+│ llivan   ┆          ┆ -05:00 – ┆          ┆ consider ┆                                                                       │
+│ WI       ┆          ┆ 2026-09- ┆          ┆ seeking  ┆                                                                       │
+│ Special  ┆          ┆ 02 03:30 ┆          ┆ shelter  ┆                                                                       │
+│ Weather  ┆          ┆ -05:00   ┆          ┆ inside a ┆                                                                       │
+│ Statemen ┆          ┆          ┆          ┆ building ┆                                                                       │
+│ t issued ┆          ┆          ┆          ┆ .        ┆                                                                       │
+│ Septembe ┆          ┆          ┆          ┆          ┆                                                                       │
+│ r 2 at   ┆          ┆          ┆          ┆ Frequent ┆                                                                       │
+│ 2:46AM   ┆          ┆          ┆          ┆ cloud to ┆                                                                       │
+│ CDT by   ┆          ┆          ┆          ┆ ground   ┆                                                                       │
+│ NWS Milw ┆          ┆          ┆          ┆ lightnin ┆                                                                       │
+│ aukee/Su ┆          ┆          ┆          ┆ g is occ ┆                                                                       │
+│ llivan   ┆          ┆          ┆          ┆ urring   ┆                                                                       │
+│ WI       ┆          ┆          ┆          ┆ with     ┆                                                                       │
+│          ┆          ┆          ┆          ┆ this     ┆                                                                       │
+│          ┆          ┆          ┆          ┆ storm.   ┆                                                                       │
+│          ┆          ┆          ┆          ┆ Lightnin ┆                                                                       │
+│          ┆          ┆          ┆          ┆ g can    ┆                                                                       │
+│          ┆          ┆          ┆          ┆ strike   ┆                                                                       │
+│          ┆          ┆          ┆          ┆ 10 miles ┆                                                                       │
+│          ┆          ┆          ┆          ┆ away     ┆                                                                       │
+│          ┆          ┆          ┆          ┆ from a   ┆                                                                       │
+│          ┆          ┆          ┆          ┆ thunders ┆                                                                       │
+│          ┆          ┆          ┆          ┆ torm.    ┆                                                                       │
+│          ┆          ┆          ┆          ┆ Seek a   ┆                                                                       │
+│          ┆          ┆          ┆          ┆ safe     ┆                                                                       │
+│          ┆          ┆          ┆          ┆ shelter  ┆                                                                       │
+│          ┆          ┆          ┆          ┆ inside a ┆                                                                       │
+│          ┆          ┆          ┆          ┆ building ┆                                                                       │
+│          ┆          ┆          ┆          ┆ or       ┆                                                                       │
+│          ┆          ┆          ┆          ┆ vehicle. ┆                                                                       │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ NWS La   ┆ Buffalo, ┆ 2026-09- ┆ Minor    ┆ N/A      ┆ urn:oid:2.49.0.1.840.0.d0de060466dc387307cc0a44dbed836b1d20c5e5.001.1 │
+│ Crosse   ┆ WI       ┆ 02 02:42 ┆          ┆          ┆                                                                       │
+│ WI       ┆          ┆ -05:00 – ┆          ┆          ┆                                                                       │
+│ The      ┆          ┆ 2026-09- ┆          ┆          ┆                                                                       │
+│ Severe   ┆          ┆ 02 02:57 ┆          ┆          ┆                                                                       │
+│ Thunders ┆          ┆ -05:00   ┆          ┆          ┆                                                                       │
+│ torm     ┆          ┆          ┆          ┆          ┆                                                                       │
+│ Warning  ┆          ┆          ┆          ┆          ┆                                                                       │
+│ has been ┆          ┆          ┆          ┆          ┆                                                                       │
+│ cancelle ┆          ┆          ┆          ┆          ┆                                                                       │
+│ d.       ┆          ┆          ┆          ┆          ┆                                                                       │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ NWS La   ┆ Jackson, ┆ 2026-09- ┆ Severe   ┆ For your ┆ urn:oid:2.49.0.1.840.0.d0de060466dc387307cc0a44dbed836b1d20c5e5.002.1 │
+│ Crosse   ┆ WI; La   ┆ 02 02:42 ┆          ┆ protecti ┆                                                                       │
+│ WI       ┆ Crosse,  ┆ -05:00 – ┆          ┆ on move  ┆                                                                       │
+│ Severe   ┆ WI;      ┆ 2026-09- ┆          ┆ to an    ┆                                                                       │
+│ Thunders ┆ Monroe,  ┆ 02 03:15 ┆          ┆ interior ┆                                                                       │
+│ torm     ┆ WI; Trem ┆ -05:00   ┆          ┆ room on  ┆                                                                       │
+│ Warning  ┆ pealeau, ┆          ┆          ┆ the      ┆                                                                       │
+│ issued   ┆ WI       ┆          ┆          ┆ lowest   ┆                                                                       │
+│ Septembe ┆          ┆          ┆          ┆ floor of ┆                                                                       │
+│ r 2 at   ┆          ┆          ┆          ┆ a        ┆                                                                       │
+│ 2:42AM   ┆          ┆          ┆          ┆ building ┆                                                                       │
+│ CDT      ┆          ┆          ┆          ┆ .        ┆                                                                       │
+│ until    ┆          ┆          ┆          ┆          ┆                                                                       │
+│ Septembe ┆          ┆          ┆          ┆          ┆                                                                       │
+│ r 2 at   ┆          ┆          ┆          ┆          ┆                                                                       │
+│ 3:15AM   ┆          ┆          ┆          ┆          ┆                                                                       │
+│ CDT by   ┆          ┆          ┆          ┆          ┆                                                                       │
+│ NWS La   ┆          ┆          ┆          ┆          ┆                                                                       │
+│ Crosse   ┆          ┆          ┆          ┆          ┆                                                                       │
+│ WI       ┆          ┆          ┆          ┆          ┆                                                                       │
+└──────────┴──────────┴──────────┴──────────┴──────────┴───────────────────────────────────────────────────────────────────────┘
+
+note: More alerts available

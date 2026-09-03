@@ -1,0 +1,67 @@
+---
+source: noaa_weather_cli/src/output/render/tests.rs
+expression: "options(ColorMode::Never, 100).render(&alerts.summarize())"
+---
+Watches, warnings, and advisories
+5 alerts
+
+┌─────────────────┬─────────────────┬─────────────────┬──────────┬────────────────┬────────────────┐
+│ Alert           ┆ Areas Affected  ┆ Effective       ┆ Severity ┆ Instructions   ┆ ID             │
+╞═════════════════╪═════════════════╪═════════════════╪══════════╪════════════════╪════════════════╡
+│ NWS Grand       ┆ Newaygo;        ┆ 2026-09-02      ┆ Moderate ┆ If outdoors,   ┆ urn:oid:2.49.0 │
+│ Rapids MI       ┆ Montcalm; Kent  ┆ 03:48 -04:00 –  ┆          ┆ consider       ┆ .1.840.0.af7e0 │
+│ Special Weather ┆                 ┆ 2026-09-02      ┆          ┆ seeking        ┆ 442df8bfed7953 │
+│ Statement       ┆                 ┆ 04:45 -04:00    ┆          ┆ shelter inside ┆ cb5cae6e466130 │
+│ issued          ┆                 ┆                 ┆          ┆ a building.    ┆ 4cc1f49.001.1  │
+│ September 2 at  ┆                 ┆                 ┆          ┆                ┆                │
+│ 3:48AM EDT by   ┆                 ┆                 ┆          ┆                ┆                │
+│ NWS Grand       ┆                 ┆                 ┆          ┆                ┆                │
+│ Rapids MI       ┆                 ┆                 ┆          ┆                ┆                │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ NWS             ┆ Montgomery      ┆ 2026-09-02      ┆ Unknown  ┆ Monitoring     ┆ urn:oid:2.49.0 │
+│ N/A             ┆                 ┆ 07:47 +00:00 –  ┆          ┆ message only.  ┆ .1.840.0-KEEPA │
+│                 ┆                 ┆ 2026-09-02      ┆          ┆ Please         ┆ LIVE-51140     │
+│                 ┆                 ┆ 07:57 +00:00    ┆          ┆ disregard.     ┆                │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ NWS Milwaukee/S ┆ Fond Du Lac     ┆ 2026-09-02      ┆ Moderate ┆ If outdoors,   ┆ urn:oid:2.49.0 │
+│ ullivan WI      ┆                 ┆ 02:46 -05:00 –  ┆          ┆ consider       ┆ .1.840.0.eac01 │
+│ Special Weather ┆                 ┆ 2026-09-02      ┆          ┆ seeking        ┆ 48b2838ef4c3a0 │
+│ Statement       ┆                 ┆ 03:30 -05:00    ┆          ┆ shelter inside ┆ fdb45fc4ca6d60 │
+│ issued          ┆                 ┆                 ┆          ┆ a building.    ┆ a01ea27.001.1  │
+│ September 2 at  ┆                 ┆                 ┆          ┆                ┆                │
+│ 2:46AM CDT by   ┆                 ┆                 ┆          ┆ Frequent cloud ┆                │
+│ NWS Milwaukee/S ┆                 ┆                 ┆          ┆ to ground      ┆                │
+│ ullivan WI      ┆                 ┆                 ┆          ┆ lightning is   ┆                │
+│                 ┆                 ┆                 ┆          ┆ occurring with ┆                │
+│                 ┆                 ┆                 ┆          ┆ this storm.    ┆                │
+│                 ┆                 ┆                 ┆          ┆ Lightning can  ┆                │
+│                 ┆                 ┆                 ┆          ┆ strike 10      ┆                │
+│                 ┆                 ┆                 ┆          ┆ miles away     ┆                │
+│                 ┆                 ┆                 ┆          ┆ from a         ┆                │
+│                 ┆                 ┆                 ┆          ┆ thunderstorm.  ┆                │
+│                 ┆                 ┆                 ┆          ┆ Seek a safe    ┆                │
+│                 ┆                 ┆                 ┆          ┆ shelter inside ┆                │
+│                 ┆                 ┆                 ┆          ┆ a building or  ┆                │
+│                 ┆                 ┆                 ┆          ┆ vehicle.       ┆                │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ NWS La Crosse   ┆ Buffalo, WI     ┆ 2026-09-02      ┆ Minor    ┆ N/A            ┆ urn:oid:2.49.0 │
+│ WI              ┆                 ┆ 02:42 -05:00 –  ┆          ┆                ┆ .1.840.0.d0de0 │
+│ The Severe      ┆                 ┆ 2026-09-02      ┆          ┆                ┆ 60466dc387307c │
+│ Thunderstorm    ┆                 ┆ 02:57 -05:00    ┆          ┆                ┆ c0a44dbed836b1 │
+│ Warning has     ┆                 ┆                 ┆          ┆                ┆ d20c5e5.001.1  │
+│ been cancelled. ┆                 ┆                 ┆          ┆                ┆                │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ NWS La Crosse   ┆ Jackson, WI; La ┆ 2026-09-02      ┆ Severe   ┆ For your       ┆ urn:oid:2.49.0 │
+│ WI              ┆ Crosse, WI;     ┆ 02:42 -05:00 –  ┆          ┆ protection     ┆ .1.840.0.d0de0 │
+│ Severe          ┆ Monroe, WI;     ┆ 2026-09-02      ┆          ┆ move to an     ┆ 60466dc387307c │
+│ Thunderstorm    ┆ Trempealeau, WI ┆ 03:15 -05:00    ┆          ┆ interior room  ┆ c0a44dbed836b1 │
+│ Warning issued  ┆                 ┆                 ┆          ┆ on the lowest  ┆ d20c5e5.002.1  │
+│ September 2 at  ┆                 ┆                 ┆          ┆ floor of a     ┆                │
+│ 2:42AM CDT      ┆                 ┆                 ┆          ┆ building.      ┆                │
+│ until September ┆                 ┆                 ┆          ┆                ┆                │
+│ 2 at 3:15AM CDT ┆                 ┆                 ┆          ┆                ┆                │
+│ by NWS La       ┆                 ┆                 ┆          ┆                ┆                │
+│ Crosse WI       ┆                 ┆                 ┆          ┆                ┆                │
+└─────────────────┴─────────────────┴─────────────────┴──────────┴────────────────┴────────────────┘
+
+note: More alerts available

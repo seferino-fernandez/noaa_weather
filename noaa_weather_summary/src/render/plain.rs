@@ -9,7 +9,9 @@ use super::{RenderOptions, format_value, heading_or_empty};
 /// Same walk as the markdown renderer: title, subtitle, one block per section
 /// separated by blank lines, notes last. Facts are `Label: value`; tables are
 /// columns padded with spaces and aligned per [`Align`]. Emphasis is ignored
-/// because plain text has no markup for it.
+/// because plain text has no markup for it. Facts and prose keep the newlines
+/// a [`crate::Value::Lines`] produces; table cells join them with `; ` so a
+/// row stays one line.
 pub fn render(summary: &Summary, options: &RenderOptions) -> String {
     let mut blocks: Vec<String> = Vec::new();
 
@@ -67,7 +69,7 @@ fn render_section(section: &Section, options: &RenderOptions) -> String {
                 .iter()
                 .map(|row| {
                     row.iter()
-                        .map(|cell| format_value(&cell.value, options).replace('\n', " "))
+                        .map(|cell| format_value(&cell.value, options).replace('\n', "; "))
                         .collect()
                 })
                 .collect();

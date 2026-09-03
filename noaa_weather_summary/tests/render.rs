@@ -47,6 +47,14 @@ fn synthetic_summary() -> Summary {
                         Value::identifier_from_url("https://api.weather.gov/zones/county/MIC163/"),
                     ]),
                 ),
+                Fact::new(
+                    "Issued by",
+                    Some("senderName"),
+                    Value::lines(vec![
+                        Value::text(Some("NWS Detroit/Pontiac MI")),
+                        Value::text(None),
+                    ]),
+                ),
             ],
         })
         .push(Section::Table {
@@ -58,7 +66,13 @@ fn synthetic_summary() -> Summary {
             ],
             rows: vec![
                 vec![
-                    Value::text(Some("MI")).into(),
+                    Cell::new(
+                        Value::lines(vec![
+                            Value::text(Some("MI")),
+                            Value::text(Some("two lines in one cell")),
+                        ]),
+                        Emphasis::Notice,
+                    ),
                     Cell::new(Value::count(12), Emphasis::Danger),
                     Value::yes_no(Some(true)).into(),
                 ],

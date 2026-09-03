@@ -24,7 +24,12 @@ const INVALID: &str = "Invalid";
 const TIMESTAMP_FORMAT: &str = "%Y-%m-%d %H:%M %:z";
 
 /// Formats a value as text, without any markup.
-fn format_value(value: &Value, options: &RenderOptions) -> String {
+///
+/// [`Value::Lines`] joins with newlines, so a caller that puts the result in a
+/// cell must decide what a newline means there: the markdown renderer writes
+/// `<br>`, the plain renderer writes `; `, and a terminal table can take the
+/// newline as it stands.
+pub fn format_value(value: &Value, options: &RenderOptions) -> String {
     match value {
         Value::Text(text) | Value::Identifier(text) => text.clone(),
         Value::Missing => MISSING.to_owned(),
@@ -55,12 +60,17 @@ fn format_value(value: &Value, options: &RenderOptions) -> String {
         Value::YesNo(true) => "Yes".to_owned(),
         Value::YesNo(false) => "No".to_owned(),
         Value::Coordinates { lat, lon } => format!("{lat:.4}, {lon:.4}"),
-        Value::List(values) => values
-            .iter()
-            .map(|value| format_value(value, options))
-            .collect::<Vec<_>>()
-            .join(", "),
+        Value::List(values) => join(values, ", ", options),
+        Value::Lines(values) => join(values, "\n", options),
     }
+}
+
+fn join(values: &[Value], separator: &str, options: &RenderOptions) -> String {
+    values
+        .iter()
+        .map(|value| format_value(value, options))
+        .collect::<Vec<_>>()
+        .join(separator)
 }
 
 fn format_timestamp(timestamp: &OffsetDateTime, options: &RenderOptions) -> String {
@@ -181,6 +191,18 @@ mod tests {
                 &options
             ),
             "MIZ044, MIZ045"
+        );
+    }
+
+    #[test]
+    fn lines_join_with_newlines() {
+        let options = RenderOptions::default();
+        assert_eq!(
+            format_value(
+                &Value::lines(vec![Value::text(Some("NWS Detroit MI")), Value::text(None)]),
+                &options
+            ),
+            "NWS Detroit MI\nN/A"
         );
     }
 }

@@ -1,0 +1,51 @@
+---
+source: noaa_weather_cli/src/output/render/tests.rs
+expression: "options(ColorMode::Always, 100).render(&synthetic_summary())"
+---
+[38;5;9m[1mSevere Thunderstorm Warning[0m
+[2mSevere Thunderstorm Warning issued for Wayne County until 7:00 AM EDT[0m
+
+┌────────────────┬───────────────────────────────────────────────────┐
+│ ID             ┆ urn:oid:2.49.0.1.840.0.abcdef0123456789.001.1     │
+│ Area           ┆ Wayne, MI                                         │
+│ Sent           ┆ 2026-09-02 03:48 -04:00                           │
+│ Effective      ┆ 2026-09-02 03:48 -04:00 – 2026-09-02 07:00 -04:00 │
+│ Ends           ┆ 2026-09-02 03:48 -04:00 – ongoing                 │
+│ Severity       ┆[38;5;9m[1m Severe                                            [0m│
+│ Urgency        ┆[38;5;11m Expected                                          [39m│
+│ Watch          ┆[38;5;14m Under review                                      [39m│
+│ Certainty      ┆[38;5;10m Likely                                            [39m│
+│ Headline       ┆ N/A                                               │
+│ Wind gust      ┆ 60 mph                                            │
+│ Hail size      ┆ Invalid                                           │
+│ Chance of rain ┆ 40%                                               │
+│ Zones          ┆ 3                                                 │
+│ Payload        ┆ 1.46 MiB                                          │
+│ Replaced       ┆ No                                                │
+│ Location       ┆ 42.3314, -83.0458                                 │
+│ Affected zones ┆ MIZ044, MIC163                                    │
+│ Issued by      ┆ NWS Detroit/Pontiac MI                            │
+│                ┆ N/A                                               │
+└────────────────┴───────────────────────────────────────────────────┘
+
+[1mBy area[0m
+┌─────────────────────────────────────────────┬─────────┬────────┬────────┐
+│[1m Area                                        [0m┆[1m  Alerts [0m┆[1m Marine [0m┆[1m Zone   [0m│
+╞═════════════════════════════════════════════╪═════════╪════════╪════════╡
+│[38;5;14m Michigan                                    [39m┆[38;5;9m[1m      12 [0m┆   Yes  ┆ MIZ044 │
+│[38;5;14m severe storms across the southeast counties [39m┆         ┆        ┆        │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│[38;5;11m Ohio                                        [39m┆[38;5;10m       3 [39m┆   No   ┆ OHZ001 │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ N/A                                         ┆ Invalid ┆   N/A  ┆ PZZ800 │
+└─────────────────────────────────────────────┴─────────┴────────┴────────┘
+
+[1mDescription[0m
+At 348 AM EDT, a severe thunderstorm was located over Detroit, moving east at 40 mph. Hail damage to
+vehicles is expected.
+
+No instructions
+
+[2mnote: More alerts available[0m
+
+[2mnote: Zone counts are in --json[0m

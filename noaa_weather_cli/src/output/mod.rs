@@ -6,17 +6,18 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context as _, Result, bail};
-use clap::Args;
+use clap::{Args, ValueEnum};
 use comfy_table::Table;
-use jiff::tz::TimeZone;
 use noaa_weather_client::apis::BinaryPayload;
 use serde::Serialize;
 use serde_json::Value;
 
 mod atomic_file;
 mod presentation;
+mod render;
 mod sink;
 
+use render::{ColorMode, RenderOptions, TimeZoneChoice};
 use sink::{DestinationAdapter, MediaKind, StdoutDestination};
 
 use presentation::{DefaultPresentation, DefaultPresenter};
@@ -26,9 +27,38 @@ pub(crate) use presentation::zones::ZoneObservations;
 /// Global command-line arguments that select successful-output behavior.
 #[derive(Args, Debug)]
 pub(crate) struct OutputArgs {
-    /// Output successful structured responses as pretty JSON.
-    #[arg(long, global = true)]
+    /// Render successful structured responses in this format.
+    #[arg(
+        short,
+        long,
+        global = true,
+        value_name = "FORMAT",
+        default_value = "table"
+    )]
+    format: Format,
+
+    /// Output successful structured responses as pretty JSON; an alias for
+    /// `--format json`.
+    #[arg(long, global = true, conflicts_with = "format")]
     json: bool,
+
+    /// When to write color and bold escapes.
+    #[arg(long, global = true, value_name = "WHEN", default_value = "auto")]
+    color: ColorMode,
+
+    /// Wrap output to N columns; 0 means never wrap.
+    #[arg(long, global = true, value_name = "N")]
+    width: Option<u16>,
+
+    /// Show timestamps in this zone: `auto`, `source`, or an IANA zone name.
+    #[arg(
+        long,
+        global = true,
+        value_name = "ZONE",
+        default_value = "auto",
+        value_parser = render::parse_time_zone
+    )]
+    time_zone: TimeZoneChoice,
 
     /// Write output to PATH; `-` means stdout for structured output.
     #[arg(short, long, global = true, value_name = "PATH")]
@@ -59,6 +89,9 @@ impl From<String> for Operation {
 
 /// A successful default presentation before destination-specific rendering.
 pub(crate) enum PresentationDocument {
+    /// A ported family: meaning only, rendered by [`render`].
+    Summary(Box<noaa_weather_summary::Summary>),
+    /// An un-ported family that still draws its own table.
     Table(Box<Table>),
     Text(String),
 }
@@ -96,9 +129,13 @@ impl BinaryPresentation for BinaryPayload {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, ValueEnum)]
 enum Format {
+    /// Box-drawing tables, wrapped and colored for a terminal.
+    #[default]
+    #[value(name = "table")]
     Default,
+    /// Pretty JSON.
     Json,
 }
 
@@ -107,27 +144,36 @@ pub(crate) struct Output {
     format: Format,
     destination: Box<dyn DestinationAdapter>,
     default_presenter: Option<DefaultPresenter>,
+    render: RenderOptions,
 }
 
 impl Output {
     pub(crate) fn configured(args: OutputArgs) -> Self {
-        let format = if args.json {
-            Format::Json
-        } else {
-            Format::Default
-        };
-        let destination: Box<dyn DestinationAdapter> = match args.output {
+        let OutputArgs {
+            format,
+            json,
+            color,
+            width,
+            time_zone,
+            output,
+        } = args;
+        // `--json` is the documented alias, and clap already refused the
+        // combination of both flags.
+        let format = if json { Format::Json } else { format };
+        let destination: Box<dyn DestinationAdapter> = match output {
             None => Box::new(StdoutDestination::implicit()),
             Some(path) if path == Path::new("-") => Box::new(StdoutDestination::explicit()),
             Some(path) => Box::new(atomic_file::AtomicFileDestination::new(path)),
         };
+        let render = RenderOptions::new(color, width, &time_zone, destination.is_terminal());
         let default_presenter = (format == Format::Default)
-            .then(|| DefaultPresenter::new(TimeZone::try_system().unwrap_or(TimeZone::UTC)));
+            .then(|| DefaultPresenter::new(render.presenter_time_zone()));
 
         Self {
             format,
             destination,
             default_presenter,
+            render,
         }
     }
 
@@ -222,10 +268,12 @@ impl Output {
 
     fn write_presentation(&self, document: PresentationDocument) -> Result<()> {
         match document {
+            PresentationDocument::Summary(summary) => {
+                let text = self.render.render(&summary);
+                self.write_document(move |writer| write_text(writer, &text))
+            }
             PresentationDocument::Table(mut table) => {
-                if !self.destination.is_terminal() {
-                    table.force_no_tty();
-                }
+                self.render.apply(&mut table);
                 self.write_document(move |writer| write_table(writer, &table))
             }
             PresentationDocument::Text(text) => {
@@ -267,11 +315,17 @@ impl Output {
     #[cfg(test)]
     fn with_destination(format: Format, destination: Box<dyn DestinationAdapter>) -> Self {
         let default_presenter =
-            (format == Format::Default).then(|| DefaultPresenter::new(TimeZone::UTC));
+            (format == Format::Default).then(|| DefaultPresenter::new(jiff::tz::TimeZone::UTC));
         Self {
             format,
             destination,
             default_presenter,
+            render: RenderOptions::new(
+                ColorMode::Never,
+                Some(render::FALLBACK_WIDTH),
+                &TimeZoneChoice::Named(jiff::tz::TimeZone::UTC),
+                false,
+            ),
         }
     }
 }

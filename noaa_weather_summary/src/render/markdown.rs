@@ -93,9 +93,10 @@ fn table_row(cells: impl Iterator<Item = String>) -> String {
     row
 }
 
-/// Escapes pipes and folds newlines so a cell cannot break the table.
+/// Escapes pipes and turns newlines into line breaks so a cell cannot break
+/// the table while a [`crate::Value::Lines`] still reads one value per line.
 fn cell(text: &str) -> String {
-    text.replace('|', "\\|").replace('\n', " ")
+    text.replace('|', "\\|").replace('\n', "<br>")
 }
 
 fn emphasize(text: String, emphasis: Emphasis) -> String {

@@ -1,5 +1,6 @@
 ---
 source: noaa_weather_summary/tests/alerts.rs
+assertion_line: 42
 expression: list().summarize()
 ---
 title: "Watches, warnings, and advisories"
@@ -37,7 +38,9 @@ sections:
           align: Left
       rows:
         - - value:
-              Text: "NWS Grand Rapids MI\nSpecial Weather Statement issued September 2 at 3:48AM EDT by NWS Grand Rapids MI"
+              Lines:
+                - Text: NWS Grand Rapids MI
+                - Text: "Special Weather Statement issued September 2 at 3:48AM EDT by NWS Grand Rapids MI"
             emphasis: None
           - value:
               Text: Newaygo; Montcalm; Kent
@@ -57,7 +60,9 @@ sections:
               Identifier: "urn:oid:2.49.0.1.840.0.af7e0442df8bfed7953cb5cae6e4661304cc1f49.001.1"
             emphasis: None
         - - value:
-              Text: "NWS\nN/A"
+              Lines:
+                - Text: NWS
+                - Missing
             emphasis: None
           - value:
               Text: Montgomery
@@ -77,7 +82,9 @@ sections:
               Identifier: "urn:oid:2.49.0.1.840.0-KEEPALIVE-51140"
             emphasis: None
         - - value:
-              Text: "NWS Milwaukee/Sullivan WI\nSpecial Weather Statement issued September 2 at 2:46AM CDT by NWS Milwaukee/Sullivan WI"
+              Lines:
+                - Text: NWS Milwaukee/Sullivan WI
+                - Text: "Special Weather Statement issued September 2 at 2:46AM CDT by NWS Milwaukee/Sullivan WI"
             emphasis: None
           - value:
               Text: Fond Du Lac
@@ -97,7 +104,9 @@ sections:
               Identifier: "urn:oid:2.49.0.1.840.0.eac0148b2838ef4c3a0fdb45fc4ca6d60a01ea27.001.1"
             emphasis: None
         - - value:
-              Text: "NWS La Crosse WI\nThe Severe Thunderstorm Warning has been cancelled."
+              Lines:
+                - Text: NWS La Crosse WI
+                - Text: The Severe Thunderstorm Warning has been cancelled.
             emphasis: None
           - value:
               Text: "Buffalo, WI"
@@ -116,7 +125,9 @@ sections:
               Identifier: "urn:oid:2.49.0.1.840.0.d0de060466dc387307cc0a44dbed836b1d20c5e5.001.1"
             emphasis: None
         - - value:
-              Text: "NWS La Crosse WI\nSevere Thunderstorm Warning issued September 2 at 2:42AM CDT until September 2 at 3:15AM CDT by NWS La Crosse WI"
+              Lines:
+                - Text: NWS La Crosse WI
+                - Text: "Severe Thunderstorm Warning issued September 2 at 2:42AM CDT until September 2 at 3:15AM CDT by NWS La Crosse WI"
             emphasis: None
           - value:
               Text: "Jackson, WI; La Crosse, WI; Monroe, WI; Trempealeau, WI"
