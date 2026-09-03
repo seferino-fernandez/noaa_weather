@@ -4,7 +4,7 @@ use std::collections::BTreeSet;
 
 use serde_json::Value as Json;
 
-use crate::Summarize;
+use crate::{Summarize, SummaryOptions};
 
 /// NOAA property keys of `value` that the summary neither shows nor lists in
 /// [`Summarize::OMITTED`], sorted.
@@ -14,12 +14,16 @@ use crate::Summarize;
 /// object (a `FeatureCollection`). An empty result means every property is
 /// either rendered or deliberately omitted with a reason.
 ///
+/// The summary is taken under [`SummaryOptions::default`] and there is no
+/// argument for anything else: which keys an impl accounts for is a property
+/// of the impl, not of the unit system it was asked to speak.
+///
 /// # Panics
 ///
 /// Panics if `value` cannot be serialized to JSON, which no NOAA model does.
 pub fn coverage_gaps<T: Summarize>(value: &T) -> Vec<String> {
     let json = serde_json::to_value(value).expect("summarized values serialize to JSON");
-    let shown = value.summarize().keys();
+    let shown = value.summarize(&SummaryOptions::default()).keys();
     let omitted: BTreeSet<&str> = T::OMITTED.iter().map(|(key, _)| *key).collect();
 
     property_keys(&json)
@@ -66,7 +70,7 @@ mod tests {
     }
 
     impl Summarize for Sample {
-        fn summarize(&self) -> Summary {
+        fn summarize(&self, _options: &SummaryOptions) -> Summary {
             Summary::new("Sample").push(Section::Facts {
                 heading: None,
                 facts: vec![Fact::new(
@@ -97,7 +101,7 @@ mod tests {
     }
 
     impl Summarize for Collection {
-        fn summarize(&self) -> Summary {
+        fn summarize(&self, _options: &SummaryOptions) -> Summary {
             Summary::new("Collection").push(Section::Table {
                 heading: None,
                 columns: vec![crate::Column::new("Event", Some("event"))],
@@ -128,7 +132,7 @@ mod tests {
     }
 
     impl Summarize for Feature {
-        fn summarize(&self) -> Summary {
+        fn summarize(&self, _options: &SummaryOptions) -> Summary {
             Summary::new("Feature")
         }
 

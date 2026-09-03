@@ -90,6 +90,26 @@ sections:
               unit: ~
               precision: 2
           emphasis: None
+        - label: Wind
+          key: windSpeed
+          also: []
+          value:
+            Range:
+              min: 10
+              max: 20
+              unit: mph
+              precision: 0
+          emphasis: None
+        - label: Wind chill
+          key: ~
+          also: []
+          value:
+            Range:
+              min: -5
+              max: 3
+              unit: °C
+              precision: 0
+          emphasis: None
         - label: Chance of rain
           key: ~
           also: []

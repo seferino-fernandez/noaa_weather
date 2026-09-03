@@ -2,7 +2,7 @@
 
 use comfy_table::presets::{UTF8_FULL, UTF8_FULL_CONDENSED};
 use comfy_table::{CellAlignment, ColumnConstraint, Table};
-use noaa_weather_summary::render::format_value;
+use noaa_weather_summary::render::{RangeStyle, format_value};
 use noaa_weather_summary::{Align, Cell, Column, Emphasis, Fact, Section, Summary, Value};
 
 use super::{RenderOptions, Width, style};
@@ -208,9 +208,11 @@ fn is_identifier(value: &Value) -> bool {
 }
 
 /// The summary crate decides what a value says; comfy-table takes the
-/// newlines a [`Value::Lines`] produces as they stand.
+/// newlines a [`Value::Lines`] produces as they stand, and a range spells its
+/// join out, because a terminal column is no place to parse a dash between a
+/// negative bound and a positive one.
 fn text_of(value: &Value, options: &RenderOptions) -> String {
-    format_value(value, &options.summary_options())
+    format_value(value, &options.value_options(), RangeStyle::Words)
 }
 
 const fn alignment(align: Align) -> CellAlignment {

@@ -2,7 +2,11 @@
 
 use crate::{Align, Cell, Emphasis, Section, Summary};
 
-use super::{RenderOptions, format_value, heading_or_empty};
+use super::{RangeStyle, RenderOptions, format_value, heading_or_empty};
+
+/// Markdown reads as prose, where an en dash between two numbers is the
+/// ordinary typography for a range.
+const RANGE: RangeStyle = RangeStyle::Dash;
 
 /// Renders a summary as GitHub-flavored markdown.
 ///
@@ -45,7 +49,7 @@ fn render_section(section: &Section, options: &RenderOptions) -> String {
         Section::Facts { heading, facts } => {
             push_heading(&mut lines, heading.as_ref());
             for fact in facts {
-                let value = emphasize(format_value(&fact.value, options), fact.emphasis);
+                let value = emphasize(format_value(&fact.value, options, RANGE), fact.emphasis);
                 lines.push(format!("- **{}:** {value}", fact.label));
             }
         }
@@ -63,7 +67,10 @@ fn render_section(section: &Section, options: &RenderOptions) -> String {
             })));
             for row in rows {
                 lines.push(table_row(row.iter().map(|entry: &Cell| {
-                    emphasize(cell(&format_value(&entry.value, options)), entry.emphasis)
+                    emphasize(
+                        cell(&format_value(&entry.value, options, RANGE)),
+                        entry.emphasis,
+                    )
                 })));
             }
         }

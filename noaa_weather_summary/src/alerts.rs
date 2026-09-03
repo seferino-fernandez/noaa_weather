@@ -14,7 +14,9 @@ use std::collections::BTreeMap;
 use noaa_weather_client::models::{ActiveAlertCounts, Alert, AlertEventTypes, AlertSeverity};
 use noaa_weather_client::{Feature, FeatureCollection};
 
-use crate::{Align, Cell, Column, Emphasis, Fact, Section, Summarize, Summary, Value};
+use crate::{
+    Align, Cell, Column, Emphasis, Fact, Section, Summarize, Summary, SummaryOptions, Value,
+};
 
 /// How urgently an alert of this severity should read.
 fn severity_emphasis(severity: AlertSeverity) -> Emphasis {
@@ -97,7 +99,7 @@ macro_rules! with_provenance {
 }
 
 impl Summarize for FeatureCollection<Alert> {
-    fn summarize(&self) -> Summary {
+    fn summarize(&self, _options: &SummaryOptions) -> Summary {
         let title = self.title.clone().unwrap_or_else(|| "Alerts".to_owned());
         let mut summary = Summary::new(title).subtitle(count_noun(self.len(), "alert", "alerts"));
 
@@ -201,7 +203,7 @@ impl Summarize for FeatureCollection<Alert> {
 }
 
 impl Summarize for Feature<Alert> {
-    fn summarize(&self) -> Summary {
+    fn summarize(&self, _options: &SummaryOptions) -> Summary {
         let alert = &self.properties;
         let emphasis = severity_emphasis(alert.severity);
         let optional_time = |time: Option<_>| time.map_or(Value::Missing, Value::timestamp);
@@ -357,7 +359,7 @@ fn prose_or_empty(
 }
 
 impl Summarize for ActiveAlertCounts {
-    fn summarize(&self) -> Summary {
+    fn summarize(&self, _options: &SummaryOptions) -> Summary {
         let count_table = |heading: &str,
                            title: &'static str,
                            key: &'static str,
@@ -406,7 +408,7 @@ impl Summarize for ActiveAlertCounts {
 }
 
 impl Summarize for AlertEventTypes {
-    fn summarize(&self) -> Summary {
+    fn summarize(&self, _options: &SummaryOptions) -> Summary {
         let summary = Summary::new("Alert event types").subtitle(count_noun(
             self.event_types.len(),
             "type",

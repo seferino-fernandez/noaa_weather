@@ -14,7 +14,7 @@ use clap::ValueEnum;
 use comfy_table::{ContentArrangement, Table};
 use jiff::tz::TimeZone;
 use noaa_weather_summary::Summary;
-use noaa_weather_summary::render::RenderOptions as SummaryOptions;
+use noaa_weather_summary::render::RenderOptions as ValueOptions;
 
 mod style;
 mod table;
@@ -146,10 +146,10 @@ impl RenderOptions {
         }
     }
 
-    /// The summary crate's own options, so both renderers format a value the
-    /// same way.
-    fn summary_options(&self) -> SummaryOptions {
-        SummaryOptions {
+    /// The summary crate's own appearance options, so both renderers format a
+    /// value the same way.
+    fn value_options(&self) -> ValueOptions {
+        ValueOptions {
             time_zone: self.time_zone.clone(),
         }
     }

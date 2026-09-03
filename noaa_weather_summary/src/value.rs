@@ -32,6 +32,24 @@ impl Value {
         }
     }
 
+    /// A measurement NOAA gave as bounds, shown with `precision` decimal
+    /// places on each bound and an optional unit label. A missing bound makes
+    /// the whole value [`Value::Missing`], because half a range says nothing;
+    /// a non-finite bound makes it [`Value::Invalid`], as [`Value::number`]
+    /// does.
+    pub fn range(min: Option<f64>, max: Option<f64>, precision: u8, unit: Option<&str>) -> Self {
+        match (min, max) {
+            (Some(min), Some(max)) if min.is_finite() && max.is_finite() => Self::Range {
+                min,
+                max,
+                unit: unit.map(str::to_owned),
+                precision,
+            },
+            (Some(_), Some(_)) => Self::Invalid,
+            (None, _) | (_, None) => Self::Missing,
+        }
+    }
+
     /// A percentage. `None` is [`Value::Missing`]; a non-finite number is
     /// [`Value::Invalid`].
     pub fn percent(value: Option<f64>) -> Self {
@@ -132,6 +150,36 @@ mod tests {
                 value: 12.5,
                 unit: Some("mph".to_owned()),
                 precision: 1,
+            }
+        );
+    }
+
+    #[test]
+    fn range_needs_both_bounds_and_rejects_non_finite_ones() {
+        assert_eq!(
+            Value::range(None, Some(20.0), 0, Some("mph")),
+            Value::Missing
+        );
+        assert_eq!(
+            Value::range(Some(10.0), None, 0, Some("mph")),
+            Value::Missing
+        );
+        assert_eq!(Value::range(None, None, 0, None), Value::Missing);
+        assert_eq!(
+            Value::range(Some(10.0), Some(f64::NAN), 0, None),
+            Value::Invalid
+        );
+        assert_eq!(
+            Value::range(Some(f64::NEG_INFINITY), Some(20.0), 0, None),
+            Value::Invalid
+        );
+        assert_eq!(
+            Value::range(Some(10.0), Some(20.0), 0, Some("mph")),
+            Value::Range {
+                min: 10.0,
+                max: 20.0,
+                unit: Some("mph".to_owned()),
+                precision: 0,
             }
         );
     }

@@ -45,11 +45,12 @@ sets the emphasis: `Extreme` and `Severe` are `Danger`, `Moderate` is
 ```rust,no_run
 use noaa_weather_client::FeatureCollection;
 use noaa_weather_client::models::Alert;
-use noaa_weather_summary::Summarize;
 use noaa_weather_summary::render::{RenderOptions, markdown};
+use noaa_weather_summary::{Summarize, SummaryOptions};
 
 let alerts: FeatureCollection<Alert> = serde_json::from_str(&std::fs::read_to_string("alerts.json")?)?;
-println!("{}", markdown::render(&alerts.summarize(), &RenderOptions::default()));
+let summary = alerts.summarize(&SummaryOptions::default());
+println!("{}", markdown::render(&summary, &RenderOptions::default()));
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
