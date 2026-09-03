@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// Sunrise, sunset, and twilight information for a location.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct AstronomicalData {
     #[serde(rename = "sunrise", skip_serializing_if = "Option::is_none")]
     pub sunrise: Option<String>,

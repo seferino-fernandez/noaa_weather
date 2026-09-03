@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// NOAA Weather Radio metadata for a point.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct NoaaWeatherRadio {
     /// Transmitter callsign.
     #[serde(
@@ -10,6 +11,7 @@ pub struct NoaaWeatherRadio {
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
+    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
     pub transmitter: Option<Option<String>>,
     /// The SAME code of this point's county.
     #[serde(rename = "sameCode", skip_serializing_if = "Option::is_none")]
@@ -21,6 +23,7 @@ pub struct NoaaWeatherRadio {
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
+    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
     pub area_broadcast: Option<Option<String>>,
     /// A link to the local NWR broadcast for this point.
     #[serde(
@@ -29,5 +32,6 @@ pub struct NoaaWeatherRadio {
         with = "::serde_with::rust::double_option",
         skip_serializing_if = "Option::is_none"
     )]
+    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
     pub point_broadcast: Option<Option<String>>,
 }

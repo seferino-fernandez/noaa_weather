@@ -24,6 +24,8 @@
 //!
 //! let interval: Interval = "2024-01-01T00:00:00Z/PT6H".parse()?;
 //! assert_eq!(interval.start().unwrap().to_string(), "2024-01-01T00:00:00Z");
+//! // Either offset form parses; both print with a numeric offset.
+//! assert_eq!(interval.to_string(), "2024-01-01T00:00:00+00:00/PT6H");
 //! # Ok::<(), noaa_weather_client::InvalidValue>(())
 //! ```
 
@@ -37,3 +39,13 @@ pub use offset_date_time::OffsetDateTime;
 /// in query parameters and path segments. Formatting with it truncates any
 /// sub-second precision.
 pub(crate) const RFC3339_SECONDS: &str = "%Y-%m-%dT%H:%M:%SZ";
+
+/// The same instant with a numeric `+00:00` suffix instead of `Z`.
+///
+/// [`Interval`] writes its endpoints this way so that one document never
+/// mixes offset conventions: [`OffsetDateTime`] prints every response
+/// timestamp with a numeric offset, and NOAA writes `validTime` and
+/// `validTimes` as `+00:00` too. Both forms denote the same instant and
+/// NOAA accepts either in its `interval`, `arrived`, `created`, `published`,
+/// and `time` query parameters.
+pub(crate) const RFC3339_OFFSET: &str = "%Y-%m-%dT%H:%M:%S%:z";

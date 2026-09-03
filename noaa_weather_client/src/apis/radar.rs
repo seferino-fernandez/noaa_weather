@@ -585,8 +585,8 @@ mod tests {
         assert_eq!(
             first_query(&server).await.as_deref(),
             Some(
-                "limit=10&arrived=2026-08-30T12%3A00%3A00Z%2FPT1H\
-                 &created=PT15M%2F2026-08-30T12%3A00%3A00Z&published=PT30M\
+                "limit=10&arrived=2026-08-30T12%3A00%3A00%2B00%3A00%2FPT1H\
+                 &created=PT15M%2F2026-08-30T12%3A00%3A00%2B00%3A00&published=PT30M\
                  &station=KIWA&type=LEVEL2&feed=level2&resolution=1"
             )
         );
@@ -622,7 +622,7 @@ mod tests {
 
         assert_eq!(
             first_query(&server).await.as_deref(),
-            Some("arrived=2026-08-30T00%3A00%3A00Z%2F2026-08-30T01%3A00%3A00Z")
+            Some("arrived=2026-08-30T00%3A00%3A00%2B00%3A00%2F2026-08-30T01%3A00%3A00%2B00%3A00")
         );
     }
 
@@ -694,7 +694,9 @@ mod tests {
 
         assert_eq!(
             first_query(&server).await.as_deref(),
-            Some("time=2026-08-30T00%3A00%3A00Z%2F2026-08-30T01%3A00%3A00Z&interval=PT1H")
+            Some(
+                "time=2026-08-30T00%3A00%3A00%2B00%3A00%2F2026-08-30T01%3A00%3A00%2B00%3A00&interval=PT1H"
+            )
         );
     }
 
@@ -763,7 +765,7 @@ mod tests {
 
         assert_eq!(
             first_query(&server).await.as_deref(),
-            Some("published=2026-01-01T00%3A00%3A00Z%2F2026-01-01T01%3A30%3A00Z")
+            Some("published=2026-01-01T00%3A00%3A00%2B00%3A00%2F2026-01-01T01%3A30%3A00%2B00%3A00")
         );
     }
 

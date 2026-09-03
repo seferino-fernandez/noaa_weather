@@ -2,8 +2,9 @@ use std::borrow::Cow;
 use std::fmt::Display;
 
 use jiff::Timestamp;
+use noaa_weather_client::OffsetDateTime;
 use noaa_weather_client::models::radar::RadarMeasurement;
-use noaa_weather_client::models::{QuantitativeValue, UnitCodeType, ValueUnit};
+use noaa_weather_client::models::{Quantity, UnitCodeType, ValueUnit};
 
 use super::{DefaultPresenter, PresentationError};
 
@@ -77,6 +78,12 @@ impl DefaultPresenter {
         )
     }
 
+    /// Renders an instant that already carries its own offset, in the
+    /// presenter's zone rather than the source's.
+    pub(super) fn offset_date_time(&self, value: &OffsetDateTime) -> String {
+        self.parsed_timestamp(Some(value.timestamp()))
+    }
+
     pub(super) fn resource_identifier(&self, value: Option<&str>) -> String {
         let Some(value) = value.map(str::trim).filter(|value| !value.is_empty()) else {
             return MISSING.to_owned();
@@ -129,11 +136,8 @@ impl DefaultPresenter {
         }
     }
 
-    pub(super) fn quantitative_value(&self, value: Option<&QuantitativeValue>) -> String {
-        let Some(value) = value else {
-            return MISSING.to_owned();
-        };
-        let Some(number) = value.value.flatten() else {
+    pub(super) fn quantitative_value(&self, value: &Quantity) -> String {
+        let Some(number) = value.value else {
             return MISSING.to_owned();
         };
         if !number.is_finite() {
@@ -144,31 +148,27 @@ impl DefaultPresenter {
         } else {
             number.to_string()
         };
-        match value.unit_code.as_deref().and_then(unit_suffix) {
+        match unit_suffix(value.unit.code()) {
             Some(unit) => format!("{number} {unit}"),
             None => number,
         }
     }
 
-    pub(super) fn rounded_temperature(&self, value: Option<&QuantitativeValue>) -> String {
-        let Some(value) = value else {
-            return MISSING.to_owned();
-        };
-        let Some(number) = value.value.flatten() else {
+    pub(super) fn rounded_temperature(&self, value: &Quantity) -> String {
+        let Some(number) = value.value else {
             return MISSING.to_owned();
         };
         if !number.is_finite() {
             return INVALID.to_owned();
         }
-        let unit = value.unit_code.as_deref().and_then(temperature_label);
-        match unit {
+        match temperature_label(value.unit.code()) {
             Some(unit) => format!("{} {unit}", number.round()),
             None => number.round().to_string(),
         }
     }
 
-    pub(super) fn percentage(&self, value: Option<&QuantitativeValue>) -> String {
-        let Some(number) = value.and_then(|value| value.value.flatten()) else {
+    pub(super) fn percentage(&self, value: &Quantity) -> String {
+        let Some(number) = value.value else {
             return MISSING.to_owned();
         };
         if !number.is_finite() {
@@ -177,18 +177,15 @@ impl DefaultPresenter {
         format!("{number:.0}%")
     }
 
-    pub(super) fn elevation(&self, value: Option<&QuantitativeValue>) -> String {
-        let Some(measurement) = value else {
-            return MISSING.to_owned();
-        };
-        let Some(number) = measurement.value.flatten() else {
+    pub(super) fn elevation(&self, value: &Quantity) -> String {
+        let Some(number) = value.value else {
             return MISSING.to_owned();
         };
         if !number.is_finite() {
             return INVALID.to_owned();
         }
         let number = format!("{number:.1}");
-        match measurement.unit_code.as_deref().and_then(unit_suffix) {
+        match unit_suffix(value.unit.code()) {
             Some(unit) => format!("{number} {unit}"),
             None => number,
         }
@@ -230,15 +227,15 @@ impl DefaultPresenter {
 
     pub(super) fn forecast_wind(
         &self,
-        speed: Option<&QuantitativeValue>,
-        gust: Option<&QuantitativeValue>,
+        speed: &Quantity,
+        gust: Option<&Quantity>,
         direction: Option<&str>,
     ) -> String {
         let mut parts = vec![self.quantitative_value(speed)];
         if let Some(direction) = direction.filter(|value| !value.trim().is_empty()) {
             parts.push(direction.to_owned());
         }
-        if gust.is_some() {
+        if let Some(gust) = gust {
             parts.push(format!("gust {}", self.quantitative_value(gust)));
         }
         parts.join(" ")

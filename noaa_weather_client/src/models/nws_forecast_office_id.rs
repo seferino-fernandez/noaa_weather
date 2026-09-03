@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 /// NwsForecastOfficeId : Three-letter identifier for a NWS office.
 /// Three-letter identifier for a NWS office.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema), schemars(inline))]
 pub enum NwsForecastOfficeId {
     #[serde(rename = "AKQ")]
     Akq,

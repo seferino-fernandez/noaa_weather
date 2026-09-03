@@ -21,6 +21,10 @@ use wiremock::{
 
 const USER_AGENT: &str = "noaa-weather-handles/1.0 (tests@example.com)";
 const FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{}}"#;
+/// Captured responses for the families whose models require NOAA's full key set.
+const POINT: &str = include_str!("fixtures/points/point.json");
+const FORECAST: &str = include_str!("fixtures/gridpoints/forecast.json");
+const HOURLY: &str = include_str!("fixtures/gridpoints/hourly.json");
 const COLLECTION: &str = r#"{"type":"FeatureCollection","features":[]}"#;
 const GRAPH: &str = r#"{"@context":{},"@graph":[]}"#;
 
@@ -83,7 +87,7 @@ async fn points_handle_sends_coordinates_as_one_segment() {
     mount(
         &server,
         "/points/39.7456,-97.0892",
-        FEATURE,
+        POINT,
         "application/geo+json",
     )
     .await;
@@ -101,19 +105,13 @@ async fn points_forecast_for_chains_point_lookup_into_gridpoint_forecast() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/points/39.7456,-97.0892"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(
-            r#"{"type":"Feature","geometry":null,"properties":{"gridId":"TOP","gridX":31,"gridY":80}}"#,
-            "application/geo+json",
-        ))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(POINT, "application/geo+json"))
         .expect(1)
         .mount(&server)
         .await;
     Mock::given(method("GET"))
-        .and(path("/gridpoints/TOP/31,80/forecast"))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(
-            r#"{"type":"Feature","geometry":null,"properties":{"periods":[{"name":"Tonight"}]}}"#,
-            "application/geo+json",
-        ))
+        .and(path("/gridpoints/TOP/32,81/forecast"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(FORECAST, "application/geo+json"))
         .expect(1)
         .mount(&server)
         .await;
@@ -123,8 +121,10 @@ async fn points_forecast_for_chains_point_lookup_into_gridpoint_forecast() {
         .forecast_for(Coordinates::new(39.7456, -97.0892).unwrap())
         .await
         .unwrap();
-    let periods = forecast.properties.periods.unwrap();
-    assert_eq!(periods[0].name.as_deref(), Some("Tonight"));
+    assert_eq!(
+        forecast.properties.periods[0].name.as_deref(),
+        Some("Overnight")
+    );
     let requests = server.received_requests().await.unwrap();
     assert_eq!(requests.len(), 2);
     assert_eq!(
@@ -134,7 +134,7 @@ async fn points_forecast_for_chains_point_lookup_into_gridpoint_forecast() {
 }
 
 #[tokio::test]
-async fn points_forecast_for_rejects_a_point_without_a_grid() {
+async fn points_forecast_for_stops_when_the_point_cannot_be_decoded() {
     let server = MockServer::start().await;
     mount(
         &server,
@@ -149,7 +149,8 @@ async fn points_forecast_for_rejects_a_point_without_a_grid() {
         .forecast_for(Coordinates::new(39.7456, -97.0892).unwrap())
         .await
         .unwrap_err();
-    assert!(matches!(error, Error::Invalid(_)), "{error}");
+    assert!(matches!(error, Error::Json(_)), "{error}");
+    assert_eq!(server.received_requests().await.unwrap().len(), 1);
 }
 
 #[tokio::test]
@@ -158,7 +159,7 @@ async fn gridpoints_handle_uses_the_grid_id_and_units_query() {
     mount(
         &server,
         "/gridpoints/TOP/31,80/forecast/hourly",
-        FEATURE,
+        HOURLY,
         "application/geo+json",
     )
     .await;
@@ -344,7 +345,7 @@ async fn radar_handle_encodes_intervals_and_station_ids() {
         .unwrap();
     assert_eq!(
         only_query(&server).await.as_deref(),
-        Some("limit=5&published=2026-08-30T00%3A00%3A00Z%2FPT2H&station=KABQ")
+        Some("limit=5&published=2026-08-30T00%3A00%3A00%2B00%3A00%2FPT2H&station=KABQ")
     );
 }
 

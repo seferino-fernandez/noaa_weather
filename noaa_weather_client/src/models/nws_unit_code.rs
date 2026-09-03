@@ -49,4 +49,17 @@ impl NwsUnitCode {
             NwsUnitCode::Decibel => "dB",
         }
     }
+
+    /// Returns the `unitCode` string NOAA writes on the wire, such as
+    /// `nwsUnit:s`.
+    #[must_use]
+    pub fn unit_code(&self) -> &'static str {
+        match self {
+            NwsUnitCode::Second => "nwsUnit:s",
+            NwsUnitCode::Nanosecond => "nwsUnit:ns",
+            NwsUnitCode::Megahertz => "nwsUnit:MHz",
+            NwsUnitCode::DecibelZ => "nwsUnit:dBZ",
+            NwsUnitCode::Decibel => "nwsUnit:dB",
+        }
+    }
 }
