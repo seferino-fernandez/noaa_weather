@@ -14,113 +14,22 @@
 
 mod common;
 
-use std::process::Output;
 use std::time::{Duration, Instant};
 
 use assert_cmd::prelude::*;
 use common::fixtures::ALERT_ID;
 use common::noaa_weather;
-use common::table::{ALERTS, Expectation, Invocation, Live, Query};
+use common::runner::{
+    asked_for, expect_request, family, hermetic, live, run, run_against, stderr, stdout,
+};
+use common::table::{ALERTS, Query};
 use jiff::{Span, Timestamp};
 use wiremock::matchers::method;
-use wiremock::{Mock, MockServer, Request, ResponseTemplate};
-
-/// Runs the built binary with `arguments`, off the runtime's worker thread.
-///
-/// `MockServer::start` needs a tokio runtime, and the binary is driven with
-/// blocking `std::process` calls, so the two have to be kept apart.
-async fn run(arguments: &[&str]) -> Output {
-    let arguments: Vec<String> = arguments.iter().map(|&part| part.to_owned()).collect();
-    tokio::task::spawn_blocking(move || {
-        noaa_weather()
-            .args(&arguments)
-            .output()
-            .expect("the built binary must be runnable")
-    })
-    .await
-    .expect("the subprocess task must not panic")
-}
-
-/// Runs `arguments` against `server`.
-async fn run_against(server: &MockServer, arguments: &[&str]) -> Output {
-    let mut all: Vec<&str> = arguments.to_vec();
-    let uri = server.uri();
-    all.push("--base-url");
-    all.push(&uri);
-    run(&all).await
-}
-
-/// Matches a request whose path and query string are exactly the expected
-/// ones.
-///
-/// `wiremock::matchers::path` ignores the query, and `query_param` ignores
-/// parameters it was not told about; comparing the whole thing is what makes
-/// an accidental extra or renamed parameter show up.
-fn asked_for(path: &'static str, query: &'static str) -> impl Fn(&Request) -> bool {
-    matching(path, Query::Exact(query))
-}
-
-/// Matches a request against an invocation's path and [`Query`].
-fn matching(path: &'static str, query: Query) -> impl Fn(&Request) -> bool {
-    move |request: &Request| {
-        if request.url.path() != path {
-            return false;
-        }
-        let seen = request.url.query().unwrap_or_default();
-        match query {
-            Query::Exact(text) => seen == text,
-            Query::Clock => !seen.is_empty(),
-        }
-    }
-}
-
-/// Serves `invocation`'s fixture, and only to the request it should make.
-async fn expect_request(server: &MockServer, invocation: &Invocation) {
-    Mock::given(method("GET"))
-        .and(matching(invocation.path, invocation.query))
-        .respond_with(ResponseTemplate::new(200).set_body_raw(invocation.body, invocation.media))
-        .expect(1)
-        .mount(server)
-        .await;
-}
-
-/// Describes what the server was actually asked for, for failure messages.
-async fn requests_seen(server: &MockServer) -> String {
-    server
-        .received_requests()
-        .await
-        .unwrap_or_default()
-        .iter()
-        .map(|request| format!("\n  {} {}", request.method, request.url))
-        .collect()
-}
-
-fn stderr(output: &Output) -> String {
-    String::from_utf8_lossy(&output.stderr).into_owned()
-}
-
-fn stdout(output: &Output) -> String {
-    String::from_utf8_lossy(&output.stdout).into_owned()
-}
+use wiremock::{Mock, MockServer, ResponseTemplate};
 
 #[tokio::test]
 async fn every_alerts_invocation_asks_for_the_path_and_query_the_table_records() {
-    for invocation in ALERTS {
-        let server = MockServer::start().await;
-        expect_request(&server, invocation).await;
-
-        let output = run_against(&server, &invocation.argv()).await;
-
-        assert_eq!(
-            output.status.code(),
-            Some(0),
-            "`{}` failed.\nstderr: {}\nserver saw:{}",
-            invocation.display(),
-            stderr(&output),
-            requests_seen(&server).await
-        );
-        server.verify().await;
-    }
+    hermetic(family("alerts")).await;
 }
 
 /// The one query the table cannot spell, checked where the clock can be read.
@@ -134,7 +43,7 @@ async fn relative_ages_become_absolute_timestamps() {
     let server = MockServer::start().await;
     let invocation = ALERTS
         .iter()
-        .find(|invocation| matches!(invocation.query, Query::Clock))
+        .find(|invocation| matches!(invocation.query, Query::Clock(_)))
         .expect("the table must still carry the relative-age invocation");
     expect_request(&server, invocation).await;
 
@@ -230,7 +139,7 @@ async fn a_server_error_fails_the_command() {
 
     let output = run_against(&server, &["alerts", "count", "--retries", "0"]).await;
 
-    assert_eq!(output.status.code(), Some(1), "{}", stdout(&output));
+    assert_eq!(output.status.code(), Some(3), "{}", stdout(&output));
     assert!(stderr(&output).contains("503"), "{}", stderr(&output));
     server.verify().await;
 }
@@ -268,7 +177,7 @@ async fn the_timeout_flag_reaches_the_client() {
 
     assert_eq!(
         output.status.code(),
-        Some(1),
+        Some(4),
         "the delayed reply should have timed out: {}",
         stdout(&output)
     );
@@ -295,7 +204,7 @@ async fn retries_asks_for_the_response_again() {
 
     let output = run_against(&server, &["alerts", "count", "--retries", "2"]).await;
 
-    assert_eq!(output.status.code(), Some(1), "{}", stdout(&output));
+    assert_eq!(output.status.code(), Some(3), "{}", stdout(&output));
     server.verify().await;
 }
 
@@ -439,7 +348,7 @@ async fn an_unreachable_base_url_fails_without_retrying() {
     ])
     .await;
 
-    assert_eq!(output.status.code(), Some(1), "{}", stdout(&output));
+    assert_eq!(output.status.code(), Some(4), "{}", stdout(&output));
 }
 
 #[tokio::test]
@@ -447,6 +356,7 @@ async fn a_base_url_that_is_not_a_url_is_a_usage_error() {
     let output = run(&["alerts", "count", "--base-url", "not a url"]).await;
 
     let stderr = stderr(&output);
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
     assert!(stderr.contains("--base-url"), "{stderr}");
     assert!(stderr.contains("NOAA_WEATHER_BASE_URL"), "{stderr}");
 }
@@ -541,97 +451,12 @@ fn test_alerts_list_rejects_malformed_zone() {
     assert!(stderr.contains("invalid zone id"), "{stderr}");
 }
 
-/// Holds one live `--json` payload to what the table says NOAA must send.
-///
-/// Exit 0 already covers the fields the curated models require, since one of
-/// those going missing fails the decode. This closes the two gaps that
-/// leaves: a collection that came back empty, and an optional field NOAA
-/// renamed or dropped, which arrives as a silent `null`.
-fn check_payload(invocation: &Invocation, expectation: &Expectation, body: &[u8]) {
-    let where_ = invocation.display();
-    let document: serde_json::Value = serde_json::from_slice(body).unwrap_or_else(|error| {
-        panic!(
-            "`{where_} --json` did not emit JSON: {error}\n{}",
-            String::from_utf8_lossy(body)
-        )
-    });
-    let payload = document.pointer(expectation.payload).unwrap_or_else(|| {
-        panic!(
-            "`{where_} --json` has nothing at {}: {document}",
-            expectation.payload
-        )
-    });
-
-    let length = match payload {
-        serde_json::Value::Array(items) => items.len(),
-        serde_json::Value::Object(members) => members.len(),
-        other => panic!(
-            "{} in `{where_} --json` is neither an array nor an object: {other}",
-            expectation.payload
-        ),
-    };
-    assert!(
-        length > 0 || !expectation.non_empty,
-        "NOAA returned a well-formed but empty {} for `{where_}`, and this \
-         invocation is one that should always have something in it",
-        expectation.payload
-    );
-
-    let Some(first) = payload.as_array().and_then(|items| items.first()) else {
-        return;
-    };
-    let properties = first.get("properties").unwrap_or(first);
-    for key in expectation.keys {
-        let value = properties
-            .get(key)
-            .unwrap_or_else(|| panic!("`{where_} --json` dropped the {key:?} key: {properties}"));
-        let populated = match value {
-            serde_json::Value::Null => false,
-            serde_json::Value::Array(items) => !items.is_empty(),
-            serde_json::Value::Object(members) => !members.is_empty(),
-            serde_json::Value::String(text) => !text.is_empty(),
-            _ => true,
-        };
-        assert!(
-            populated,
-            "`{where_} --json` left {key:?} empty; NOAA populated it on every \
-             alert when the table was written, so this is drift"
-        );
-    }
-}
-
 /// The live half of the shared table: the same argument lists, sent at real
 /// NOAA. The hermetic tests prove the CLI asks for the right URL; only this
 /// notices that the URL stopped answering or the answer stopped decoding.
-///
-/// Each invocation runs twice, because the two forms fail differently: the
-/// table form drives the renderer over live data, and the `--json` form is
-/// what [`check_payload`] can inspect.
 #[test]
 fn test_alerts_live_noaa_answers_every_tabled_invocation() {
-    for invocation in ALERTS {
-        let Live::Check(expectation) = &invocation.live else {
-            continue;
-        };
-        for extra in [&[][..], &["--json"]] {
-            let output = noaa_weather()
-                .args(invocation.argv())
-                .args(extra)
-                .output()
-                .expect("the built binary must be runnable");
-            assert_eq!(
-                output.status.code(),
-                Some(0),
-                "`{} {}` failed against NOAA: {}",
-                invocation.display(),
-                extra.join(" "),
-                String::from_utf8_lossy(&output.stderr)
-            );
-            if !extra.is_empty() {
-                check_payload(invocation, expectation, &output.stdout);
-            }
-        }
-    }
+    live(family("alerts"));
 }
 
 /// Fetches a single alert by an id resolved at run time.

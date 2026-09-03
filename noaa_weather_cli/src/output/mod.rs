@@ -5,7 +5,7 @@ use std::future::Future;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context as _, Result, bail};
+use anyhow::{Context as _, Result, anyhow, bail};
 use clap::{Args, ValueEnum};
 use comfy_table::Table;
 use noaa_weather_client::apis::BinaryPayload;
@@ -69,6 +69,83 @@ pub(crate) struct OutputArgs {
     #[arg(short, long, global = true, value_name = "PATH")]
     output: Option<PathBuf>,
 }
+
+/// A failure to deliver output that the filesystem, or the terminal, caused.
+///
+/// This and [`UsageFailure`] both reach `main` as one `anyhow::Error` and exit
+/// with different codes, so each is tagged where it happens rather than
+/// guessed at from its message later.
+///
+/// What earns this tag is a destination that could not take the bytes *on
+/// this machine, right now*: a parent directory that does not exist, a file
+/// that cannot be opened for writing, a rename that failed. Anything that
+/// would fail identically on every machine is a [`UsageFailure`] instead.
+/// Presenting a value earns neither, because a presenter that cannot describe
+/// a response is a bug in this program.
+///
+/// The wrapped `anyhow::Error` is not a `std::error::Error`, so it cannot be
+/// returned from [`std::error::Error::source`]; [`fmt::Display`] writes the
+/// whole chain instead, which is what `{:#}` on the outer error would have
+/// printed anyway.
+#[derive(Debug)]
+pub struct OutputFailure(anyhow::Error);
+
+impl OutputFailure {
+    /// Tags `error` as an output failure, leaving an already-classified one
+    /// alone.
+    ///
+    /// The [`UsageFailure`] arm matters: `show` and `download` wrap whatever
+    /// `validate` returns, and a stdout destination refusing binary bytes has
+    /// already classified itself by then.
+    pub(crate) fn wrap(error: anyhow::Error) -> anyhow::Error {
+        if error.is::<Self>() || error.is::<UsageFailure>() {
+            error
+        } else {
+            anyhow::Error::new(Self(error))
+        }
+    }
+}
+
+impl fmt::Display for OutputFailure {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(formatter, "{:#}", self.0)
+    }
+}
+
+impl StdError for OutputFailure {}
+
+/// An output request that argv alone makes impossible.
+///
+/// `--json` on a command whose response is a PDF, and a binary download aimed
+/// at a terminal, depend on nothing but the arguments: no request is made, no
+/// file is touched, and they would fail the same way on every machine. That
+/// is a value the caller typed, so it exits 2 with the rest of the usage
+/// errors rather than telling a script its disk is bad.
+///
+/// clap cannot express either — `--format` is global and the conflict is with
+/// the subcommand — but "clap did not catch it" was never the test. The
+/// library's own [`noaa_weather_client::Error::Invalid`] is exit 2 on the
+/// same reasoning.
+#[derive(Debug)]
+pub struct UsageFailure(anyhow::Error);
+
+impl UsageFailure {
+    /// Tags `error` as a usage failure.
+    ///
+    /// Named to match [`OutputFailure::wrap`]; both take an error and hand
+    /// back a classified one rather than constructing `Self`.
+    pub(crate) fn wrap(error: anyhow::Error) -> anyhow::Error {
+        anyhow::Error::new(Self(error))
+    }
+}
+
+impl fmt::Display for UsageFailure {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(formatter, "{:#}", self.0)
+    }
+}
+
+impl StdError for UsageFailure {}
 
 /// A user-facing description of the NOAA operation being performed.
 #[derive(Clone, Debug)]
@@ -210,6 +287,14 @@ impl Output {
         }
     }
 
+    /// Whether the caller asked for machine-readable output.
+    ///
+    /// Failures follow the same choice as successes: a caller parsing JSON
+    /// out of this program gets its errors as JSON too.
+    pub(crate) fn is_machine_readable(&self) -> bool {
+        self.format == Format::Json
+    }
+
     /// Runs a typed NOAA operation and selects its default or JSON presentation.
     pub(crate) async fn show<T, E>(
         &self,
@@ -222,16 +307,20 @@ impl Output {
     {
         let operation = operation.into();
         async {
-            self.destination.validate(MediaKind::Structured)?;
+            self.destination
+                .validate(MediaKind::Structured)
+                .map_err(OutputFailure::wrap)?;
             let value = request.await.map_err(anyhow::Error::new)?;
             match self.format {
                 Format::Default => {
                     let presenter = self.default_presenter.as_ref().context(
                         "default presentation policy was not configured for default output",
                     )?;
-                    self.write_presentation(presenter.present(&value)?)
+                    let document = presenter.present(&value)?;
+                    self.write_presentation(document)
+                        .map_err(OutputFailure::wrap)
                 }
-                Format::Json => self.write_json(&value),
+                Format::Json => self.write_json(&value).map_err(OutputFailure::wrap),
             }
         }
         .await
@@ -249,9 +338,11 @@ impl Output {
     {
         let operation = operation.into();
         async {
-            self.destination.validate(MediaKind::Structured)?;
+            self.destination
+                .validate(MediaKind::Structured)
+                .map_err(OutputFailure::wrap)?;
             let value = request.await.map_err(anyhow::Error::new)?;
-            self.write_json(&value)
+            self.write_json(&value).map_err(OutputFailure::wrap)
         }
         .await
         .with_context(|| operation.to_string())
@@ -269,12 +360,22 @@ impl Output {
     {
         let operation = operation.into();
         async {
+            // Argv alone decides this one, so it is a usage error: no
+            // request is made and no file is touched, and it would fail
+            // identically on any machine. `StdoutDestination::validate`
+            // classifies the other half the same way.
             if self.format == Format::Json {
-                bail!("--json cannot be used with binary output");
+                return Err(UsageFailure::wrap(anyhow!(
+                    "--json cannot be used with binary output"
+                )));
             }
-            self.destination.validate(MediaKind::Binary)?;
+            self.destination
+                .validate(MediaKind::Binary)
+                .map_err(OutputFailure::wrap)?;
 
             let payload = request.await.map_err(anyhow::Error::new)?;
+            // An empty body is NOAA's answer rather than a problem with the
+            // destination, so this one is not tagged and exits 1.
             if payload.bytes().is_empty() {
                 bail!(
                     "received empty binary payload with content type {} from {}",
@@ -294,6 +395,7 @@ impl Output {
                     .write_all(payload.bytes())
                     .with_context(|| context.clone())
             })
+            .map_err(OutputFailure::wrap)
         }
         .await
         .with_context(|| operation.to_string())

@@ -1,0 +1,31 @@
+{
+  "@context": {
+    "@version": "1.1"
+  },
+  "@graph": [
+    {
+      "id": "https://api.weather.gov/stations/KPHX/tafs/2026-08-30/2254",
+      "issueTime": "2026-08-30T22:54:00+00:00",
+      "location": "KPHX",
+      "start": "2026-08-30T18:00:00+00:00",
+      "end": "2026-09-01T00:00:00+00:00",
+      "geometry": "POINT(33.44 -112.02)"
+    },
+    {
+      "id": "https://api.weather.gov/stations/KPHX/tafs/2026-08-30/2254",
+      "issueTime": "2026-08-30T22:54:00+00:00",
+      "location": "KPHX",
+      "start": "2026-08-30T15:00:00+00:00",
+      "end": "2026-08-31T18:00:00+00:00",
+      "geometry": "POINT(33.44 -112.02)"
+    },
+    {
+      "id": "https://api.weather.gov/stations/KPHX/tafs/2026-08-30/2254",
+      "issueTime": "2026-08-30T22:54:00+00:00",
+      "location": "KPHX",
+      "start": "2026-08-30T21:00:00+00:00",
+      "end": "2026-09-01T00:00:00+00:00",
+      "geometry": "POINT(33.44 -112.02)"
+    }
+  ]
+}

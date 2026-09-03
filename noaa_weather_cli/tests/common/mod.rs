@@ -7,6 +7,7 @@
 #![allow(dead_code)]
 
 pub mod fixtures;
+pub mod runner;
 pub mod table;
 
 use std::ffi::OsString;

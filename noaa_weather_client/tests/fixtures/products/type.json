@@ -1,0 +1,53 @@
+{
+  "@context": {
+    "@version": "1.1",
+    "@vocab": "https://api.weather.gov/ontology#"
+  },
+  "@graph": [
+    {
+      "@id": "https://api.weather.gov/products/758ed100-512d-4cf0-93c7-f4cb305858d2",
+      "id": "758ed100-512d-4cf0-93c7-f4cb305858d2",
+      "wmoCollectiveId": "FXUS61",
+      "issuingOffice": "KLWX",
+      "issuanceTime": "2026-09-03T18:55:00+00:00",
+      "productCode": "AFD",
+      "productName": "Area Forecast Discussion"
+    },
+    {
+      "@id": "https://api.weather.gov/products/b44303da-0da3-4c9c-aa45-06c0baf6a4fc",
+      "id": "b44303da-0da3-4c9c-aa45-06c0baf6a4fc",
+      "wmoCollectiveId": "FXUS61",
+      "issuingOffice": "KBUF",
+      "issuanceTime": "2026-09-03T18:55:00+00:00",
+      "productCode": "AFD",
+      "productName": "Area Forecast Discussion"
+    },
+    {
+      "@id": "https://api.weather.gov/products/f5360415-25d3-4345-b8d6-6276144af6b1",
+      "id": "f5360415-25d3-4345-b8d6-6276144af6b1",
+      "wmoCollectiveId": "FXUS61",
+      "issuingOffice": "KBOX",
+      "issuanceTime": "2026-09-03T18:55:00+00:00",
+      "productCode": "AFD",
+      "productName": "Area Forecast Discussion"
+    },
+    {
+      "@id": "https://api.weather.gov/products/acad08cb-ab74-410e-a9ca-1ab9e81be06e",
+      "id": "acad08cb-ab74-410e-a9ca-1ab9e81be06e",
+      "wmoCollectiveId": "FXUS63",
+      "issuingOffice": "KICT",
+      "issuanceTime": "2026-09-03T18:54:00+00:00",
+      "productCode": "AFD",
+      "productName": "Area Forecast Discussion"
+    },
+    {
+      "@id": "https://api.weather.gov/products/c6827bab-4495-48f0-857a-d5fbd2c65f22",
+      "id": "c6827bab-4495-48f0-857a-d5fbd2c65f22",
+      "wmoCollectiveId": "FXUS64",
+      "issuingOffice": "KJAN",
+      "issuanceTime": "2026-09-03T18:52:00+00:00",
+      "productCode": "AFD",
+      "productName": "Area Forecast Discussion"
+    }
+  ]
+}

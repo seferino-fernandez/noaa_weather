@@ -90,13 +90,25 @@ const CWSU: Rule = Rule {
     reason: "must be 3 to 4 ASCII letters or digits",
 };
 
+// NOAA's `ATSUIdentifier` schema is `^[A-Z]{3,4}$`. The length half of that
+// is a floor this rule has to meet: `/aviation/sigmets` returns 3-character
+// units such as `HNL` in roughly one feature in ten, and
+// `GET /aviation/sigmets/HNL` answers 200, so a 4-only rule rejected
+// identifiers NOAA had just handed us.
+//
+// The character-class half is deliberately *not* mirrored. `[A-Z]` says NOAA
+// only issues letters, not that a client must refuse anything else, and the
+// two failure modes are not symmetric: accepting a digit costs one round trip
+// and NOAA's own refusal, while rejecting one costs a document the caller
+// cannot fetch at all until this crate ships again. Too narrow is the bug
+// this rule was just fixed for.
 const ATSU: Rule = Rule {
     kind: ValueKind::AtsuId,
-    min: 4,
+    min: 3,
     max: 4,
     chars: Chars::Alnum,
     case: Case::Upper,
-    reason: "must be exactly 4 ASCII letters or digits",
+    reason: "must be 3 to 4 ASCII letters or digits",
 };
 
 const CALL_SIGN: Rule = Rule {
@@ -229,18 +241,25 @@ str_id! {
 str_id! {
     /// An Air Traffic Service Unit identifier such as `KKCI`.
     ///
-    /// Used by `/aviation/sigmets/{atsu}`. Accepts exactly 4 ASCII letters
-    /// or digits and uppercase-normalizes them.
+    /// Used by `/aviation/sigmets/{atsu}`. Accepts 3 to 4 ASCII letters or
+    /// digits and uppercase-normalizes them.
+    ///
+    /// NOAA's own identifiers are letters only — its published schema is
+    /// `^[A-Z]{3,4}$` — but that describes what NOAA issues rather than what
+    /// a client must refuse, so a digit is forwarded and left for NOAA to
+    /// reject.
     ///
     /// ```
     /// use noaa_weather_client::AtsuId;
     ///
     /// assert_eq!("kkci".parse::<AtsuId>()?.as_str(), "KKCI");
+    /// // Three characters too: NOAA issues SIGMETs from `HNL` and `ANC`.
+    /// assert_eq!("hnl".parse::<AtsuId>()?.as_str(), "HNL");
     /// # Ok::<(), noaa_weather_client::InvalidValue>(())
     /// ```
     AtsuId, parse_atsu,
-    "Air Traffic Service Unit identifier, exactly 4 ASCII letters or digits (for example KKCI).",
-    "^[A-Za-z0-9]{4}$"
+    "Air Traffic Service Unit identifier, 3 to 4 ASCII letters or digits (for example KKCI or HNL).",
+    "^[A-Za-z0-9]{3,4}$"
 }
 
 str_id! {
@@ -416,12 +435,23 @@ mod tests {
         assert_eq!(rejected::<CwsuId>("Z-B").kind(), ValueKind::CwsuId);
     }
 
+    /// Both bounds, because moving the floor from 4 to 3 is only safe if
+    /// something still holds it: `KK` has to stay rejected, or the rule
+    /// stops being a rule.
     #[test]
-    fn atsu_id_requires_exactly_four() {
+    fn atsu_id_accepts_three_and_four_characters_and_nothing_else() {
         assert_eq!("kkci".parse::<AtsuId>().unwrap().as_str(), "KKCI");
-        assert_eq!(rejected::<AtsuId>("KKC").kind(), ValueKind::AtsuId);
+        // NOAA issues SIGMETs from three-character units; `GET
+        // /aviation/sigmets/HNL` answers 200.
+        assert_eq!("hnl".parse::<AtsuId>().unwrap().as_str(), "HNL");
+        // A digit is forwarded rather than refused here: NOAA's `^[A-Z]{3,4}$`
+        // says what it issues, not what a client must reject, and refusing
+        // costs more than one wasted round trip would.
+        assert_eq!("k1c2".parse::<AtsuId>().unwrap().as_str(), "K1C2");
+        assert_eq!(rejected::<AtsuId>("KK").kind(), ValueKind::AtsuId);
         assert_eq!(rejected::<AtsuId>("KKCII").kind(), ValueKind::AtsuId);
         assert_eq!(rejected::<AtsuId>("").kind(), ValueKind::AtsuId);
+        assert_eq!(rejected::<AtsuId>("KK-I").kind(), ValueKind::AtsuId);
     }
 
     #[test]

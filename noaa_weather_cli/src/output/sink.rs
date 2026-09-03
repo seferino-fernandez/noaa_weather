@@ -1,7 +1,9 @@
 use std::borrow::Cow;
 use std::io::{self, IsTerminal as _, Write as _};
 
-use anyhow::{Result, bail};
+use anyhow::{Result, anyhow};
+
+use super::UsageFailure;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum MediaKind {
@@ -39,12 +41,23 @@ impl StdoutDestination {
 }
 
 impl DestinationAdapter for StdoutDestination {
+    /// Refuses binary bytes, whether or not standard output is a terminal.
+    ///
+    /// Nothing here consults [`Self::is_terminal`]: piping a PDF is refused
+    /// as firmly as printing one, so the refusal depends on argv alone and
+    /// is a [`UsageFailure`] rather than an output failure. A caller who
+    /// sees exit 5 should look at their disk; these two want `--output
+    /// <PATH>` instead.
     fn validate(&self, media: MediaKind) -> Result<()> {
         if media == MediaKind::Binary {
             if self.explicit {
-                bail!("binary output requires a filesystem path; --output - is not supported");
+                return Err(UsageFailure::wrap(anyhow!(
+                    "binary output requires a filesystem path; --output - is not supported"
+                )));
             }
-            bail!("binary output requires --output <PATH>");
+            return Err(UsageFailure::wrap(anyhow!(
+                "binary output requires --output <PATH>"
+            )));
         }
         Ok(())
     }

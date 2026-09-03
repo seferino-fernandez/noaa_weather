@@ -1,0 +1,104 @@
+{
+  "@context": {
+    "@version": "1.1",
+    "@vocab": "https://api.weather.gov/ontology#"
+  },
+  "@graph": [
+    {
+      "productCode": "ABV",
+      "productName": "Rawinsonde Data Above 100 Millibars"
+    },
+    {
+      "productCode": "AFD",
+      "productName": "Area Forecast Discussion"
+    },
+    {
+      "productCode": "AQA",
+      "productName": "Air Quality Alert"
+    },
+    {
+      "productCode": "DSW",
+      "productName": "Dust Storm Warning"
+    },
+    {
+      "productCode": "FFA",
+      "productName": "Flash Flood Watch"
+    },
+    {
+      "productCode": "FFS",
+      "productName": "Flash Flood Statement"
+    },
+    {
+      "productCode": "FFW",
+      "productName": "Flash Flood Warning"
+    },
+    {
+      "productCode": "FLS",
+      "productName": "Flood Statement"
+    },
+    {
+      "productCode": "FWF",
+      "productName": "Routine Fire Wx Fcst (With/Without 6-10 Day Outlook)"
+    },
+    {
+      "productCode": "HML",
+      "productName": "AHPS XML"
+    },
+    {
+      "productCode": "LSR",
+      "productName": "Local Storm Report"
+    },
+    {
+      "productCode": "MAN",
+      "productName": "Rawinsonde Observation Mandatory Levels"
+    },
+    {
+      "productCode": "NPW",
+      "productName": "Non-Precipitation Warnings / Watches / Advisories"
+    },
+    {
+      "productCode": "PFM",
+      "productName": "Point Forecast Matrices"
+    },
+    {
+      "productCode": "RR3",
+      "productName": "Hydro-Met Data Report Part 3"
+    },
+    {
+      "productCode": "RR5",
+      "productName": "Hydro-Met Data Report Part 5"
+    },
+    {
+      "productCode": "RRS",
+      "productName": "HADS Data"
+    },
+    {
+      "productCode": "SFT",
+      "productName": "Tabular State Forecast"
+    },
+    {
+      "productCode": "SGL",
+      "productName": "Rawinsonde Observation Significant Levels"
+    },
+    {
+      "productCode": "SPS",
+      "productName": "Special Weather Statement"
+    },
+    {
+      "productCode": "SVR",
+      "productName": "Severe Thunderstorm Warning"
+    },
+    {
+      "productCode": "SVS",
+      "productName": "Severe Weather Statement"
+    },
+    {
+      "productCode": "VFT",
+      "productName": "Terminal Aerodrome Forecast (TAF) Verification"
+    },
+    {
+      "productCode": "ZFP",
+      "productName": "Zone Forecast Product"
+    }
+  ]
+}

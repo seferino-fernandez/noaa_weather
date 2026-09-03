@@ -1,0 +1,31 @@
+{
+  "@context": {
+    "@version": "1.1"
+  },
+  "@graph": [
+    {
+      "@id": "https://api.weather.gov/offices/PSR/headlines/8efe6a38d9d74abb80d62e71fba34189",
+      "id": "8efe6a38d9d74abb80d62e71fba34189",
+      "office": "https://api.weather.gov/offices/PSR",
+      "important": false,
+      "issuanceTime": "2026-09-01T09:27:00+00:00",
+      "link": "https://www.weather.gov/psr/August2026ClimateData",
+      "name": "August2026ClimateData",
+      "title": "Phoenix, Yuma, and El Centro August 2026 Climate Data",
+      "summary": null,
+      "content": "<p style=\"text-align: center; font-size:16pt\"><a href=\"https://www.weather.gov/media/psr/Climate/August2026Climate.pdf\" target=\"_blank\">Click To View This Data&nbsp;In New Window</a></p>\r\n\r\n<p style=\"text-align: center; font-size:16pt\">&nbsp;</p>\r\n\r\n<p style=\"text-align: center;\"><iframe align=\"middle\" frameborder=\"0\" height=\"500\" scrolling=\"yes\" src=\"https://www.weather.gov/media/psr/Climate/August2026Climate.pdf\" width=\"95%\"></iframe></p>\r\n"
+    },
+    {
+      "@id": "https://api.weather.gov/offices/PSR/headlines/593627f70073a49e2483c3e0bf4f8221",
+      "id": "593627f70073a49e2483c3e0bf4f8221",
+      "office": "https://api.weather.gov/offices/PSR",
+      "important": false,
+      "issuanceTime": "2023-09-20T06:06:00+00:00",
+      "link": "https://www.weather.gov/psr/history.html",
+      "name": "thisdayinweatherhistory",
+      "title": "This Day in Weather History",
+      "summary": null,
+      "content": "<a href=\"www.weather.gov%2Fpsr%2Fhistory.html\">This Day in Weather History</a>"
+    }
+  ]
+}

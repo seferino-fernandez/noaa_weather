@@ -1,0 +1,2 @@
+glossary/terms.json is trimmed. Rule: keep the envelope, keep the first 5 elements of 'glossary', keep any later element introducing a key path the kept ones lack, drop the rest.
+Captured 3183 elements, kept 5, dropped 3178.

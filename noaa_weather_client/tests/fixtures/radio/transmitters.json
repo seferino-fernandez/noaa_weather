@@ -1,0 +1,164 @@
+{
+  "@context": {
+    "@version": "1.1"
+  },
+  "@graph": [
+    {
+      "@id": "https://api.weather.gov/radio/KUT404",
+      "@type": "wx:Transmitter",
+      "setId": "nwr-transmitters-20251021123534-sozfyxcq",
+      "callSign": "KUT404",
+      "transmitterFrequency": "162.450",
+      "siteName": "Aberdeen",
+      "siteCity": "Hatley",
+      "siteState": "MS",
+      "sameCodes": [
+        "028095",
+        "028025",
+        "001075",
+        "028115",
+        "028087",
+        "028081",
+        "028017",
+        "028057"
+      ],
+      "counties": [
+        "MSC095",
+        "MSC025",
+        "ALC075",
+        "MSC115",
+        "MSC087",
+        "MSC081",
+        "MSC017",
+        "MSC057"
+      ]
+    },
+    {
+      "@id": "https://api.weather.gov/radio/KUT404",
+      "@type": "wx:Transmitter",
+      "setId": "nwr-transmitters-20251021123534-sozfyxcq",
+      "callSign": "KUT404",
+      "transmitterFrequency": "162.450",
+      "siteName": "Aberdeen",
+      "siteCity": "Hatley",
+      "siteState": "MS",
+      "sameCodes": [
+        "028095",
+        "028025",
+        "001075",
+        "028115",
+        "028087",
+        "028081",
+        "028017",
+        "028057"
+      ],
+      "counties": [
+        "MSC095",
+        "MSC025",
+        "ALC075",
+        "MSC115",
+        "MSC087",
+        "MSC081",
+        "MSC017",
+        "MSC057"
+      ]
+    },
+    {
+      "@id": "https://api.weather.gov/radio/KUT404",
+      "@type": "wx:Transmitter",
+      "setId": "nwr-transmitters-20251021123534-sozfyxcq",
+      "callSign": "KUT404",
+      "transmitterFrequency": "162.450",
+      "siteName": "Aberdeen",
+      "siteCity": "Hatley",
+      "siteState": "MS",
+      "sameCodes": [
+        "028095",
+        "028025",
+        "001075",
+        "028115",
+        "028087",
+        "028081",
+        "028017",
+        "028057"
+      ],
+      "counties": [
+        "MSC095",
+        "MSC025",
+        "ALC075",
+        "MSC115",
+        "MSC087",
+        "MSC081",
+        "MSC017",
+        "MSC057"
+      ]
+    },
+    {
+      "@id": "https://api.weather.gov/radio/WXM25",
+      "@type": "wx:Transmitter",
+      "setId": "nwr-transmitters-20251021123534-sozfyxcq",
+      "callSign": "WXM25",
+      "transmitterFrequency": "162.475",
+      "siteName": "Aberdeen",
+      "siteCity": "Bath",
+      "siteState": "SD",
+      "sameCodes": [
+        "046049",
+        "046059",
+        "046115",
+        "046025",
+        "046037",
+        "038021",
+        "046089",
+        "046091",
+        "046013",
+        "046045"
+      ],
+      "counties": [
+        "SDC049",
+        "SDC059",
+        "SDC115",
+        "SDC025",
+        "SDC037",
+        "NDC021",
+        "SDC089",
+        "SDC091",
+        "SDC013",
+        "SDC045"
+      ]
+    },
+    {
+      "@id": "https://api.weather.gov/radio/KUT404",
+      "@type": "wx:Transmitter",
+      "setId": "nwr-transmitters-20251021123534-sozfyxcq",
+      "callSign": "KUT404",
+      "transmitterFrequency": "162.450",
+      "siteName": "Aberdeen",
+      "siteCity": "Hatley",
+      "siteState": "MS",
+      "sameCodes": [
+        "028095",
+        "028025",
+        "001075",
+        "028115",
+        "028087",
+        "028081",
+        "028017",
+        "028057"
+      ],
+      "counties": [
+        "MSC095",
+        "MSC025",
+        "ALC075",
+        "MSC115",
+        "MSC087",
+        "MSC081",
+        "MSC017",
+        "MSC057"
+      ]
+    }
+  ],
+  "pagination": {
+    "next": "https://api.weather.gov/radio?cursor=eyJpIjo1MDB9"
+  }
+}

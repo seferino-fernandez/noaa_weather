@@ -1,0 +1,21 @@
+{
+  "@context": {
+    "@version": "1.1"
+  },
+  "@id": "https://api.weather.gov/radio/KEC94",
+  "@type": "wx:Transmitter",
+  "setId": "nwr-transmitters-20251021123534-sozfyxcq",
+  "callSign": "KEC94",
+  "transmitterFrequency": "162.550",
+  "siteName": "Phoenix",
+  "siteCity": "South Mtn.",
+  "siteState": "AZ",
+  "sameCodes": [
+    "004013",
+    "004021"
+  ],
+  "counties": [
+    "AZC013",
+    "AZC021"
+  ]
+}
