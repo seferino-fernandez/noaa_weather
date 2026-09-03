@@ -30,14 +30,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match client.points().get(here).await {
         Ok(point_data) => {
             let properties = &point_data.properties;
-            println!("  Forecast Office: {:?}", properties.forecast_office);
+            println!("  Forecast Office: {}", properties.forecast_office);
             println!(
                 "  Grid Coordinates: {},{}",
-                properties.grid_x.unwrap_or(0),
-                properties.grid_y.unwrap_or(0)
+                properties.grid_x, properties.grid_y
             );
-            if let Some(time_zone) = &properties.time_zone {
-                println!("  Time Zone: {}", time_zone);
+            if let Some(time_zone) = properties.time_zone.iana_name() {
+                println!("  Time Zone: {time_zone}");
             }
         }
         Err(error) => {
@@ -50,11 +49,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n[2] Getting the forecast for that point...");
     match client.points().forecast_for(here).await {
         Ok(forecast) => {
-            for period in forecast.properties.periods.iter().flatten().take(3) {
+            for period in forecast.properties.periods.iter().take(3) {
                 println!(
                     "  {}: {}",
                     period.name.as_deref().unwrap_or("Unnamed period"),
-                    period.short_forecast.as_deref().unwrap_or("No summary")
+                    period.short_forecast
                 );
             }
         }

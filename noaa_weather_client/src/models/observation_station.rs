@@ -41,9 +41,9 @@ pub struct ObservationStation {
     #[serde(rename = "subProvider", skip_serializing_if = "Option::is_none")]
     pub sub_provider: Option<String>,
     #[serde(rename = "distance", skip_serializing_if = "Option::is_none")]
-    pub distance: Option<models::QuantitativeValue>,
+    pub distance: Option<models::Quantity>,
     #[serde(rename = "bearing", skip_serializing_if = "Option::is_none")]
-    pub bearing: Option<models::QuantitativeValue>,
+    pub bearing: Option<models::Quantity>,
 }
 
 impl ObservationStation {

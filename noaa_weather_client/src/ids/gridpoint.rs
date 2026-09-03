@@ -8,7 +8,6 @@ use crate::models::Point;
 const SHAPE: &str = "must be OFFICE/x,y (for example TOP/31,80)";
 const OFFICE: &str = "office code must be 3 to 4 ASCII letters or digits";
 const RANGE: &str = "grid x and y must be whole numbers from 0 to 65535";
-const NO_GRID: &str = "point response has no grid coordinates";
 
 /// A forecast grid cell: an office code plus `x,y` grid coordinates.
 ///
@@ -125,27 +124,19 @@ impl_string_schema!(
 impl TryFrom<&Point> for GridpointId {
     type Error = InvalidValue;
 
+    /// Converts a point response into the grid cell covering it.
+    ///
+    /// A [`Point`] always names its office and grid coordinates, so the only
+    /// way this fails is a grid coordinate outside `0..=65535`.
     fn try_from(point: &Point) -> Result<Self, Self::Error> {
-        let describe = || {
-            let field = |value: Option<i32>| value.map_or("?".to_owned(), |v| v.to_string());
-            format!(
-                "{}/{},{}",
-                point.grid_id.map_or("?".to_owned(), |id| id.to_string()),
-                field(point.grid_x),
-                field(point.grid_y)
-            )
-        };
-        let (Some(office), Some(x), Some(y)) = (point.grid_id, point.grid_x, point.grid_y) else {
+        let (Ok(x), Ok(y)) = (u16::try_from(point.grid_x), u16::try_from(point.grid_y)) else {
             return Err(InvalidValue::new(
                 ValueKind::GridpointId,
-                describe(),
-                NO_GRID,
+                format!("{}/{},{}", point.grid_id, point.grid_x, point.grid_y),
+                RANGE,
             ));
         };
-        let (Ok(x), Ok(y)) = (u16::try_from(x), u16::try_from(y)) else {
-            return Err(InvalidValue::new(ValueKind::GridpointId, describe(), RANGE));
-        };
-        Ok(Self::new(OfficeId::from(office), x, y))
+        Ok(Self::new(OfficeId::from(point.grid_id), x, y))
     }
 }
 
@@ -219,47 +210,52 @@ mod tests {
         }
     }
 
-    #[test]
-    fn converts_from_a_point_with_grid_fields() {
-        let point = Point {
-            grid_id: Some(NwsForecastOfficeId::Top),
-            grid_x: Some(31),
-            grid_y: Some(80),
-            ..Point::default()
-        };
-        let grid = GridpointId::try_from(&point).unwrap();
-        assert_eq!(grid, GridpointId::new(top(), 31, 80));
+    /// A point response with the grid coordinates under test, minimal but
+    /// complete: [`Point`] requires every field NOAA always sends.
+    fn point_at(office: &str, x: u32, y: u32) -> Point {
+        serde_json::from_value(serde_json::json!({
+            "cwa": office,
+            "type": "land",
+            "forecastOffice": format!("https://api.weather.gov/offices/{office}"),
+            "gridId": office,
+            "gridX": x,
+            "gridY": y,
+            "forecast": "https://api.weather.gov/gridpoints/TOP/31,80/forecast",
+            "forecastHourly": "https://api.weather.gov/gridpoints/TOP/31,80/forecast/hourly",
+            "forecastGridData": "https://api.weather.gov/gridpoints/TOP/31,80",
+            "observationStations": "https://api.weather.gov/gridpoints/TOP/31,80/stations",
+            "relativeLocation": {"type": "Feature", "geometry": null, "properties": {
+                "city": "Linn",
+                "state": "KS",
+                "distance": {"unitCode": "wmoUnit:m", "value": 6745.3279758024},
+                "bearing": {"unitCode": "wmoUnit:degree_(angle)", "value": 358}
+            }},
+            "forecastZone": "https://api.weather.gov/zones/forecast/KSZ009",
+            "county": "https://api.weather.gov/zones/county/KSC201",
+            "fireWeatherZone": "https://api.weather.gov/zones/fire/KSZ009",
+            "timeZone": "America/Chicago",
+            "radarStation": "KTWX"
+        }))
+        .unwrap()
     }
 
     #[test]
-    fn point_without_grid_fields_is_invalid() {
-        let point = Point::default();
-        let error = GridpointId::try_from(&point).unwrap_err();
-        assert_eq!(error.kind(), ValueKind::GridpointId);
-        assert_eq!(error.reason(), NO_GRID);
-        assert_eq!(error.input(), "?/?,?");
-
-        let partial = Point {
-            grid_id: Some(NwsForecastOfficeId::Top),
-            grid_x: Some(31),
-            ..Point::default()
-        };
-        let error = GridpointId::try_from(&partial).unwrap_err();
-        assert_eq!(error.reason(), NO_GRID);
-        assert_eq!(error.input(), "TOP/31,?");
+    fn converts_from_a_point() {
+        let point = point_at("TOP", 31, 80);
+        assert_eq!(point.grid_id, NwsForecastOfficeId::Top);
+        assert_eq!(
+            GridpointId::try_from(&point).unwrap(),
+            GridpointId::new(top(), 31, 80)
+        );
     }
 
     #[test]
     fn point_with_out_of_range_grid_is_invalid() {
-        let point = Point {
-            grid_id: Some(NwsForecastOfficeId::Top),
-            grid_x: Some(-1),
-            grid_y: Some(80),
-            ..Point::default()
-        };
+        let point = point_at("TOP", 70_000, 80);
         let error = GridpointId::try_from(&point).unwrap_err();
+        assert_eq!(error.kind(), ValueKind::GridpointId);
         assert_eq!(error.reason(), RANGE);
-        assert_eq!(error.input(), "TOP/-1,80");
+        assert_eq!(error.input(), "TOP/70000,80");
     }
 
     #[test]

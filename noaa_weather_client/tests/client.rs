@@ -19,7 +19,7 @@ use wiremock::{
 };
 
 const USER_AGENT: &str = "noaa-weather-integration/1.0 (tests@example.com)";
-const POINT: &str = r#"{"type":"Feature","geometry":null,"properties":{}}"#;
+const POINT: &str = include_str!("fixtures/points/point.json");
 const POINT_PATH: &str = "/points/39.7456,-97.0892";
 
 fn builder_for(server: &MockServer) -> ClientBuilder {

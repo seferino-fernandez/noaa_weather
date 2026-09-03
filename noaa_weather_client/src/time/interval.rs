@@ -25,19 +25,28 @@ enum Bounds {
 
 /// An ISO 8601 time interval in one of its four forms.
 ///
-/// | Form             | Constructor            | Text                                       |
-/// |------------------|------------------------|--------------------------------------------|
-/// | start and end    | [`Interval::between`]  | `2024-01-01T00:00:00Z/2024-01-02T00:00:00Z` |
-/// | start and length | [`Interval::starting`] | `2024-01-01T00:00:00Z/PT6H`                |
-/// | length and end   | [`Interval::ending`]   | `PT6H/2024-01-02T00:00:00Z`                |
-/// | length only      | [`Interval::lasting`]  | `PT6H`                                     |
+/// | Form             | Constructor            | Text                                                 |
+/// |------------------|------------------------|------------------------------------------------------|
+/// | start and end    | [`Interval::between`]  | `2024-01-01T00:00:00+00:00/2024-01-02T00:00:00+00:00` |
+/// | start and length | [`Interval::starting`] | `2024-01-01T00:00:00+00:00/PT6H`                      |
+/// | length and end   | [`Interval::ending`]   | `PT6H/2024-01-02T00:00:00+00:00`                      |
+/// | length only      | [`Interval::lasting`]  | `PT6H`                                                |
 ///
 /// Timestamps are truncated to whole seconds at construction (never
 /// rounded, because NOAA rejects fractional seconds), so equality, the text
 /// form, and serde all describe the same instant. They are written as
 /// RFC 3339 in UTC and durations in ISO 8601 form, exactly as NOAA's
-/// `interval`, `arrived`, `created`, and `published` query parameters
-/// expect.
+/// `interval`, `arrived`, `created`, `published`, and `time` query
+/// parameters expect.
+///
+/// # Offsets
+///
+/// Parsing accepts `Z` and any numeric offset; printing always writes UTC
+/// with a numeric `+00:00` suffix, matching how NOAA writes `validTime` and
+/// `validTimes` and how [`OffsetDateTime`](super::OffsetDateTime) prints
+/// response timestamps, so one document never mixes the two conventions.
+/// Unlike `OffsetDateTime`, an interval keeps only instants: an endpoint
+/// written in another offset is normalized to UTC rather than reproduced.
 ///
 /// ```
 /// use noaa_weather_client::Interval;
@@ -49,8 +58,9 @@ enum Bounds {
 /// assert_eq!(recent.to_string(), "PT6H");
 ///
 /// let from_start = Interval::starting(start, six_hours)?;
-/// assert_eq!(from_start.to_string(), "2024-01-01T00:00:00Z/PT6H");
+/// assert_eq!(from_start.to_string(), "2024-01-01T00:00:00+00:00/PT6H");
 /// assert_eq!(from_start, "2024-01-01T00:00:00Z/PT6H".parse()?);
+/// assert_eq!(from_start, "2024-01-01T00:00:00+00:00/PT6H".parse()?);
 /// # Ok::<(), noaa_weather_client::InvalidValue>(())
 /// ```
 #[derive(Clone, Copy, Serialize, Deserialize)]
@@ -197,7 +207,7 @@ impl fmt::Debug for Interval {
 
 impl fmt::Display for Interval {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let seconds = |instant: Timestamp| instant.strftime(super::RFC3339_SECONDS);
+        let seconds = |instant: Timestamp| instant.strftime(super::RFC3339_OFFSET);
         match self.0 {
             Bounds::Between { start, end } => {
                 write!(formatter, "{}/{}", seconds(start), seconds(end))
@@ -297,7 +307,7 @@ mod tests {
             Interval::between(at("2024-01-01T00:00:00Z"), at("2024-01-02T00:00:00Z")).unwrap();
         assert_eq!(
             interval.to_string(),
-            "2024-01-01T00:00:00Z/2024-01-02T00:00:00Z"
+            "2024-01-01T00:00:00+00:00/2024-01-02T00:00:00+00:00"
         );
         assert_eq!(interval.to_string().parse::<Interval>().unwrap(), interval);
         assert_eq!(interval.start(), Some(at("2024-01-01T00:00:00Z")));
@@ -318,7 +328,7 @@ mod tests {
     #[test]
     fn starting_renders_and_parses() {
         let interval = Interval::starting(at("2024-01-01T00:00:00Z"), span("PT1H")).unwrap();
-        assert_eq!(interval.to_string(), "2024-01-01T00:00:00Z/PT1H");
+        assert_eq!(interval.to_string(), "2024-01-01T00:00:00+00:00/PT1H");
         assert_eq!(interval.to_string().parse::<Interval>().unwrap(), interval);
         assert_eq!(interval.start(), Some(at("2024-01-01T00:00:00Z")));
         assert!(interval.end().is_none());
@@ -331,7 +341,7 @@ mod tests {
     #[test]
     fn ending_renders_and_parses() {
         let interval = Interval::ending(span("PT1H"), at("2024-01-01T00:00:00Z")).unwrap();
-        assert_eq!(interval.to_string(), "PT1H/2024-01-01T00:00:00Z");
+        assert_eq!(interval.to_string(), "PT1H/2024-01-01T00:00:00+00:00");
         assert_eq!(interval.to_string().parse::<Interval>().unwrap(), interval);
         assert!(interval.start().is_none());
         assert_eq!(interval.end(), Some(at("2024-01-01T00:00:00Z")));
@@ -402,7 +412,13 @@ mod tests {
     #[test]
     fn timestamps_normalize_to_utc() {
         let interval: Interval = "2024-01-01T05:00:00+05:00/PT1H".parse().unwrap();
-        assert_eq!(interval.to_string(), "2024-01-01T00:00:00Z/PT1H");
+        assert_eq!(interval.to_string(), "2024-01-01T00:00:00+00:00/PT1H");
+        // An interval keeps instants only, so a non-UTC endpoint is
+        // normalized to UTC rather than reproduced.
+        assert_eq!(
+            "2024-01-01T00:00:00Z/PT1H".parse::<Interval>().unwrap(),
+            interval
+        );
     }
 
     #[test]
@@ -451,7 +467,7 @@ mod tests {
     fn serde_round_trip() {
         let interval = Interval::starting(at("2024-01-01T00:00:00Z"), span("PT6H")).unwrap();
         let json = serde_json::to_string(&interval).unwrap();
-        assert_eq!(json, "\"2024-01-01T00:00:00Z/PT6H\"");
+        assert_eq!(json, "\"2024-01-01T00:00:00+00:00/PT6H\"");
         assert_eq!(serde_json::from_str::<Interval>(&json).unwrap(), interval);
         assert_eq!(Interval::try_from("PT6H").unwrap().to_string(), "PT6H");
         assert_eq!(
@@ -460,7 +476,7 @@ mod tests {
                 .to_string(),
             "PT6H"
         );
-        assert_eq!(String::from(interval), "2024-01-01T00:00:00Z/PT6H");
+        assert_eq!(String::from(interval), "2024-01-01T00:00:00+00:00/PT6H");
         let error = serde_json::from_str::<Interval>("\"PT1H/PT2H\"").unwrap_err();
         assert!(error.to_string().contains("invalid interval"), "{error}");
     }
@@ -471,29 +487,29 @@ mod tests {
         let end = at("2024-01-01T06:00:00.5Z");
         assert_eq!(
             Interval::between(start, end).unwrap().to_string(),
-            "2024-01-01T00:00:00Z/2024-01-01T06:00:00Z"
+            "2024-01-01T00:00:00+00:00/2024-01-01T06:00:00+00:00"
         );
         assert_eq!(
             Interval::starting(start, span("PT6H")).unwrap().to_string(),
-            "2024-01-01T00:00:00Z/PT6H"
+            "2024-01-01T00:00:00+00:00/PT6H"
         );
         assert_eq!(
             Interval::ending(span("PT6H"), end).unwrap().to_string(),
-            "PT6H/2024-01-01T06:00:00Z"
+            "PT6H/2024-01-01T06:00:00+00:00"
         );
     }
 
     #[test]
     fn fractional_input_round_trips_to_the_truncated_form() {
         let parsed: Interval = "2024-01-01T00:00:00.25Z/PT6H".parse().unwrap();
-        assert_eq!(parsed.to_string(), "2024-01-01T00:00:00Z/PT6H");
+        assert_eq!(parsed.to_string(), "2024-01-01T00:00:00+00:00/PT6H");
         let again: Interval = parsed.to_string().parse().unwrap();
         assert_eq!(again, parsed);
-        assert_eq!(String::from(parsed), "2024-01-01T00:00:00Z/PT6H");
+        assert_eq!(String::from(parsed), "2024-01-01T00:00:00+00:00/PT6H");
         assert_eq!(parsed.start(), Some(at("2024-01-01T00:00:00Z")));
 
         let json = serde_json::to_string(&parsed).unwrap();
-        assert_eq!(json, "\"2024-01-01T00:00:00Z/PT6H\"");
+        assert_eq!(json, "\"2024-01-01T00:00:00+00:00/PT6H\"");
         assert_eq!(serde_json::from_str::<Interval>(&json).unwrap(), parsed);
         assert_eq!(
             Interval::starting(at("2024-01-01T00:00:00.999Z"), span("PT6H")).unwrap(),

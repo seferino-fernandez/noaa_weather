@@ -35,8 +35,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .points()
         .forecast_for(Coordinates::new(39.7456, -97.0892)?)
         .await?;
-    for period in forecast.properties.periods.iter().flatten().take(3) {
-        println!("{:?}: {:?}", period.name, period.short_forecast);
+    for period in forecast.properties.periods.iter().take(3) {
+        println!("{:?}: {}", period.name, period.short_forecast);
     }
 
     let active = client
@@ -80,8 +80,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
   List fields are `Vec<T>` (sent as one comma-separated value), instants are `Option<jiff::Timestamp>` (sent as RFC 3339), periods are `Option<Interval>` (ISO 8601 intervals), limits are `Option<u16>`. Query structs also derive `Serialize`/`Deserialize` in camelCase for JSON tooling; the wire encoding is separate and never produced from serde.
 - **Date and time segments.** `stations().taf(&station, issued)` and `aviation().sigmet(&atsu, issued)` take one `jiff::Timestamp` and send its UTC date and `HHMM` minute (seconds are dropped). `stations().observation_at` sends RFC 3339 UTC. `aviation().cwa` and `sigmets_for_atsu_on` take a `jiff::civil::Date`.
 - **Timestamps.** Timestamps inside responses are `OffsetDateTime`: the instant plus the UTC offset NOAA wrote it in, so `alert.sent` reads back and re-serializes as exactly `2026-09-02T03:48:00-04:00` while comparing equal to the same instant in any offset. `timestamp()` gives the plain `jiff::Timestamp`, `in_tz(&TimeZone)` a `jiff::Zoned`. `FeatureCollection::updated` uses it too (NOAA sends `+00:00`).
-- **Curated models.** The alerts family is hand-written: `Alert` has typed `id: AlertId`, `geocode.ugc: Vec<ZoneId>`, non-`Option` fields where CAP requires a value, empty lists and maps instead of `None`, `parameters: BTreeMap<String, Vec<String>>` with `parameter("VTEC")`, `affected_zone_ids()`, and the `replaced_by`/`replaced_at` pair NOAA adds to superseded alerts. `alerts().active_count()` returns `ActiveAlertCounts`; `alerts().types()` returns `AlertEventTypes`. Other families are still generated from the OpenAPI document and will follow the same rules.
-- **Composition.** `points().forecast_for(coordinates)` is the one composed convenience: it calls `points().get`, converts the response to a `GridpointId`, and calls `gridpoints().forecast`. A point without grid coordinates is `Error::Invalid`.
+- **Curated models.** The alerts family is hand-written: `Alert` has typed `id: AlertId`, `geocode.ugc: Vec<ZoneId>`, non-`Option` fields where CAP requires a value, empty lists and maps instead of `None`, `parameters: BTreeMap<String, Vec<String>>` with `parameter("VTEC")`, `affected_zone_ids()`, and the `replaced_by`/`replaced_at` pair NOAA adds to superseded alerts. `alerts().active_count()` returns `ActiveAlertCounts`; `alerts().types()` returns `AlertEventTypes`. Points, gridpoints, and forecasts follow: `Point` has a `grid_id: NwsForecastOfficeId`, `grid_x`/`grid_y: u32`, a `time_zone: jiff::tz::TimeZone`, and accessors returning the typed ids in its URL fields; `Gridpoint` names all 59 layers as always-present fields with a typed `other` bucket for anything NOAA adds; and both forecast endpoints return one `Forecast` of `ForecastPeriod`s. Requiredness in all three comes from a live probe of 63 grids across 62 offices and 4,760 forecast periods. The remaining families are still generated from the OpenAPI document and will follow the same rules.
+- **Composition.** `points().forecast_for(coordinates)` is the one composed convenience: it calls `points().get`, converts the response to a `GridpointId`, and calls `gridpoints().forecast`. A grid coordinate outside `0..=65535` is `Error::Invalid`.
 
 ## Pagination
 
@@ -253,7 +253,9 @@ The IWXXM wire structs and decoder are implementation details. Consumers should 
 
 ## Forecast values in 3.11
 
-Textual forecasts always request NOAA's quantitative temperature and wind formats. Callers never pass feature flags, and `temperature`, `wind_speed`, and `wind_gust` use `QuantitativeValue` models.
+Textual forecasts always request NOAA's quantitative temperature and wind formats. Callers never pass feature flags, and `temperature`, `wind_speed`, and `wind_gust` are `Quantity` values: a number (or a `min_value`/`max_value` range) and a typed `Unit`, with `Quantity::in_unit` for temperature, speed, length, and pressure conversions.
+
+Both forecast endpoints return `Feature<Forecast>`; `forecast.forecast_generator` says which one produced it.
 
 ```rust,no_run
 use noaa_weather_client::{Client, GridpointId, apis::gridpoints::{ForecastQuery, ForecastUnits}};

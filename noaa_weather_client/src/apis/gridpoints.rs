@@ -32,7 +32,7 @@ use crate::models;
 ///
 /// This is the response model's units enumeration under its request-side
 /// name, since forecast responses echo the units they were rendered in.
-pub use crate::models::GridpointForecastUnits as ForecastUnits;
+pub use crate::models::ForecastUnits;
 
 /// Options for [`Gridpoints::forecast`] and [`Gridpoints::forecast_hourly`].
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -41,7 +41,6 @@ pub use crate::models::GridpointForecastUnits as ForecastUnits;
 pub struct ForecastQuery {
     /// Units for textual values; NOAA defaults to US customary.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
     pub units: Option<ForecastUnits>,
 }
 
@@ -146,7 +145,7 @@ impl Gridpoints<'_> {
         &self,
         grid: &GridpointId,
         query: &ForecastQuery,
-    ) -> Result<Feature<models::Gridpoint12hForecast>, Error> {
+    ) -> Result<Feature<models::Forecast>, Error> {
         self.grid(grid)
             .literal_path("forecast")
             .query(query)
@@ -183,7 +182,7 @@ impl Gridpoints<'_> {
         &self,
         grid: &GridpointId,
         query: &ForecastQuery,
-    ) -> Result<Feature<models::GridpointHourlyForecast>, Error> {
+    ) -> Result<Feature<models::Forecast>, Error> {
         self.grid(grid)
             .literal_path("forecast/hourly")
             .query(query)
@@ -243,7 +242,10 @@ mod tests {
     use super::{ForecastQuery, ForecastUnits, GridpointStationsQuery};
     use crate::{GridpointId, client::test_support::client_for};
 
-    const FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{}}"#;
+    /// Captured `/gridpoints/TOP/31,80` and forecast responses.
+    const GRIDPOINT: &str = include_str!("../../tests/fixtures/gridpoints/gridpoint.json");
+    const FORECAST: &str = include_str!("../../tests/fixtures/gridpoints/forecast.json");
+    const HOURLY: &str = include_str!("../../tests/fixtures/gridpoints/hourly.json");
     const COLLECTION: &str = r#"{"type":"FeatureCollection","features":[]}"#;
     const REQUIRED_FLAGS: &str = "forecast_temperature_qv,forecast_wind_speed_qv";
 
@@ -261,7 +263,7 @@ mod tests {
     #[tokio::test]
     async fn gridpoint_path_is_office_then_comma_joined_coordinates() {
         let server = MockServer::start().await;
-        mount_geo_json(&server, FEATURE).await;
+        mount_geo_json(&server, GRIDPOINT).await;
 
         client_for(&server).gridpoints().get(&psr()).await.unwrap();
 
@@ -275,7 +277,7 @@ mod tests {
     #[tokio::test]
     async fn forecast_sends_quantitative_flags_and_units_query() {
         let server = MockServer::start().await;
-        mount_geo_json(&server, FEATURE).await;
+        mount_geo_json(&server, FORECAST).await;
 
         client_for(&server)
             .gridpoints()
@@ -297,7 +299,7 @@ mod tests {
     #[tokio::test]
     async fn hourly_forecast_with_default_query_omits_units() {
         let server = MockServer::start().await;
-        mount_geo_json(&server, FEATURE).await;
+        mount_geo_json(&server, HOURLY).await;
 
         client_for(&server)
             .gridpoints()

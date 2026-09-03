@@ -21,56 +21,33 @@ fn create_point_metadata_table(point_data: &Feature<Point>, presenter: &DefaultP
 
     let properties = &point_data.properties;
 
-    // Helper macro to add rows for `Option<T>` properties
-    macro_rules! add_row_if_some {
-        ($table:ident, $label:expr, $value:expr) => {
-            if let Some(ref val) = $value {
-                $table.add_row(vec![$label, &format!("{val}")]);
-            }
-        };
-        ($table:ident, $label:expr, $value:expr, $formatter:expr) => {
-            if let Some(ref val) = $value {
-                $table.add_row(vec![$label, &$formatter(val)]);
-            }
-        };
-    }
-
-    add_row_if_some!(
-        table,
+    table.add_row(vec![
         "Forecast Office",
-        properties.forecast_office,
-        |value: &String| presenter.resource_identifier(Some(value))
-    );
-    add_row_if_some!(table, "Grid ID", properties.grid_id);
-    add_row_if_some!(table, "Grid X", properties.grid_x);
-    add_row_if_some!(table, "Grid Y", properties.grid_y);
-    add_row_if_some!(
-        table,
+        &presenter.resource_identifier(Some(&properties.forecast_office)),
+    ]);
+    table.add_row(vec!["Grid ID", &properties.grid_id.to_string()]);
+    table.add_row(vec!["Grid X", &properties.grid_x.to_string()]);
+    table.add_row(vec!["Grid Y", &properties.grid_y.to_string()]);
+    table.add_row(vec![
         "Forecast Zone",
-        properties.forecast_zone,
-        |value: &String| presenter.resource_identifier(Some(value))
-    );
-    add_row_if_some!(table, "County Zone", properties.county, |value: &String| {
-        presenter.resource_identifier(Some(value))
-    });
-    add_row_if_some!(
-        table,
+        &presenter.resource_identifier(Some(&properties.forecast_zone)),
+    ]);
+    table.add_row(vec![
+        "County Zone",
+        &presenter.resource_identifier(Some(&properties.county)),
+    ]);
+    table.add_row(vec![
         "Fire Weather Zone",
-        properties.fire_weather_zone,
-        |value: &String| presenter.resource_identifier(Some(value))
-    );
-    add_row_if_some!(
-        table,
+        &presenter.resource_identifier(Some(&properties.fire_weather_zone)),
+    ]);
+    table.add_row(vec![
         "Time Zone",
-        properties.time_zone,
-        |value: &String| { presenter.text(Some(value)) }
-    );
-    add_row_if_some!(
-        table,
+        &presenter.text(properties.time_zone.iana_name()),
+    ]);
+    table.add_row(vec![
         "Radar Station",
-        properties.radar_station,
-        |value: &String| presenter.resource_identifier(Some(value))
-    );
+        &presenter.resource_identifier(Some(&properties.radar_station)),
+    ]);
 
     table
 }
