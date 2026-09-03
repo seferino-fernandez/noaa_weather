@@ -6,10 +6,13 @@
 //! whole path — decode, [`Summarize`], render — because those three chosen
 //! output changes are what a reviewer needs to see.
 
-use noaa_weather_client::models::{ActiveAlertCounts, Alert, AlertEventTypes};
+use noaa_weather_client::models::{
+    ActiveAlertCounts, Alert, AlertEventTypes, Forecast, Gridpoint, Point,
+};
 use noaa_weather_client::{Feature, FeatureCollection, OffsetDateTime};
 use noaa_weather_summary::{
-    Align, Cell, Column, Emphasis, Fact, Section, Summarize, Summary, SummaryOptions, Value,
+    Align, Cell, Column, Emphasis, Fact, Section, Summarize, Summary, SummaryOptions, UnitSystem,
+    Value,
 };
 
 use super::{ColorMode, RenderOptions, TimeZoneChoice};
@@ -21,6 +24,14 @@ const COUNT: &str =
     include_str!("../../../../noaa_weather_client/tests/fixtures/alerts/count.json");
 const TYPES: &str =
     include_str!("../../../../noaa_weather_client/tests/fixtures/alerts/types.json");
+const POINT: &str =
+    include_str!("../../../../noaa_weather_client/tests/fixtures/points/point.json");
+const GRIDPOINT: &str =
+    include_str!("../../../../noaa_weather_client/tests/fixtures/gridpoints/gridpoint.json");
+const FORECAST: &str =
+    include_str!("../../../../noaa_weather_client/tests/fixtures/gridpoints/forecast.json");
+const HOURLY: &str =
+    include_str!("../../../../noaa_weather_client/tests/fixtures/gridpoints/hourly.json");
 
 /// Options with nothing left to the environment, so a snapshot means the same
 /// thing on every machine.
@@ -316,4 +327,80 @@ fn a_named_zone_moves_every_timestamp() {
         false,
     );
     insta::assert_snapshot!(options.render(&synthetic_summary()));
+}
+
+#[test]
+fn point_metadata() {
+    let point: Feature<Point> = serde_json::from_str(POINT).expect("point.json decodes");
+    insta::assert_snapshot!(
+        options(ColorMode::Never, 100).render(&point.summarize(&SummaryOptions::default()))
+    );
+}
+
+/// The whole reason `--units` is a flag: the same response, two systems.
+#[test]
+fn point_metadata_in_metric() {
+    let point: Feature<Point> = serde_json::from_str(POINT).expect("point.json decodes");
+    let summary = point.summarize(&SummaryOptions {
+        units: UnitSystem::Si,
+    });
+    insta::assert_snapshot!(options(ColorMode::Never, 100).render(&summary));
+}
+
+#[test]
+fn raw_gridpoint() {
+    let gridpoint: Feature<Gridpoint> =
+        serde_json::from_str(GRIDPOINT).expect("gridpoint.json decodes");
+    insta::assert_snapshot!(
+        options(ColorMode::Never, 100).render(&gridpoint.summarize(&SummaryOptions::default()))
+    );
+}
+
+#[test]
+fn twelve_hour_forecast() {
+    let forecast: Feature<Forecast> =
+        serde_json::from_str(FORECAST).expect("forecast.json decodes");
+    insta::assert_snapshot!(
+        options(ColorMode::Never, 100).render(&forecast.summarize(&SummaryOptions::default()))
+    );
+}
+
+#[test]
+fn hourly_forecast() {
+    let forecast: Feature<Forecast> = serde_json::from_str(HOURLY).expect("hourly.json decodes");
+    insta::assert_snapshot!(
+        options(ColorMode::Never, 100).render(&forecast.summarize(&SummaryOptions::default()))
+    );
+}
+
+/// The forecast's updated time is a `Fact`, not a subtitle, so it moves with
+/// `--time-zone` exactly as the covered interval beside it does. A subtitle is
+/// a `String`; an instant written into one would sit frozen next to a fact
+/// that moved.
+#[test]
+fn a_named_zone_moves_the_forecast_times_too() {
+    let forecast: Feature<Forecast> =
+        serde_json::from_str(FORECAST).expect("forecast.json decodes");
+    let summary = forecast.summarize(&SummaryOptions::default());
+    let zone = jiff::tz::TimeZone::get("UTC").expect("UTC exists");
+    let source = RenderOptions::new(ColorMode::Never, Some(100), &TimeZoneChoice::Source, false);
+    let utc = RenderOptions::new(
+        ColorMode::Never,
+        Some(100),
+        &TimeZoneChoice::Named(zone),
+        false,
+    );
+
+    let in_source = source.render(&summary);
+    let in_utc = utc.render(&summary);
+    assert_ne!(in_source, in_utc);
+    assert!(
+        in_source.contains("Updated \u{2506} 2026-09-02 06:26 +00:00"),
+        "{in_source}"
+    );
+    // The periods carry the office's own -05:00 offset, and the zone moves
+    // them; the updated time is already UTC and only proves it is a fact by
+    // sitting in the same table as the interval that moved.
+    assert!(in_source.contains("-05:00"), "{in_source}");
+    assert!(!in_utc.contains("-05:00"), "{in_utc}");
 }

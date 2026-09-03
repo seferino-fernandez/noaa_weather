@@ -1,0 +1,17 @@
+---
+source: noaa_weather_cli/src/output/render/tests.rs
+expression: "options(ColorMode::Never, 100).render(&summary)"
+---
+6.7 km N of Linn, KS
+39.7456, -97.0892
+
+┌────────────────────┬─────────────────┐
+│ Grid cell          ┆ TOP/32,81       │
+│ Responsible office ┆ TOP             │
+│ Time zone          ┆ America/Chicago │
+│ Radar station      ┆ KTWX            │
+│ Forecast zone      ┆ KSZ009          │
+│ County zone        ┆ KSC201          │
+│ Fire weather zone  ┆ KSZ009          │
+│ Land or sea        ┆ land            │
+└────────────────────┴─────────────────┘

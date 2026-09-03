@@ -9,6 +9,7 @@ use anyhow::{Context as _, Result, bail};
 use clap::{Args, ValueEnum};
 use comfy_table::Table;
 use noaa_weather_client::apis::BinaryPayload;
+use noaa_weather_summary::{SummaryOptions, UnitSystem};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -49,6 +50,10 @@ pub(crate) struct OutputArgs {
     /// Wrap output to N columns; 0 means never wrap.
     #[arg(long, global = true, value_name = "N")]
     width: Option<u16>,
+
+    /// Show measurements in this unit system.
+    #[arg(long, global = true, value_name = "SYSTEM", default_value = "us")]
+    units: Units,
 
     /// Show timestamps in this zone: `auto`, `source`, or an IANA zone name.
     #[arg(
@@ -129,6 +134,30 @@ impl BinaryPresentation for BinaryPayload {
     }
 }
 
+/// Which unit system measurements are converted to before they are shown.
+///
+/// The command-line spelling of [`UnitSystem`]. NOAA's own `units` request
+/// parameter is a different question and an inert one — the feature flags
+/// this crate always sends make every response metric — so this flag is
+/// presentation policy, resolved here alongside `--color` and `--width`.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, ValueEnum)]
+enum Units {
+    /// Fahrenheit, miles per hour, feet, miles, inches, inches of mercury.
+    #[default]
+    Us,
+    /// Celsius, kilometres per hour, metres, kilometres, millimetres, hectopascals.
+    Si,
+}
+
+impl From<Units> for UnitSystem {
+    fn from(units: Units) -> Self {
+        match units {
+            Units::Us => Self::Us,
+            Units::Si => Self::Si,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, ValueEnum)]
 enum Format {
     /// Box-drawing tables, wrapped and colored for a terminal.
@@ -154,6 +183,7 @@ impl Output {
             json,
             color,
             width,
+            units,
             time_zone,
             output,
         } = args;
@@ -166,8 +196,11 @@ impl Output {
             Some(path) => Box::new(atomic_file::AtomicFileDestination::new(path)),
         };
         let render = RenderOptions::new(color, width, &time_zone, destination.is_terminal());
+        let summary = SummaryOptions {
+            units: units.into(),
+        };
         let default_presenter = (format == Format::Default)
-            .then(|| DefaultPresenter::new(render.presenter_time_zone()));
+            .then(|| DefaultPresenter::new(render.presenter_time_zone(), summary));
 
         Self {
             format,
@@ -314,8 +347,8 @@ impl Output {
 
     #[cfg(test)]
     fn with_destination(format: Format, destination: Box<dyn DestinationAdapter>) -> Self {
-        let default_presenter =
-            (format == Format::Default).then(|| DefaultPresenter::new(jiff::tz::TimeZone::UTC));
+        let default_presenter = (format == Format::Default)
+            .then(|| DefaultPresenter::new(jiff::tz::TimeZone::UTC, SummaryOptions::default()));
         Self {
             format,
             destination,

@@ -40,6 +40,26 @@ pub use crate::models::ForecastUnits;
 #[serde(rename_all = "camelCase", default)]
 pub struct ForecastQuery {
     /// Units for textual values; NOAA defaults to US customary.
+    ///
+    /// # Inert on the measured fields
+    ///
+    /// This crate always sends
+    /// `Feature-Flags: forecast_temperature_qv,forecast_wind_speed_qv`, and
+    /// under those flags NOAA renders every measured field as a
+    /// [`Quantity`](crate::models::Quantity) in its own pipeline units —
+    /// `wmoUnit:degC` and `wmoUnit:km_h-1` — whichever `units` the request
+    /// asked for. So `units=us` and `units=si` return byte-identical unit
+    /// codes and byte-identical numbers; what changes is the narrative text
+    /// in [`ForecastPeriod::detailed_forecast`] and the echoed
+    /// [`Forecast::units`] string.
+    ///
+    /// To read a forecast in a chosen system, convert at the presentation
+    /// boundary with [`Quantity::in_unit`]; the CLI's global `--units` flag
+    /// does exactly that.
+    ///
+    /// [`ForecastPeriod::detailed_forecast`]: crate::models::ForecastPeriod::detailed_forecast
+    /// [`Forecast::units`]: crate::models::Forecast::units
+    /// [`Quantity::in_unit`]: crate::models::Quantity::in_unit
     #[serde(skip_serializing_if = "Option::is_none")]
     pub units: Option<ForecastUnits>,
 }

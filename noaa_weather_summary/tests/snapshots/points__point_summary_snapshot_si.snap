@@ -1,0 +1,62 @@
+---
+source: noaa_weather_summary/tests/points.rs
+expression: "point().summarize(&options(UnitSystem::Si))"
+---
+title: "6.7 km N of Linn, KS"
+subtitle: "39.7456, -97.0892"
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: Grid cell
+          key: gridId
+          also:
+            - gridX
+            - gridY
+          value:
+            Identifier: "TOP/32,81"
+          emphasis: None
+        - label: Responsible office
+          key: cwa
+          also: []
+          value:
+            Identifier: TOP
+          emphasis: None
+        - label: Time zone
+          key: timeZone
+          also: []
+          value:
+            Text: America/Chicago
+          emphasis: None
+        - label: Radar station
+          key: radarStation
+          also: []
+          value:
+            Identifier: KTWX
+          emphasis: None
+        - label: Forecast zone
+          key: forecastZone
+          also: []
+          value:
+            Identifier: KSZ009
+          emphasis: None
+        - label: County zone
+          key: county
+          also: []
+          value:
+            Identifier: KSC201
+          emphasis: None
+        - label: Fire weather zone
+          key: fireWeatherZone
+          also: []
+          value:
+            Identifier: KSZ009
+          emphasis: None
+        - label: Land or sea
+          key: type
+          also: []
+          value:
+            Text: land
+          emphasis: None
+notes: []

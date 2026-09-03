@@ -5,8 +5,11 @@ use std::error::Error as StdError;
 use std::fmt;
 
 use jiff::tz::TimeZone;
-use noaa_weather_client::models::{ActiveAlertCounts, Alert, AlertEventTypes};
+use noaa_weather_client::models::{
+    ActiveAlertCounts, Alert, AlertEventTypes, Forecast, Gridpoint, Point,
+};
 use noaa_weather_client::{Feature, FeatureCollection};
+use noaa_weather_summary::SummaryOptions;
 use serde::Serialize;
 
 use super::PresentationDocument;
@@ -15,9 +18,7 @@ mod values;
 
 pub mod aviation;
 pub mod glossary;
-pub mod gridpoints;
 pub mod offices;
-pub mod points;
 pub mod products;
 pub mod radar;
 pub mod radio;
@@ -27,11 +28,22 @@ pub mod zones;
 /// Owns the policy used to turn typed NOAA responses into default output.
 pub(crate) struct DefaultPresenter {
     time_zone: TimeZone,
+    summary: SummaryOptions,
 }
 
 impl DefaultPresenter {
-    pub(super) fn new(time_zone: TimeZone) -> Self {
-        Self { time_zone }
+    pub(super) fn new(time_zone: TimeZone, summary: SummaryOptions) -> Self {
+        Self { time_zone, summary }
+    }
+
+    /// The meaning choices the ported families are summarized under.
+    ///
+    /// Only [`SummaryOptions`] belongs here: the un-ported presenters make
+    /// every decision themselves, and appearance is
+    /// [`RenderOptions`](crate::output::render::RenderOptions)'s job either
+    /// way.
+    fn summary_options(&self) -> &SummaryOptions {
+        &self.summary
     }
 
     pub(super) fn present<T>(&self, value: &T) -> Result<PresentationDocument, PresentationError>
@@ -66,12 +78,12 @@ macro_rules! summarized {
             impl DefaultPresentation for $response {
                 fn present_default(
                     &self,
-                    _presenter: &DefaultPresenter,
+                    presenter: &DefaultPresenter,
                 ) -> Result<PresentationDocument, PresentationError> {
                     Ok(PresentationDocument::Summary(Box::new(
                         noaa_weather_summary::Summarize::summarize(
                             self,
-                            &noaa_weather_summary::SummaryOptions::default(),
+                            presenter.summary_options(),
                         ),
                     )))
                 }
@@ -85,6 +97,9 @@ summarized!(
     FeatureCollection<Alert>,
     ActiveAlertCounts,
     AlertEventTypes,
+    Feature<Point>,
+    Feature<Gridpoint>,
+    Feature<Forecast>,
 );
 
 /// A failure to construct a complete default presentation document.
@@ -196,6 +211,7 @@ mod tests {
     fn owns_weather_value_policy() {
         let presenter = DefaultPresenter::new(
             TimeZone::get("America/Phoenix").expect("test time zone must exist"),
+            SummaryOptions::default(),
         );
 
         let document = presenter.present(&PolicyExample).unwrap();
@@ -211,7 +227,7 @@ mod tests {
 
     #[test]
     fn malformed_timestamp_is_typed_and_contextual() {
-        let presenter = DefaultPresenter::new(TimeZone::UTC);
+        let presenter = DefaultPresenter::new(TimeZone::UTC, SummaryOptions::default());
 
         let error = match presenter.present(&InvalidTimestampExample) {
             Ok(_) => panic!("malformed timestamp should fail presentation"),

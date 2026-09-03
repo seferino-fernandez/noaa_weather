@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::apis::gridpoints::{ForecastQuery, ForecastUnits, GridpointStationsQuery};
+use noaa_weather_client::apis::gridpoints::{ForecastQuery, GridpointStationsQuery};
 use noaa_weather_client::{Client, GridpointId};
 
 use crate::output::Output;
@@ -33,13 +33,10 @@ pub enum GridpointCommands {
     /// Get the multi-day textual forecast for a gridpoint.
     ///
     /// Returns a human-readable forecast summary broken down into periods (e.g., "Tonight", "Thursday").
-    /// Example: `noaa-weather gridpoints forecast PSR/159,100 --units si`
+    /// Example: `noaa-weather gridpoints forecast PSR/159,100`
     Forecast {
         #[clap(flatten)]
         location: GridpointLocationArgs,
-        /// Specify units for forecast data (`us` for US customary, `si` for Metric).
-        #[arg(long)]
-        units: Option<ForecastUnits>,
     },
     /// Get the hourly textual forecast for a gridpoint.
     ///
@@ -48,9 +45,6 @@ pub enum GridpointCommands {
     ForecastHourly {
         #[clap(flatten)]
         location: GridpointLocationArgs,
-        /// Specify units for forecast data (`us` for US customary, `si` for Metric).
-        #[arg(long)]
-        units: Option<ForecastUnits>,
     },
     /// List observation stations usable for retrieving observations for a gridpoint.
     ///
@@ -91,23 +85,25 @@ pub async fn handle_command(
                 )
                 .await
         }
-        GridpointCommands::Forecast { location, units } => {
+        // NOAA's own `units` parameter is inert under the feature flags this
+        // crate always sends, so the request never carries one and the global
+        // `--units` decides what the reader sees.
+        GridpointCommands::Forecast { location } => {
             output
                 .show(
                     format!("getting gridpoint forecast for {}", location.gridpoint),
-                    gridpoints.forecast(&location.gridpoint, &ForecastQuery { units: *units }),
+                    gridpoints.forecast(&location.gridpoint, &ForecastQuery::default()),
                 )
                 .await
         }
-        GridpointCommands::ForecastHourly { location, units } => {
+        GridpointCommands::ForecastHourly { location } => {
             output
                 .show(
                     format!(
                         "getting hourly gridpoint forecast for {}",
                         location.gridpoint
                     ),
-                    gridpoints
-                        .forecast_hourly(&location.gridpoint, &ForecastQuery { units: *units }),
+                    gridpoints.forecast_hourly(&location.gridpoint, &ForecastQuery::default()),
                 )
                 .await
         }

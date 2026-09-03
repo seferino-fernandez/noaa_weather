@@ -8,6 +8,8 @@ use serde::Serialize;
 
 pub mod alerts;
 pub mod audit;
+pub mod gridpoints;
+pub mod points;
 pub mod render;
 pub mod units;
 mod value;
