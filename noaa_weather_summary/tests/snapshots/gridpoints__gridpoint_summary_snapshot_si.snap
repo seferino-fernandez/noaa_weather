@@ -1,0 +1,723 @@
+---
+source: noaa_weather_summary/tests/gridpoints.rs
+expression: "gridpoint().summarize(&options(UnitSystem::Si))"
+---
+title: "Gridpoint TOP/31,80"
+subtitle: Issued by TOP
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: Updated
+          key: updateTime
+          also: []
+          value:
+            Timestamp: "2026-09-02T06:26:13+00:00"
+          emphasis: None
+        - label: Covers
+          key: validTimes
+          also: []
+          value:
+            Interval:
+              start: "2026-09-02T00:00:00+00:00"
+              end: "2026-09-10T01:00:00+00:00"
+          emphasis: None
+        - label: Elevation
+          key: elevation
+          also: []
+          value:
+            Quantity:
+              value: 456.8952
+              unit: m
+              precision: 0
+          emphasis: None
+        - label: Grid cell
+          key: gridId
+          also:
+            - gridX
+            - gridY
+          value:
+            Identifier: "TOP/31,80"
+          emphasis: None
+  - Table:
+      heading: Layers
+      columns:
+        - title: Layer
+          key: ~
+          also:
+            - temperature
+            - dewpoint
+            - maxTemperature
+            - minTemperature
+            - relativeHumidity
+            - apparentTemperature
+            - wetBulbGlobeTemperature
+            - heatIndex
+            - windChill
+            - skyCover
+            - windDirection
+            - windSpeed
+            - windGust
+            - weather
+            - hazards
+            - heatRisk
+            - probabilityOfPrecipitation
+            - quantitativePrecipitation
+            - iceAccumulation
+            - snowfallAmount
+            - snowLevel
+            - ceilingHeight
+            - visibility
+            - transportWindSpeed
+            - transportWindDirection
+            - mixingHeight
+            - hainesIndex
+            - lightningActivityLevel
+            - twentyFootWindSpeed
+            - twentyFootWindDirection
+            - waveHeight
+            - wavePeriod
+            - waveDirection
+            - primarySwellHeight
+            - primarySwellDirection
+            - secondarySwellHeight
+            - secondarySwellDirection
+            - wavePeriod2
+            - windWaveHeight
+            - dispersionIndex
+            - pressure
+            - probabilityOfTropicalStormWinds
+            - probabilityOfHurricaneWinds
+            - potentialOf15mphWinds
+            - potentialOf25mphWinds
+            - potentialOf35mphWinds
+            - potentialOf45mphWinds
+            - potentialOf20mphWindGusts
+            - potentialOf30mphWindGusts
+            - potentialOf40mphWindGusts
+            - potentialOf50mphWindGusts
+            - potentialOf60mphWindGusts
+            - grasslandFireDangerIndex
+            - probabilityOfThunder
+            - davisStabilityIndex
+            - atmosphericDispersionIndex
+            - lowVisibilityOccurrenceRiskIndex
+            - stability
+            - redFlagThreatIndex
+          align: Left
+        - title: Unit
+          key: ~
+          also: []
+          align: Left
+        - title: Values
+          key: ~
+          also: []
+          align: Right
+        - title: Covers
+          key: ~
+          also: []
+          align: Left
+        - title: First value
+          key: ~
+          also: []
+          align: Right
+      rows:
+        - - value:
+              Text: temperature
+            emphasis: None
+          - value:
+              Text: °C
+            emphasis: None
+          - value:
+              Count: 164
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T01:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 33.333333333333336
+                unit: °C
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: dewpoint
+            emphasis: None
+          - value:
+              Text: °C
+            emphasis: None
+          - value:
+              Count: 61
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T01:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 16.666666666666668
+                unit: °C
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: maxTemperature
+            emphasis: None
+          - value:
+              Text: °C
+            emphasis: None
+          - value:
+              Count: 9
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T02:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 37.22222222222222
+                unit: °C
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: minTemperature
+            emphasis: None
+          - value:
+              Text: °C
+            emphasis: None
+          - value:
+              Count: 8
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T01:00:00+00:00"
+                end: "2026-09-09T15:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 23.88888888888889
+                unit: °C
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: relativeHumidity
+            emphasis: None
+          - value:
+              Text: "%"
+            emphasis: None
+          - value:
+              Count: 163
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T01:00:00+00:00"
+            emphasis: None
+          - value:
+              Percent: 37
+            emphasis: None
+        - - value:
+              Text: apparentTemperature
+            emphasis: None
+          - value:
+              Text: °C
+            emphasis: None
+          - value:
+              Count: 155
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T01:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 33.888888888888886
+                unit: °C
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: wetBulbGlobeTemperature
+            emphasis: None
+          - value:
+              Text: °C
+            emphasis: None
+          - value:
+              Count: 146
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T01:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 26.11111111111111
+                unit: °C
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: heatIndex
+            emphasis: None
+          - value:
+              Text: °C
+            emphasis: None
+          - value:
+              Count: 155
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T01:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 33.888888888888886
+                unit: °C
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: windChill
+            emphasis: None
+          - value:
+              Text: °C
+            emphasis: None
+          - value:
+              Count: 1
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T01:00:00+00:00"
+            emphasis: None
+          - value: Missing
+            emphasis: None
+        - - value:
+              Text: skyCover
+            emphasis: None
+          - value:
+              Text: "%"
+            emphasis: None
+          - value:
+              Count: 98
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T06:00:00+00:00"
+            emphasis: None
+          - value:
+              Percent: 4
+            emphasis: None
+        - - value:
+              Text: windDirection
+            emphasis: None
+          - value:
+              Text: °
+            emphasis: None
+          - value:
+              Count: 73
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T01:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 170
+                unit: °
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: windSpeed
+            emphasis: None
+          - value:
+              Text: km/h
+            emphasis: None
+          - value:
+              Count: 64
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T01:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 16.668
+                unit: km/h
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: windGust
+            emphasis: None
+          - value:
+              Text: km/h
+            emphasis: None
+          - value:
+              Count: 93
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T01:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 20.372
+                unit: km/h
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: heatRisk
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              Count: 3
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T06:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 4
+                unit: ~
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: probabilityOfPrecipitation
+            emphasis: None
+          - value:
+              Text: "%"
+            emphasis: None
+          - value:
+              Count: 47
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T06:00:00+00:00"
+            emphasis: None
+          - value:
+              Percent: 0
+            emphasis: None
+        - - value:
+              Text: quantitativePrecipitation
+            emphasis: None
+          - value:
+              Text: mm
+            emphasis: None
+          - value:
+              Count: 33
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T06:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 0
+                unit: mm
+                precision: 2
+            emphasis: None
+        - - value:
+              Text: iceAccumulation
+            emphasis: None
+          - value:
+              Text: mm
+            emphasis: None
+          - value:
+              Count: 32
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T00:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 0
+                unit: mm
+                precision: 2
+            emphasis: None
+        - - value:
+              Text: snowfallAmount
+            emphasis: None
+          - value:
+              Text: mm
+            emphasis: None
+          - value:
+              Count: 32
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T00:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 0
+                unit: mm
+                precision: 2
+            emphasis: None
+        - - value:
+              Text: ceilingHeight
+            emphasis: None
+          - value:
+              Text: m
+            emphasis: None
+          - value:
+              Count: 1
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-03T10:00:00+00:00"
+            emphasis: None
+          - value: Missing
+            emphasis: None
+        - - value:
+              Text: visibility
+            emphasis: None
+          - value:
+              Text: km
+            emphasis: None
+          - value:
+              Count: 1
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-03T10:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 16.09344
+                unit: km
+                precision: 1
+            emphasis: None
+        - - value:
+              Text: transportWindSpeed
+            emphasis: None
+          - value:
+              Text: km/h
+            emphasis: None
+          - value:
+              Count: 84
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T01:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 24.076
+                unit: km/h
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: transportWindDirection
+            emphasis: None
+          - value:
+              Text: °
+            emphasis: None
+          - value:
+              Count: 111
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T01:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 180
+                unit: °
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: mixingHeight
+            emphasis: None
+          - value:
+              Text: m
+            emphasis: None
+          - value:
+              Count: 187
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T01:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 427.0248
+                unit: m
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: grasslandFireDangerIndex
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-03T03:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 0
+                unit: ~
+                precision: 0
+            emphasis: None
+        - - value:
+              Text: probabilityOfThunder
+            emphasis: None
+          - value:
+              Text: "%"
+            emphasis: None
+          - value:
+              Count: 44
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-10T00:00:00+00:00"
+            emphasis: None
+          - value:
+              Percent: 0
+            emphasis: None
+        - - value:
+              Text: redFlagThreatIndex
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              Count: 1
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T00:00:00+00:00"
+                end: "2026-09-07T11:00:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 0
+                unit: ~
+                precision: 0
+            emphasis: None
+  - Table:
+      heading: Hazards
+      columns:
+        - title: When
+          key: ~
+          also: []
+          align: Left
+        - title: Hazard
+          key: ~
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Interval:
+                start: "2026-09-02T18:00:00+00:00"
+                end: "2026-09-05T01:00:00+00:00"
+            emphasis: Warning
+          - value:
+              Lines:
+                - Text: Heat Advisory
+            emphasis: Warning
+  - Table:
+      heading: Weather
+      columns:
+        - title: When
+          key: ~
+          also: []
+          align: Left
+        - title: Expected
+          key: ~
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Interval:
+                start: "2026-09-06T12:00:00+00:00"
+                end: "2026-09-06T18:00:00+00:00"
+            emphasis: None
+          - value:
+              Lines:
+                - Text: Slight chance of light rain showers
+            emphasis: None
+        - - value:
+              Interval:
+                start: "2026-09-07T06:00:00+00:00"
+                end: "2026-09-07T12:00:00+00:00"
+            emphasis: None
+          - value:
+              Lines:
+                - Text: Slight chance of thunderstorms
+                - Text: Slight chance of light rain showers
+            emphasis: None
+        - - value:
+              Interval:
+                start: "2026-09-08T06:00:00+00:00"
+                end: "2026-09-08T12:00:00+00:00"
+            emphasis: None
+          - value:
+              Lines:
+                - Text: Slight chance of thunderstorms
+                - Text: Slight chance of light rain showers
+            emphasis: None
+        - - value:
+              Interval:
+                start: "2026-09-09T00:00:00+00:00"
+                end: "2026-09-09T06:00:00+00:00"
+            emphasis: None
+          - value:
+              Lines:
+                - Text: Slight chance of light rain showers
+            emphasis: None
+        - - value:
+              Interval:
+                start: "2026-09-09T06:00:00+00:00"
+                end: "2026-09-09T12:00:00+00:00"
+            emphasis: None
+          - value:
+              Lines:
+                - Text: Slight chance of thunderstorms
+                - Text: Slight chance of light rain showers
+            emphasis: None
+        - - value:
+              Interval:
+                start: "2026-09-09T12:00:00+00:00"
+                end: "2026-09-10T00:00:00+00:00"
+            emphasis: None
+          - value:
+              Lines:
+                - Text: Slight chance of light rain showers
+            emphasis: None
+        - - value:
+              Interval:
+                start: "2026-09-10T00:00:00+00:00"
+                end: "2026-09-10T01:00:00+00:00"
+            emphasis: None
+          - value:
+              Lines:
+                - Text: Chance of light rain showers
+            emphasis: None
+notes:
+  - 31 layers have no values for this grid

@@ -148,6 +148,15 @@ impl Interval {
     /// covered interval has an end only once the span is added to the start.
     /// [`Interval::lasting`] has no anchor to add it to, so it has no end.
     ///
+    /// # Calendar units
+    ///
+    /// NOAA writes `validTimes` as `P8DT1H` and a layer's `validTime` as
+    /// `P4DT12H`, so the span usually carries days. Days are not a uniform
+    /// length of time in general, and adding one to a bare instant is a
+    /// question with no answer — so the arithmetic is anchored in UTC, where
+    /// a day is always 24 hours and no daylight-saving transition exists to
+    /// disagree about. That is the same clock the endpoints are stored on.
+    ///
     /// ```
     /// use noaa_weather_client::Interval;
     ///
@@ -161,6 +170,10 @@ impl Interval {
     ///     Some("2024-01-01T06:00:00Z".parse()?),
     /// );
     ///
+    /// // The form NOAA actually sends: eight days and an hour.
+    /// let grid: Interval = "2024-01-01T00:00:00Z/P8DT1H".parse()?;
+    /// assert_eq!(grid.resolved_end(), Some("2024-01-09T01:00:00Z".parse()?));
+    ///
     /// assert_eq!(Interval::lasting(six_hours)?.resolved_end(), None);
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
@@ -168,7 +181,11 @@ impl Interval {
     pub fn resolved_end(&self) -> Option<Timestamp> {
         match self.0 {
             Bounds::Between { end, .. } | Bounds::Ending { end, .. } => Some(end),
-            Bounds::Starting { start, span } => start.checked_add(span).ok(),
+            Bounds::Starting { start, span } => start
+                .to_zoned(jiff::tz::TimeZone::UTC)
+                .checked_add(span)
+                .ok()
+                .map(|zoned| zoned.timestamp()),
             Bounds::Lasting { .. } => None,
         }
     }
@@ -419,13 +436,33 @@ mod tests {
         );
     }
 
-    /// A span whose length depends on a calendar has no fixed number of
-    /// seconds to add to an instant, so it resolves to nothing rather than
-    /// to a guess.
+    /// A span in calendar units has no fixed number of seconds on its own, so
+    /// the arithmetic is anchored in UTC — the clock the endpoints are stored
+    /// on, where a day is always 24 hours. `P8DT1H` is the form NOAA writes
+    /// every `validTimes` in, so declining it would leave a gridpoint with no
+    /// printable end at all.
     #[test]
-    fn resolved_end_declines_a_span_with_calendar_units() {
-        let month = Interval::starting(at("2024-01-01T00:00:00Z"), span("P1M")).unwrap();
-        assert_eq!(month.resolved_end(), None);
+    fn resolved_end_anchors_calendar_units_in_utc() {
+        let start = at("2024-01-01T00:00:00Z");
+        assert_eq!(
+            Interval::starting(start, span("P8DT1H"))
+                .unwrap()
+                .resolved_end(),
+            Some(at("2024-01-09T01:00:00Z"))
+        );
+        assert_eq!(
+            Interval::starting(start, span("P1M"))
+                .unwrap()
+                .resolved_end(),
+            Some(at("2024-02-01T00:00:00Z"))
+        );
+        // Leap day included, because the anchor is a real calendar.
+        assert_eq!(
+            Interval::starting(at("2024-02-28T00:00:00Z"), span("P1D"))
+                .unwrap()
+                .resolved_end(),
+            Some(at("2024-02-29T00:00:00Z"))
+        );
     }
 
     #[test]

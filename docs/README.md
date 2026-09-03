@@ -8,6 +8,7 @@
 | `--json` | — | off | An alias for `--format json`. Passing both fails. |
 | `--color` | `auto`, `always`, `never` | `auto` | `auto` colors only when the destination is a terminal and `NO_COLOR` is unset or empty. `always` writes escapes even into a file or a pipe. |
 | `--width` | a number of columns | `COLUMNS`, else the terminal, else 100 | Wrapping width, never narrower than 40. `--width 0` never wraps, for piping into `less -S`. |
+| `--units` | `us`, `si` | `us` | The system measurements are converted to before they are shown: `us` is Fahrenheit, miles per hour, feet, miles, inches and inches of mercury; `si` is Celsius, km/h, metres, kilometres, millimetres and hectopascals. NOAA's own `units` request parameter is inert — every response is metric whatever it asks — so the conversion happens here. |
 | `--time-zone` | `auto`, `source`, an IANA name | `auto` | `auto` is this machine's zone; `source` keeps the UTC offset NOAA sent; a name such as `America/Detroit` shows every timestamp there. |
 | `-o`, `--output` | a path, or `-` | standard output | Writes to an atomically replaced file; `-` selects standard output explicitly. |
 

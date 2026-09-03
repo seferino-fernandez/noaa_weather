@@ -88,7 +88,7 @@ impl QuantityKind {
 /// above, writes kilometres per hour as `km h^-1`, and gives the nautical mile
 /// a bare space. An unlisted unit falls back to its wire symbol, which is
 /// what the CLI printed before this table existed.
-fn label(unit: &Unit) -> &str {
+pub(crate) fn label(unit: &Unit) -> &str {
     let symbol = symbol(unit.code());
     match symbol {
         "degF" => "\u{b0}F",
@@ -113,10 +113,39 @@ fn label(unit: &Unit) -> &str {
 
 /// The unit symbol NOAA's `{namespace}:{unit}` wire code ends in, keyed the
 /// same way [`Quantity::in_unit`] keys its conversions.
-fn symbol(code: &str) -> &str {
+pub(crate) fn symbol(code: &str) -> &str {
     code.rsplit([':', '/'])
         .find(|segment| !segment.is_empty())
         .unwrap_or(code)
+}
+
+/// The label a reading of `kind` measured in `source` ends up shown under.
+///
+/// A gridpoint layer states its unit once, in a column header, above a series
+/// of numbers that [`Value::quantity`] labels one by one. Both answers come
+/// from here, so the header cannot claim `°C` over a column of `°F`: the
+/// question "does this unit convert to the kind's target" is asked exactly as
+/// [`Value::quantity`] asks it, by trying the conversion on a placeholder.
+///
+/// `None` means there is nothing to say — a dimensionless index, or a layer
+/// NOAA sent with no `uom` at all.
+pub(crate) fn shown_unit(
+    kind: QuantityKind,
+    source: Option<&Unit>,
+    options: &SummaryOptions,
+) -> Option<String> {
+    // A percentage is shown as `40%` whether or not NOAA bothered to say so,
+    // because `Value::quantity` turns it into a `Value::Percent`.
+    if kind == QuantityKind::Percent {
+        return Some("%".to_owned());
+    }
+    let source = source?;
+    let probe = Quantity::new(Some(0.0), source.clone());
+    let converted = kind
+        .target(options.units)
+        .map(Unit::from)
+        .and_then(|target| probe.in_unit(&target));
+    Some(label(&converted.as_ref().unwrap_or(&probe).unit).to_owned())
 }
 
 impl Value {
@@ -148,6 +177,28 @@ impl Value {
             (Some(_), _, _) => Self::number(shown.value, precision, unit),
             (None, min @ Some(_), max @ Some(_)) => Self::range(min, max, precision, unit),
             (None, _, _) => Self::Missing,
+        }
+    }
+
+    /// One reading from a gridpoint layer, which states its unit once for the
+    /// whole series instead of on every number.
+    ///
+    /// The same policy as [`Value::quantity`], reached from the shape NOAA
+    /// uses for layers. A layer with no `uom` — every dimensionless index,
+    /// and [`probabilityOfThunder`] — has nothing to convert to, so the
+    /// number is shown as sent, at the precision its kind asks for.
+    ///
+    /// [`probabilityOfThunder`]: noaa_weather_client::models::Gridpoint::probability_of_thunder
+    pub fn reading(
+        value: Option<f64>,
+        unit: Option<&Unit>,
+        kind: QuantityKind,
+        options: &SummaryOptions,
+    ) -> Self {
+        match unit {
+            Some(unit) => Self::quantity(&Quantity::new(value, unit.clone()), kind, options),
+            None if kind == QuantityKind::Percent => Self::percent(value),
+            None => Self::number(value, kind.precision(), None),
         }
     }
 }
@@ -359,6 +410,110 @@ mod tests {
                 unit: Some("m".to_owned()),
                 precision: 0,
             }
+        );
+    }
+
+    /// A layer states its unit once; a reading of it lands in the same place
+    /// the equivalent [`Quantity`] would.
+    #[test]
+    fn a_layer_reading_follows_the_same_policy_as_a_quantity() {
+        let celsius = Unit::from("wmoUnit:degC");
+        assert_eq!(
+            Value::reading(
+                Some(23.888_888_888_888_89),
+                Some(&celsius),
+                QuantityKind::Temperature,
+                &options(UnitSystem::Us)
+            ),
+            Value::quantity(
+                &quantity("wmoUnit:degC", 23.888_888_888_888_89),
+                QuantityKind::Temperature,
+                &options(UnitSystem::Us)
+            )
+        );
+        assert_eq!(
+            Value::reading(
+                None,
+                Some(&celsius),
+                QuantityKind::Temperature,
+                &options(UnitSystem::Us)
+            ),
+            Value::Missing
+        );
+    }
+
+    /// `heatRisk` and `probabilityOfThunder` arrive with no `uom` at all. An
+    /// index keeps its bare number; a probability is still a percentage.
+    #[test]
+    fn a_layer_without_a_unit_keeps_its_number() {
+        let us = options(UnitSystem::Us);
+        assert_eq!(
+            Value::reading(Some(4.0), None, QuantityKind::Index, &us),
+            Value::Quantity {
+                value: 4.0,
+                unit: None,
+                precision: 0,
+            }
+        );
+        assert_eq!(
+            Value::reading(Some(44.0), None, QuantityKind::Percent, &us),
+            Value::Percent(44.0)
+        );
+        assert_eq!(
+            Value::reading(None, None, QuantityKind::Index, &us),
+            Value::Missing
+        );
+    }
+
+    /// The column header and the cells under it are one decision, so a header
+    /// can never claim a unit the values are not shown in.
+    #[test]
+    fn the_shown_unit_agrees_with_every_value_under_it() {
+        let cases = [
+            (QuantityKind::Temperature, Some("wmoUnit:degC"), "\u{b0}F"),
+            (QuantityKind::Speed, Some("wmoUnit:km_h-1"), "mph"),
+            (QuantityKind::Height, Some("wmoUnit:m"), "ft"),
+            (QuantityKind::Distance, Some("wmoUnit:m"), "mi"),
+            (QuantityKind::Depth, Some("wmoUnit:mm"), "in"),
+            (
+                QuantityKind::Angle,
+                Some("wmoUnit:degree_(angle)"),
+                "\u{b0}",
+            ),
+            (QuantityKind::Percent, Some("wmoUnit:percent"), "%"),
+            // No unit to convert through: the wire symbol stands.
+            (QuantityKind::Depth, Some("bananaUnit:bunches"), "bunches"),
+            // A kind whose unit measures something else keeps what it has.
+            (QuantityKind::Temperature, Some("wmoUnit:m"), "m"),
+        ];
+        let us = options(UnitSystem::Us);
+        for (kind, code, expected) in cases {
+            let unit = code.map(Unit::from);
+            assert_eq!(
+                shown_unit(kind, unit.as_ref(), &us).as_deref(),
+                Some(expected),
+                "{kind:?} {code:?}"
+            );
+            let reading = Value::reading(Some(1.0), unit.as_ref(), kind, &us);
+            let shown = match reading {
+                Value::Quantity { unit, .. } => unit,
+                Value::Percent(_) => Some("%".to_owned()),
+                other => panic!("expected a labelled value, got {other:?}"),
+            };
+            assert_eq!(shown.as_deref(), Some(expected), "{kind:?} value label");
+        }
+    }
+
+    /// A dimensionless index has no unit to name; a percentage names itself
+    /// even when NOAA sent no `uom`.
+    #[test]
+    fn a_unitless_layer_has_a_unit_only_when_it_is_a_percentage() {
+        let us = options(UnitSystem::Us);
+        assert_eq!(shown_unit(QuantityKind::Index, None, &us), None);
+        assert_eq!(shown_unit(QuantityKind::Height, None, &us), None);
+        assert_eq!(
+            shown_unit(QuantityKind::Percent, None, &us).as_deref(),
+            Some("%")
         );
     }
 

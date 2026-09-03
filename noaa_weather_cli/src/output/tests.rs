@@ -17,7 +17,7 @@ use super::binary::Sealed;
 use super::presentation::{DefaultPresentation, DefaultPresenter, PresentationError};
 use super::render::{ColorMode, TimeZoneChoice};
 use super::sink::{DestinationAdapter, MediaKind, SinkTransaction};
-use super::{BinaryPresentation, Format, Output, OutputArgs, PresentationDocument};
+use super::{BinaryPresentation, Format, Output, OutputArgs, PresentationDocument, Units};
 
 #[derive(Serialize)]
 struct Example {
@@ -147,6 +147,7 @@ fn json_configuration_does_not_construct_a_default_presenter() {
         json: true,
         color: ColorMode::Never,
         width: None,
+        units: Units::Us,
         time_zone: TimeZoneChoice::Source,
         output: None,
     });
@@ -394,6 +395,7 @@ async fn binary_policy_is_validated_before_polling() {
         json: false,
         color: ColorMode::Never,
         width: None,
+        units: Units::Us,
         time_zone: TimeZoneChoice::Source,
         output: None,
     });
@@ -418,6 +420,7 @@ async fn json_rejection_precedes_binary_destination_validation() {
         json: true,
         color: ColorMode::Never,
         width: None,
+        units: Units::Us,
         time_zone: TimeZoneChoice::Source,
         output: None,
     });
@@ -532,6 +535,7 @@ async fn serialization_failure_leaves_existing_file_unchanged() {
         json: true,
         color: ColorMode::Never,
         width: None,
+        units: Units::Us,
         time_zone: TimeZoneChoice::Source,
         output: Some(path.clone()),
     });
@@ -556,6 +560,7 @@ async fn missing_parent_is_rejected_before_polling() {
         json: false,
         color: ColorMode::Never,
         width: None,
+        units: Units::Us,
         time_zone: TimeZoneChoice::Source,
         output: Some(path),
     });
@@ -688,9 +693,93 @@ fn dash_selects_explicit_stdout_but_binary_still_requires_a_file() {
         json: false,
         color: ColorMode::Never,
         width: None,
+        units: Units::Us,
         time_zone: TimeZoneChoice::Source,
         output: Some(Path::new("-").to_path_buf()),
     });
     let error = output.destination.validate(MediaKind::Binary).unwrap_err();
     assert!(format!("{error:#}").contains("filesystem path"));
+}
+
+const POINT_FIXTURE: &str =
+    include_str!("../../../noaa_weather_client/tests/fixtures/points/point.json");
+const FORECAST_FIXTURE: &str =
+    include_str!("../../../noaa_weather_client/tests/fixtures/gridpoints/forecast.json");
+
+/// Renders `value` through a fully configured [`Output`], the way the binary
+/// does, and returns what was written.
+///
+/// The file destination is the only one [`Output::configured`] can be asked
+/// for in a test; `memory_output` goes through `Output::with_destination`,
+/// which hard-codes the summary options and so cannot see this flag at all.
+async fn rendered_with_units<T: DefaultPresentation + 'static>(value: T, units: Units) -> String {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("rendered.txt");
+    let output = Output::configured(OutputArgs {
+        format: Format::Default,
+        json: false,
+        color: ColorMode::Never,
+        width: Some(100),
+        units,
+        time_zone: TimeZoneChoice::Source,
+        output: Some(path.clone()),
+    });
+
+    output
+        .show("rendering a fixture", async { Ok::<_, FetchError>(value) })
+        .await
+        .unwrap();
+    std::fs::read_to_string(path).unwrap()
+}
+
+/// `--units` has exactly one wire into the summary crate: `OutputArgs.units`
+/// through `From<Units> for UnitSystem` into the `SummaryOptions` that
+/// `Output::configured` hands `DefaultPresenter`, which the `summarized!`
+/// macro reads back through `summary_options()`.
+///
+/// Nothing else in the suite walks that wire — the render snapshots build a
+/// `SummaryOptions` by hand and never construct a `DefaultPresenter` — so
+/// pinning either half to a constant would leave every other test green while
+/// `--units si` silently answered in US customary. This test exists to fail
+/// in that case.
+#[tokio::test]
+async fn the_units_flag_reaches_the_summary_through_the_configured_output() {
+    use noaa_weather_client::Feature;
+    use noaa_weather_client::models::Forecast;
+
+    let forecast = || -> Feature<Forecast> {
+        serde_json::from_str(FORECAST_FIXTURE).expect("forecast.json decodes")
+    };
+    let us = rendered_with_units(forecast(), Units::Us).await;
+    let si = rendered_with_units(forecast(), Units::Si).await;
+
+    assert_ne!(us, si, "--units must change what is rendered");
+    for expected in ["75 \u{b0}F", "10 mph", "10 to 15 mph"] {
+        assert!(us.contains(expected), "missing {expected:?} in:\n{us}");
+    }
+    for absent in ["\u{b0}C", "km/h"] {
+        assert!(!us.contains(absent), "unexpected {absent:?} in:\n{us}");
+    }
+    for expected in ["24 \u{b0}C", "16 km/h", "16 to 24 km/h"] {
+        assert!(si.contains(expected), "missing {expected:?} in:\n{si}");
+    }
+    for absent in ["\u{b0}F", "mph"] {
+        assert!(!si.contains(absent), "unexpected {absent:?} in:\n{si}");
+    }
+}
+
+/// The same wire, on the family whose unit choice reaches the title rather
+/// than a table cell.
+#[tokio::test]
+async fn the_units_flag_reaches_a_summary_title() {
+    use noaa_weather_client::Feature;
+    use noaa_weather_client::models::Point;
+
+    let point =
+        || -> Feature<Point> { serde_json::from_str(POINT_FIXTURE).expect("point.json decodes") };
+    let us = rendered_with_units(point(), Units::Us).await;
+    let si = rendered_with_units(point(), Units::Si).await;
+
+    assert!(us.contains("4.2 mi N of Linn, KS"), "{us}");
+    assert!(si.contains("6.7 km N of Linn, KS"), "{si}");
 }

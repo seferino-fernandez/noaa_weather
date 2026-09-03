@@ -78,6 +78,37 @@ pub struct Quantity {
 }
 
 impl Quantity {
+    /// A measurement of `value` in `unit`, with no range and no quality
+    /// control flag.
+    ///
+    /// [`Quantity`] is `#[non_exhaustive]`, so this is the only way to build
+    /// one outside this crate. It exists for the places NOAA writes the
+    /// number and its unit apart rather than together — a
+    /// [`GridpointLayer`](super::GridpointLayer) carries one `uom` over a
+    /// whole series of bare numbers — so a caller can hand a reading to
+    /// [`Quantity::in_unit`] without reassembling JSON.
+    ///
+    /// ```
+    /// use noaa_weather_client::models::{Quantity, Unit};
+    ///
+    /// let celsius = Quantity::new(Some(23.888_888_888_888_89), Unit::from("wmoUnit:degC"));
+    /// let fahrenheit = celsius.in_unit(&Unit::from("wmoUnit:degF")).unwrap();
+    /// assert_eq!(fahrenheit.value.unwrap().round(), 75.0);
+    ///
+    /// // A layer with no reading for a period is still a measurement.
+    /// assert_eq!(Quantity::new(None, Unit::from("wmoUnit:m")).value, None);
+    /// ```
+    #[must_use]
+    pub const fn new(value: Option<f64>, unit: Unit) -> Self {
+        Self {
+            value,
+            min_value: None,
+            max_value: None,
+            unit,
+            quality_control: None,
+        }
+    }
+
     /// Returns this measurement expressed in `unit`, or `None` when the two
     /// units measure different things.
     ///

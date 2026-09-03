@@ -1,0 +1,330 @@
+---
+source: noaa_weather_summary/tests/gridpoints.rs
+expression: "forecast().summarize(&options(UnitSystem::Us))"
+---
+title: Forecast
+subtitle: ~
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: Updated
+          key: updateTime
+          also: []
+          value:
+            Timestamp: "2026-09-02T06:26:13+00:00"
+          emphasis: None
+        - label: Covers
+          key: validTimes
+          also: []
+          value:
+            Interval:
+              start: "2026-09-02T00:00:00+00:00"
+              end: "2026-09-10T01:00:00+00:00"
+          emphasis: None
+  - Table:
+      heading: ~
+      columns:
+        - title: Period
+          key: periods
+          also: []
+          align: Left
+        - title: Time
+          key: ~
+          also: []
+          align: Left
+        - title: Temp
+          key: ~
+          also: []
+          align: Right
+        - title: Wind
+          key: ~
+          also: []
+          align: Left
+        - title: Forecast
+          key: ~
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Text: Overnight
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T02:00:00-05:00"
+                end: "2026-09-02T06:00:00-05:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 75
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Text: 10 mph S
+            emphasis: None
+          - value:
+              Text: Partly Cloudy
+            emphasis: None
+        - - value:
+              Text: Wednesday
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T06:00:00-05:00"
+                end: "2026-09-02T18:00:00-05:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 99
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Text: 10 to 15 mph S gust 25 mph
+            emphasis: None
+          - value:
+              Text: Mostly Sunny
+            emphasis: None
+        - - value:
+              Text: Wednesday Night
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T18:00:00-05:00"
+                end: "2026-09-03T06:00:00-05:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 76
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Text: 10 to 15 mph S gust 20 mph
+            emphasis: None
+          - value:
+              Text: Partly Cloudy
+            emphasis: None
+        - - value:
+              Text: Thursday
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-03T06:00:00-05:00"
+                end: "2026-09-03T18:00:00-05:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 97.99999999999999
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Text: 15 to 20 mph S gust 30 mph
+            emphasis: None
+          - value:
+              Text: Mostly Sunny
+            emphasis: None
+        - - value:
+              Text: Thursday Night
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-03T18:00:00-05:00"
+                end: "2026-09-04T06:00:00-05:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 76
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Text: 10 to 15 mph S gust 25 mph
+            emphasis: None
+          - value:
+              Text: Mostly Clear
+            emphasis: None
+        - - value:
+              Text: Friday
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-04T06:00:00-05:00"
+                end: "2026-09-04T18:00:00-05:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 97
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Text: 10 mph S gust 20 mph
+            emphasis: None
+          - value:
+              Text: Mostly Sunny
+            emphasis: None
+        - - value:
+              Text: Friday Night
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-04T18:00:00-05:00"
+                end: "2026-09-05T06:00:00-05:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 76
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Text: 5 to 10 mph S
+            emphasis: None
+          - value:
+              Text: Partly Cloudy
+            emphasis: None
+        - - value:
+              Text: Saturday
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-05T06:00:00-05:00"
+                end: "2026-09-05T18:00:00-05:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 96
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Text: 5 to 10 mph S
+            emphasis: None
+          - value:
+              Text: Mostly Sunny
+            emphasis: None
+        - - value:
+              Text: Saturday Night
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-05T18:00:00-05:00"
+                end: "2026-09-06T06:00:00-05:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 73
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Text: 5 mph S
+            emphasis: None
+          - value:
+              Text: Partly Cloudy
+            emphasis: None
+        - - value:
+              Text: Sunday
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-06T06:00:00-05:00"
+                end: "2026-09-06T18:00:00-05:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 94
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Text: 5 mph S
+            emphasis: None
+          - value:
+              Text: Slight Chance Rain Showers
+            emphasis: None
+        - - value:
+              Text: Sunday Night
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-06T18:00:00-05:00"
+                end: "2026-09-07T06:00:00-05:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 71
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Text: 5 mph SE
+            emphasis: None
+          - value:
+              Text: Partly Cloudy then Slight Chance Showers And Thunderstorms
+            emphasis: None
+        - - value:
+              Text: Labor Day
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-07T06:00:00-05:00"
+                end: "2026-09-07T18:00:00-05:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 92
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Text: 5 to 10 mph SE
+            emphasis: None
+          - value:
+              Text: Slight Chance Showers And Thunderstorms then Mostly Sunny
+            emphasis: None
+        - - value:
+              Text: Monday Night
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-07T18:00:00-05:00"
+                end: "2026-09-08T06:00:00-05:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 72
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Text: 10 mph SE gust 20 mph
+            emphasis: None
+          - value:
+              Text: Partly Cloudy then Slight Chance Showers And Thunderstorms
+            emphasis: None
+        - - value:
+              Text: Tuesday
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-08T06:00:00-05:00"
+                end: "2026-09-08T18:00:00-05:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 90
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Text: 10 to 15 mph S gust 25 mph
+            emphasis: None
+          - value:
+              Text: Slight Chance Showers And Thunderstorms then Mostly Sunny
+            emphasis: None
+notes: []
