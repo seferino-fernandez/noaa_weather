@@ -12,6 +12,10 @@ homepage = "https://github.com/seferino-fernandez/noaa_weather"
 documentation = "https://github.com/seferino-fernandez/noaa_weather"
 readme = "README.md"
 
+[lib]
+name = "noaa_weather_cli"
+path = "src/lib.rs"
+
 [[bin]]
 name = "noaa-weather"
 path = "src/main.rs"
@@ -20,7 +24,7 @@ path = "src/main.rs"
 noaa_weather_client.workspace = true
 noaa_weather_summary.workspace = true
 
-clap = { workspace = true, features = ["derive"] }
+clap = { workspace = true, features = ["derive", "env"] }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 anyhow.workspace = true
 serde = { workspace = true, features = ["derive"] }
