@@ -1,9 +1,6 @@
-use noaa_weather_cli::try_main;
+use noaa_weather_cli::run;
 
 #[tokio::main]
-async fn main() {
-    if let Err(error) = try_main().await {
-        eprintln!("noaa-weather: {error:#}");
-        std::process::exit(1);
-    }
+async fn main() -> std::process::ExitCode {
+    run().await.into()
 }

@@ -1,0 +1,55 @@
+{
+  "@context": {
+    "@version": "1.1"
+  },
+  "stories": [
+    {
+      "officeId": "PSR",
+      "startTime": "2026-08-23T04:00:00+00:00",
+      "endTime": "2026-09-04T05:00:00+00:00",
+      "updateTime": "2026-09-03T08:38:55+00:00",
+      "title": "5 Day Outlook",
+      "description": "Temperatures across the region will remain near to below normal though Saturday before temperatures warm back up to neat to slightly above normal as early as Sunday.",
+      "altText": "A graphic showing the high and low temperatures for the next 5 days in the form of a line plot for Phoenix, Globe/Miami, and Yuma/El Centro. ",
+      "priority": false,
+      "order": 0,
+      "download": "https://api.weather.gov/offices/PSR/weatherstories/download/227060e4-9667-4215-94d4-b37f6e94e2c8"
+    },
+    {
+      "officeId": "PSR",
+      "startTime": "2026-09-02T10:00:00+00:00",
+      "endTime": "2026-09-04T10:00:00+00:00",
+      "updateTime": "2026-09-03T03:39:11+00:00",
+      "title": "Storm Chances Thursday-Early Saturday",
+      "description": "There will be an increase in tropical moisture at the end of this week which will result in increasing shower and storm chances. Best chances will be across eastern and southeastern Arizona, but there is a 30-60% chance of storms surviving into the lower deserts of south-central Arizona. ",
+      "altText": "Graphic displaying two maps for the rain chances on the top (Thursday night - early Friday morning on the top left and Friday afternoon - early Saturday morning on the top right). Across the bottom is a description of the shower and storm chances for the period and a list of the main threats. ",
+      "priority": false,
+      "order": 1,
+      "download": "https://api.weather.gov/offices/PSR/weatherstories/download/b0a7c062-f331-477f-9a39-6a0f63e46fc2"
+    },
+    {
+      "officeId": "PSR",
+      "startTime": "2026-08-25T04:00:00+00:00",
+      "endTime": "2026-09-14T06:59:00+00:00",
+      "updateTime": "2026-09-02T03:33:14+00:00",
+      "title": "August Climate Summary",
+      "description": "With August wrapped up we can now take a close look at how August fared. Phoenix came in 4th for the hottest August on record, meanwhile El Centro tied for the warmest, and Yuma came in as the hottest August on record. Additionally the average high temperature was 4-6.4 degrees above normal, and the average low at each site was between 7-9 degrees above normal. The only factor that was not above normal was the precipitation totals, however Phoenix was only 0.03\" below the normal. ",
+      "altText": "Graphic showing August 2026 climate summary, with three columns, one for Phoenix, Yuma, and lastly El Centro. Each column displays the average high temperature, average low temperature, mean temperature, and precipitation total with the departure from normal beside each point. ",
+      "priority": false,
+      "order": 3,
+      "download": "https://api.weather.gov/offices/PSR/weatherstories/download/5ae4e37f-f6bb-4019-9cd4-aeb82636ea68"
+    },
+    {
+      "officeId": "PSR",
+      "startTime": "2026-08-13T07:00:00+00:00",
+      "endTime": "2026-09-15T06:59:00+00:00",
+      "updateTime": "2026-09-02T03:44:21+00:00",
+      "title": "Meteorological Summer Climate Summary",
+      "description": "With August wrapped up that also concludes the meteorological summer season (June-August). Phoenix tied for second hottest, while Yuma and El Centro came in at the 2nd hottest summer on record. The average high, low and mean temperatures were all several degrees above normal, while precipitation totals were below normal.  ",
+      "altText": "Graphic showing 2026 meteorological summer climate summary, with three columns, one for Phoenix, Yuma, and lastly El Centro. Each column displays the average high temperature, average low temperature, mean temperature, and precipitation total with the departure from normal beside each point. ",
+      "priority": false,
+      "order": 4,
+      "download": "https://api.weather.gov/offices/PSR/weatherstories/download/642a0de1-9862-41a6-8ad7-0865e6ed9058"
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+radar/spgds.json is trimmed. Rule: keep the envelope, keep the first 2 elements of '@graph', keep any later element introducing a key path the kept ones lack, drop the rest.
+Captured 8 elements, kept 2, dropped 6.

@@ -1,0 +1,201 @@
+{
+  "@context": [
+    "https://geojson.org/geojson-ld/geojson-context.jsonld",
+    {
+      "@version": "1.1",
+      "wmoUnit": "https://codes.wmo.int/common/unit/",
+      "nwsUnit": "https://api.weather.gov/ontology/unit/"
+    }
+  ],
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "id": "https://api.weather.gov/radar/stations/TEWR",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.27,
+          40.593
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/radar/stations/TEWR",
+        "@type": "wx:RadarStation",
+        "id": "TEWR",
+        "name": "Newark",
+        "stationType": "TDWR",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 41.45278
+        },
+        "timeZone": "GMT",
+        "latency": {
+          "current": {
+            "unitCode": "nwsUnit:s",
+            "value": 0.135381
+          },
+          "average": {
+            "unitCode": "nwsUnit:s",
+            "value": 0.08
+          },
+          "max": {
+            "unitCode": "nwsUnit:s",
+            "value": 1
+          },
+          "levelTwoLastReceivedTime": "2026-09-03T18:56:58+00:00",
+          "maxLatencyTime": "2026-09-03T18:00:46+00:00",
+          "reportingHost": "rdss",
+          "host": "ldm4"
+        },
+        "rda": {
+          "timestamp": "2026-09-03T18:55:18+00:00",
+          "reportingHost": "rdss",
+          "properties": {
+            "resolutionVersion": null,
+            "nl2Path": "Default",
+            "volumeCoveragePattern": "L90",
+            "buildNumber": 2,
+            "alarmSummary": "No Alarms",
+            "operabilityStatus": "RDA - On-line",
+            "status": "Operate",
+            "controlStatus": "Local Only",
+            "mode": "Operational"
+          }
+        }
+      }
+    },
+    {
+      "id": "https://api.weather.gov/radar/stations/KLNX",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -100.57621,
+          41.95794
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/radar/stations/KLNX",
+        "@type": "wx:RadarStation",
+        "id": "KLNX",
+        "name": "North Platte",
+        "stationType": "WSR-88D",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 919
+        },
+        "timeZone": "GMT",
+        "latency": {
+          "current": {
+            "unitCode": "nwsUnit:s",
+            "value": 0.164335
+          },
+          "average": {
+            "unitCode": "nwsUnit:s",
+            "value": 0.24
+          },
+          "max": {
+            "unitCode": "nwsUnit:s",
+            "value": 11
+          },
+          "levelTwoLastReceivedTime": "2026-09-03T18:56:55+00:00",
+          "maxLatencyTime": "2026-09-03T18:01:12+00:00",
+          "reportingHost": "rdss",
+          "host": "ldm4"
+        },
+        "rda": {
+          "timestamp": "2026-09-03T18:55:50+00:00",
+          "reportingHost": "tdss",
+          "properties": {
+            "resolutionVersion": 6,
+            "nl2Path": "Default",
+            "volumeCoveragePattern": "R212",
+            "controlStatus": "RPG (Remote) Only",
+            "buildNumber": 24.1,
+            "alarmSummary": "No Alarms",
+            "mode": "Operational",
+            "generatorState": "Utility PWR Available",
+            "superResolutionStatus": "Enabled",
+            "operabilityStatus": "RDA - On-line",
+            "status": "Operate",
+            "averageTransmitterPower": {
+              "unitCode": "wmoUnit:W",
+              "value": 807
+            },
+            "reflectivityCalibrationCorrection": {
+              "unitCode": "wmoUnit:dB",
+              "value": -0.2
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "https://api.weather.gov/radar/stations/KGWX",
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -88.32919,
+          33.89691
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/radar/stations/KGWX",
+        "@type": "wx:RadarStation",
+        "id": "KGWX",
+        "name": "Columbus AFB",
+        "stationType": "WSR-88D",
+        "elevation": {
+          "unitCode": "wmoUnit:m",
+          "value": 155
+        },
+        "timeZone": "GMT",
+        "latency": {
+          "current": {
+            "unitCode": "nwsUnit:s",
+            "value": 0.269631
+          },
+          "average": {
+            "unitCode": "nwsUnit:s",
+            "value": 0.3
+          },
+          "max": {
+            "unitCode": "nwsUnit:s",
+            "value": 4
+          },
+          "levelTwoLastReceivedTime": "2026-09-03T18:56:59+00:00",
+          "maxLatencyTime": "2026-09-03T18:28:00+00:00",
+          "reportingHost": "rdss",
+          "host": "ldm4"
+        },
+        "rda": {
+          "timestamp": "2026-09-03T18:55:50+00:00",
+          "reportingHost": "tdss",
+          "properties": {
+            "resolutionVersion": 6,
+            "nl2Path": "Default",
+            "volumeCoveragePattern": "R212",
+            "controlStatus": "RPG (Remote) Only",
+            "buildNumber": 24.1,
+            "alarmSummary": "No Alarms",
+            "mode": "Operational",
+            "generatorState": "Utility PWR Available",
+            "superResolutionStatus": "Enabled",
+            "operabilityStatus": "RDA - On-line",
+            "status": "Operate",
+            "averageTransmitterPower": {
+              "unitCode": "wmoUnit:W",
+              "value": 1559
+            },
+            "reflectivityCalibrationCorrection": {
+              "unitCode": "wmoUnit:dB",
+              "value": 0.04
+            }
+          }
+        }
+      }
+    }
+  ]
+}

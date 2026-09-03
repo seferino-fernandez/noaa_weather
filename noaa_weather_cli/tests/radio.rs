@@ -1,35 +1,29 @@
-use assert_cmd::cargo::*;
-use assert_cmd::prelude::*;
-use std::process::{Command, Output};
+//! The `radio` family, end to end.
 
-fn run(args: &[&str]) -> Output {
-    Command::new(cargo_bin!("noaa-weather"))
-        .args(args)
-        .output()
-        .expect("run noaa-weather")
+mod common;
+
+use common::fixtures::{JSON_LD, RADIO_TRANSMITTERS};
+use common::noaa_weather;
+use common::runner::{family, hermetic, live, run_against, stderr};
+use wiremock::matchers::{method, path};
+use wiremock::{Mock, MockServer, ResponseTemplate};
+
+#[tokio::test]
+async fn every_radio_invocation_asks_for_the_path_and_query_the_table_records() {
+    hermetic(family("radio")).await;
 }
 
 #[test]
-fn test_radio_station_success() {
-    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
-    cmd.arg("radio");
-    cmd.arg("station");
-    cmd.arg("KEC94");
-    cmd.assert().success();
-}
-
-#[test]
-fn test_radio_point_success() {
-    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
-    cmd.args(["radio", "point", "33.4484,-112.0740"]);
-    cmd.assert().success();
+fn test_radio_live_noaa_answers_every_tabled_invocation() {
+    live(family("radio"));
 }
 
 #[test]
 fn test_radio_station_rejects_malformed_call_sign() {
-    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
-    cmd.args(["radio", "station", "KE C94"]);
-    let output = cmd.output().unwrap();
+    let output = noaa_weather()
+        .args(["radio", "station", "KE C94"])
+        .output()
+        .unwrap();
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert_eq!(output.status.code(), Some(2), "{stderr}");
     assert!(stderr.contains("invalid call sign"), "{stderr}");
@@ -37,82 +31,80 @@ fn test_radio_station_rejects_malformed_call_sign() {
 
 #[test]
 fn test_radio_station_failure_missing_arg() {
-    let mut cmd = Command::new(cargo_bin!("noaa-weather"));
-    cmd.arg("radio");
-    cmd.arg("station");
-    cmd.assert().failure();
+    let output = noaa_weather().args(["radio", "station"]).output().unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(
+        stderr.contains("required arguments were not provided"),
+        "{stderr}"
+    );
 }
 
-#[test]
-fn test_radio_transmitters_support_table_json_and_cursor() {
-    let table = run(&["radio", "transmitters"]);
-    assert!(
-        table.status.success(),
-        "{}",
-        String::from_utf8_lossy(&table.stderr)
-    );
+/// The transmitter listing renders a table and JSON off one response.
+#[tokio::test]
+async fn test_radio_transmitters_support_table_and_json() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/radio"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(RADIO_TRANSMITTERS, JSON_LD))
+        .mount(&server)
+        .await;
+
+    let table = run_against(&server, &["radio", "transmitters"]).await;
+    assert_eq!(table.status.code(), Some(0), "{}", stderr(&table));
     assert!(String::from_utf8_lossy(&table.stdout).contains("Call Sign"));
 
-    let json = run(&["radio", "transmitters", "--json"]);
-    assert!(
-        json.status.success(),
-        "{}",
-        String::from_utf8_lossy(&json.stderr)
-    );
+    let json = run_against(&server, &["radio", "transmitters", "--json"]).await;
+    assert_eq!(json.status.code(), Some(0), "{}", stderr(&json));
     let value: serde_json::Value = serde_json::from_slice(&json.stdout).unwrap();
     let transmitters = value["@graph"].as_array().expect("transmitter graph");
-    assert!(transmitters.is_empty() || transmitters[0]["callSign"].is_string());
-
-    if let Some(next) = value["pagination"]["next"].as_str()
-        && let Some(cursor) = next.split("cursor=").nth(1)
-    {
-        let page = run(&["radio", "transmitters", "--cursor", cursor, "--json"]);
-        assert!(
-            page.status.success(),
-            "{}",
-            String::from_utf8_lossy(&page.stderr)
-        );
-        let value: serde_json::Value = serde_json::from_slice(&page.stdout).unwrap();
-        assert!(value["@graph"].is_array());
-    }
+    let first = transmitters
+        .first()
+        .expect("the transmitter fixture carries at least one entry");
+    assert!(first["callSign"].is_string(), "{first}");
 }
 
+/// A cursor NOAA published has to be usable as the next page's argument.
+///
+/// The value comes out of the previous page rather than the table, because a
+/// cursor encodes an offset into a list that changes.
 #[test]
-fn test_radio_transmitter_supports_table_and_json() {
-    let table = run(&["radio", "transmitter", "KEC94"]);
-    assert!(
-        table.status.success(),
-        "{}",
-        String::from_utf8_lossy(&table.stderr)
+fn test_radio_transmitters_follow_a_live_cursor() {
+    let first = noaa_weather()
+        .args(["radio", "transmitters", "--json"])
+        .output()
+        .expect("the built binary must be runnable");
+    assert_eq!(
+        first.status.code(),
+        Some(0),
+        "`radio transmitters --json` failed: {}",
+        String::from_utf8_lossy(&first.stderr)
     );
-    assert!(String::from_utf8_lossy(&table.stdout).contains("KEC94"));
+    let page: serde_json::Value = serde_json::from_slice(&first.stdout).unwrap();
 
-    let json = run(&["radio", "transmitter", "KEC94", "--json"]);
-    assert!(
-        json.status.success(),
-        "{}",
-        String::from_utf8_lossy(&json.stderr)
-    );
-    let value: serde_json::Value = serde_json::from_slice(&json.stdout).unwrap();
-    assert_eq!(value["callSign"], "KEC94");
-}
+    let next = page["pagination"]["next"].as_str().unwrap_or_else(|| {
+        panic!("NOAA stopped publishing a `pagination.next` for `/radio`: {page}")
+    });
+    let cursor = next
+        .split("cursor=")
+        .nth(1)
+        .unwrap_or_else(|| panic!("`pagination.next` carries no cursor parameter: {next}"));
 
-#[test]
-fn test_radio_county_zone_supports_table_and_json() {
-    let table = run(&["radio", "zone", "AZC013"]);
-    assert!(
-        table.status.success(),
-        "{}",
-        String::from_utf8_lossy(&table.stderr)
+    let second = noaa_weather()
+        .args(["radio", "transmitters", "--cursor", cursor, "--json"])
+        .output()
+        .expect("the built binary must be runnable");
+    assert_eq!(
+        second.status.code(),
+        Some(0),
+        "`radio transmitters --cursor {cursor}` failed: {}",
+        String::from_utf8_lossy(&second.stderr)
     );
-    assert!(String::from_utf8_lossy(&table.stdout).contains("Call Sign"));
-
-    let json = run(&["radio", "zone", "AZC013", "--json"]);
+    let page: serde_json::Value = serde_json::from_slice(&second.stdout).unwrap();
     assert!(
-        json.status.success(),
-        "{}",
-        String::from_utf8_lossy(&json.stderr)
+        page["@graph"]
+            .as_array()
+            .is_some_and(|page| !page.is_empty()),
+        "the cursor NOAA published led to an empty page: {page}"
     );
-    let value: serde_json::Value = serde_json::from_slice(&json.stdout).unwrap();
-    assert!(value["@graph"].is_array());
 }

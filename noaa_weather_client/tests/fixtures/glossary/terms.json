@@ -1,0 +1,25 @@
+{
+  "@context": [],
+  "glossary": [
+    {
+      "term": "1-2-3 Rule",
+      "definition": "A means of avoiding winds associated with a tropical cyclone by taking into account the forecast track error of the National Weather Service over a 10 year period which is approximately 100 nm in 24 hours, 200 nm for 48 hours and 300 nm in 72 hours. The forecast track error is added to the 34 knot wind radii to compute the danger area. The wind radii may be found within Tropical Cyclone Forecast Advisory (TCM) forecasts. "
+    },
+    {
+      "term": "100-year Flood",
+      "definition": "A statistic that indicates the magnitude of flood which can be expected to occur on average with a frequency of once every 100 years at a given\r\npoint or reach on a river. The 100-year flood is usually developed from a statistical distribution that is based on historical floods.\r\nThis is also called a base flood."
+    },
+    {
+      "term": "100-year Flood Plain",
+      "definition": "The flood plain that would be inundated in the event of a 100-year flood."
+    },
+    {
+      "term": "500 hPa",
+      "definition": "Pressure surface (geopotential height) in the troposphere equivalent to about 18,000 feet above sea level. Level of the atmosphere at which half the mass of the atmosphere lies above and half below, as measured in pressure units. This area is important for understanding surface weather, upper air storms tend to be steered in the direction of the winds at this level and are highly correlated with surface weather."
+    },
+    {
+      "term": "500 mb",
+      "definition": "Pressure surface (geopotential height) in the troposphere equivalent to about 18,000 feet above sea level. Level of the atmosphere at which half the mass of the atmosphere lies above and half below, as measured in pressure units. This area is important for understanding surface weather, upper air storms tend to be steered in the direction of the winds at this level and are highly correlated with surface weather."
+    }
+  ]
+}

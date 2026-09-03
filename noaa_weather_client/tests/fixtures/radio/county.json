@@ -1,0 +1,127 @@
+{
+  "@context": {
+    "@version": "1.1"
+  },
+  "@graph": [
+    {
+      "@id": "https://api.weather.gov/radio/WWG41",
+      "@type": "wx:Transmitter",
+      "setId": "nwr-transmitters-20251021123534-sozfyxcq",
+      "callSign": "WWG41",
+      "transmitterFrequency": "162.425",
+      "siteName": "Payson Gila County N.",
+      "siteCity": "Mt. Ord",
+      "siteState": "AZ",
+      "sameCodes": [
+        "004007",
+        "004005",
+        "004021",
+        "004013",
+        "004025"
+      ],
+      "counties": [
+        "AZC007",
+        "AZC005",
+        "AZC021",
+        "AZC013",
+        "AZC025"
+      ]
+    },
+    {
+      "@id": "https://api.weather.gov/radio/WWG41",
+      "@type": "wx:Transmitter",
+      "setId": "nwr-transmitters-20251021123534-sozfyxcq",
+      "callSign": "WWG41",
+      "transmitterFrequency": "162.425",
+      "siteName": "Payson Gila County N.",
+      "siteCity": "Mt. Ord",
+      "siteState": "AZ",
+      "sameCodes": [
+        "004007",
+        "004005",
+        "004021",
+        "004013",
+        "004025"
+      ],
+      "counties": [
+        "AZC007",
+        "AZC005",
+        "AZC021",
+        "AZC013",
+        "AZC025"
+      ]
+    },
+    {
+      "@id": "https://api.weather.gov/radio/WWG41",
+      "@type": "wx:Transmitter",
+      "setId": "nwr-transmitters-20251021123534-sozfyxcq",
+      "callSign": "WWG41",
+      "transmitterFrequency": "162.425",
+      "siteName": "Payson Gila County N.",
+      "siteCity": "Mt. Ord",
+      "siteState": "AZ",
+      "sameCodes": [
+        "004007",
+        "004005",
+        "004021",
+        "004013",
+        "004025"
+      ],
+      "counties": [
+        "AZC007",
+        "AZC005",
+        "AZC021",
+        "AZC013",
+        "AZC025"
+      ]
+    },
+    {
+      "@id": "https://api.weather.gov/radio/WWG41",
+      "@type": "wx:Transmitter",
+      "setId": "nwr-transmitters-20251021123534-sozfyxcq",
+      "callSign": "WWG41",
+      "transmitterFrequency": "162.425",
+      "siteName": "Payson Gila County N.",
+      "siteCity": "Mt. Ord",
+      "siteState": "AZ",
+      "sameCodes": [
+        "004007",
+        "004005",
+        "004021",
+        "004013",
+        "004025"
+      ],
+      "counties": [
+        "AZC007",
+        "AZC005",
+        "AZC021",
+        "AZC013",
+        "AZC025"
+      ]
+    },
+    {
+      "@id": "https://api.weather.gov/radio/WWG41",
+      "@type": "wx:Transmitter",
+      "setId": "nwr-transmitters-20251021123534-sozfyxcq",
+      "callSign": "WWG41",
+      "transmitterFrequency": "162.425",
+      "siteName": "Payson Gila County N.",
+      "siteCity": "Mt. Ord",
+      "siteState": "AZ",
+      "sameCodes": [
+        "004007",
+        "004005",
+        "004021",
+        "004013",
+        "004025"
+      ],
+      "counties": [
+        "AZC007",
+        "AZC005",
+        "AZC021",
+        "AZC013",
+        "AZC025"
+      ]
+    }
+  ]
+}

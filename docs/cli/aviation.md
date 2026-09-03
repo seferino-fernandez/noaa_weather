@@ -1,6 +1,6 @@
 # Aviation
 
-CWSU and ATSU identifiers are validated before any request is made (3 to 4 and exactly 4 letters or digits respectively); a malformed value is a usage error (exit code 2).
+CWSU and ATSU identifiers are validated before any request is made (3 to 4 letters or digits); a malformed value is a usage error (exit code 2).
 
 ## Get a specific Center Weather Advisory (CWA)
 

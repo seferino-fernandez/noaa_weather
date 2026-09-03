@@ -1,0 +1,2 @@
+radar/stations.json is trimmed. Rule: keep the envelope, keep the first 3 elements of 'features', keep any later element introducing a key path the kept ones lack, drop the rest.
+Captured 208 elements, kept 3, dropped 205.

@@ -132,9 +132,15 @@ pub(crate) mod schema_tests {
             &["ZAB", "zab", "KZAB"],
             &["", "ZA", "ZABCD", "Z-B"],
         );
+        // `KKC` was in the reject list while the rule read "exactly 4".
+        // NOAA's `ATSUIdentifier` is `^[A-Z]{3,4}$` and it issues SIGMETs
+        // from ANC, FAI, HNL and JNU, so three characters have to be
+        // accepted. `K1C2` stays accepted: the parser is deliberately one
+        // notch wider than NOAA's character class, so a digit reaches NOAA
+        // and is refused there rather than here.
         assert_pattern_matches_parser::<AtsuId>(
-            &["KKCI", "kkci", "K1C2"],
-            &["", "KKC", "KKCII", "KK-I"],
+            &["KKCI", "kkci", "HNL", "hnl", "K1C2"],
+            &["", "KK", "KKCII", "KK-I"],
         );
         assert_pattern_matches_parser::<CallSign>(
             &["WXK27", "wxk27", "WXK", "WXK27ABC"],
