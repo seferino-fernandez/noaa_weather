@@ -111,13 +111,14 @@ impl Summarize for FeatureCollection<Alert> {
                 .iter()
                 .map(|feature| {
                     let alert = &feature.properties;
-                    let who_and_what = format!(
-                        "{}\n{}",
-                        alert.sender_name,
-                        alert.headline.as_deref().unwrap_or("N/A")
-                    );
+                    // Two independent statements, not one sentence: who issued
+                    // the alert, then what they said.
+                    let who_and_what = Value::lines(vec![
+                        Value::text(Some(&alert.sender_name)),
+                        Value::text(alert.headline.as_deref()),
+                    ]);
                     vec![
-                        Value::text(Some(&who_and_what)).into(),
+                        who_and_what.into(),
                         Value::text(Some(&alert.area_desc)).into(),
                         Value::interval(alert.effective, Some(alert.expires)).into(),
                         Cell::new(

@@ -15,6 +15,7 @@ use wiremock::{
 
 use super::binary::Sealed;
 use super::presentation::{DefaultPresentation, DefaultPresenter, PresentationError};
+use super::render::{ColorMode, TimeZoneChoice};
 use super::sink::{DestinationAdapter, MediaKind, SinkTransaction};
 use super::{BinaryPresentation, Format, Output, OutputArgs, PresentationDocument};
 
@@ -142,7 +143,11 @@ async fn default_table_is_written_by_lines_with_one_final_newline() {
 #[test]
 fn json_configuration_does_not_construct_a_default_presenter() {
     let output = Output::configured(OutputArgs {
+        format: Format::Default,
         json: true,
+        color: ColorMode::Never,
+        width: None,
+        time_zone: TimeZoneChoice::Source,
         output: None,
     });
 
@@ -385,7 +390,11 @@ async fn malformed_radar_timestamp_fails_only_default_presentation() {
 async fn binary_policy_is_validated_before_polling() {
     let polled = Cell::new(false);
     let output = Output::configured(OutputArgs {
+        format: Format::Default,
         json: false,
+        color: ColorMode::Never,
+        width: None,
+        time_zone: TimeZoneChoice::Source,
         output: None,
     });
 
@@ -405,7 +414,11 @@ async fn binary_policy_is_validated_before_polling() {
 async fn json_rejection_precedes_binary_destination_validation() {
     let polled = Cell::new(false);
     let output = Output::configured(OutputArgs {
+        format: Format::Default,
         json: true,
+        color: ColorMode::Never,
+        width: None,
+        time_zone: TimeZoneChoice::Source,
         output: None,
     });
 
@@ -515,7 +528,11 @@ async fn serialization_failure_leaves_existing_file_unchanged() {
     let path = directory.path().join("output.json");
     std::fs::write(&path, "existing\n").unwrap();
     let output = Output::configured(OutputArgs {
+        format: Format::Default,
         json: true,
+        color: ColorMode::Never,
+        width: None,
+        time_zone: TimeZoneChoice::Source,
         output: Some(path.clone()),
     });
 
@@ -535,7 +552,11 @@ async fn missing_parent_is_rejected_before_polling() {
     let path = directory.path().join("missing").join("output.txt");
     let polled = Cell::new(false);
     let output = Output::configured(OutputArgs {
+        format: Format::Default,
         json: false,
+        color: ColorMode::Never,
+        width: None,
+        time_zone: TimeZoneChoice::Source,
         output: Some(path),
     });
 
@@ -663,7 +684,11 @@ impl SinkTransaction for FailingTransaction {
 #[test]
 fn dash_selects_explicit_stdout_but_binary_still_requires_a_file() {
     let output = Output::configured(OutputArgs {
+        format: Format::Default,
         json: false,
+        color: ColorMode::Never,
+        width: None,
+        time_zone: TimeZoneChoice::Source,
         output: Some(Path::new("-").to_path_buf()),
     });
     let error = output.destination.validate(MediaKind::Binary).unwrap_err();

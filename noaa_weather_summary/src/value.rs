@@ -95,6 +95,15 @@ impl Value {
             Self::List(values)
         }
     }
+
+    /// Several values shown one per line. An empty list is [`Value::Missing`].
+    pub fn lines(values: Vec<Value>) -> Self {
+        if values.is_empty() {
+            Self::Missing
+        } else {
+            Self::Lines(values)
+        }
+    }
 }
 
 #[cfg(test)]
@@ -199,6 +208,15 @@ mod tests {
         assert_eq!(
             Value::list(vec![Value::count(1)]),
             Value::List(vec![Value::Count(1)])
+        );
+    }
+
+    #[test]
+    fn empty_lines_are_missing() {
+        assert_eq!(Value::lines(Vec::new()), Value::Missing);
+        assert_eq!(
+            Value::lines(vec![Value::text(Some("NWS Detroit")), Value::text(None)]),
+            Value::Lines(vec![Value::Text("NWS Detroit".to_owned()), Value::Missing])
         );
     }
 }

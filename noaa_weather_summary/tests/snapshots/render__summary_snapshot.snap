@@ -130,6 +130,14 @@ sections:
               - Identifier: MIZ044
               - Identifier: MIC163
           emphasis: None
+        - label: Issued by
+          key: senderName
+          also: []
+          value:
+            Lines:
+              - Text: NWS Detroit/Pontiac MI
+              - Missing
+          emphasis: None
   - Table:
       heading: By area
       columns:
@@ -148,8 +156,10 @@ sections:
           align: Center
       rows:
         - - value:
-              Text: MI
-            emphasis: None
+              Lines:
+                - Text: MI
+                - Text: two lines in one cell
+            emphasis: Notice
           - value:
               Count: 12
             emphasis: Danger

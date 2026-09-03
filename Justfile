@@ -7,6 +7,10 @@ test:
 	cargo nextest run
 	cargo test --doc
 
+# Run the tests that need a real terminal, and so cannot run under a harness
+test-live:
+	cargo nextest run --all-features --run-ignored all -E 'binary(color)'
+
 # Lint the code with Clippy
 lint:
     cargo clippy

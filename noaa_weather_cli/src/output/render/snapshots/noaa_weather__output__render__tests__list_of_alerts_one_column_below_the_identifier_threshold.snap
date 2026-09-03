@@ -1,0 +1,53 @@
+---
+source: noaa_weather_cli/src/output/render/tests.rs
+expression: rendered
+---
+Watches, warnings, and advisories
+5 alerts
+
+┌──────────────────────┬──────────────────────┬──────────────────────┬──────────┬──────────────────────┬──────────────────────┐
+│ Alert                ┆ Areas Affected       ┆ Effective            ┆ Severity ┆ Instructions         ┆ ID                   │
+╞══════════════════════╪══════════════════════╪══════════════════════╪══════════╪══════════════════════╪══════════════════════╡
+│ NWS Grand Rapids MI  ┆ Newaygo; Montcalm;   ┆ 2026-09-02 03:48     ┆ Moderate ┆ If outdoors,         ┆ urn:oid:2.49.0.1.840 │
+│ Special Weather      ┆ Kent                 ┆ -04:00 – 2026-09-02  ┆          ┆ consider seeking     ┆ .0.af7e0442df8bfed79 │
+│ Statement issued     ┆                      ┆ 04:45 -04:00         ┆          ┆ shelter inside a     ┆ 53cb5cae6e4661304cc1 │
+│ September 2 at       ┆                      ┆                      ┆          ┆ building.            ┆ f49.001.1            │
+│ 3:48AM EDT by NWS    ┆                      ┆                      ┆          ┆                      ┆                      │
+│ Grand Rapids MI      ┆                      ┆                      ┆          ┆                      ┆                      │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ NWS                  ┆ Montgomery           ┆ 2026-09-02 07:47     ┆ Unknown  ┆ Monitoring message   ┆ urn:oid:2.49.0.1.840 │
+│ N/A                  ┆                      ┆ +00:00 – 2026-09-02  ┆          ┆ only. Please         ┆ .0-KEEPALIVE-51140   │
+│                      ┆                      ┆ 07:57 +00:00         ┆          ┆ disregard.           ┆                      │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ NWS                  ┆ Fond Du Lac          ┆ 2026-09-02 02:46     ┆ Moderate ┆ If outdoors,         ┆ urn:oid:2.49.0.1.840 │
+│ Milwaukee/Sullivan   ┆                      ┆ -05:00 – 2026-09-02  ┆          ┆ consider seeking     ┆ .0.eac0148b2838ef4c3 │
+│ WI                   ┆                      ┆ 03:30 -05:00         ┆          ┆ shelter inside a     ┆ a0fdb45fc4ca6d60a01e │
+│ Special Weather      ┆                      ┆                      ┆          ┆ building.            ┆ a27.001.1            │
+│ Statement issued     ┆                      ┆                      ┆          ┆                      ┆                      │
+│ September 2 at       ┆                      ┆                      ┆          ┆ Frequent cloud to    ┆                      │
+│ 2:46AM CDT by NWS    ┆                      ┆                      ┆          ┆ ground lightning is  ┆                      │
+│ Milwaukee/Sullivan   ┆                      ┆                      ┆          ┆ occurring with this  ┆                      │
+│ WI                   ┆                      ┆                      ┆          ┆ storm.               ┆                      │
+│                      ┆                      ┆                      ┆          ┆ Lightning can strike ┆                      │
+│                      ┆                      ┆                      ┆          ┆ 10 miles away from a ┆                      │
+│                      ┆                      ┆                      ┆          ┆ thunderstorm. Seek a ┆                      │
+│                      ┆                      ┆                      ┆          ┆ safe                 ┆                      │
+│                      ┆                      ┆                      ┆          ┆ shelter inside a     ┆                      │
+│                      ┆                      ┆                      ┆          ┆ building or vehicle. ┆                      │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ NWS La Crosse WI     ┆ Buffalo, WI          ┆ 2026-09-02 02:42     ┆ Minor    ┆ N/A                  ┆ urn:oid:2.49.0.1.840 │
+│ The Severe           ┆                      ┆ -05:00 – 2026-09-02  ┆          ┆                      ┆ .0.d0de060466dc38730 │
+│ Thunderstorm Warning ┆                      ┆ 02:57 -05:00         ┆          ┆                      ┆ 7cc0a44dbed836b1d20c │
+│ has been cancelled.  ┆                      ┆                      ┆          ┆                      ┆ 5e5.001.1            │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ NWS La Crosse WI     ┆ Jackson, WI; La      ┆ 2026-09-02 02:42     ┆ Severe   ┆ For your protection  ┆ urn:oid:2.49.0.1.840 │
+│ Severe Thunderstorm  ┆ Crosse, WI; Monroe,  ┆ -05:00 – 2026-09-02  ┆          ┆ move to an interior  ┆ .0.d0de060466dc38730 │
+│ Warning issued       ┆ WI; Trempealeau, WI  ┆ 03:15 -05:00         ┆          ┆ room on the lowest   ┆ 7cc0a44dbed836b1d20c │
+│ September 2 at       ┆                      ┆                      ┆          ┆ floor of a           ┆ 5e5.002.1            │
+│ 2:42AM CDT until     ┆                      ┆                      ┆          ┆ building.            ┆                      │
+│ September 2 at       ┆                      ┆                      ┆          ┆                      ┆                      │
+│ 3:15AM CDT by NWS La ┆                      ┆                      ┆          ┆                      ┆                      │
+│ Crosse WI            ┆                      ┆                      ┆          ┆                      ┆                      │
+└──────────────────────┴──────────────────────┴──────────────────────┴──────────┴──────────────────────┴──────────────────────┘
+
+note: More alerts available

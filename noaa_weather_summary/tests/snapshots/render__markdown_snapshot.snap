@@ -23,12 +23,14 @@ _Severe Thunderstorm Warning issued for Wayne County until 7:00 AM EDT_
 - **Replaced:** No
 - **Location:** 42.3314, -83.0458
 - **Affected zones:** MIZ044, MIC163
+- **Issued by:** NWS Detroit/Pontiac MI
+N/A
 
 ### By area
 
 | Area | Alerts | Marine |
 | :--- | ---: | :---: |
-| MI | **12** | Yes |
+| MI<br>two lines in one cell | **12** | Yes |
 | OH \| WV | 3 | No |
 | N/A | Invalid | N/A |
 

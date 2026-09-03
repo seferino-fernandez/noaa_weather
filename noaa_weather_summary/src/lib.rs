@@ -314,8 +314,13 @@ pub enum Value {
         /// Longitude in decimal degrees.
         lon: f64,
     },
-    /// Several values shown together.
+    /// Several values shown together as one enumeration.
     List(Vec<Value>),
+    /// Several values shown one per line, each independently emphasizable.
+    ///
+    /// Unlike [`Value::List`], which reads as a comma-joined enumeration,
+    /// these are separate statements that happen to share a cell.
+    Lines(Vec<Value>),
 }
 
 /// How urgently a summary or fact should read, from calm to alarming.

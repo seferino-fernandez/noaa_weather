@@ -5,13 +5,14 @@ use std::error::Error as StdError;
 use std::fmt;
 
 use jiff::tz::TimeZone;
+use noaa_weather_client::models::{ActiveAlertCounts, Alert, AlertEventTypes};
+use noaa_weather_client::{Feature, FeatureCollection};
 use serde::Serialize;
 
 use super::PresentationDocument;
 
 mod values;
 
-pub mod alerts;
 pub mod aviation;
 pub mod glossary;
 pub mod gridpoints;
@@ -48,6 +49,40 @@ pub(crate) trait DefaultPresentation: Serialize {
         presenter: &DefaultPresenter,
     ) -> Result<PresentationDocument, PresentationError>;
 }
+
+/// Declares that these types present themselves through their [`Summarize`]
+/// impls, so the summary crate decides meaning and `output::render` decides
+/// appearance.
+///
+/// A blanket impl is impossible: [`Summarize`] is foreign, [`DefaultPresentation`]
+/// is local, and the un-ported families still have their own impls. This list
+/// is therefore the answer to "which families are ported", and it grows one
+/// line per family.
+///
+/// [`Summarize`]: noaa_weather_summary::Summarize
+macro_rules! summarized {
+    ($($response:ty),+ $(,)?) => {
+        $(
+            impl DefaultPresentation for $response {
+                fn present_default(
+                    &self,
+                    _presenter: &DefaultPresenter,
+                ) -> Result<PresentationDocument, PresentationError> {
+                    Ok(PresentationDocument::Summary(Box::new(
+                        noaa_weather_summary::Summarize::summarize(self),
+                    )))
+                }
+            }
+        )+
+    };
+}
+
+summarized!(
+    Feature<Alert>,
+    FeatureCollection<Alert>,
+    ActiveAlertCounts,
+    AlertEventTypes,
+);
 
 /// A failure to construct a complete default presentation document.
 #[derive(Debug)]

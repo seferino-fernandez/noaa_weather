@@ -23,12 +23,14 @@ Payload: 1.46 MiB
 Replaced: No
 Location: 42.3314, -83.0458
 Affected zones: MIZ044, MIC163
+Issued by: NWS Detroit/Pontiac MI
+N/A
 
 By area
-Area      Alerts  Marine
-MI            12   Yes
-OH | WV        3    No
-N/A      Invalid   N/A
+Area                        Alerts  Marine
+MI; two lines in one cell       12   Yes
+OH | WV                          3    No
+N/A                        Invalid   N/A
 
 Description
 At 348 AM EDT, a severe thunderstorm was located over Detroit, moving east at 40 mph.
