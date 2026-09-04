@@ -1,10 +1,7 @@
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{Attribute, Cell, CellAlignment, ContentArrangement, Table};
-use noaa_weather_client::models::{
-    MetarPhenomenon, Observation, ObservationCloudLayersInner, Zone, ZoneForecast, ZoneState,
-};
+use noaa_weather_client::models::{Zone, ZoneForecast, ZoneState};
 use noaa_weather_client::{Feature, FeatureCollection};
-use serde::Serialize;
 
 use crate::output::PresentationDocument;
 use crate::output::presentation::{DefaultPresentation, DefaultPresenter, PresentationError};
@@ -239,146 +236,6 @@ fn create_zone_row(zone: &Zone, presenter: &DefaultPresenter) -> Vec<Cell> {
     ]
 }
 
-/// Formats cloud layers from an observation.
-fn format_observation_clouds(
-    cloud_layers_field: Option<&Option<Vec<ObservationCloudLayersInner>>>,
-    presenter: &DefaultPresenter,
-) -> String {
-    match cloud_layers_field {
-        Some(Some(layers)) if !layers.is_empty() => layers
-            .iter()
-            .map(|layer| {
-                let amount = &layer.amount;
-                let base_str = presenter.value_unit(Some(layer.base.as_ref()));
-                format!("{amount} at {base_str}")
-            })
-            .collect::<Vec<String>>()
-            .join("\n"),
-        Some(Some(_)) => "Clear".to_owned(),
-        Some(None) => "N/A (not reported)".to_owned(),
-        None => presenter.missing(),
-    }
-}
-
-/// Formats present weather phenomena.
-fn format_observation_present_weather(weather_opt: Option<&Vec<MetarPhenomenon>>) -> String {
-    match weather_opt {
-        Some(phenomena) if !phenomena.is_empty() => phenomena
-            .iter()
-            .map(|phenomenon| phenomenon.raw_string.clone())
-            .filter(|raw_string| !raw_string.is_empty())
-            .collect::<Vec<String>>()
-            .join(" "),
-        _ => String::new(),
-    }
-}
-
-/// Creates a table listing the latest observations from stations within a zone.
-///
-/// Each row represents a single observation from a station.
-///
-/// # Arguments
-/// * `observations_features`: A slice of observation features from a feature collection.
-///
-/// # Returns
-/// A `Result<Table>` which is the `comfy_table::Table` ready for display, or an error.
-fn create_zone_observations_table(
-    observations_features: &[Feature<Observation>],
-    presenter: &DefaultPresenter,
-) -> Result<Table, PresentationError> {
-    let mut table = Table::new();
-    table.load_style(UTF8_FULL);
-    table.set_content_arrangement(ContentArrangement::Dynamic);
-
-    table.set_header(vec![
-        Cell::new("Station")
-            .add_attribute(Attribute::Bold)
-            .set_alignment(CellAlignment::Center),
-        Cell::new("Time")
-            .add_attribute(Attribute::Bold)
-            .set_alignment(CellAlignment::Center),
-        Cell::new("Weather")
-            .add_attribute(Attribute::Bold)
-            .set_alignment(CellAlignment::Center),
-        Cell::new("Temp.")
-            .add_attribute(Attribute::Bold)
-            .set_alignment(CellAlignment::Center),
-        Cell::new("Dewpoint")
-            .add_attribute(Attribute::Bold)
-            .set_alignment(CellAlignment::Center),
-        Cell::new("Wind")
-            .add_attribute(Attribute::Bold)
-            .set_alignment(CellAlignment::Center),
-        Cell::new("Sea Level Pressure")
-            .add_attribute(Attribute::Bold)
-            .set_alignment(CellAlignment::Center),
-        Cell::new("Visibility")
-            .add_attribute(Attribute::Bold)
-            .set_alignment(CellAlignment::Center),
-        Cell::new("Clouds")
-            .add_attribute(Attribute::Bold)
-            .set_alignment(CellAlignment::Center),
-    ]);
-
-    if observations_features.is_empty() {
-        table.add_row(vec![
-            Cell::new("No observations available for this zone.")
-                .set_alignment(CellAlignment::Center)
-                .add_attribute(Attribute::Italic),
-        ]);
-        return Ok(table);
-    }
-
-    for (index, obs_feature) in observations_features.iter().enumerate() {
-        let properties: &Observation = &obs_feature.properties;
-
-        let station_name = presenter.text(properties.station_name.as_deref());
-        let station_id = presenter.text(properties.station_id.as_deref());
-        let station_name_code = format!("{station_name}\n({station_id})");
-        let timestamp = presenter.timestamp(
-            format!("zone observations.features[{index}].properties.timestamp"),
-            properties.timestamp.as_deref(),
-        )?;
-
-        let temp = presenter.value_unit(properties.temperature.as_ref());
-        let dewpoint = presenter.value_unit(properties.dewpoint.as_ref());
-
-        let wind = presenter.observation_wind(
-            properties.wind_speed.as_ref(),
-            properties.wind_direction.as_ref(),
-        );
-
-        // Prioritize Sea Level Pressure, fallback to Barometric if SLP is not available
-        let pressure = presenter.observation_pressure(
-            properties.sea_level_pressure.as_ref(),
-            properties.barometric_pressure.as_ref(),
-        );
-
-        let visibility = presenter.value_unit(properties.visibility.as_ref());
-        let clouds = format_observation_clouds(properties.cloud_layers.as_ref(), presenter);
-
-        // For weather description, use textDescription. If empty, use formatted presentWeather.
-        let present_weather =
-            format_observation_present_weather(properties.present_weather.as_ref());
-        let weather_description =
-            presenter.observation_weather(properties.text_description.as_deref(), &present_weather);
-
-        table.add_row(vec![
-            Cell::new(station_name_code),
-            Cell::new(timestamp),
-            Cell::new(weather_description),
-            Cell::new(temp),
-            Cell::new(dewpoint),
-            Cell::new(wind),
-            Cell::new(pressure),
-            Cell::new(visibility),
-            Cell::new(clouds),
-        ]);
-    }
-
-    Ok(table)
-}
-
 impl DefaultPresentation for FeatureCollection<Zone> {
     fn present_default(
         &self,
@@ -409,21 +266,5 @@ impl DefaultPresentation for Feature<ZoneForecast> {
         Ok(PresentationDocument::table(create_zone_forecast_table(
             self, presenter,
         )))
-    }
-}
-
-#[derive(Serialize)]
-#[serde(transparent)]
-pub(crate) struct ZoneObservations(pub(crate) FeatureCollection<Observation>);
-
-impl DefaultPresentation for ZoneObservations {
-    fn present_default(
-        &self,
-        presenter: &DefaultPresenter,
-    ) -> Result<PresentationDocument, PresentationError> {
-        Ok(PresentationDocument::table(create_zone_observations_table(
-            &self.0.features,
-            presenter,
-        )?))
     }
 }

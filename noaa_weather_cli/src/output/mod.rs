@@ -23,7 +23,7 @@ use sink::{DestinationAdapter, MediaKind, StdoutDestination};
 
 use presentation::{DefaultPresentation, DefaultPresenter};
 
-pub(crate) use presentation::zones::ZoneObservations;
+pub(crate) use noaa_weather_summary::stations::ZoneObservations;
 
 /// Global command-line arguments that select successful-output behavior.
 #[derive(Args, Debug)]

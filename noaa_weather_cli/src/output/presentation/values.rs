@@ -106,29 +106,6 @@ impl DefaultPresenter {
         }
     }
 
-    pub(super) fn observation_pressure(
-        &self,
-        sea_level: Option<&ValueUnit>,
-        barometric: Option<&ValueUnit>,
-    ) -> String {
-        let first = [sea_level, barometric]
-            .into_iter()
-            .flatten()
-            .find(|value| value.value.is_some_and(f64::is_finite));
-        self.value_unit(first)
-    }
-
-    pub(super) fn observation_weather(
-        &self,
-        description: Option<&str>,
-        present_weather_summary: &str,
-    ) -> String {
-        match description.filter(|value| !value.trim().is_empty()) {
-            Some(description) => description.trim().to_owned(),
-            None => self.text(Some(present_weather_summary)),
-        }
-    }
-
     pub(super) fn radar_measurement(&self, value: Option<&RadarMeasurement>) -> String {
         let Some(measurement) = value else {
             return MISSING.to_owned();
@@ -143,23 +120,6 @@ impl DefaultPresenter {
         match measurement.unit().map(unit_code_label) {
             Some(unit) => format!("{number} {unit}"),
             None => number,
-        }
-    }
-
-    pub(super) fn observation_wind(
-        &self,
-        speed: Option<&ValueUnit>,
-        direction: Option<&ValueUnit>,
-    ) -> String {
-        let speed = self.value_unit(speed);
-        if speed == MISSING || speed == INVALID {
-            return speed;
-        }
-        let direction = self.value_unit(direction);
-        if direction == MISSING || direction == INVALID {
-            speed
-        } else {
-            format!("{speed} {direction}")
         }
     }
 

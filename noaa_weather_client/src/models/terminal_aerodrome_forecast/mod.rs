@@ -18,17 +18,32 @@ pub use error::{TafDecodeError, TafDecodeErrorKind};
 
 /// A decoded Terminal Aerodrome Forecast.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct TerminalAerodromeForecast {
     bulletin_identifier: Box<str>,
     report_metadata: ReportMetadata,
+    #[cfg_attr(feature = "schemars", schemars(with = "String"))]
     issued_at: Timestamp,
     aerodrome: Aerodrome,
     report: ForecastReport,
 }
 
 impl TerminalAerodromeForecast {
+    /// Decodes one WMO IWXXM meteorological bulletin into forecast meaning.
+    ///
+    /// The XML wire tree remains private; callers receive the same normalized
+    /// model as [`crate::apis::stations::Stations::taf`].
+    ///
+    /// # Errors
+    ///
+    /// Returns a contextual [`TafDecodeError`] when the XML is malformed or
+    /// required forecast meaning cannot be normalized.
+    pub fn from_iwxxm(bytes: &[u8]) -> Result<Self, TafDecodeError> {
+        decode::decode_iwxxm(bytes)
+    }
+
     /// Aerodrome described by this forecast.
     #[must_use]
     pub const fn aerodrome(&self) -> &Aerodrome {
@@ -88,6 +103,7 @@ impl TerminalAerodromeForecast {
 
 /// Report-level IWXXM metadata.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct ReportMetadata {
@@ -119,18 +135,21 @@ impl ReportMetadata {
 
 /// Provenance supplied when a TAC bulletin was translated to IWXXM.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct TranslationMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     source_bulletin_identifier: Option<Box<str>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
     source_bulletin_received_at: Option<Timestamp>,
     #[serde(skip_serializing_if = "Option::is_none")]
     centre_designator: Option<Box<str>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     centre_name: Option<Box<str>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
     translated_at: Option<Timestamp>,
 }
 
@@ -168,6 +187,7 @@ impl TranslationMetadata {
 
 /// IWXXM report issuance status.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum ReportStatus {
@@ -186,6 +206,7 @@ pub enum ReportStatus {
 
 /// Permitted use of an IWXXM report.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum PermissibleUsage {
@@ -211,6 +232,7 @@ pub enum PermissibleUsage {
 
 /// Why an IWXXM report is non-operational.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum PermissibleUsageReason {
@@ -227,6 +249,7 @@ pub enum PermissibleUsageReason {
 
 /// Content state of a TAF report.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
@@ -255,6 +278,7 @@ pub enum ForecastReport {
 
 /// Why a TAF contains no forecast groups.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum MissingForecastReason {
@@ -269,10 +293,13 @@ pub enum MissingForecastReason {
 
 /// Inclusive time range associated with forecast meaning.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct TimeRange {
+    #[cfg_attr(feature = "schemars", schemars(with = "String"))]
     start: Timestamp,
+    #[cfg_attr(feature = "schemars", schemars(with = "String"))]
     end: Timestamp,
 }
 
@@ -292,6 +319,7 @@ impl TimeRange {
 
 /// Aerodrome identity carried by a TAF.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct Aerodrome {
@@ -323,6 +351,7 @@ impl Aerodrome {
 
 /// Geographic point in latitude/longitude order.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct GeoPosition {
@@ -346,6 +375,7 @@ impl GeoPosition {
 
 /// Relational operator attached to a forecast measurement.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum Comparison {
@@ -364,6 +394,7 @@ pub enum Comparison {
 
 /// Prevailing horizontal visibility.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct Visibility {
@@ -387,6 +418,7 @@ impl Visibility {
 
 /// Forecast wind direction.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", content = "degrees", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum WindDirection {
@@ -398,6 +430,7 @@ pub enum WindDirection {
 
 /// Wind speed normalized to knots.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct WindSpeed {
@@ -421,6 +454,7 @@ impl WindSpeed {
 
 /// Surface-wind forecast.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct SurfaceWind {
@@ -432,6 +466,7 @@ pub struct SurfaceWind {
 
 /// Reported, omitted, or explicitly unavailable forecast meaning.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "state", content = "value", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum ForecastElement<T> {
@@ -474,6 +509,7 @@ pub type ForecastVisibility = ForecastElement<Visibility>;
 
 /// A reported value or an explicit IWXXM unavailable value.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "state", content = "value", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum ForecastValue<T> {
@@ -508,6 +544,7 @@ impl<T> ForecastValue<T> {
 
 /// Why IWXXM forecast meaning is unavailable.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum MissingReason {
@@ -528,6 +565,7 @@ pub enum MissingReason {
 
 /// Significant-weather state for one forecast group.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "state", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum ForecastWeather {
@@ -549,6 +587,7 @@ pub enum ForecastWeather {
 
 /// One exact WMO 4678 weather code and its parsed meaning.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct Weather {
@@ -594,6 +633,7 @@ impl Weather {
 
 /// Intensity of forecast weather.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum WeatherIntensity {
@@ -607,6 +647,7 @@ pub enum WeatherIntensity {
 
 /// Descriptor modifying one or more weather phenomena.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum WeatherDescriptor {
@@ -635,6 +676,7 @@ pub enum WeatherDescriptor {
 
 /// Atomic phenomenon encoded by a WMO 4678 weather code.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum WeatherPhenomenon {
@@ -691,6 +733,7 @@ pub enum WeatherPhenomenon {
 
 /// Cloud state for one forecast group.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "state", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum ForecastClouds {
@@ -717,6 +760,7 @@ pub enum ForecastClouds {
 
 /// One forecast cloud layer.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct CloudLayer {
@@ -748,6 +792,7 @@ impl CloudLayer {
 
 /// Amount of sky covered by one cloud layer.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum CloudAmount {
@@ -772,6 +817,7 @@ pub enum CloudAmount {
 
 /// Significant convective cloud type.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum CloudType {
@@ -788,6 +834,7 @@ pub enum CloudType {
 
 /// Paired maximum and minimum temperature forecast for one validity period.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct TemperatureForecast {
@@ -811,10 +858,12 @@ impl TemperatureForecast {
 
 /// One forecast temperature extremum.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct TemperatureExtreme {
     celsius: f64,
+    #[cfg_attr(feature = "schemars", schemars(with = "String"))]
     occurs_at: Timestamp,
 }
 
@@ -854,6 +903,7 @@ impl SurfaceWind {
 
 /// Meteorological conditions reported by one forecast group.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct ForecastConditions {
@@ -907,6 +957,7 @@ impl ForecastConditions {
 
 /// One base or change group in a TAF.
 #[derive(Clone, Debug, PartialEq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct ForecastGroup {
@@ -937,6 +988,7 @@ impl ForecastGroup {
 
 /// How a forecast group modifies the prevailing conditions.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum ForecastGroupKind {
@@ -960,8 +1012,4 @@ pub enum ForecastGroupKind {
         /// Original IWXXM change-indicator code.
         code: Box<str>,
     },
-}
-
-pub(crate) fn decode_iwxxm(bytes: &[u8]) -> Result<TerminalAerodromeForecast, TafDecodeError> {
-    decode::decode_iwxxm(bytes)
 }

@@ -17,8 +17,8 @@ use std::path::Path;
 use noaa_weather_client::models::radar_station::{CommandChannel, CommandChannelMode};
 use noaa_weather_client::models::{
     ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CwsuOffice, Forecast,
-    Gridpoint, Observation, ObservationStation, Point, RadarStationFeature, Sigmet, Zone,
-    ZoneForecast,
+    Gridpoint, Observation, ObservationStation, Point, RadarStationFeature, Sigmet,
+    TerminalAerodromeForecastsResponse, Zone, ZoneForecast,
 };
 use noaa_weather_client::{Feature, FeatureCollection};
 use serde::Serialize;
@@ -226,6 +226,7 @@ fn captured_responses_preserve_every_non_whitelisted_key_path() {
         ("stations/single.json", Feature<ObservationStation>),
         ("stations/observations.json", FeatureCollection<Observation>),
         ("stations/latest.json", Feature<Observation>),
+        ("stations/tafs.json", TerminalAerodromeForecastsResponse),
         ("points/point.json", Feature<Point>),
         ("gridpoints/gridpoint.json", Feature<Gridpoint>),
         ("gridpoints/forecast.json", Feature<Forecast>),

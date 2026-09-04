@@ -1,0 +1,164 @@
+---
+source: noaa_weather_summary/tests/stations.rs
+expression: "ZoneObservations(observations).summarize(&SummaryOptions::default())"
+---
+title: Zone observations
+subtitle: 2 observations
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: Station
+          key: stationId
+          also:
+            - stationName
+          align: Left
+        - title: Time
+          key: timestamp
+          also: []
+          align: Left
+        - title: Weather
+          key: textDescription
+          also:
+            - presentWeather
+          align: Left
+        - title: Temperature
+          key: temperature
+          also: []
+          align: Left
+        - title: Dewpoint
+          key: dewpoint
+          also: []
+          align: Left
+        - title: Wind
+          key: windSpeed
+          also:
+            - windDirection
+            - windGust
+          align: Left
+        - title: Pressure
+          key: seaLevelPressure
+          also:
+            - barometricPressure
+          align: Left
+        - title: Visibility
+          key: visibility
+          also: []
+          align: Left
+        - title: Clouds
+          key: cloudLayers
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Lines:
+                - Text: Wendover Airport
+                - Identifier: KENV
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-02T07:30:00+00:00"
+            emphasis: None
+          - value:
+              Text: Clear
+            emphasis: None
+          - value:
+              Quantity:
+                value: 66.2
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Quantity:
+                value: 24.8
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Lines:
+                - Quantity:
+                    value: 190
+                    unit: °
+                    precision: 0
+                - Quantity:
+                    value: 6.912133142448104
+                    unit: mph
+                    precision: 0
+                - Missing
+            emphasis: None
+          - value:
+              Quantity:
+                value: 29.89999989776841
+                unit: inHg
+                precision: 2
+            emphasis: None
+          - value:
+              Quantity:
+                value: 10
+                unit: mi
+                precision: 1
+            emphasis: None
+          - value:
+              Lines:
+                - Text: CLR
+                - Quantity:
+                    value: 12500
+                    unit: ft
+                    precision: 0
+            emphasis: None
+        - - value:
+              Lines:
+                - Text: Wendover Airport
+                - Identifier: KENV
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-02T07:25:00+00:00"
+            emphasis: None
+          - value:
+              Text: Clear
+            emphasis: None
+          - value:
+              Quantity:
+                value: 66.2
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Quantity:
+                value: 24.8
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Lines:
+                - Quantity:
+                    value: 200
+                    unit: °
+                    precision: 0
+                - Quantity:
+                    value: 5.7489262705798145
+                    unit: mph
+                    precision: 0
+                - Missing
+            emphasis: None
+          - value:
+              Quantity:
+                value: 29.89999989776841
+                unit: inHg
+                precision: 2
+            emphasis: None
+          - value:
+              Quantity:
+                value: 10
+                unit: mi
+                precision: 1
+            emphasis: None
+          - value:
+              Lines:
+                - Text: CLR
+                - Quantity:
+                    value: 12500
+                    unit: ft
+                    precision: 0
+            emphasis: None
+notes: []

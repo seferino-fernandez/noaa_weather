@@ -11,8 +11,9 @@ use crate::{Summarize, SummaryOptions};
 ///
 /// Keys are gathered from the top-level JSON object, from `properties` when it
 /// is an object (a GeoJSON `Feature`) and from every `features[].properties`
-/// object (a `FeatureCollection`). An empty result means every property is
-/// either rendered or deliberately omitted with a reason.
+/// object (a `FeatureCollection`). JSON-LD collections under `@graph` are
+/// walked the same way. An empty result means every property is either
+/// rendered or deliberately omitted with a reason.
 ///
 /// The summary is taken under [`SummaryOptions::default`] and there is no
 /// argument for anything else: which keys an impl accounts for is a property
@@ -50,6 +51,11 @@ fn property_keys(json: &Json) -> BTreeSet<String> {
             if let Some(properties) = feature.get("properties").and_then(Json::as_object) {
                 keys.extend(properties.keys().cloned());
             }
+        }
+    }
+    if let Some(graph) = object.get("@graph").and_then(Json::as_array) {
+        for item in graph.iter().filter_map(Json::as_object) {
+            keys.extend(item.keys().cloned());
         }
     }
     keys
@@ -145,5 +151,32 @@ mod tests {
             properties: serde_json::json!({ "id": "a" }),
         };
         assert_eq!(coverage_gaps(&feature), vec!["id".to_owned()]);
+    }
+
+    #[derive(Serialize)]
+    struct Graph {
+        #[serde(rename = "@graph")]
+        items: Vec<Json>,
+    }
+
+    impl Summarize for Graph {
+        fn summarize(&self, _options: &SummaryOptions) -> Summary {
+            Summary::new("Graph").push(Section::Table {
+                heading: None,
+                columns: vec![crate::Column::new("ID", Some("id"))],
+                rows: Vec::new(),
+            })
+        }
+
+        const OMITTED: &'static [(&'static str, &'static str)] =
+            &[("@graph", "each item is one row")];
+    }
+
+    #[test]
+    fn walks_json_ld_graph_items() {
+        let graph = Graph {
+            items: vec![serde_json::json!({"id": "a", "issueTime": "x"})],
+        };
+        assert_eq!(coverage_gaps(&graph), vec!["issueTime".to_owned()]);
     }
 }

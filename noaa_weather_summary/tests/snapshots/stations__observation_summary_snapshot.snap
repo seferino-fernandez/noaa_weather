@@ -1,0 +1,156 @@
+---
+source: noaa_weather_summary/tests/stations.rs
+expression: "observation().summarize(&SummaryOptions::default())"
+---
+title: "Station: KSLC - Observation"
+subtitle: "Salt Lake City, Salt Lake City International Airport"
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: Observed
+          key: timestamp
+          also: []
+          value:
+            Timestamp: "2026-09-02T07:35:00+00:00"
+          emphasis: None
+        - label: Conditions
+          key: textDescription
+          also: []
+          value:
+            Text: Clear
+          emphasis: None
+        - label: Present weather
+          key: presentWeather
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Elevation
+          key: elevation
+          also: []
+          value:
+            Quantity:
+              value: 4225.7217847769025
+              unit: ft
+              precision: 0
+          emphasis: None
+        - label: Temperature
+          key: temperature
+          also: []
+          value:
+            Quantity:
+              value: 71.6
+              unit: °F
+              precision: 0
+          emphasis: None
+        - label: Dewpoint
+          key: dewpoint
+          also: []
+          value:
+            Quantity:
+              value: 51.8
+              unit: °F
+              precision: 0
+          emphasis: None
+        - label: Wind direction
+          key: windDirection
+          also: []
+          value:
+            Quantity:
+              value: 160
+              unit: °
+              precision: 0
+          emphasis: None
+        - label: Wind speed
+          key: windSpeed
+          also: []
+          value:
+            Quantity:
+              value: 14.965103793843953
+              unit: mph
+              precision: 0
+          emphasis: None
+        - label: Wind gust
+          key: windGust
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Barometric pressure
+          key: barometricPressure
+          also: []
+          value:
+            Quantity:
+              value: 29.929999407803905
+              unit: inHg
+              precision: 2
+          emphasis: None
+        - label: Sea-level pressure
+          key: seaLevelPressure
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Visibility
+          key: visibility
+          also: []
+          value:
+            Quantity:
+              value: 10
+              unit: mi
+              precision: 1
+          emphasis: None
+        - label: Relative humidity
+          key: relativeHumidity
+          also: []
+          value:
+            Percent: 49.667494492032
+          emphasis: None
+        - label: Wind chill
+          key: windChill
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Heat index
+          key: heatIndex
+          also: []
+          value:
+            Quantity:
+              value: 70.79437224112601
+              unit: °F
+              precision: 0
+          emphasis: None
+        - label: 24-hour high
+          key: maxTemperatureLast24Hours
+          also: []
+          value: Missing
+          emphasis: None
+        - label: 24-hour low
+          key: minTemperatureLast24Hours
+          also: []
+          value: Missing
+          emphasis: None
+        - label: "Precipitation, 1 hour"
+          key: precipitationLastHour
+          also: []
+          value: Missing
+          emphasis: None
+        - label: "Precipitation, 3 hours"
+          key: precipitationLast3Hours
+          also: []
+          value: Missing
+          emphasis: None
+        - label: "Precipitation, 6 hours"
+          key: precipitationLast6Hours
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Cloud 1 (CLR)
+          key: cloudLayers
+          also: []
+          value:
+            Quantity:
+              value: 12500
+              unit: ft
+              precision: 0
+          emphasis: None
+notes: []

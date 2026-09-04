@@ -1,0 +1,86 @@
+---
+source: noaa_weather_summary/tests/stations.rs
+expression: "station().summarize(&SummaryOptions::default())"
+---
+title: Observation station
+subtitle: "Salt Lake City, Salt Lake City International Airport"
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: Station ID
+          key: stationIdentifier
+          also: []
+          align: Left
+        - title: Name
+          key: name
+          also: []
+          align: Left
+        - title: Elevation
+          key: elevation
+          also: []
+          align: Right
+        - title: Time Zone
+          key: timeZone
+          also: []
+          align: Left
+        - title: Coordinates
+          key: geometry
+          also: []
+          align: Left
+        - title: Provider
+          key: provider
+          also:
+            - subProvider
+          align: Left
+        - title: Zones
+          key: forecast
+          also:
+            - county
+            - fireWeatherZone
+          align: Left
+        - title: Distance
+          key: distance
+          also: []
+          align: Right
+        - title: Bearing
+          key: bearing
+          also: []
+          align: Right
+      rows:
+        - - value:
+              Identifier: KSLC
+            emphasis: None
+          - value:
+              Text: "Salt Lake City, Salt Lake City International Airport"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 4226
+                unit: ft
+                precision: 0
+            emphasis: None
+          - value:
+              Text: America/Denver
+            emphasis: None
+          - value:
+              Coordinates:
+                lat: 40.77069
+                lon: -111.96503
+            emphasis: None
+          - value:
+              Lines:
+                - Text: ASOS-HFM
+            emphasis: None
+          - value:
+              Lines:
+                - Identifier: UTZ105
+                - Identifier: UTC035
+                - Identifier: UTZ478
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value: Missing
+            emphasis: None
+notes: []

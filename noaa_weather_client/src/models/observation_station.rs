@@ -1,76 +1,69 @@
-use crate::models;
+//! Observation-station metadata returned by station-listing endpoints.
+//!
+//! # Requiredness
+//!
+//! A live census of 500 stations on 2026-09-04 found every key below on
+//! every record except `county` and `fireWeatherZone`, each of which was
+//! absent once. A state-filtered Arizona response also contained station A4837
+//! without any forecast-zone links, so `forecast` is optional as well. Empty
+//! provider strings are real values and remain distinct from absent fields.
+//! `distance` and `bearing` occur only when a gridpoint ranks its nearby
+//! stations.
+
+use jiff::tz::TimeZone;
 use serde::{Deserialize, Serialize};
 
-use super::ValueUnit;
+use super::Quantity;
+use crate::StationId;
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+/// Metadata for one surface observation station.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct ObservationStation {
-    /// A geometry represented in Well-Known Text (WKT) format.
-    #[serde(
-        rename = "geometry",
-        default,
-        with = "::serde_with::rust::double_option",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub geometry: Option<Option<String>>,
-    #[serde(rename = "@id", skip_serializing_if = "Option::is_none")]
-    pub at_id: Option<String>,
-    #[serde(rename = "@type", skip_serializing_if = "Option::is_none")]
-    pub at_type: Option<AtType>,
-    #[serde(rename = "elevation", skip_serializing_if = "Option::is_none")]
-    pub elevation: Option<ValueUnit>,
-    #[serde(rename = "stationIdentifier", skip_serializing_if = "Option::is_none")]
-    pub station_identifier: Option<String>,
-    #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-    #[serde(rename = "timeZone", skip_serializing_if = "Option::is_none")]
-    pub time_zone: Option<String>,
-    /// A link to the NWS public forecast zone containing this station.
-    #[serde(rename = "forecast", skip_serializing_if = "Option::is_none")]
+    /// Canonical API URL for the station.
+    #[serde(rename = "@id")]
+    pub at_id: String,
+    /// JSON-LD resource type (`wx:ObservationStation`).
+    #[serde(rename = "@type")]
+    pub at_type: ObservationType,
+    /// Station elevation.
+    pub elevation: Quantity,
+    /// ICAO, FAA, or provider station identifier.
+    pub station_identifier: StationId,
+    /// Human-readable station name.
+    pub name: String,
+    /// IANA time zone observed by this station.
+    #[serde(with = "jiff::fmt::serde::tz::required")]
+    #[cfg_attr(feature = "schemars", schemars(with = "String"))]
+    pub time_zone: TimeZone,
+    /// Link to the NWS public forecast zone containing this station.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub forecast: Option<String>,
-    /// A link to the NWS county zone containing this station.
-    #[serde(rename = "county", skip_serializing_if = "Option::is_none")]
+    /// Link to the NWS county zone containing this station.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub county: Option<String>,
-    /// A link to the NWS fire weather forecast zone containing this station.
-    #[serde(rename = "fireWeatherZone", skip_serializing_if = "Option::is_none")]
+    /// Link to the NWS fire-weather zone containing this station.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fire_weather_zone: Option<String>,
-    /// The data provider for this station.
-    #[serde(rename = "provider", skip_serializing_if = "Option::is_none")]
-    pub provider: Option<String>,
-    /// The sub-provider for this station.
-    #[serde(rename = "subProvider", skip_serializing_if = "Option::is_none")]
-    pub sub_provider: Option<String>,
-    #[serde(rename = "distance", skip_serializing_if = "Option::is_none")]
-    pub distance: Option<models::Quantity>,
-    #[serde(rename = "bearing", skip_serializing_if = "Option::is_none")]
-    pub bearing: Option<models::Quantity>,
+    /// Primary data provider.
+    pub provider: String,
+    /// Provider subdivision, or an empty string when there is none.
+    pub sub_provider: String,
+    /// Distance from the gridpoint that requested this station.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub distance: Option<Quantity>,
+    /// Bearing from the gridpoint that requested this station.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bearing: Option<Quantity>,
 }
 
-impl ObservationStation {
-    pub fn new() -> ObservationStation {
-        ObservationStation {
-            geometry: None,
-            at_id: None,
-            at_type: None,
-            elevation: None,
-            station_identifier: None,
-            name: None,
-            time_zone: None,
-            forecast: None,
-            county: None,
-            fire_weather_zone: None,
-            provider: None,
-            sub_provider: None,
-            distance: None,
-            bearing: None,
-        }
-    }
-}
-#[derive(
-    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
-)]
-pub enum AtType {
+/// JSON-LD type shared by station metadata and station observations.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema), schemars(inline))]
+pub enum ObservationType {
+    /// A weather observation station resource.
     #[serde(rename = "wx:ObservationStation")]
-    #[default]
-    WxColonObservationStation,
+    Station,
 }

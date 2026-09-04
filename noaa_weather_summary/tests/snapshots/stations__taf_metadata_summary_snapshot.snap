@@ -1,0 +1,73 @@
+---
+source: noaa_weather_summary/tests/stations.rs
+expression: "tafs.summarize(&SummaryOptions::default())"
+---
+title: Terminal Aerodrome Forecasts
+subtitle: 2 forecasts
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: ID
+          key: id
+          also: []
+          align: Left
+        - title: Issue Time
+          key: issueTime
+          also: []
+          align: Left
+        - title: Location
+          key: location
+          also: []
+          align: Left
+        - title: Start
+          key: start
+          also: []
+          align: Left
+        - title: End
+          key: end
+          also: []
+          align: Left
+        - title: Geometry
+          key: geometry
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Identifier: "2254"
+            emphasis: None
+          - value:
+              Timestamp: "2026-08-30T22:54:00+00:00"
+            emphasis: None
+          - value:
+              Identifier: KPHX
+            emphasis: None
+          - value:
+              Timestamp: "2026-08-30T18:00:00+00:00"
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-01T00:00:00+00:00"
+            emphasis: None
+          - value:
+              Text: POINT(33.44 -112.02)
+            emphasis: None
+        - - value:
+              Identifier: "2254"
+            emphasis: None
+          - value:
+              Timestamp: "2026-08-30T22:54:00+00:00"
+            emphasis: None
+          - value:
+              Identifier: KPHX
+            emphasis: None
+          - value:
+              Timestamp: "2026-08-30T15:00:00+00:00"
+            emphasis: None
+          - value:
+              Timestamp: "2026-08-31T18:00:00+00:00"
+            emphasis: None
+          - value:
+              Text: POINT(33.44 -112.02)
+            emphasis: None
+notes: []

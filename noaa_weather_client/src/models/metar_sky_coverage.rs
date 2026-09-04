@@ -1,11 +1,10 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(
-    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
-)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema), schemars(inline))]
+#[non_exhaustive]
 pub enum MetarSkyCoverage {
     #[serde(rename = "OVC")]
-    #[default]
     Ovc,
     #[serde(rename = "BKN")]
     Bkn,

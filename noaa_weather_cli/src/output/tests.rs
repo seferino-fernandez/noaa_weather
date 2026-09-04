@@ -213,7 +213,8 @@ async fn normalized_taf_meaning_flows_through_the_default_output_seam() {
         "No significant weather",
         "No significant cloud",
         "Unchanged from prevailing conditions",
-        "CHANGE — PROBABILITY 40% — TEMPORARY",
+        "CHANGE — PROBABILITY 40% —",
+        "TEMPORARY",
     ] {
         assert!(
             rendered.contains(expected),

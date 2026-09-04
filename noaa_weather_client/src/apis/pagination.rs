@@ -108,6 +108,53 @@ mod tests {
         body.to_string()
     }
 
+    fn observations_page(ids: &[&str], next: Option<&str>) -> String {
+        let quantity = |unit: &str| json!({"unitCode": unit, "value": null});
+        let features: Vec<_> = ids
+            .iter()
+            .map(|id| {
+                json!({
+                    "id": format!("https://api.weather.gov/stations/KSLC/observations/{id}"),
+                    "type": "Feature",
+                    "geometry": null,
+                    "properties": {
+                        "@id": format!("https://api.weather.gov/stations/KSLC/observations/{id}"),
+                        "@type": "wx:ObservationStation",
+                        "elevation": quantity("wmoUnit:m"),
+                        "station": "https://api.weather.gov/stations/KSLC",
+                        "stationId": "KSLC",
+                        "stationName": "Salt Lake City",
+                        "timestamp": "2026-09-02T07:35:00+00:00",
+                        "rawMessage": "",
+                        "textDescription": "Clear",
+                        "icon": null,
+                        "presentWeather": [],
+                        "temperature": quantity("wmoUnit:degC"),
+                        "dewpoint": quantity("wmoUnit:degC"),
+                        "windDirection": quantity("wmoUnit:degree_(angle)"),
+                        "windSpeed": quantity("wmoUnit:km_h-1"),
+                        "windGust": quantity("wmoUnit:km_h-1"),
+                        "barometricPressure": quantity("wmoUnit:Pa"),
+                        "seaLevelPressure": quantity("wmoUnit:Pa"),
+                        "visibility": quantity("wmoUnit:m"),
+                        "maxTemperatureLast24Hours": quantity("wmoUnit:degC"),
+                        "minTemperatureLast24Hours": quantity("wmoUnit:degC"),
+                        "precipitationLast3Hours": quantity("wmoUnit:mm"),
+                        "relativeHumidity": quantity("wmoUnit:percent"),
+                        "windChill": quantity("wmoUnit:degC"),
+                        "heatIndex": quantity("wmoUnit:degC"),
+                        "cloudLayers": []
+                    }
+                })
+            })
+            .collect();
+        let mut body = json!({"type": "FeatureCollection", "features": features});
+        if let Some(next) = next {
+            body["pagination"] = json!({"next": next});
+        }
+        body.to_string()
+    }
+
     /// Mounts three pages: the first without a cursor, then `c1` and `c2`.
     async fn mount_three_pages(server: &MockServer, third_next: Option<&str>) {
         Mock::given(method("GET"))
@@ -318,7 +365,19 @@ mod tests {
                         "id": format!("https://api.weather.gov/stations/{id}"),
                         "type": "Feature",
                         "geometry": {"type": "Point", "coordinates": [-111.97, 40.77]},
-                        "properties": {"stationIdentifier": id}
+                        "properties": {
+                            "@id": format!("https://api.weather.gov/stations/{id}"),
+                            "@type": "wx:ObservationStation",
+                            "elevation": {"unitCode": "wmoUnit:m", "value": 1288},
+                            "stationIdentifier": id,
+                            "name": id,
+                            "timeZone": "America/Denver",
+                            "forecast": "https://api.weather.gov/zones/forecast/UTZ101",
+                            "county": "https://api.weather.gov/zones/county/UTC035",
+                            "fireWeatherZone": "https://api.weather.gov/zones/fire/UTZ101",
+                            "provider": "ASOS",
+                            "subProvider": ""
+                        }
                     })
                 })
                 .collect();
@@ -353,7 +412,7 @@ mod tests {
             .and(path("/stations/KSLC/observations"))
             .and(query_param_is_missing("cursor"))
             .respond_with(ResponseTemplate::new(200).set_body_raw(
-                page(
+                observations_page(
                     &["obs1"],
                     Some("https://api.weather.gov/stations/KSLC/observations?cursor=o2"),
                 ),
@@ -366,7 +425,7 @@ mod tests {
             .and(query_param("cursor", "o2"))
             .respond_with(
                 ResponseTemplate::new(200)
-                    .set_body_raw(page(&["obs2"], None), "application/geo+json"),
+                    .set_body_raw(observations_page(&["obs2"], None), "application/geo+json"),
             )
             .mount(&server)
             .await;
@@ -385,7 +444,7 @@ mod tests {
             .unwrap();
         let ids: Vec<_> = stations
             .iter()
-            .map(|station| station.station_identifier.as_deref().unwrap())
+            .map(|station| station.station_identifier.as_str())
             .collect();
         assert_eq!(ids, ["KSLC", "KDEN"]);
         assert_eq!(stations.pagination, None);
