@@ -70,6 +70,9 @@ fixtures:
 # Run the pull request validation acceptance gate
 verify:
     cargo fmt --all --check
-    cargo clippy --all-targets -- -D warnings
-    cargo nextest --verbose run
+    cargo clippy --workspace --all-targets --all-features -- -D warnings
+    cargo clippy -p noaa_weather_client --no-default-features -- -D warnings
+    cargo nextest run --workspace --all-targets --all-features
+    cargo test --doc --workspace
+    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features -p noaa_weather_client -p noaa_weather_summary
     cargo build --release
