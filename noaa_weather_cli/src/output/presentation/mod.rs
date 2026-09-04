@@ -7,7 +7,8 @@ use std::fmt;
 use jiff::tz::TimeZone;
 use noaa_weather_client::models::{
     ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CwsuOffice, Forecast,
-    GlossaryResponse, Gridpoint, Observation, ObservationStation, Point, RadioBroadcast,
+    GlossaryResponse, Gridpoint, Observation, ObservationStation, Office, OfficeBriefingResponse,
+    OfficeHeadline, OfficeHeadlineCollection, OfficeWeatherStoryCollection, Point, RadioBroadcast,
     RadioTransmitter, RadioTransmitterCollection, Sigmet, TerminalAerodromeForecast,
     TerminalAerodromeForecastsResponse, TextProduct, TextProductCollection,
     TextProductLocationCollection, TextProductTypeCollection, Zone, ZoneForecast,
@@ -20,7 +21,6 @@ use super::PresentationDocument;
 
 mod values;
 
-pub mod offices;
 pub mod radar;
 
 /// Owns the policy used to turn typed NOAA responses into default output.
@@ -103,6 +103,11 @@ summarized!(
     RadioBroadcast,
     RadioTransmitter,
     RadioTransmitterCollection,
+    Office,
+    OfficeHeadlineCollection,
+    OfficeHeadline,
+    OfficeBriefingResponse,
+    OfficeWeatherStoryCollection,
     Feature<Point>,
     Feature<Gridpoint>,
     Feature<Forecast>,

@@ -12,8 +12,11 @@ use crate::{Summarize, SummaryOptions};
 /// Keys are gathered from the top-level JSON object, from `properties` when it
 /// is an object (a GeoJSON `Feature`) and from every `features[].properties`
 /// object (a `FeatureCollection`). JSON-LD collections under `@graph` are
-/// walked the same way. An empty result means every property is either
-/// rendered or deliberately omitted with a reason.
+/// walked the same way. Office addresses, active briefings, and weather-story
+/// arrays are expanded because those response families carry their data in
+/// named nested objects rather than GeoJSON or JSON-LD collections. An empty
+/// result means every property is either rendered or deliberately omitted
+/// with a reason.
 ///
 /// The summary is taken under [`SummaryOptions::default`] and there is no
 /// argument for anything else: which keys an impl accounts for is a property
@@ -56,6 +59,17 @@ fn property_keys(json: &Json) -> BTreeSet<String> {
     if let Some(graph) = object.get("@graph").and_then(Json::as_array) {
         for item in graph.iter().filter_map(Json::as_object) {
             keys.extend(item.keys().cloned());
+        }
+    }
+    if let Some(address) = object.get("address").and_then(Json::as_object) {
+        keys.extend(address.keys().cloned());
+    }
+    if let Some(briefing) = object.get("briefing").and_then(Json::as_object) {
+        keys.extend(briefing.keys().cloned());
+    }
+    if let Some(stories) = object.get("stories").and_then(Json::as_array) {
+        for story in stories.iter().filter_map(Json::as_object) {
+            keys.extend(story.keys().cloned());
         }
     }
     keys

@@ -11,6 +11,7 @@ pub mod audit;
 pub mod aviation;
 pub mod glossary;
 pub mod gridpoints;
+pub mod offices;
 pub mod points;
 pub mod products;
 pub mod radio;

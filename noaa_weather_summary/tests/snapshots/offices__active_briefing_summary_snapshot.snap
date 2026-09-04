@@ -1,0 +1,64 @@
+---
+source: noaa_weather_summary/tests/offices.rs
+expression: "briefing.summarize(&SummaryOptions::default())"
+---
+title: NWS office briefing
+subtitle: Click to view briefing
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: ID
+          key: id
+          also:
+            - briefing
+          value:
+            Identifier: f25c1906-57d1-4f86-80cf-a20dce3bddaa
+          emphasis: None
+        - label: Office
+          key: officeId
+          also: []
+          value:
+            Identifier: TOP
+          emphasis: None
+        - label: Active
+          key: startTime
+          also:
+            - endTime
+          value:
+            Interval:
+              start: "2026-09-04T08:02:00+00:00"
+              end: "2026-09-05T08:02:00+00:00"
+          emphasis: None
+        - label: Updated
+          key: updateTime
+          also: []
+          value:
+            Timestamp: "2026-09-04T18:55:11+00:00"
+          emphasis: None
+        - label: Title
+          key: title
+          also: []
+          value:
+            Text: Click to view briefing
+          emphasis: None
+        - label: Description
+          key: description
+          also: []
+          value:
+            Text: Extreme Heat Warning Through Tuesday Evening
+          emphasis: None
+        - label: Priority
+          key: priority
+          also: []
+          value:
+            YesNo: false
+          emphasis: None
+        - label: Download
+          key: download
+          also: []
+          value:
+            Text: "https://api.weather.gov/offices/TOP/briefing/download/f25c1906-57d1-4f86-80cf-a20dce3bddaa"
+          emphasis: None
+notes: []

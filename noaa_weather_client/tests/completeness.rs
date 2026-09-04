@@ -17,10 +17,11 @@ use std::path::Path;
 use noaa_weather_client::models::radar_station::{CommandChannel, CommandChannelMode};
 use noaa_weather_client::models::{
     ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CwsuOffice, Forecast,
-    GlossaryResponse, Gridpoint, Observation, ObservationStation, Point, RadarStationFeature,
-    RadioTransmitter, RadioTransmitterCollection, Sigmet, TerminalAerodromeForecastsResponse,
-    TextProduct, TextProductCollection, TextProductLocationCollection, TextProductTypeCollection,
-    Zone, ZoneForecast,
+    GlossaryResponse, Gridpoint, Observation, ObservationStation, Office, OfficeBriefingResponse,
+    OfficeHeadline, OfficeHeadlineCollection, OfficeWeatherStoryCollection, Point,
+    RadarStationFeature, RadioTransmitter, RadioTransmitterCollection, Sigmet,
+    TerminalAerodromeForecastsResponse, TextProduct, TextProductCollection,
+    TextProductLocationCollection, TextProductTypeCollection, Zone, ZoneForecast,
 };
 use noaa_weather_client::{Feature, FeatureCollection};
 use serde::Serialize;
@@ -263,6 +264,14 @@ fn captured_responses_preserve_every_non_whitelisted_key_path() {
         ("radio/transmitters.json", RadioTransmitterCollection),
         ("radio/transmitter.json", RadioTransmitter),
         ("radio/county.json", RadioTransmitterCollection),
+        ("offices/office.json", Office),
+        ("offices/headlines.json", OfficeHeadlineCollection),
+        ("offices/headline.json", OfficeHeadline),
+        ("offices/briefing.json", OfficeBriefingResponse),
+        (
+            "offices/weather_stories.json",
+            OfficeWeatherStoryCollection
+        ),
         ("radar/KFSX.json", RadarStationFeature),
         ("radar/KLNX.json", RadarStationFeature),
         ("radar/TSLC.json", RadarStationFeature),
@@ -483,6 +492,27 @@ async fn live_responses_preserve_every_non_whitelisted_key_path() {
         "/zones/county/AZC013/radio",
         JSON_LD,
         RadioTransmitterCollection
+    );
+
+    live!("/offices/PSR", JSON_LD, Office);
+    let headlines = live!("/offices/PSR/headlines", JSON_LD, OfficeHeadlineCollection);
+    match first_member(&headlines, "@graph") {
+        Some(first) => {
+            let url = first["@id"]
+                .as_str()
+                .expect("an office headline carries @id");
+            live!(&path_of(url), JSON_LD, OfficeHeadline);
+        }
+        None => eprintln!(
+            "/offices/PSR/headlines returned an empty `@graph`; the collection \
+             was checked, the single-headline response was not"
+        ),
+    };
+    live!("/offices/LWX/briefing", JSON_LD, OfficeBriefingResponse);
+    live!(
+        "/offices/PSR/weatherstories",
+        JSON_LD,
+        OfficeWeatherStoryCollection
     );
 
     let products = live!("/products?limit=500", JSON_LD, TextProductCollection);

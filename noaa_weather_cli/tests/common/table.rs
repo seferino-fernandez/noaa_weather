@@ -693,7 +693,7 @@ pub const OFFICES: &[Invocation] = &[
         body: OFFICE,
         media: JSON_LD,
         binary: false,
-        renders: &["PSR", "Name"],
+        renders: &["NWS Phoenix", "PAB 1TA", "Responsible Counties", "8"],
         live: Live::Check(Expectation {
             payload: "/id",
             keys: &[],
@@ -712,7 +712,7 @@ pub const OFFICES: &[Invocation] = &[
         body: OFFICE,
         media: JSON_LD,
         binary: false,
-        renders: &["PSR", "Name"],
+        renders: &["NWS Phoenix", "PAB 1TA", "Responsible Counties", "8"],
         live: Live::Check(Expectation {
             payload: "/id",
             keys: &[],
@@ -729,7 +729,7 @@ pub const OFFICES: &[Invocation] = &[
         media: JSON_LD,
         binary: false,
         // An office with no news is a quiet week, not a broken route.
-        renders: &["Title"],
+        renders: &["8efe6a38d9d74a", "Phoenix,", "2026-09-01"],
         live: graph(false),
     },
     Invocation {
@@ -745,7 +745,7 @@ pub const OFFICES: &[Invocation] = &[
         body: OFFICE_HEADLINE,
         media: JSON_LD,
         binary: false,
-        renders: &["Title"],
+        renders: &["8efe6a38d9d74a", "Phoenix,", "PSR"],
         live: Live::Skip(
             "a headline id expires with the headline; \
              `a_headline_is_fetched_by_an_id_resolved_at_run_time` reads a \
@@ -760,12 +760,12 @@ pub const OFFICES: &[Invocation] = &[
         body: OFFICE_BRIEFING,
         media: JSON_LD,
         binary: false,
-        renders: &["Download", "Starts"],
+        renders: &["NWS office briefing", "This office has no active briefing"],
         live: Live::Check(Expectation {
             // `briefing` is null whenever the office has nothing active,
             // which is most of the time, so this only asserts the envelope
             // arrived and decoded.
-            payload: "/@context",
+            payload: "",
             keys: &[],
             non_empty: false,
             equals: &[],
@@ -784,9 +784,9 @@ pub const OFFICES: &[Invocation] = &[
         body: OFFICE_BRIEFING,
         media: JSON_LD,
         binary: false,
-        renders: &["Download", "Starts"],
+        renders: &["NWS office briefing", "This office has no active briefing"],
         live: Live::Check(Expectation {
-            payload: "/@context",
+            payload: "",
             keys: &[],
             non_empty: false,
             equals: &[],
@@ -831,7 +831,12 @@ pub const OFFICES: &[Invocation] = &[
         body: OFFICE_WEATHER_STORIES,
         media: JSON_LD,
         binary: false,
-        renders: &["Alt Text", "Title"],
+        renders: &[
+            "5 Day Outlook",
+            "Temperatures",
+            "A graphic",
+            "227060e4-9667-4215-94d4-b37f6e94e2c8",
+        ],
         live: Live::Check(Expectation {
             payload: "/stories",
             keys: &[],

@@ -1,0 +1,65 @@
+---
+source: noaa_weather_summary/tests/offices.rs
+expression: "stories.summarize(&SummaryOptions::default())"
+---
+title: NWS office weather stories
+subtitle: 2 stories
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: Story ID
+          key: download
+          also:
+            - stories
+          align: Left
+        - title: Title
+          key: title
+          also:
+            - priority
+          align: Left
+        - title: Description
+          key: description
+          also: []
+          align: Left
+        - title: Alt Text
+          key: altText
+          also: []
+          align: Left
+        - title: Order
+          key: order
+          also: []
+          align: Right
+      rows:
+        - - value:
+              Identifier: 227060e4-9667-4215-94d4-b37f6e94e2c8
+            emphasis: None
+          - value:
+              Text: 5 Day Outlook
+            emphasis: None
+          - value:
+              Text: Temperatures across the region will remain near to below normal though Saturday before temperatures warm back up to neat to slightly above normal as early as Sunday.
+            emphasis: None
+          - value:
+              Text: "A graphic showing the high and low temperatures for the next 5 days in the form of a line plot for Phoenix, Globe/Miami, and Yuma/El Centro."
+            emphasis: None
+          - value:
+              Count: 0
+            emphasis: None
+        - - value:
+              Identifier: b0a7c062-f331-477f-9a39-6a0f63e46fc2
+            emphasis: None
+          - value:
+              Text: Storm Chances Thursday-Early Saturday
+            emphasis: None
+          - value:
+              Text: "There will be an increase in tropical moisture at the end of this week which will result in increasing shower and storm chances. Best chances will be across eastern and southeastern Arizona, but there is a 30-60% chance of storms surviving into the lower deserts of south-central Arizona."
+            emphasis: None
+          - value:
+              Text: Graphic displaying two maps for the rain chances on the top (Thursday night - early Friday morning on the top left and Friday afternoon - early Saturday morning on the top right). Across the bottom is a description of the shower and storm chances for the period and a list of the main threats.
+            emphasis: None
+          - value:
+              Count: 1
+            emphasis: None
+notes: []
