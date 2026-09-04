@@ -147,8 +147,8 @@ pub(crate) mod schema_tests {
             &["", "WX", "WXK27ABCD", "WXK 27"],
         );
         assert_pattern_matches_parser::<ProductTypeCode>(
-            &["AFD", "afd", "ZF"],
-            &["", "A", "AFDX", "AF1"],
+            &["AFD", "afd", "ZF", "RR3", "fa0"],
+            &["", "A", "AFDX", "A-F"],
         );
         assert_pattern_matches_parser::<RadarStationId>(
             &["KABX", "kabx", "K1B2", "HWPA2", "tlka2"],

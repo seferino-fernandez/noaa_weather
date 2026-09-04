@@ -12,8 +12,6 @@ use super::{InvalidValue, ValueKind};
 pub(super) enum Chars {
     /// ASCII letters and digits.
     Alnum,
-    /// ASCII letters only.
-    Letters,
     /// ASCII letters, digits, and `-`.
     AlnumHyphen,
     /// Printable ASCII other than space (`!` through `~`).
@@ -27,7 +25,6 @@ impl Chars {
     const fn admits(self, byte: u8) -> bool {
         match self {
             Self::Alnum => byte.is_ascii_alphanumeric(),
-            Self::Letters => byte.is_ascii_alphabetic(),
             Self::AlnumHyphen => byte.is_ascii_alphanumeric() || byte == b'-',
             Self::Printable => byte.is_ascii_graphic(),
             Self::Base64 => {
@@ -124,9 +121,9 @@ const PRODUCT_TYPE: Rule = Rule {
     kind: ValueKind::ProductTypeCode,
     min: 2,
     max: 3,
-    chars: Chars::Letters,
+    chars: Chars::Alnum,
     case: Case::Upper,
-    reason: "must be 2 to 3 ASCII letters",
+    reason: "must be 2 to 3 ASCII letters or digits",
 };
 
 const RADAR_STATION: Rule = Rule {
@@ -280,10 +277,11 @@ str_id! {
 }
 
 str_id! {
-    /// A text product type code such as `AFD` or `ZFP`.
+    /// A text product type code such as `AFD`, `ZFP`, or `RR3`.
     ///
-    /// Used by `/products/types/{typeId}`. Accepts 2 to 3 ASCII letters and
-    /// uppercase-normalizes them.
+    /// Used by `/products/types/{typeId}`. Accepts 2 to 3 ASCII letters or
+    /// digits and uppercase-normalizes them. NOAA's live type catalog includes
+    /// digit-bearing codes such as `FA0`, `RR3`, and `WS9`.
     ///
     /// ```
     /// use noaa_weather_client::ProductTypeCode;
@@ -292,8 +290,8 @@ str_id! {
     /// # Ok::<(), noaa_weather_client::InvalidValue>(())
     /// ```
     ProductTypeCode, parse_product_type,
-    "Text product type code, 2 to 3 ASCII letters (for example AFD).",
-    "^[A-Za-z]{2,3}$"
+    "Text product type code, 2 to 3 ASCII letters or digits (for example AFD or RR3).",
+    "^[A-Za-z0-9]{2,3}$"
 }
 
 str_id! {
@@ -468,9 +466,10 @@ mod tests {
     }
 
     #[test]
-    fn product_type_code_is_letters_only() {
+    fn product_type_code_accepts_live_digit_bearing_codes() {
         assert_eq!("afd".parse::<ProductTypeCode>().unwrap().as_str(), "AFD");
         assert!("ZF".parse::<ProductTypeCode>().is_ok());
+        assert_eq!("rr3".parse::<ProductTypeCode>().unwrap().as_str(), "RR3");
         assert_eq!(
             rejected::<ProductTypeCode>("A").kind(),
             ValueKind::ProductTypeCode
@@ -480,12 +479,8 @@ mod tests {
             ValueKind::ProductTypeCode
         );
         assert_eq!(
-            rejected::<ProductTypeCode>("AF1").kind(),
-            ValueKind::ProductTypeCode
-        );
-        assert_eq!(
-            rejected::<ProductTypeCode>("AF1").reason(),
-            "must be 2 to 3 ASCII letters"
+            rejected::<ProductTypeCode>("A-F").reason(),
+            "must be 2 to 3 ASCII letters or digits"
         );
     }
 

@@ -886,7 +886,12 @@ pub const PRODUCTS: &[Invocation] = &[
         body: PRODUCT_LIST,
         media: JSON_LD,
         binary: false,
-        renders: &["Product Code"],
+        renders: &[
+            "Product Code",
+            "ABV",
+            "KTBW",
+            "dcfd78a0-561b-423e-9fd6-889455b8c535",
+        ],
         live: graph(true),
     },
     Invocation {
@@ -897,7 +902,12 @@ pub const PRODUCTS: &[Invocation] = &[
         body: PRODUCT_LIST,
         media: JSON_LD,
         binary: false,
-        renders: &["Product Code"],
+        renders: &[
+            "Product Code",
+            "ABV",
+            "KTBW",
+            "dcfd78a0-561b-423e-9fd6-889455b8c535",
+        ],
         live: graph(true),
     },
     Invocation {
@@ -908,7 +918,12 @@ pub const PRODUCTS: &[Invocation] = &[
         body: PRODUCT_LIST,
         media: JSON_LD,
         binary: false,
-        renders: &["Product Code"],
+        renders: &[
+            "Product Code",
+            "ABV",
+            "KTBW",
+            "dcfd78a0-561b-423e-9fd6-889455b8c535",
+        ],
         live: graph(false),
     },
     Invocation {
@@ -934,7 +949,12 @@ pub const PRODUCTS: &[Invocation] = &[
         body: PRODUCT_LIST,
         media: JSON_LD,
         binary: false,
-        renders: &["Product Code"],
+        renders: &[
+            "Product Code",
+            "ABV",
+            "KTBW",
+            "dcfd78a0-561b-423e-9fd6-889455b8c535",
+        ],
         live: graph(true),
     },
     Invocation {
@@ -945,7 +965,13 @@ pub const PRODUCTS: &[Invocation] = &[
         body: PRODUCT,
         media: JSON_LD,
         binary: false,
-        renders: &["Issuance Time", "UFUS42"],
+        renders: &[
+            "Issuance Time",
+            "UFUS42",
+            "ABV",
+            "Rawinsonde Data Above 100 Millibars",
+            "72210 TTCC",
+        ],
         live: Live::Skip(
             "a product id ages out of NOAA's window; \
              `a_product_is_fetched_by_an_id_resolved_at_run_time` reads a \
@@ -960,7 +986,7 @@ pub const PRODUCTS: &[Invocation] = &[
         body: PRODUCT_LOCATIONS,
         media: JSON_LD,
         binary: false,
-        renders: &["Location ID", "Location Name"],
+        renders: &["Location ID", "Location Name", "ABQ", "Albuquerque, NM"],
         live: Live::Check(Expectation {
             // A map of every issuance location, which does not change with
             // the weather.
@@ -978,7 +1004,12 @@ pub const PRODUCTS: &[Invocation] = &[
         body: PRODUCT_TYPES,
         media: JSON_LD,
         binary: false,
-        renders: &["Product Code"],
+        renders: &[
+            "Product Code",
+            "Product Name",
+            "ABV",
+            "Rawinsonde Data Above 100 Millibars",
+        ],
         live: graph(true),
     },
     Invocation {
@@ -989,7 +1020,12 @@ pub const PRODUCTS: &[Invocation] = &[
         body: PRODUCT_TYPE,
         media: JSON_LD,
         binary: false,
-        renders: &["Product Code"],
+        renders: &[
+            "Product Code",
+            "AFD",
+            "KLWX",
+            "758ed100-512d-4cf0-93c7-f4cb305858d2",
+        ],
         live: graph(true),
     },
     Invocation {
@@ -1000,7 +1036,12 @@ pub const PRODUCTS: &[Invocation] = &[
         body: PRODUCT_TYPE_LOCATION,
         media: JSON_LD,
         binary: false,
-        renders: &["Product Code"],
+        renders: &[
+            "Product Code",
+            "AFD",
+            "KLWX",
+            "758ed100-512d-4cf0-93c7-f4cb305858d2",
+        ],
         live: graph(true),
     },
     Invocation {
@@ -1011,7 +1052,7 @@ pub const PRODUCTS: &[Invocation] = &[
         body: PRODUCT_TYPE_LOCATIONS,
         media: JSON_LD,
         binary: false,
-        renders: &["Location ID"],
+        renders: &["Location ID", "Location Name", "ABQ", "Albuquerque, NM"],
         live: Live::Check(Expectation {
             payload: "/locations",
             keys: &[],
@@ -1027,7 +1068,12 @@ pub const PRODUCTS: &[Invocation] = &[
         body: PRODUCT_LOCATION_TYPES,
         media: JSON_LD,
         binary: false,
-        renders: &["Product Code"],
+        renders: &[
+            "Product Code",
+            "Product Name",
+            "AFD",
+            "Area Forecast Discussion",
+        ],
         live: graph(true),
     },
     Invocation {
@@ -1038,7 +1084,13 @@ pub const PRODUCTS: &[Invocation] = &[
         body: PRODUCT_LATEST,
         media: JSON_LD,
         binary: false,
-        renders: &["Issuance Time", "AFD"],
+        renders: &[
+            "Issuance Time",
+            "AFD",
+            "KPSR",
+            "Area Forecast Discussion",
+            "National Weather Service Phoenix AZ",
+        ],
         live: Live::Check(Expectation {
             // The body is the whole point of a text product, and it is the
             // one member a renamed field would empty without failing the

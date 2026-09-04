@@ -367,9 +367,19 @@ mod tests {
     use super::ProductsQuery;
     use crate::client::test_support::client_for;
 
+    const PRODUCT: &str = r#"{
+        "@id":"https://api.weather.gov/products/a4791428-298e-473c-8e6f-5796701c9e4a",
+        "id":"a4791428-298e-473c-8e6f-5796701c9e4a",
+        "wmoCollectiveId":"FXUS65",
+        "issuingOffice":"KPSR",
+        "issuanceTime":"2026-09-04T12:00:00+00:00",
+        "productCode":"AFD",
+        "productName":"Area Forecast Discussion"
+    }"#;
+
     async fn mount_json_ld(server: &MockServer, expected: u64) {
         Mock::given(method("GET"))
-            .respond_with(ResponseTemplate::new(200).set_body_raw("{}", "application/ld+json"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(PRODUCT, "application/ld+json"))
             .expect(expected)
             .mount(server)
             .await;
