@@ -1,0 +1,58 @@
+---
+source: noaa_weather_summary/tests/radio.rs
+expression: "decode_json::<RadioTransmitter>(TRANSMITTER).summarize(&SummaryOptions::default())"
+---
+title: NOAA Weather Radio transmitter
+subtitle: KEC94
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: Call Sign
+          key: callSign
+          also: []
+          value:
+            Identifier: KEC94
+          emphasis: None
+        - label: Frequency
+          key: transmitterFrequency
+          also: []
+          value:
+            Text: "162.550"
+          emphasis: None
+        - label: Site
+          key: siteName
+          also: []
+          value:
+            Text: Phoenix
+          emphasis: None
+        - label: City
+          key: siteCity
+          also: []
+          value:
+            Text: South Mtn.
+          emphasis: None
+        - label: State
+          key: siteState
+          also: []
+          value:
+            Identifier: AZ
+          emphasis: None
+        - label: SAME Codes
+          key: sameCodes
+          also: []
+          value:
+            List:
+              - Identifier: "004013"
+              - Identifier: "004021"
+          emphasis: None
+        - label: Counties
+          key: counties
+          also: []
+          value:
+            List:
+              - Identifier: AZC013
+              - Identifier: AZC021
+          emphasis: None
+notes: []

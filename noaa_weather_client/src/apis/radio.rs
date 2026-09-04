@@ -222,12 +222,27 @@ mod tests {
 
     const TRANSMITTERS: &str = r#"{
         "@graph": [{
+            "@id": "https://api.weather.gov/radio/KAAA",
+            "@type": "wx:Transmitter",
+            "setId": "nwr-transmitters-test",
             "callSign": "KAAA",
             "transmitterFrequency": "162.550",
+            "siteName": "Alpha",
+            "siteCity": "Phoenix",
+            "siteState": "AZ",
             "sameCodes": ["004013", "004013"],
             "counties": ["AZC013", "AZC013"]
         }, {
-            "callSign": "KAAA"
+            "@id": "https://api.weather.gov/radio/KBBB",
+            "@type": "wx:Transmitter",
+            "setId": "nwr-transmitters-test",
+            "callSign": "KBBB",
+            "transmitterFrequency": "162.400",
+            "siteName": "Bravo",
+            "siteCity": "Tucson",
+            "siteState": "AZ",
+            "sameCodes": [],
+            "counties": []
         }],
         "pagination": {"next": "https://api.weather.gov/radio?cursor=next-page"}
     }"#;
@@ -346,10 +361,7 @@ mod tests {
             first_page.pagination.unwrap().next,
             "https://api.weather.gov/radio?cursor=next-page"
         );
-        assert_eq!(
-            second_page.transmitters[0].frequency.as_deref(),
-            Some("162.550")
-        );
+        assert_eq!(second_page.transmitters[0].frequency, "162.550");
         assert_eq!(second_page.transmitters[0].same_codes, ["004013", "004013"]);
 
         let requests = server.received_requests().await.unwrap();
@@ -367,8 +379,13 @@ mod tests {
                 r#"{
                     "@context": "https://geojson.org/geojson-ld/geojson-context.jsonld",
                     "@id": "https://api.weather.gov/radio/KAAA",
+                    "@type": "wx:Transmitter",
+                    "setId": "nwr-transmitters-test",
                     "callSign": "KAAA",
                     "transmitterFrequency": "162.550",
+                    "siteName": "Alpha",
+                    "siteCity": "Phoenix",
+                    "siteState": "AZ",
                     "sameCodes": [],
                     "counties": []
                 }"#,
@@ -384,8 +401,8 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(transmitter.call_sign.as_deref(), Some("KAAA"));
-        assert_eq!(transmitter.frequency.as_deref(), Some("162.550"));
+        assert_eq!(transmitter.call_sign.as_str(), "KAAA");
+        assert_eq!(transmitter.frequency, "162.550");
         assert!(transmitter.same_codes.is_empty());
     }
 
@@ -395,10 +412,21 @@ mod tests {
         Mock::given(method("GET"))
             .and(path("/zones/county/AZC013/radio"))
             .and(header("Accept", "application/ld+json"))
-            .respond_with(
-                ResponseTemplate::new(200)
-                    .set_body_raw(r#"{"@graph":[{"callSign":"KPHX"}]}"#, "application/ld+json"),
-            )
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                r#"{"@graph":[{
+                        "@id":"https://api.weather.gov/radio/KPHX",
+                        "@type":"wx:Transmitter",
+                        "setId":"nwr-transmitters-test",
+                        "callSign":"KPHX",
+                        "transmitterFrequency":"162.400",
+                        "siteName":"Phoenix",
+                        "siteCity":"Phoenix",
+                        "siteState":"AZ",
+                        "sameCodes":[],
+                        "counties":[]
+                    }]}"#,
+                "application/ld+json",
+            ))
             .expect(1)
             .mount(&server)
             .await;
@@ -410,10 +438,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(transmitters.pagination, None);
-        assert_eq!(
-            transmitters.transmitters[0].call_sign.as_deref(),
-            Some("KPHX")
-        );
+        assert_eq!(transmitters.transmitters[0].call_sign.as_str(), "KPHX");
         let requests = server.received_requests().await.unwrap();
         assert_eq!(requests[0].url.query(), None);
     }

@@ -29,9 +29,8 @@ impl DefaultPresentation for Example {
         &self,
         _presenter: &DefaultPresenter,
     ) -> Result<PresentationDocument, PresentationError> {
-        Ok(PresentationDocument::Text(format!(
-            "value: {}\n\n",
-            self.value
+        Ok(PresentationDocument::Summary(Box::new(
+            noaa_weather_summary::Summary::new(format!("value: {}", self.value)),
         )))
     }
 }
@@ -75,7 +74,9 @@ impl DefaultPresentation for InvalidJson {
         &self,
         _presenter: &DefaultPresenter,
     ) -> Result<PresentationDocument, PresentationError> {
-        Ok(PresentationDocument::Text("unused".to_owned()))
+        Ok(PresentationDocument::Summary(Box::new(
+            noaa_weather_summary::Summary::new("unused"),
+        )))
     }
 }
 

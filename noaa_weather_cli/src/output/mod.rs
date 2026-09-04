@@ -175,7 +175,6 @@ pub(crate) enum PresentationDocument {
     Summary(Box<noaa_weather_summary::Summary>),
     /// An un-ported family that still draws its own table.
     Table(Box<Table>),
-    Text(String),
 }
 
 impl PresentationDocument {
@@ -410,9 +409,6 @@ impl Output {
             PresentationDocument::Table(mut table) => {
                 self.render.apply(&mut table);
                 self.write_document(move |writer| write_table(writer, &table))
-            }
-            PresentationDocument::Text(text) => {
-                self.write_document(move |writer| write_text(writer, &text))
             }
         }
     }

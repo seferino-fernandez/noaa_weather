@@ -7,10 +7,10 @@ use std::fmt;
 use jiff::tz::TimeZone;
 use noaa_weather_client::models::{
     ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CwsuOffice, Forecast,
-    GlossaryResponse, Gridpoint, Observation, ObservationStation, Point, Sigmet,
-    TerminalAerodromeForecast, TerminalAerodromeForecastsResponse, TextProduct,
-    TextProductCollection, TextProductLocationCollection, TextProductTypeCollection, Zone,
-    ZoneForecast,
+    GlossaryResponse, Gridpoint, Observation, ObservationStation, Point, RadioBroadcast,
+    RadioTransmitter, RadioTransmitterCollection, Sigmet, TerminalAerodromeForecast,
+    TerminalAerodromeForecastsResponse, TextProduct, TextProductCollection,
+    TextProductLocationCollection, TextProductTypeCollection, Zone, ZoneForecast,
 };
 use noaa_weather_client::{Feature, FeatureCollection};
 use noaa_weather_summary::SummaryOptions;
@@ -22,7 +22,6 @@ mod values;
 
 pub mod offices;
 pub mod radar;
-pub mod radio;
 
 /// Owns the policy used to turn typed NOAA responses into default output.
 pub(crate) struct DefaultPresenter {
@@ -101,6 +100,9 @@ summarized!(
     TextProductCollection,
     TextProductLocationCollection,
     TextProductTypeCollection,
+    RadioBroadcast,
+    RadioTransmitter,
+    RadioTransmitterCollection,
     Feature<Point>,
     Feature<Gridpoint>,
     Feature<Forecast>,
@@ -207,7 +209,9 @@ mod tests {
                 presenter.value_unit(Some(&invalid_measurement)),
                 presenter.bytes(Some(-1)),
             ];
-            Ok(PresentationDocument::Text(values.join(" | ")))
+            Ok(PresentationDocument::Summary(Box::new(
+                noaa_weather_summary::Summary::new(values.join(" | ")),
+            )))
         }
     }
 
@@ -219,9 +223,11 @@ mod tests {
             &self,
             presenter: &DefaultPresenter,
         ) -> Result<PresentationDocument, PresentationError> {
-            Ok(PresentationDocument::Text(
-                presenter.timestamp("example.timestamp", Some("not-a-timestamp"))?,
-            ))
+            Ok(PresentationDocument::Summary(Box::new(
+                noaa_weather_summary::Summary::new(
+                    presenter.timestamp("example.timestamp", Some("not-a-timestamp"))?,
+                ),
+            )))
         }
     }
 
@@ -233,12 +239,12 @@ mod tests {
         );
 
         let document = presenter.present(&PolicyExample).unwrap();
-        let PresentationDocument::Text(rendered) = document else {
-            panic!("policy example should render text");
+        let PresentationDocument::Summary(summary) = document else {
+            panic!("policy example should build a summary");
         };
 
         assert_eq!(
-            rendered,
+            summary.title,
             "08/31/26 8:59:00 AM | N/A | AZZ551 | 101325.00 | N/A | Invalid | Invalid (negative)"
         );
     }
