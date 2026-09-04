@@ -25,6 +25,8 @@ const FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{}}"#;
 const POINT: &str = include_str!("fixtures/points/point.json");
 const FORECAST: &str = include_str!("fixtures/gridpoints/forecast.json");
 const HOURLY: &str = include_str!("fixtures/gridpoints/hourly.json");
+const CWA: &str = include_str!("fixtures/aviation/cwa.json");
+const SIGMET: &str = include_str!("fixtures/aviation/sigmet.json");
 const COLLECTION: &str = r#"{"type":"FeatureCollection","features":[]}"#;
 const GRAPH: &str = r#"{"@context":{},"@graph":[]}"#;
 
@@ -282,14 +284,14 @@ async fn aviation_handle_formats_dates_and_issue_instants() {
     mount(
         &server,
         "/aviation/cwsus/ZAB/cwas/2026-08-30/101",
-        FEATURE,
+        CWA,
         "application/geo+json",
     )
     .await;
     mount(
         &server,
         "/aviation/sigmets/KKCI/2026-08-30/1430",
-        FEATURE,
+        SIGMET,
         "application/geo+json",
     )
     .await;

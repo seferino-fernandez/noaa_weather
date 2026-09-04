@@ -1,0 +1,86 @@
+---
+source: noaa_weather_summary/tests/aviation.rs
+expression: "products.summarize(&SummaryOptions::default())"
+---
+title: SIGMETs and AIRMETs
+subtitle: 2 products
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: ID
+          key: id
+          also: []
+          align: Left
+        - title: Issue time
+          key: issueTime
+          also: []
+          align: Left
+        - title: ATSU
+          key: atsu
+          also: []
+          align: Left
+        - title: FIR
+          key: fir
+          also: []
+          align: Left
+        - title: Sequence
+          key: sequence
+          also: []
+          align: Left
+        - title: Phenomenon
+          key: phenomenon
+          also: []
+          align: Left
+        - title: Valid
+          key: start
+          also:
+            - end
+          align: Left
+      rows:
+        - - value:
+              Identifier: "0655"
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-02T06:55:00+00:00"
+            emphasis: None
+          - value:
+              Identifier: KKCI
+            emphasis: None
+          - value:
+              Text: KZAB
+            emphasis: None
+          - value:
+              Text: 27C
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T06:55:00+00:00"
+                end: "2026-09-02T08:55:00+00:00"
+            emphasis: None
+        - - value:
+              Identifier: "0655"
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-02T06:55:00+00:00"
+            emphasis: None
+          - value:
+              Identifier: KKCI
+            emphasis: None
+          - value:
+              Text: KZNY
+            emphasis: None
+          - value:
+              Text: 19E
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T06:55:00+00:00"
+                end: "2026-09-02T08:55:00+00:00"
+            emphasis: None
+notes: []

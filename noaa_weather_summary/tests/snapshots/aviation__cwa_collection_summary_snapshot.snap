@@ -1,0 +1,88 @@
+---
+source: noaa_weather_summary/tests/aviation.rs
+expression: "advisories.summarize(&SummaryOptions::default())"
+---
+title: Center Weather Advisories
+subtitle: 2 advisories
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: ID
+          key: id
+          also: []
+          align: Left
+        - title: Issue time
+          key: issueTime
+          also: []
+          align: Left
+        - title: CWSU
+          key: cwsu
+          also: []
+          align: Left
+        - title: Sequence
+          key: sequence
+          also: []
+          align: Right
+        - title: Valid
+          key: start
+          also:
+            - end
+          align: Left
+        - title: Basis
+          key: observedProperty
+          also: []
+          align: Left
+        - title: Advisory
+          key: text
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Identifier: "106"
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-02T01:05:00+00:00"
+            emphasis: None
+          - value:
+              Identifier: ZAB
+            emphasis: None
+          - value:
+              Count: 106
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-02T01:05:00+00:00"
+                end: "2026-09-02T02:00:00+00:00"
+            emphasis: None
+          - value:
+              Identifier: Tstm
+            emphasis: None
+          - value:
+              Text: DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 24015KT TOPS TO FL400. AZ
+            emphasis: None
+        - - value:
+              Identifier: "105"
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-01T21:27:00+00:00"
+            emphasis: None
+          - value:
+              Identifier: ZAB
+            emphasis: None
+          - value:
+              Count: 105
+            emphasis: None
+          - value:
+              Interval:
+                start: "2026-09-01T21:27:00+00:00"
+                end: "2026-09-01T22:00:00+00:00"
+            emphasis: None
+          - value:
+              Identifier: PrecipitationRate
+            emphasis: None
+          - value:
+              Text: DVLPG AREA SHRA/TSRA WITH MOD TO HVY PCPN. MOV LTL TOPS TO FL390. AZ
+            emphasis: None
+notes: []

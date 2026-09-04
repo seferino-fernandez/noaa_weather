@@ -1,0 +1,55 @@
+---
+source: noaa_weather_summary/tests/aviation.rs
+expression: "cwa().summarize(&SummaryOptions::default())"
+---
+title: Center Weather Advisory
+subtitle: ZAB sequence 106
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: ID
+          key: id
+          also: []
+          value:
+            Identifier: "106"
+          emphasis: None
+        - label: Issue time
+          key: issueTime
+          also: []
+          value:
+            Timestamp: "2026-09-02T01:05:00+00:00"
+          emphasis: None
+        - label: CWSU
+          key: cwsu
+          also: []
+          value:
+            Identifier: ZAB
+          emphasis: None
+        - label: Sequence
+          key: sequence
+          also: []
+          value:
+            Count: 106
+          emphasis: None
+        - label: Valid
+          key: start
+          also:
+            - end
+          value:
+            Interval:
+              start: "2026-09-02T01:05:00+00:00"
+              end: "2026-09-02T02:00:00+00:00"
+          emphasis: None
+        - label: Basis
+          key: observedProperty
+          also: []
+          value:
+            Identifier: Tstm
+          emphasis: None
+  - Prose:
+      heading: Advisory
+      key: text
+      text: DVLPG AREA TSRA WITH MOD TO HVY PCPN. MOV FROM 24015KT TOPS TO FL400. AZ
+notes: []

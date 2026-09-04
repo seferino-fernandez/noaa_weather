@@ -1,0 +1,55 @@
+---
+source: noaa_weather_summary/tests/aviation.rs
+expression: "cwsu().summarize(&SummaryOptions::default())"
+---
+title: Albuquerque CWSU
+subtitle: Center Weather Service Unit ZAB
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: ID
+          key: id
+          also: []
+          value:
+            Identifier: ZAB
+          emphasis: None
+        - label: Address
+          key: address
+          also: []
+          value:
+            Lines:
+              - Text: 8000 Louisiana Blvd NE
+              - Text: "Albuquerque, NM 87109"
+          emphasis: None
+        - label: Phone
+          key: telephone
+          also: []
+          value:
+            Text: 505.856.4690
+          emphasis: None
+        - label: Fax
+          key: faxNumber
+          also: []
+          value:
+            Text: 505.856.4692
+          emphasis: None
+        - label: Email
+          key: email
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Website
+          key: sameAs
+          also: []
+          value:
+            Text: "https://www.weather.gov/zab"
+          emphasis: None
+        - label: Region
+          key: nwsRegion
+          also: []
+          value:
+            Text: sr
+          emphasis: None
+notes: []

@@ -20,7 +20,7 @@ pub use self::area_code::AreaCode;
 pub mod center_weather_advisory;
 pub use self::center_weather_advisory::CenterWeatherAdvisory;
 pub mod cwsu_office;
-pub use self::cwsu_office::CwsuOffice;
+pub use self::cwsu_office::{CwsuOffice, CwsuOfficeAddress, CwsuOfficeContext};
 pub mod gridpoint;
 pub use self::gridpoint::{
     Forecast, ForecastGenerator, ForecastPeriod, ForecastUnits, Gridpoint, GridpointLayer, Hazard,

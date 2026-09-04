@@ -324,8 +324,10 @@ mod tests {
     use super::SigmetsQuery;
     use crate::client::test_support::client_for;
 
-    const FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{}}"#;
+    const SIGMET_FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{"id":"https://api.weather.gov/aviation/sigmets/KKCI/2026-08-31/0030","issueTime":"2026-08-31T00:30:00+00:00","fir":null,"atsu":"KKCI","sequence":null,"phenomenon":null,"start":"2026-08-31T00:30:00+00:00","end":"2026-08-31T02:30:00+00:00"}}"#;
+    const CWA_FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{"id":"https://api.weather.gov/aviation/cwsus/ZAB/cwas/2026-08-30/101","issueTime":"2026-08-30T01:00:00+00:00","cwsu":"ZAB","sequence":101,"start":"2026-08-30T01:00:00+00:00","end":"2026-08-30T03:00:00+00:00","observedProperty":null,"text":"CWA text"}}"#;
     const COLLECTION: &str = r#"{"type":"FeatureCollection","features":[]}"#;
+    const CWSU: &str = r#"{"@context":{"@version":"1.1","@vocab":"https://schema.org/"},"@id":"https://api.weather.gov/aviation/cwsus/ZAB","@type":"GovernmentOrganization","address":{"@type":"PostalAddress","addressLocality":"Albuquerque","addressRegion":"NM","postalCode":"87109","streetAddress":"8000 Louisiana Blvd NE"},"email":"","faxNumber":"505.856.4692","id":"ZAB","name":"Albuquerque CWSU","nwsRegion":"sr","sameAs":"https://www.weather.gov/zab","telephone":"505.856.4690"}"#;
 
     async fn mount(server: &MockServer, route: &str, body: &'static str, media: &'static str) {
         Mock::given(method("GET"))
@@ -343,7 +345,7 @@ mod tests {
         mount(
             &server,
             "/aviation/sigmets/KKCI/2026-08-31/0030",
-            FEATURE,
+            SIGMET_FEATURE,
             "application/geo+json",
         )
         .await;
@@ -365,7 +367,7 @@ mod tests {
         mount(
             &server,
             "/aviation/cwsus/ZAB/cwas/2026-08-30/101",
-            FEATURE,
+            CWA_FEATURE,
             "application/geo+json",
         )
         .await;
@@ -380,7 +382,7 @@ mod tests {
     #[tokio::test]
     async fn cwsu_routes_request_their_media_types() {
         let server = MockServer::start().await;
-        mount(&server, "/aviation/cwsus/ZAB", "{}", "application/ld+json").await;
+        mount(&server, "/aviation/cwsus/ZAB", CWSU, "application/ld+json").await;
         mount(
             &server,
             "/aviation/cwsus/ZAB/cwas",

@@ -8,6 +8,7 @@ use serde::Serialize;
 
 pub mod alerts;
 pub mod audit;
+pub mod aviation;
 pub mod gridpoints;
 pub mod points;
 pub mod render;
