@@ -114,16 +114,11 @@ pub mod terminal_aerodrome_forecast;
 pub use self::terminal_aerodrome_forecast::TerminalAerodromeForecast;
 pub mod terminal_aerodrome_forecasts_response;
 pub use self::terminal_aerodrome_forecasts_response::TerminalAerodromeForecastsResponse;
-pub mod text_product;
-pub use self::text_product::TextProduct;
-pub mod text_product_collection;
-pub use self::text_product_collection::TextProductCollection;
-pub mod text_product_location_collection;
-pub use self::text_product_location_collection::TextProductLocationCollection;
-pub mod text_product_type_collection;
-pub use self::text_product_type_collection::TextProductTypeCollection;
-pub mod text_product_type_collection_graph_inner;
-pub use self::text_product_type_collection_graph_inner::TextProductTypeCollectionGraphInner;
+pub mod product;
+pub use self::product::{
+    TextProduct, TextProductCollection, TextProductLocationCollection, TextProductType,
+    TextProductTypeCollection,
+};
 pub mod units;
 pub use self::units::{Quantity, Unit, UnitCodeType, ValueUnit};
 pub mod wmo_unit_code;

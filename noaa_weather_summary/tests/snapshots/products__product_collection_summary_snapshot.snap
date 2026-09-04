@@ -1,0 +1,53 @@
+---
+source: noaa_weather_summary/tests/products.rs
+expression: "products.summarize(&SummaryOptions::default())"
+---
+title: NWS text products
+subtitle: 2 products
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: ID
+          key: id
+          also: []
+          align: Left
+        - title: Product Code
+          key: productCode
+          also: []
+          align: Left
+        - title: Issuing Office
+          key: issuingOffice
+          also: []
+          align: Left
+        - title: Issuance Time
+          key: issuanceTime
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Identifier: dcfd78a0-561b-423e-9fd6-889455b8c535
+            emphasis: None
+          - value:
+              Identifier: ABV
+            emphasis: None
+          - value:
+              Identifier: KTBW
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-28T00:00:00+00:00"
+            emphasis: None
+        - - value:
+              Identifier: 1bca15d6-d174-495e-9bf4-29271428e4d1
+            emphasis: None
+          - value:
+              Identifier: FZL
+            emphasis: None
+          - value:
+              Identifier: KTBW
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-28T00:00:00+00:00"
+            emphasis: None
+notes: []

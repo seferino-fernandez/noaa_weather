@@ -18,7 +18,8 @@ use noaa_weather_client::models::radar_station::{CommandChannel, CommandChannelM
 use noaa_weather_client::models::{
     ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CwsuOffice, Forecast,
     GlossaryResponse, Gridpoint, Observation, ObservationStation, Point, RadarStationFeature,
-    Sigmet, TerminalAerodromeForecastsResponse, Zone, ZoneForecast,
+    Sigmet, TerminalAerodromeForecastsResponse, TextProduct, TextProductCollection,
+    TextProductLocationCollection, TextProductTypeCollection, Zone, ZoneForecast,
 };
 use noaa_weather_client::{Feature, FeatureCollection};
 use serde::Serialize;
@@ -249,6 +250,15 @@ fn captured_responses_preserve_every_non_whitelisted_key_path() {
         ("aviation/cwa.json", Feature<CenterWeatherAdvisory>),
         ("aviation/cwsu.json", CwsuOffice),
         ("glossary/terms.json", GlossaryResponse),
+        ("products/list.json", TextProductCollection),
+        ("products/product.json", TextProduct),
+        ("products/locations.json", TextProductLocationCollection),
+        ("products/types.json", TextProductTypeCollection),
+        ("products/type.json", TextProductCollection),
+        ("products/type_locations.json", TextProductLocationCollection),
+        ("products/type_location.json", TextProductCollection),
+        ("products/location_types.json", TextProductTypeCollection),
+        ("products/latest.json", TextProduct),
         ("radar/KFSX.json", RadarStationFeature),
         ("radar/KLNX.json", RadarStationFeature),
         ("radar/TSLC.json", RadarStationFeature),
@@ -462,6 +472,48 @@ async fn live_responses_preserve_every_non_whitelisted_key_path() {
     live!("/points/39.7456,-97.0892", GEO_JSON, Feature<Point>);
 
     live!("/glossary", JSON_LD, GlossaryResponse);
+
+    let products = live!("/products?limit=500", JSON_LD, TextProductCollection);
+    match first_member(&products, "@graph") {
+        Some(first) => {
+            let url = first["@id"]
+                .as_str()
+                .expect("a text-product catalog entry carries @id");
+            live!(&path_of(url), JSON_LD, TextProduct);
+        }
+        None => eprintln!(
+            "/products?limit=500 returned a well-formed empty `@graph`, so \
+             there was no product id to fetch; the collection was checked, \
+             the single-product response was not"
+        ),
+    }
+    live!(
+        "/products/locations",
+        JSON_LD,
+        TextProductLocationCollection
+    );
+    live!("/products/types", JSON_LD, TextProductTypeCollection);
+    live!("/products/types/AFD", JSON_LD, TextProductCollection);
+    live!(
+        "/products/types/AFD/locations",
+        JSON_LD,
+        TextProductLocationCollection
+    );
+    live!(
+        "/products/types/AFD/locations/LWX",
+        JSON_LD,
+        TextProductCollection
+    );
+    live!(
+        "/products/locations/PSR/types",
+        JSON_LD,
+        TextProductTypeCollection
+    );
+    live!(
+        "/products/types/AFD/locations/PSR/latest",
+        JSON_LD,
+        TextProduct
+    );
 
     live!("/gridpoints/TOP/31,80", GEO_JSON, Feature<Gridpoint>);
     live!(

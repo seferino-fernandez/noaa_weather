@@ -91,7 +91,7 @@ fn a_product_is_fetched_by_an_id_resolved_at_run_time() {
 #[test]
 fn test_products_reject_malformed_type_code() {
     let output = noaa_weather()
-        .args(["products", "type", "--type-id", "AFDX"])
+        .args(["products", "type", "--type-id", "A-F"])
         .output()
         .unwrap();
     let stderr = String::from_utf8_lossy(&output.stderr);

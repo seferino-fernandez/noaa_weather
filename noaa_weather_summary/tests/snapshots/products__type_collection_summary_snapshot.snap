@@ -1,0 +1,40 @@
+---
+source: noaa_weather_summary/tests/products.rs
+expression: "types.summarize(&SummaryOptions::default())"
+---
+title: NWS product types
+subtitle: 3 types
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: Product Code
+          key: productCode
+          also:
+            - "@graph"
+          align: Left
+        - title: Product Name
+          key: productName
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Identifier: ABV
+            emphasis: None
+          - value:
+              Text: Rawinsonde Data Above 100 Millibars
+            emphasis: None
+        - - value:
+              Identifier: ADA
+            emphasis: None
+          - value:
+              Text: Alarm/Alert Administrative Msg
+            emphasis: None
+        - - value:
+              Identifier: ADM
+            emphasis: None
+          - value:
+              Text: Alert Administrative Message
+            emphasis: None
+notes: []

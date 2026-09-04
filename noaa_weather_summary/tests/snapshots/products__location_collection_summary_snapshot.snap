@@ -1,0 +1,38 @@
+---
+source: noaa_weather_summary/tests/products.rs
+expression: "locations.summarize(&SummaryOptions::default())"
+---
+title: NWS product locations
+subtitle: 3 locations
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: Location ID
+          key: locations
+          also: []
+          align: Left
+        - title: Location Name
+          key: ~
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Identifier: "0"
+            emphasis: None
+          - value: Missing
+            emphasis: None
+        - - value:
+              Identifier: ABQ
+            emphasis: None
+          - value:
+              Text: "Albuquerque, NM"
+            emphasis: None
+        - - value:
+              Identifier: PSR
+            emphasis: None
+          - value:
+              Text: NWS Phoenix
+            emphasis: None
+notes: []
