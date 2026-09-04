@@ -291,6 +291,9 @@ capture "products/latest.json" "$BASE_URL/products/types/AFD/locations/PSR/lates
 capture "radar/servers.json" "$BASE_URL/radar/servers" "" "$JSON_LD"
 capture "radar/stations.json" "$BASE_URL/radar/stations"
 trim "radar/stations.json" features 3
+capture "radar/KFSX.json" "$BASE_URL/radar/stations/KFSX"
+capture "radar/KLNX.json" "$BASE_URL/radar/stations/KLNX"
+capture "radar/TSLC.json" "$BASE_URL/radar/stations/TSLC"
 capture "radar/queue.json" "$BASE_URL/radar/queues/rds?limit=5" "" "$JSON_LD"
 capture "radar/alarms.json" "$BASE_URL/radar/stations/KABQ/alarms" "" "$JSON_LD"
 capture "radar/spgds.json" "$BASE_URL/radar/spgds" "" "$JSON_LD"

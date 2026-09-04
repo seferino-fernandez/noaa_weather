@@ -14,9 +14,10 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
 
+use noaa_weather_client::models::radar_station::{CommandChannel, CommandChannelMode};
 use noaa_weather_client::models::{
     ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, Forecast, Gridpoint,
-    Observation, ObservationStation, Point, Sigmet, Zone, ZoneForecast,
+    Observation, ObservationStation, Point, RadarStationFeature, Sigmet, Zone, ZoneForecast,
 };
 use noaa_weather_client::{Feature, FeatureCollection};
 use serde::Serialize;
@@ -29,6 +30,48 @@ const WHITELIST: &[(&str, &str)] = &[
         "JSON-LD vocabulary, identical on every response, no weather data",
     ),
     ("observationStations", "duplicates features[].id"),
+    (
+        "shortPulseVerticaldBZ0",
+        "present on both WSR-88D fixtures KFSX and KLNX captured 2026-09-03; radar curation is deferred",
+    ),
+    (
+        "longPulseVerticaldBZ0",
+        "present on both WSR-88D fixtures KFSX and KLNX captured 2026-09-03; radar curation is deferred",
+    ),
+];
+
+const PATH_WHITELIST: &[(&str, &str)] = &[
+    (
+        "properties.performance.properties",
+        "all 45 TDWR stations sent [] here on 2026-09-03; [] is intentionally normalized to None",
+    ),
+    (
+        "properties.performance.properties[]",
+        "all 45 TDWR stations sent [] here on 2026-09-03; [] is intentionally normalized to None",
+    ),
+    (
+        "properties.adaptation.properties",
+        "all 45 TDWR stations sent [] here on 2026-09-03; [] is intentionally normalized to None",
+    ),
+    (
+        "properties.adaptation.properties[]",
+        "all 45 TDWR stations sent [] here on 2026-09-03; [] is intentionally normalized to None",
+    ),
+];
+
+const TSLC_NULL_PATH_WHITELIST: &[(&str, &str)] = &[
+    (
+        "properties.rda.properties.resolutionVersion",
+        "null-only exemption on radar/TSLC.json, captured 2026-09-03",
+    ),
+    (
+        "properties.performance.timestamp",
+        "null-only exemption on radar/TSLC.json, captured 2026-09-03",
+    ),
+    (
+        "properties.adaptation.timestamp",
+        "null-only exemption on radar/TSLC.json, captured 2026-09-03",
+    ),
 ];
 
 fn collect_key_paths(value: &Value, prefix: &str, paths: &mut BTreeSet<String>) {
@@ -63,7 +106,26 @@ fn key_paths(value: &Value) -> BTreeSet<String> {
     paths
 }
 
-fn is_whitelisted(path: &str) -> bool {
+fn value_at_path<'a>(value: &'a Value, path: &str) -> Option<&'a Value> {
+    path.split('.').try_fold(value, |value, key| value.get(key))
+}
+
+fn is_whitelisted(label: &str, path: &str, raw: &Value) -> bool {
+    if PATH_WHITELIST
+        .iter()
+        .any(|(whitelisted, _)| path == *whitelisted)
+    {
+        return true;
+    }
+    let is_tscl = matches!(label, "radar/TSLC.json" | "/radar/stations/TSLC");
+    if is_tscl
+        && TSLC_NULL_PATH_WHITELIST
+            .iter()
+            .any(|(whitelisted, _)| path == *whitelisted)
+        && value_at_path(raw, path).is_some_and(Value::is_null)
+    {
+        return true;
+    }
     let final_segment = path.rsplit('.').next().unwrap_or(path);
     WHITELIST.iter().any(|(key, _)| final_segment == *key)
 }
@@ -110,7 +172,7 @@ where
 
     let missing = raw_paths
         .difference(&our_paths)
-        .filter(|path| !is_whitelisted(path))
+        .filter(|path| !is_whitelisted(label, path, raw))
         .cloned()
         .collect::<Vec<_>>();
     assert!(
@@ -183,6 +245,68 @@ fn captured_responses_preserve_every_non_whitelisted_key_path() {
             FeatureCollection<CenterWeatherAdvisory>
         ),
         ("aviation/cwa.json", Feature<CenterWeatherAdvisory>),
+        ("radar/KFSX.json", RadarStationFeature),
+        ("radar/KLNX.json", RadarStationFeature),
+        ("radar/TSLC.json", RadarStationFeature),
+    );
+}
+
+#[test]
+fn radar_command_channel_round_trips_as_the_original_json_scalar() {
+    for (path, expected) in [
+        ("radar/KLNX.json", r#""commandChannel":"Single""#),
+        ("radar/KFSX.json", r#""commandChannel":2"#),
+    ] {
+        let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures")
+            .join(path);
+        let source = fs::read_to_string(&fixture)
+            .unwrap_or_else(|error| panic!("failed to read {}: {error}", fixture.display()));
+        let station: RadarStationFeature = serde_json::from_str(&source)
+            .unwrap_or_else(|error| panic!("failed to deserialize {path}: {error}"));
+        let serialized = serde_json::to_string(&station)
+            .unwrap_or_else(|error| panic!("failed to serialize {path}: {error}"));
+        assert!(
+            serialized.contains(expected),
+            "{path} serialized commandChannel with the wrong JSON scalar: {serialized}"
+        );
+    }
+}
+
+#[test]
+fn radar_single_command_channel_deserializes_as_a_mode() {
+    let channel: CommandChannel = serde_json::from_str(r#""Single""#).unwrap();
+
+    assert!(matches!(
+        channel,
+        CommandChannel::Mode(CommandChannelMode::Single)
+    ));
+}
+
+#[test]
+fn radar_empty_properties_arrays_deserialize_as_absent() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/radar/TSLC.json");
+    let source = fs::read_to_string(&fixture)
+        .unwrap_or_else(|error| panic!("failed to read {}: {error}", fixture.display()));
+    let station: RadarStationFeature = serde_json::from_str(&source)
+        .unwrap_or_else(|error| panic!("failed to deserialize {}: {error}", fixture.display()));
+    let station = station.radar_station.as_ref().expect("TSLC properties");
+
+    assert!(
+        station
+            .performance
+            .as_ref()
+            .expect("TSLC performance")
+            .properties
+            .is_none()
+    );
+    assert!(
+        station
+            .adaptation
+            .as_ref()
+            .expect("TSLC adaptation")
+            .properties
+            .is_none()
     );
 }
 
@@ -326,6 +450,10 @@ async fn live_responses_preserve_every_non_whitelisted_key_path() {
         GEO_JSON,
         Feature<Observation>
     );
+
+    live!("/radar/stations/KFSX", GEO_JSON, RadarStationFeature);
+    live!("/radar/stations/KLNX", GEO_JSON, RadarStationFeature);
+    live!("/radar/stations/TSLC", GEO_JSON, RadarStationFeature);
 
     live!("/points/39.7456,-97.0892", GEO_JSON, Feature<Point>);
 

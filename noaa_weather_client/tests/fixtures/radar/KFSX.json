@@ -1,0 +1,253 @@
+{
+  "@context": [
+    "https://geojson.org/geojson-ld/geojson-context.jsonld",
+    {
+      "@version": "1.1",
+      "wmoUnit": "https://codes.wmo.int/common/unit/",
+      "nwsUnit": "https://api.weather.gov/ontology/unit/"
+    }
+  ],
+  "id": "https://api.weather.gov/radar/stations/KFSX",
+  "type": "Feature",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -111.19843,
+      34.57433
+    ]
+  },
+  "properties": {
+    "@id": "https://api.weather.gov/radar/stations/KFSX",
+    "@type": "wx:RadarStation",
+    "id": "KFSX",
+    "name": "Flagstaff",
+    "stationType": "WSR-88D",
+    "elevation": {
+      "unitCode": "wmoUnit:m",
+      "value": 2260.7
+    },
+    "timeZone": "GMT",
+    "latency": {
+      "current": {
+        "unitCode": "nwsUnit:s",
+        "value": 0.174509
+      },
+      "average": {
+        "unitCode": "nwsUnit:s",
+        "value": 0.19
+      },
+      "max": {
+        "unitCode": "nwsUnit:s",
+        "value": 11
+      },
+      "levelTwoLastReceivedTime": "2026-09-04T00:34:01+00:00",
+      "maxLatencyTime": "2026-09-04T00:02:33+00:00",
+      "reportingHost": "rdss",
+      "host": "ldm4"
+    },
+    "rda": {
+      "timestamp": "2026-09-04T00:33:19+00:00",
+      "reportingHost": "rdss",
+      "properties": {
+        "resolutionVersion": 6,
+        "nl2Path": "Default",
+        "volumeCoveragePattern": "R212",
+        "controlStatus": "RPG (Remote) Only",
+        "buildNumber": 24.1,
+        "alarmSummary": "No Alarms",
+        "mode": "Operational",
+        "generatorState": "Utility PWR Available",
+        "superResolutionStatus": "Enabled",
+        "operabilityStatus": "RDA - On-line",
+        "status": "Operate",
+        "averageTransmitterPower": {
+          "unitCode": "wmoUnit:W",
+          "value": 644
+        },
+        "reflectivityCalibrationCorrection": {
+          "unitCode": "wmoUnit:dB",
+          "value": -0.02
+        }
+      }
+    },
+    "performance": {
+      "timestamp": "2026-09-04T00:30:52+00:00",
+      "reportingHost": "rdss",
+      "properties": {
+        "ntp_status": 0,
+        "commandChannel": 2,
+        "radomeAirTemperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 27.349998
+        },
+        "transitionalPowerSource": "OK",
+        "horizontalShortPulseNoise": {
+          "unitCode": "wmoUnit:dB_m-1",
+          "value": -82.7302
+        },
+        "elevationEncoderLight": "OK",
+        "horizontalLongPulseNoise": {
+          "unitCode": "wmoUnit:dB_m-1",
+          "value": -87.6
+        },
+        "azimuthEncoderLight": "OK",
+        "horizontalNoiseTemperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": -100.50727
+        },
+        "linearity": 0.99778736,
+        "transmitterPeakPower": {
+          "unitCode": "wmoUnit:kW",
+          "value": 729.20465
+        },
+        "horizontalDeltadBZ0": {
+          "unitCode": "wmoUnit:dB",
+          "value": -0.02252789
+        },
+        "transmitterRecycleCount": 0,
+        "verticalDeltadBZ0": {
+          "unitCode": "wmoUnit:dB",
+          "value": 0.27962324
+        },
+        "receiverBias": {
+          "unitCode": "wmoUnit:dB",
+          "value": 0.58264923
+        },
+        "shortPulseHorizontaldBZ0": {
+          "unitCode": "nwsUnit:dBZ",
+          "value": -42.85253
+        },
+        "transmitterImbalance": {
+          "unitCode": "wmoUnit:dB",
+          "value": -0.15850334
+        },
+        "longPulseHorizontaldBZ0": {
+          "unitCode": "nwsUnit:dBZ",
+          "value": -52.46
+        },
+        "performanceCheckTime": "2026-09-04T07:36:45Z",
+        "transmitterLeavingAirTemperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 29.27
+        },
+        "shelterTemperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 21.150002
+        },
+        "powerSource": "Utility",
+        "dynamicRange": {
+          "unitCode": "wmoUnit:dB",
+          "value": 94
+        },
+        "shortPulseVerticaldBZ0": {
+          "unitCode": "nwsUnit:dBZ",
+          "value": -43.310375
+        },
+        "longPulseVerticaldBZ0": {
+          "unitCode": "nwsUnit:dBZ",
+          "value": -53.13
+        },
+        "fuelLevel": {
+          "unitCode": "wmoUnit:percent",
+          "value": 77
+        }
+      }
+    },
+    "adaptation": {
+      "timestamp": "2026-09-02T15:26:21+00:00",
+      "reportingHost": "rdss",
+      "properties": {
+        "transmitterFrequency": {
+          "unitCode": "nwsUnit:MHz",
+          "value": 2760
+        },
+        "pathLossWG04Circulator": {
+          "unitCode": "wmoUnit:dB",
+          "value": -0.15
+        },
+        "antennaGainIncludingRadome": {
+          "unitCode": "wmoUnit:dB",
+          "value": 44.8
+        },
+        "pathLossA6ArcDetector": {
+          "unitCode": "wmoUnit:dB",
+          "value": -0.05
+        },
+        "cohoPowerAtA1J4": {
+          "unitCode": "wmoUnit:dB_m-1",
+          "value": 26.57
+        },
+        "ameHorzizontalTestSignalPower": {
+          "unitCode": "wmoUnit:dB_m-1",
+          "value": 12.35
+        },
+        "pathLossTransmitterCouplerCoupling": {
+          "unitCode": "wmoUnit:dB",
+          "value": -34.7
+        },
+        "staloPowerAtA1J2": {
+          "unitCode": "wmoUnit:dB_m-1",
+          "value": 16.49
+        },
+        "ameNoiseSourceHorizontalExcessNoiseRatio": {
+          "unitCode": "wmoUnit:dB",
+          "value": 21.7
+        },
+        "pathLossVerticalIFHeliaxTo4AT16": {
+          "unitCode": "wmoUnit:dB",
+          "value": -2.86
+        },
+        "pathLossAT4Attenuator": {
+          "unitCode": "wmoUnit:dB",
+          "value": -5.16
+        },
+        "pathLossHorzontalIFHeliaxTo4AT17": {
+          "unitCode": "wmoUnit:dB",
+          "value": 0
+        },
+        "pathLossIFDRIFAntiAliasFilter": {
+          "unitCode": "wmoUnit:dB",
+          "value": -1.43
+        },
+        "pathLossIFDBurstAntiAliasFilter": {
+          "unitCode": "wmoUnit:dB",
+          "value": -1.53
+        },
+        "pathLossWG02HarmonicFilter": {
+          "unitCode": "wmoUnit:dB",
+          "value": -0.15
+        },
+        "transmitterPowerDataWattsFactor": {
+          "unitCode": "wmoUnit:W",
+          "value": 0.0001111
+        },
+        "pathLossWaveguideKlystronToSwitch": {
+          "unitCode": "wmoUnit:dB",
+          "value": -0.09
+        },
+        "pulseWidthTransmitterOutputShortPulse": {
+          "unitCode": "nwsUnit:ns",
+          "value": 1500
+        },
+        "pulseWidthTransmitterOutputLongPulse": {
+          "unitCode": "nwsUnit:ns",
+          "value": 4620
+        },
+        "pathLossWG06SpectrumFilter": {
+          "unitCode": "wmoUnit:dB",
+          "value": 0
+        },
+        "horizontalReceiverNoiseShortPulse": {
+          "unitCode": "wmoUnit:dB",
+          "value": -82.9
+        },
+        "horizontalReceiverNoiseLongPulse": {
+          "unitCode": "wmoUnit:dB_m-1",
+          "value": -87.6
+        },
+        "transmitterSpectrumFilterInstalled": "F"
+      }
+    }
+  }
+}
+

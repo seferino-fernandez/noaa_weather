@@ -13,8 +13,8 @@ use super::radar_server::{
     RadarServerPingTargets,
 };
 use super::radar_station::{
-    AdaptationInfo, AdaptationProperties, LatencyInfo, PerformanceInfo, PerformanceProperties,
-    RadarStation, RadarStationFeature, RdaInfo, RdaProperties,
+    AdaptationInfo, AdaptationProperties, CommandChannel, LatencyInfo, PerformanceInfo,
+    PerformanceProperties, RadarStation, RadarStationFeature, RdaInfo, RdaProperties,
 };
 use super::{UnitCodeType, ValueUnit};
 
@@ -425,7 +425,7 @@ impl RadarPerformanceTelemetry {
 #[non_exhaustive]
 pub struct RadarPerformanceProperties {
     ntp_status: Option<i32>,
-    command_channel: Option<Box<str>>,
+    command_channel: Option<CommandChannel>,
     transitional_power_source: Option<Box<str>>,
     horizontal_short_pulse_noise: Option<RadarMeasurement>,
     elevation_encoder_light: Option<Box<str>>,
@@ -452,7 +452,6 @@ pub struct RadarPerformanceProperties {
 
 impl RadarPerformanceProperties {
     string_accessors! {
-        command_channel => command_channel,
         transitional_power_source => transitional_power_source,
         elevation_encoder_light => elevation_encoder_light,
         azimuth_encoder_light => azimuth_encoder_light,
@@ -476,6 +475,13 @@ impl RadarPerformanceProperties {
         dynamic_range => dynamic_range,
     }
     timestamp_accessors! { performance_check_time => performance_check_time }
+
+    /// Command-channel mode or number; NOAA sent `"Single"` for 137 and `1` or `2`
+    /// for 21 of 159 WSR-88D stations measured on 2026-09-03.
+    #[must_use]
+    pub const fn command_channel(&self) -> Option<&CommandChannel> {
+        self.command_channel.as_ref()
+    }
 
     /// NTP status code.
     #[must_use]
@@ -1012,7 +1018,7 @@ fn normalize_performance_properties(
 ) -> Result<RadarPerformanceProperties, RadarNormalizationError> {
     Ok(RadarPerformanceProperties {
         ntp_status: raw.ntp_status,
-        command_channel: boxed(&raw.command_channel),
+        command_channel: raw.command_channel.clone(),
         transitional_power_source: boxed(&raw.transitional_power_source),
         horizontal_short_pulse_noise: measurement(&raw.horizontal_short_pulse_noise),
         elevation_encoder_light: boxed(&raw.elevation_encoder_light),

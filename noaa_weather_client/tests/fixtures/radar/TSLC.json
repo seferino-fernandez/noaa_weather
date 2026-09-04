@@ -1,0 +1,75 @@
+{
+  "@context": [
+    "https://geojson.org/geojson-ld/geojson-context.jsonld",
+    {
+      "@version": "1.1",
+      "wmoUnit": "https://codes.wmo.int/common/unit/",
+      "nwsUnit": "https://api.weather.gov/ontology/unit/"
+    }
+  ],
+  "id": "https://api.weather.gov/radar/stations/TSLC",
+  "type": "Feature",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -111.93,
+      40.967
+    ]
+  },
+  "properties": {
+    "@id": "https://api.weather.gov/radar/stations/TSLC",
+    "@type": "wx:RadarStation",
+    "id": "TSLC",
+    "name": "Salt Lake City",
+    "stationType": "TDWR",
+    "elevation": {
+      "unitCode": "wmoUnit:m",
+      "value": 1309.11598
+    },
+    "timeZone": "GMT",
+    "latency": {
+      "current": {
+        "unitCode": "nwsUnit:s",
+        "value": 0.08243
+      },
+      "average": {
+        "unitCode": "nwsUnit:s",
+        "value": 0.07
+      },
+      "max": {
+        "unitCode": "nwsUnit:s",
+        "value": 0
+      },
+      "levelTwoLastReceivedTime": "2026-09-04T00:34:00+00:00",
+      "maxLatencyTime": "2026-09-04T00:05:51+00:00",
+      "reportingHost": "rdss",
+      "host": "ldm4"
+    },
+    "rda": {
+      "timestamp": "2026-09-04T00:30:00+00:00",
+      "reportingHost": "rdss",
+      "properties": {
+        "resolutionVersion": null,
+        "nl2Path": "Default",
+        "volumeCoveragePattern": "L90",
+        "buildNumber": 2,
+        "alarmSummary": "No Alarms",
+        "operabilityStatus": "RDA - On-line",
+        "status": "Operate",
+        "controlStatus": "Local Only",
+        "mode": "Operational"
+      }
+    },
+    "performance": {
+      "timestamp": null,
+      "reportingHost": "rdss",
+      "properties": []
+    },
+    "adaptation": {
+      "timestamp": null,
+      "reportingHost": "rdss",
+      "properties": []
+    }
+  }
+}
+

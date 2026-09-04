@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use super::{JsonLdContext, ValueUnit};
 
@@ -218,13 +218,60 @@ pub struct Feature {
     pub properties: Option<RadarStationProperties>,
 }
 
+/// The two different meanings NOAA put in `commandChannel`.
+///
+/// Across all 159 WSR-88D stations measured on 2026-09-03, NOAA sent the
+/// mode name `"Single"` for 137 stations, channel number `1` for 12, channel
+/// number `2` for 9, and omitted the field once. A single scalar type would
+/// either lose the distinction or reject one of the observed JSON shapes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum CommandChannel {
+    /// A redundant command channel number, observed as `1` or `2` on 21 WSR-88D stations on 2026-09-03.
+    Channel(u8),
+    /// A named mode, observed as `"Single"` on 137 WSR-88D stations on 2026-09-03.
+    Mode(CommandChannelMode),
+    /// No string other than `"Single"` was recorded in the 2026-09-03 census; any later string is preserved verbatim.
+    Other(Box<str>),
+}
+
+/// A named `commandChannel` mode NOAA sent on 137 WSR-88D stations measured on 2026-09-03.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub enum CommandChannelMode {
+    /// Receives the `"Single"` mode name NOAA sent on 137 WSR-88D stations measured on 2026-09-03.
+    #[serde(rename = "Single")]
+    Single,
+}
+
+fn deserialize_empty_array_as_none<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum PropertiesOrEmptyArray<T> {
+        Properties(T),
+        EmptyArray(Vec<serde::de::IgnoredAny>),
+    }
+
+    match Option::<PropertiesOrEmptyArray<T>>::deserialize(deserializer)? {
+        None => Ok(None),
+        Some(PropertiesOrEmptyArray::Properties(properties)) => Ok(Some(properties)),
+        Some(PropertiesOrEmptyArray::EmptyArray(properties)) if properties.is_empty() => Ok(None),
+        Some(PropertiesOrEmptyArray::EmptyArray(_)) => Err(serde::de::Error::custom(
+            "expected an object or an empty array",
+        )),
+    }
+}
+
 /// Detailed performance metrics of the radar station.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PerformanceProperties {
     #[serde(rename = "ntp_status", skip_serializing_if = "Option::is_none")]
     pub ntp_status: Option<i32>,
     #[serde(rename = "commandChannel", skip_serializing_if = "Option::is_none")]
-    pub command_channel: Option<String>,
+    pub command_channel: Option<CommandChannel>,
     #[serde(
         rename = "radomeAirTemperature",
         skip_serializing_if = "Option::is_none"
@@ -323,7 +370,13 @@ pub struct PerformanceInfo {
     pub timestamp: Option<String>,
     #[serde(rename = "reportingHost", skip_serializing_if = "Option::is_none")]
     pub reporting_host: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// NOAA sent this as an empty array for all 45 TDWR stations measured on 2026-09-03;
+    /// it deserializes as absent and serializes as an omitted key, never `{}`.
+    #[serde(
+        default,
+        deserialize_with = "deserialize_empty_array_as_none",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub properties: Option<PerformanceProperties>,
 }
 
@@ -448,6 +501,12 @@ pub struct AdaptationInfo {
     pub timestamp: Option<String>,
     #[serde(rename = "reportingHost", skip_serializing_if = "Option::is_none")]
     pub reporting_host: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// NOAA sent this as an empty array for all 45 TDWR stations measured on 2026-09-03;
+    /// it deserializes as absent and serializes as an omitted key, never `{}`.
+    #[serde(
+        default,
+        deserialize_with = "deserialize_empty_array_as_none",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub properties: Option<AdaptationProperties>,
 }
