@@ -1,0 +1,49 @@
+---
+source: noaa_weather_summary/tests/zones.rs
+expression: "forecast.summarize(&SummaryOptions::default())"
+---
+title: Zone forecast
+subtitle: UTZ101
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: Zone ID
+          key: zone
+          also: []
+          value:
+            Identifier: UTZ101
+          emphasis: None
+        - label: Updated
+          key: updated
+          also: []
+          value:
+            Timestamp: "2026-09-02T12:44:00-06:00"
+          emphasis: None
+  - Table:
+      heading: ~
+      columns:
+        - title: Day/Night
+          key: name
+          also:
+            - periods
+          align: Left
+        - title: Forecast
+          key: detailedForecast
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Text: Today
+            emphasis: None
+          - value:
+              Text: Sunny in the morning then becoming partly cloudy. Breezy. Highs around 80. Southwest winds 15 to 25 mph decreasing to 10 to 20 mph late in the afternoon.
+            emphasis: None
+        - - value:
+              Text: Tonight
+            emphasis: None
+          - value:
+              Text: Partly cloudy. Lows in the mid 50s. Northwest winds 10 to 20 mph.
+            emphasis: None
+notes: []

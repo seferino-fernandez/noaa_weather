@@ -77,6 +77,7 @@ impl DefaultPresenter {
         )
     }
 
+    #[cfg(test)]
     pub(super) fn resource_identifier(&self, value: Option<&str>) -> String {
         let Some(value) = value.map(str::trim).filter(|value| !value.is_empty()) else {
             return MISSING.to_owned();

@@ -1,0 +1,85 @@
+---
+source: noaa_weather_summary/tests/zones.rs
+expression: "zones.summarize(&SummaryOptions::default())"
+---
+title: Zones
+subtitle: 2 zones
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: Zone ID
+          key: id
+          also: []
+          align: Left
+        - title: Name
+          key: name
+          also: []
+          align: Left
+        - title: Type
+          key: type
+          also: []
+          align: Left
+        - title: State
+          key: state
+          also: []
+          align: Left
+        - title: Time Zone(s)
+          key: timeZone
+          also: []
+          align: Left
+        - title: Forecast Office
+          key: forecastOffice
+          also: []
+          align: Left
+        - title: Observation Stations
+          key: observationStations
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Identifier: AKC013
+            emphasis: None
+          - value:
+              Text: Aleutians East
+            emphasis: None
+          - value:
+              Text: county
+            emphasis: None
+          - value:
+              Text: AK
+            emphasis: None
+          - value:
+              Lines:
+                - Text: America/Anchorage
+                - Text: America/Nome
+            emphasis: None
+          - value:
+              Identifier: AFC
+            emphasis: None
+          - value: Missing
+            emphasis: None
+        - - value:
+              Identifier: AKC016
+            emphasis: None
+          - value:
+              Text: Aleutians West
+            emphasis: None
+          - value:
+              Text: county
+            emphasis: None
+          - value:
+              Text: AK
+            emphasis: None
+          - value:
+              Lines:
+                - Text: America/Nome
+                - Text: America/Adak
+            emphasis: None
+          - value:
+              Identifier: AFC
+            emphasis: None
+          - value: Missing
+            emphasis: None
+notes: []

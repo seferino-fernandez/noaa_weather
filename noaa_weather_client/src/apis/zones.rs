@@ -29,7 +29,7 @@ use crate::models::{self, AreaCode, RegionCode};
 ///
 /// This is the response model's zone type under its request-side name,
 /// since zone responses report the same value.
-pub use crate::models::NwsZoneType as ZoneType;
+pub use crate::models::ZoneType;
 
 /// Options for [`Zones::get`].
 #[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -66,7 +66,6 @@ pub struct ZonesQuery {
     pub region: Vec<RegionCode>,
     /// Zone types to include (`type` on the wire).
     #[serde(rename = "type", skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
     pub types: Vec<ZoneType>,
     /// Only zones containing this point.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -405,7 +404,8 @@ mod tests {
         models::{LandRegionCode, RegionCode},
     };
 
-    const FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{}}"#;
+    const ZONE: &str = include_str!("../../tests/fixtures/zones/single.json");
+    const FORECAST: &str = include_str!("../../tests/fixtures/zones/forecast.json");
     const COLLECTION: &str = r#"{"type":"FeatureCollection","features":[]}"#;
 
     async fn mount_geo_json(server: &MockServer, body: &'static str) {
@@ -422,7 +422,7 @@ mod tests {
     #[tokio::test]
     async fn forecast_places_type_and_normalized_id_in_the_path() {
         let server = MockServer::start().await;
-        mount_geo_json(&server, FEATURE).await;
+        mount_geo_json(&server, FORECAST).await;
 
         client_for(&server)
             .zones()
@@ -439,7 +439,7 @@ mod tests {
     #[tokio::test]
     async fn get_encodes_effective_as_rfc_3339_or_nothing() {
         let server = MockServer::start().await;
-        mount_geo_json(&server, FEATURE).await;
+        mount_geo_json(&server, ZONE).await;
         let client = client_for(&server);
 
         client
