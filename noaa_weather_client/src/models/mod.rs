@@ -127,7 +127,8 @@ pub mod zone;
 pub use self::zone::{
     Zone, ZoneForecast, ZoneForecastPeriod, ZoneResourceType, ZoneState, ZoneType,
 };
-pub mod radio_broadcast;
-pub use self::radio_broadcast::*;
-pub mod radio_transmitter;
-pub use self::radio_transmitter::{RadioTransmitter, RadioTransmitterCollection};
+pub mod radio;
+pub use self::radio::{
+    BroadcastMark, Paragraph, RadioBroadcast, RadioTransmitter, RadioTransmitterCollection, SayAs,
+    Sentence, SentenceContent,
+};

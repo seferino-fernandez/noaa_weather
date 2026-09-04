@@ -1,0 +1,84 @@
+---
+source: noaa_weather_summary/tests/radio.rs
+expression: "transmitters.summarize(&SummaryOptions::default())"
+---
+title: NOAA Weather Radio transmitters
+subtitle: 2 transmitters
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: Call Sign
+          key: callSign
+          also: []
+          align: Left
+        - title: Frequency
+          key: transmitterFrequency
+          also: []
+          align: Left
+        - title: Site
+          key: siteName
+          also: []
+          align: Left
+        - title: City
+          key: siteCity
+          also: []
+          align: Left
+        - title: State
+          key: siteState
+          also: []
+          align: Left
+        - title: SAME Codes
+          key: sameCodes
+          also: []
+          align: Right
+        - title: Counties
+          key: counties
+          also: []
+          align: Right
+      rows:
+        - - value:
+              Identifier: KUT404
+            emphasis: None
+          - value:
+              Text: "162.450"
+            emphasis: None
+          - value:
+              Text: Aberdeen
+            emphasis: None
+          - value:
+              Text: Hatley
+            emphasis: None
+          - value:
+              Identifier: MS
+            emphasis: None
+          - value:
+              Count: 8
+            emphasis: None
+          - value:
+              Count: 8
+            emphasis: None
+        - - value:
+              Identifier: WXM25
+            emphasis: None
+          - value:
+              Text: "162.475"
+            emphasis: None
+          - value:
+              Text: Aberdeen
+            emphasis: None
+          - value:
+              Text: Bath
+            emphasis: None
+          - value:
+              Identifier: SD
+            emphasis: None
+          - value:
+              Count: 10
+            emphasis: None
+          - value:
+              Count: 10
+            emphasis: None
+notes:
+  - More transmitters available

@@ -18,8 +18,9 @@ use noaa_weather_client::models::radar_station::{CommandChannel, CommandChannelM
 use noaa_weather_client::models::{
     ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CwsuOffice, Forecast,
     GlossaryResponse, Gridpoint, Observation, ObservationStation, Point, RadarStationFeature,
-    Sigmet, TerminalAerodromeForecastsResponse, TextProduct, TextProductCollection,
-    TextProductLocationCollection, TextProductTypeCollection, Zone, ZoneForecast,
+    RadioTransmitter, RadioTransmitterCollection, Sigmet, TerminalAerodromeForecastsResponse,
+    TextProduct, TextProductCollection, TextProductLocationCollection, TextProductTypeCollection,
+    Zone, ZoneForecast,
 };
 use noaa_weather_client::{Feature, FeatureCollection};
 use serde::Serialize;
@@ -259,6 +260,9 @@ fn captured_responses_preserve_every_non_whitelisted_key_path() {
         ("products/type_location.json", TextProductCollection),
         ("products/location_types.json", TextProductTypeCollection),
         ("products/latest.json", TextProduct),
+        ("radio/transmitters.json", RadioTransmitterCollection),
+        ("radio/transmitter.json", RadioTransmitter),
+        ("radio/county.json", RadioTransmitterCollection),
         ("radar/KFSX.json", RadarStationFeature),
         ("radar/KLNX.json", RadarStationFeature),
         ("radar/TSLC.json", RadarStationFeature),
@@ -472,6 +476,14 @@ async fn live_responses_preserve_every_non_whitelisted_key_path() {
     live!("/points/39.7456,-97.0892", GEO_JSON, Feature<Point>);
 
     live!("/glossary", JSON_LD, GlossaryResponse);
+
+    live!("/radio", JSON_LD, RadioTransmitterCollection);
+    live!("/radio/KEC94", JSON_LD, RadioTransmitter);
+    live!(
+        "/zones/county/AZC013/radio",
+        JSON_LD,
+        RadioTransmitterCollection
+    );
 
     let products = live!("/products?limit=500", JSON_LD, TextProductCollection);
     match first_member(&products, "@graph") {

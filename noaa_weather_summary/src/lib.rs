@@ -13,6 +13,7 @@ pub mod glossary;
 pub mod gridpoints;
 pub mod points;
 pub mod products;
+pub mod radio;
 pub mod render;
 pub mod stations;
 pub mod units;

@@ -1,0 +1,28 @@
+---
+source: noaa_weather_summary/tests/radio.rs
+expression: "broadcast.summarize(&SummaryOptions::default())"
+---
+title: NOAA Weather Radio Broadcast
+subtitle: ~
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: Language
+          key: "@xml:lang"
+          also: []
+          value:
+            Text: en-US
+          emphasis: None
+        - label: SSML Version
+          key: "@version"
+          also: []
+          value:
+            Text: "1.1"
+          emphasis: None
+  - Prose:
+      heading: Transcript
+      key: p
+      text: "You are listening to the NOAA weather radio on frequency 162.550, call sign KEC94, out of  South Mtn., AZ.\n[mark: {'requesterSameCode': '004013'}]\n[mark: {'transmitter': '162.550'}]\n[mark: {'stationId':  'KEC94'}]\n[mark: {'sameLocations': '004013, 004021'}]\n\nHere is your NOAA Weather Radio area forecast."
+notes: []
