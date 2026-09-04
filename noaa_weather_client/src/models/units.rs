@@ -274,8 +274,8 @@ impl Scale {
 
 /// A WMO or NWS unit code, without the open [`Unit::Other`] fallback.
 ///
-/// Used by [`ValueUnit`], the older measurement shape that observation,
-/// radar, and station responses still carry.
+/// Used by [`ValueUnit`], the older measurement shape retained by the
+/// not-yet-curated radar wire models.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum UnitCodeType {
@@ -285,8 +285,7 @@ pub enum UnitCodeType {
     Nws(NwsUnitCode),
 }
 
-/// Represents a value with an associated unit code.
-/// This is used for fields like elevation, latency, power, etc.
+/// Legacy radar-wire value with an associated unit code.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ValueUnit {
     /// The unit code, which can be either a WMO unit code or an NWS unit code.

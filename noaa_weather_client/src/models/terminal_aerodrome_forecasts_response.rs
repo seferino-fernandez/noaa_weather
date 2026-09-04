@@ -1,28 +1,37 @@
+//! Metadata returned by `/stations/{stationId}/tafs`.
+
 use serde::{Deserialize, Serialize};
-use std::option::Option;
 
-use super::JsonLdContext;
+use crate::StationId;
+use crate::time::OffsetDateTime;
 
-#[derive(Serialize, Deserialize)]
+/// Current Terminal Aerodrome Forecast metadata for one station.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct TerminalAerodromeForecastsResponse {
-    #[serde(rename = "@context", skip_serializing_if = "Option::is_none")]
-    pub at_context: Option<Box<JsonLdContext>>,
-    #[serde(rename = "@graph", skip_serializing_if = "Option::is_none")]
-    pub graph: Option<Vec<TerminalAerodromeForecastMetadata>>,
+    /// Forecast metadata in NOAA's response order.
+    #[serde(rename = "@graph")]
+    pub forecasts: Vec<TerminalAerodromeForecastMetadata>,
 }
 
-#[derive(Serialize, Deserialize)]
+/// Addressing and validity metadata for one TAF document.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct TerminalAerodromeForecastMetadata {
-    #[serde(rename = "id")]
+    /// Canonical URL for the TAF document.
     pub id: String,
-    #[serde(rename = "issueTime", skip_serializing_if = "Option::is_none")]
-    pub issue_time: Option<String>,
-    #[serde(rename = "location", skip_serializing_if = "Option::is_none")]
-    pub location: Option<String>,
-    #[serde(rename = "start", skip_serializing_if = "Option::is_none")]
-    pub start: Option<String>,
-    #[serde(rename = "end", skip_serializing_if = "Option::is_none")]
-    pub end: Option<String>,
-    #[serde(rename = "geometry", skip_serializing_if = "Option::is_none")]
-    pub geometry: Option<String>,
+    /// Time NOAA issued the document.
+    pub issue_time: OffsetDateTime,
+    /// Station the TAF describes.
+    pub location: StationId,
+    /// Beginning of the forecast period.
+    pub start: OffsetDateTime,
+    /// End of the forecast period.
+    pub end: OffsetDateTime,
+    /// Aerodrome point in NOAA's WKT representation.
+    pub geometry: String,
 }

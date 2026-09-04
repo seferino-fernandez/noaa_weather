@@ -671,7 +671,7 @@ pub const GRIDPOINTS: &[Invocation] = &[
         body: GRIDPOINT_STATIONS,
         media: GEO_JSON,
         binary: false,
-        renders: &["Station ID"],
+        renders: &["Station ID", "KMYZ", "27.4 mi", "71 °"],
         live: features(true),
     },
 ];
@@ -1281,7 +1281,7 @@ pub const STATIONS: &[Invocation] = &[
         body: STATION,
         media: GEO_JSON,
         binary: false,
-        renders: &["Station ID", "KSLC"],
+        renders: &["Station ID", "KSLC", "Salt Lake City International Airport"],
         live: Live::Check(Expectation {
             payload: "/properties",
             keys: &["name", "timeZone", "elevation"],
@@ -1297,7 +1297,7 @@ pub const STATIONS: &[Invocation] = &[
         body: STATION_LIST,
         media: GEO_JSON,
         binary: false,
-        renders: &["Station ID"],
+        renders: &["Station ID", "0007W", "MesoWest"],
         live: features(true),
     },
     Invocation {
@@ -1308,7 +1308,7 @@ pub const STATIONS: &[Invocation] = &[
         body: STATION_LIST,
         media: GEO_JSON,
         binary: false,
-        renders: &["Station ID"],
+        renders: &["Station ID", "0007W", "MesoWest"],
         live: features(true),
     },
     Invocation {
@@ -1319,7 +1319,7 @@ pub const STATIONS: &[Invocation] = &[
         body: STATION_LIST,
         media: GEO_JSON,
         binary: false,
-        renders: &["Station ID"],
+        renders: &["Station ID", "0007W", "MesoWest"],
         live: features(true),
     },
     Invocation {
@@ -1330,7 +1330,7 @@ pub const STATIONS: &[Invocation] = &[
         body: STATION_LIST,
         media: GEO_JSON,
         binary: false,
-        renders: &["Station ID"],
+        renders: &["Station ID", "0007W", "MesoWest"],
         live: features(true),
     },
     Invocation {
@@ -1341,7 +1341,12 @@ pub const STATIONS: &[Invocation] = &[
         body: LATEST_OBSERVATION,
         media: GEO_JSON,
         binary: false,
-        renders: &["Station: KSLC - Observation"],
+        renders: &[
+            "Station: KSLC - Observation",
+            "Clear",
+            "Temperature",
+            "72 °F",
+        ],
         live: Live::Check(Expectation {
             payload: "/properties",
             keys: &["textDescription", "temperature"],
@@ -1369,7 +1374,7 @@ pub const STATIONS: &[Invocation] = &[
         body: OBSERVATIONS,
         media: GEO_JSON,
         binary: false,
-        renders: &["Timest"],
+        renders: &["Station observations", "73 °F", "29.93", "inHg"],
         live: features(true),
     },
     Invocation {
@@ -1380,7 +1385,12 @@ pub const STATIONS: &[Invocation] = &[
         body: LATEST_OBSERVATION,
         media: GEO_JSON,
         binary: false,
-        renders: &["Station: KSLC - Observation"],
+        renders: &[
+            "Station: KSLC - Observation",
+            "Clear",
+            "Temperature",
+            "72 °F",
+        ],
         live: Live::Skip(
             "NOAA serves this route only for an instant an observation was \
              actually taken at, and only within its retention window; \
@@ -1396,7 +1406,7 @@ pub const STATIONS: &[Invocation] = &[
         body: TAFS,
         media: JSON_LD,
         binary: false,
-        renders: &["Issue Time", "KPHX"],
+        renders: &["Issue Time", "KPHX", "2026-08-30"],
         live: graph(true),
     },
     Invocation {
@@ -1407,7 +1417,12 @@ pub const STATIONS: &[Invocation] = &[
         body: TAF,
         media: IWXXM,
         binary: false,
-        renders: &["Category"],
+        renders: &[
+            "Terminal Aerodrome Forecast",
+            "KPHX",
+            "Report state",
+            "VCTS",
+        ],
         live: Live::Skip(
             "a TAF is addressed by its issue minute, which NOAA stops \
              serving; `test_stations_taf_success` resolves a current one out \
@@ -1494,7 +1509,7 @@ pub const ZONES: &[Invocation] = &[
         body: ZONE_STATIONS,
         media: GEO_JSON,
         binary: false,
-        renders: &["Station ID"],
+        renders: &["Station ID", "ARAU1", "ARAGONITE"],
         live: features(true),
     },
     Invocation {
@@ -1505,7 +1520,7 @@ pub const ZONES: &[Invocation] = &[
         body: ZONE_OBSERVATIONS,
         media: GEO_JSON,
         binary: false,
-        renders: &["Station"],
+        renders: &["Zone observations", "KENV", "Clear", "66 °F", "29.90"],
         live: features(true),
     },
 ];

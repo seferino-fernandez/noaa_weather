@@ -1,0 +1,170 @@
+---
+source: noaa_weather_summary/tests/stations.rs
+expression: "observations.summarize(&SummaryOptions::default())"
+---
+title: Station observations
+subtitle: 2 observations
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: Timestamp
+          key: timestamp
+          also: []
+          align: Left
+        - title: Temperature
+          key: temperature
+          also: []
+          align: Left
+        - title: Dewpoint
+          key: dewpoint
+          also: []
+          align: Left
+        - title: Wind direction
+          key: windDirection
+          also: []
+          align: Left
+        - title: Wind speed
+          key: windSpeed
+          also: []
+          align: Left
+        - title: Wind gust
+          key: windGust
+          also: []
+          align: Left
+        - title: Barometric pressure
+          key: barometricPressure
+          also: []
+          align: Left
+        - title: Sea-level pressure
+          key: seaLevelPressure
+          also: []
+          align: Left
+        - title: Visibility
+          key: visibility
+          also: []
+          align: Left
+        - title: Relative humidity
+          key: relativeHumidity
+          also: []
+          align: Left
+        - title: Wind chill
+          key: windChill
+          also: []
+          align: Left
+        - title: Heat index
+          key: heatIndex
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Timestamp: "2026-09-02T07:30:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 73.39999999999999
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Quantity:
+                value: 51.8
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Quantity:
+                value: 170
+                unit: °
+                precision: 0
+            emphasis: None
+          - value:
+              Quantity:
+                value: 14.965103793843953
+                unit: mph
+                precision: 0
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              Quantity:
+                value: 29.929999407803905
+                unit: inHg
+                precision: 2
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              Quantity:
+                value: 10
+                unit: mi
+                precision: 1
+            emphasis: None
+          - value:
+              Percent: 46.740001991736
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              Quantity:
+                value: 72.636780093612
+                unit: °F
+                precision: 0
+            emphasis: None
+        - - value:
+              Timestamp: "2026-09-02T07:25:00+00:00"
+            emphasis: None
+          - value:
+              Quantity:
+                value: 73.39999999999999
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Quantity:
+                value: 50
+                unit: °F
+                precision: 0
+            emphasis: None
+          - value:
+              Quantity:
+                value: 170
+                unit: °
+                precision: 0
+            emphasis: None
+          - value:
+              Quantity:
+                value: 13.801896921975661
+                unit: mph
+                precision: 0
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              Quantity:
+                value: 29.929999407803905
+                unit: inHg
+                precision: 2
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              Quantity:
+                value: 10
+                unit: mi
+                precision: 1
+            emphasis: None
+          - value:
+              Percent: 43.726894466588
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              Quantity:
+                value: 72.49516403993
+                unit: °F
+                precision: 0
+            emphasis: None
+notes:
+  - More observations available

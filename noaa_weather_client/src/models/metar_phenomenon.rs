@@ -1,57 +1,43 @@
 use serde::{Deserialize, Serialize};
 
-/// MetarPhenomenon : An object representing a decoded METAR phenomenon string.
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+/// One decoded METAR present-weather phenomenon.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct MetarPhenomenon {
-    #[serde(rename = "intensity", deserialize_with = "Option::deserialize")]
+    /// Light or heavy intensity; absence means moderate.
     pub intensity: Option<Intensity>,
-    #[serde(rename = "modifier", deserialize_with = "Option::deserialize")]
+    /// Phenomenon modifier such as showers or freezing.
     pub modifier: Option<Modifier>,
-    #[serde(rename = "weather")]
+    /// Basic weather phenomenon.
     pub weather: Weather,
-    #[serde(rename = "rawString")]
+    /// Original METAR token.
     pub raw_string: String,
-    #[serde(rename = "inVicinity", skip_serializing_if = "Option::is_none")]
+    /// Whether the phenomenon is nearby rather than at the station.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub in_vicinity: Option<bool>,
 }
 
-impl MetarPhenomenon {
-    /// An object representing a decoded METAR phenomenon string.
-    pub fn new(
-        intensity: Option<Intensity>,
-        modifier: Option<Modifier>,
-        weather: Weather,
-        raw_string: String,
-    ) -> MetarPhenomenon {
-        MetarPhenomenon {
-            intensity,
-            modifier,
-            weather,
-            raw_string,
-            in_vicinity: None,
-        }
-    }
-}
-
 /// Intensity of the phenomenon
-#[derive(
-    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
-)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema), schemars(inline))]
+#[non_exhaustive]
 pub enum Intensity {
+    /// Light intensity.
     #[serde(rename = "light")]
-    #[default]
     Light,
+    /// Heavy intensity.
     #[serde(rename = "heavy")]
     Heavy,
 }
 
 /// Modifier of the phenomenon
-#[derive(
-    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
-)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema), schemars(inline))]
+#[non_exhaustive]
 pub enum Modifier {
     #[serde(rename = "patches")]
-    #[default]
     Patches,
     #[serde(rename = "blowing")]
     Blowing,
@@ -68,12 +54,11 @@ pub enum Modifier {
 }
 
 /// Weather of the phenomenon
-#[derive(
-    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
-)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema), schemars(inline))]
+#[non_exhaustive]
 pub enum Weather {
     #[serde(rename = "fog_mist")]
-    #[default]
     FogMist,
     #[serde(rename = "dust_storm")]
     DustStorm,

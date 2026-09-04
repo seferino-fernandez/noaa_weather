@@ -7,7 +7,8 @@ use std::fmt;
 use jiff::tz::TimeZone;
 use noaa_weather_client::models::{
     ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CwsuOffice, Forecast,
-    Gridpoint, Point, Sigmet,
+    Gridpoint, Observation, ObservationStation, Point, Sigmet, TerminalAerodromeForecast,
+    TerminalAerodromeForecastsResponse,
 };
 use noaa_weather_client::{Feature, FeatureCollection};
 use noaa_weather_summary::SummaryOptions;
@@ -22,7 +23,6 @@ pub mod offices;
 pub mod products;
 pub mod radar;
 pub mod radio;
-pub mod stations;
 pub mod zones;
 
 /// Owns the policy used to turn typed NOAA responses into default output.
@@ -105,6 +105,13 @@ summarized!(
     FeatureCollection<CenterWeatherAdvisory>,
     Feature<Sigmet>,
     FeatureCollection<Sigmet>,
+    Feature<ObservationStation>,
+    FeatureCollection<ObservationStation>,
+    Feature<Observation>,
+    FeatureCollection<Observation>,
+    TerminalAerodromeForecastsResponse,
+    TerminalAerodromeForecast,
+    noaa_weather_summary::stations::ZoneObservations,
 );
 
 /// A failure to construct a complete default presentation document.
@@ -189,8 +196,7 @@ mod tests {
                 presenter
                     .resource_identifier(Some("https://api.weather.gov/zones/forecast/AZZ551/")),
                 presenter.value_unit(Some(&unitless_pressure)),
-                presenter
-                    .observation_pressure(Some(&incomplete_pressure), Some(&unitless_pressure)),
+                presenter.value_unit(Some(&incomplete_pressure)),
                 presenter.value_unit(Some(&invalid_measurement)),
                 presenter.bytes(Some(-1)),
             ];
@@ -226,7 +232,7 @@ mod tests {
 
         assert_eq!(
             rendered,
-            "08/31/26 8:59:00 AM | N/A | AZZ551 | 101325.00 | 101325.00 | Invalid | Invalid (negative)"
+            "08/31/26 8:59:00 AM | N/A | AZZ551 | 101325.00 | N/A | Invalid | Invalid (negative)"
         );
     }
 

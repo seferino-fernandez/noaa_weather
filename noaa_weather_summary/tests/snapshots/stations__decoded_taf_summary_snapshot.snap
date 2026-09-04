@@ -1,0 +1,322 @@
+---
+source: noaa_weather_summary/tests/stations.rs
+expression: "taf.summarize(&SummaryOptions::default())"
+---
+title: Terminal Aerodrome Forecast
+subtitle: KPHX
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: Airport
+          key: aerodrome
+          also: []
+          value:
+            Identifier: KPHX
+          emphasis: None
+        - label: Issued
+          key: issuedAt
+          also: []
+          value:
+            Timestamp: "2026-08-30T17:29:00+00:00"
+          emphasis: None
+        - label: Status
+          key: reportMetadata
+          also: []
+          value:
+            Text: Normal
+          emphasis: None
+        - label: Permissible use
+          key: ~
+          also: []
+          value:
+            Text: Operational
+          emphasis: None
+        - label: Bulletin
+          key: bulletinIdentifier
+          also: []
+          value:
+            Identifier: A_LTUS45KPSR301700_C_KPSR_20260830173003.xml
+          emphasis: None
+        - label: Report state
+          key: report
+          also: []
+          value:
+            Text: Forecast
+          emphasis: None
+        - label: Valid period
+          key: ~
+          also: []
+          value:
+            Interval:
+              start: "2026-08-30T18:00:00+00:00"
+              end: "2026-09-01T00:00:00+00:00"
+          emphasis: None
+        - label: INITIAL FORECAST
+          key: ~
+          also: []
+          value:
+            Interval:
+              start: "2026-08-30T17:29:00+00:00"
+              end: "2026-08-30T20:00:00+00:00"
+          emphasis: None
+        - label: CAVOK
+          key: ~
+          also: []
+          value:
+            YesNo: false
+          emphasis: None
+        - label: Wind
+          key: ~
+          also: []
+          value:
+            Text: 170° at 8 kt
+          emphasis: None
+        - label: Visibility
+          key: ~
+          also: []
+          value:
+            Text: ≥10 km (6.2 mi)
+          emphasis: None
+        - label: Weather
+          key: ~
+          also: []
+          value:
+            Text: Not reported
+          emphasis: None
+        - label: Clouds
+          key: ~
+          also: []
+          value:
+            Text: "Few (FEW) at 15000 ft AGL\nFew (FEW) at 25000 ft AGL"
+          emphasis: None
+        - label: CHANGE — FROM (FM)
+          key: ~
+          also: []
+          value:
+            Interval:
+              start: "2026-08-30T20:00:00+00:00"
+              end: "2026-08-31T01:00:00+00:00"
+          emphasis: None
+        - label: CAVOK
+          key: ~
+          also: []
+          value:
+            YesNo: false
+          emphasis: None
+        - label: Wind
+          key: ~
+          also: []
+          value:
+            Text: 260° at 7 kt
+          emphasis: None
+        - label: Visibility
+          key: ~
+          also: []
+          value:
+            Text: ≥10 km (6.2 mi)
+          emphasis: None
+        - label: Weather
+          key: ~
+          also: []
+          value:
+            Text: Unchanged from prevailing conditions
+          emphasis: None
+        - label: Clouds
+          key: ~
+          also: []
+          value:
+            Text: "Few (FEW) at 15000 ft AGL\nScattered (SCT) at 25000 ft AGL"
+          emphasis: None
+        - label: CHANGE — FROM (FM)
+          key: ~
+          also: []
+          value:
+            Interval:
+              start: "2026-08-31T01:00:00+00:00"
+              end: "2026-08-31T06:00:00+00:00"
+          emphasis: None
+        - label: CAVOK
+          key: ~
+          also: []
+          value:
+            YesNo: false
+          emphasis: None
+        - label: Wind
+          key: ~
+          also: []
+          value:
+            Text: 170° at 20 kt; gusting 28 kt
+          emphasis: None
+        - label: Visibility
+          key: ~
+          also: []
+          value:
+            Text: ≥10 km (6.2 mi)
+          emphasis: None
+        - label: Weather
+          key: ~
+          also: []
+          value:
+            Text: VCTS — thunderstorm in the vicinity
+          emphasis: None
+        - label: Clouds
+          key: ~
+          also: []
+          value:
+            Text: "Few (FEW) at 10000 ft AGL — Cumulonimbus (CB)\nScattered (SCT) at 15000 ft AGL\nBroken (BKN) at 25000 ft AGL"
+          emphasis: None
+        - label: CHANGE — TEMPORARY (TEMPO)
+          key: ~
+          also: []
+          value:
+            Interval:
+              start: "2026-08-31T02:00:00+00:00"
+              end: "2026-08-31T06:00:00+00:00"
+          emphasis: None
+        - label: CAVOK
+          key: ~
+          also: []
+          value:
+            YesNo: false
+          emphasis: None
+        - label: Wind
+          key: ~
+          also: []
+          value:
+            Text: 150° at 25 kt; gusting 35 kt
+          emphasis: None
+        - label: Visibility
+          key: ~
+          also: []
+          value:
+            Text: 8 km (5.0 mi)
+          emphasis: None
+        - label: Weather
+          key: ~
+          also: []
+          value:
+            Text: "-TSRA — light thunderstorm with rain\nBLDU — blowing with widespread dust"
+          emphasis: None
+        - label: Clouds
+          key: ~
+          also: []
+          value:
+            Text: Scattered (SCT) at 10000 ft AGL — Cumulonimbus (CB)
+          emphasis: None
+        - label: CHANGE — FROM (FM)
+          key: ~
+          also: []
+          value:
+            Interval:
+              start: "2026-08-31T06:00:00+00:00"
+              end: "2026-08-31T11:00:00+00:00"
+          emphasis: None
+        - label: CAVOK
+          key: ~
+          also: []
+          value:
+            YesNo: false
+          emphasis: None
+        - label: Wind
+          key: ~
+          also: []
+          value:
+            Text: 80° at 11 kt
+          emphasis: None
+        - label: Visibility
+          key: ~
+          also: []
+          value:
+            Text: ≥10 km (6.2 mi)
+          emphasis: None
+        - label: Weather
+          key: ~
+          also: []
+          value:
+            Text: VCSH — showers in the vicinity
+          emphasis: None
+        - label: Clouds
+          key: ~
+          also: []
+          value:
+            Text: "Scattered (SCT) at 10000 ft AGL\nBroken (BKN) at 12000 ft AGL\nBroken (BKN) at 25000 ft AGL"
+          emphasis: None
+        - label: CHANGE — FROM (FM)
+          key: ~
+          also: []
+          value:
+            Interval:
+              start: "2026-08-31T11:00:00+00:00"
+              end: "2026-08-31T21:00:00+00:00"
+          emphasis: None
+        - label: CAVOK
+          key: ~
+          also: []
+          value:
+            YesNo: false
+          emphasis: None
+        - label: Wind
+          key: ~
+          also: []
+          value:
+            Text: 110° at 8 kt
+          emphasis: None
+        - label: Visibility
+          key: ~
+          also: []
+          value:
+            Text: ≥10 km (6.2 mi)
+          emphasis: None
+        - label: Weather
+          key: ~
+          also: []
+          value:
+            Text: Unchanged from prevailing conditions
+          emphasis: None
+        - label: Clouds
+          key: ~
+          also: []
+          value:
+            Text: "Scattered (SCT) at 10000 ft AGL\nBroken (BKN) at 12000 ft AGL\nBroken (BKN) at 25000 ft AGL"
+          emphasis: None
+        - label: CHANGE — FROM (FM)
+          key: ~
+          also: []
+          value:
+            Interval:
+              start: "2026-08-31T21:00:00+00:00"
+              end: "2026-09-01T00:00:00+00:00"
+          emphasis: None
+        - label: CAVOK
+          key: ~
+          also: []
+          value:
+            YesNo: false
+          emphasis: None
+        - label: Wind
+          key: ~
+          also: []
+          value:
+            Text: 170° at 4 kt
+          emphasis: None
+        - label: Visibility
+          key: ~
+          also: []
+          value:
+            Text: ≥10 km (6.2 mi)
+          emphasis: None
+        - label: Weather
+          key: ~
+          also: []
+          value:
+            Text: Unchanged from prevailing conditions
+          emphasis: None
+        - label: Clouds
+          key: ~
+          also: []
+          value:
+            Text: "Few (FEW) at 9000 ft AGL\nScattered (SCT) at 11000 ft AGL"
+          emphasis: None
+notes: []

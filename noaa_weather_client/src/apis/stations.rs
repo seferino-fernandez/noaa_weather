@@ -490,7 +490,7 @@ impl Stations<'_> {
             .path_segment(issued.strftime("%H%M"))
             .xml_bytes(http::XmlMedia::Iwxxm)
             .await?;
-        models::terminal_aerodrome_forecast::decode_iwxxm(&bytes).map_err(Error::from)
+        models::TerminalAerodromeForecast::from_iwxxm(&bytes).map_err(Error::from)
     }
 }
 
@@ -504,7 +504,8 @@ mod tests {
     use super::{LatestObservationQuery, ObservationsQuery, StationsQuery};
     use crate::{StationId, client::test_support::client_for};
 
-    const FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{}}"#;
+    const STATION: &str = include_str!("../../tests/fixtures/stations/single.json");
+    const OBSERVATION: &str = include_str!("../../tests/fixtures/stations/latest.json");
     const COLLECTION: &str = r#"{"type":"FeatureCollection","features":[]}"#;
 
     fn kphx() -> StationId {
@@ -561,7 +562,7 @@ mod tests {
     #[tokio::test]
     async fn station_id_is_normalized_into_the_path() {
         let server = MockServer::start().await;
-        mount_geo_json(&server, FEATURE).await;
+        mount_geo_json(&server, STATION).await;
 
         client_for(&server).stations().get(&kphx()).await.unwrap();
 
@@ -573,7 +574,7 @@ mod tests {
     #[tokio::test]
     async fn observation_at_formats_the_instant_as_rfc_3339_utc() {
         let server = MockServer::start().await;
-        mount_geo_json(&server, FEATURE).await;
+        mount_geo_json(&server, OBSERVATION).await;
 
         client_for(&server)
             .stations()
@@ -593,7 +594,9 @@ mod tests {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
             .and(path("/stations/KPHX/observations/latest"))
-            .respond_with(ResponseTemplate::new(200).set_body_raw(FEATURE, "application/geo+json"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_raw(OBSERVATION, "application/geo+json"),
+            )
             .expect(1)
             .mount(&server)
             .await;
