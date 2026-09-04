@@ -7,8 +7,8 @@ use std::fmt;
 use jiff::tz::TimeZone;
 use noaa_weather_client::models::{
     ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CwsuOffice, Forecast,
-    Gridpoint, Observation, ObservationStation, Point, Sigmet, TerminalAerodromeForecast,
-    TerminalAerodromeForecastsResponse, Zone, ZoneForecast,
+    GlossaryResponse, Gridpoint, Observation, ObservationStation, Point, Sigmet,
+    TerminalAerodromeForecast, TerminalAerodromeForecastsResponse, Zone, ZoneForecast,
 };
 use noaa_weather_client::{Feature, FeatureCollection};
 use noaa_weather_summary::SummaryOptions;
@@ -18,7 +18,6 @@ use super::PresentationDocument;
 
 mod values;
 
-pub mod glossary;
 pub mod offices;
 pub mod products;
 pub mod radar;
@@ -96,6 +95,7 @@ summarized!(
     FeatureCollection<Alert>,
     ActiveAlertCounts,
     AlertEventTypes,
+    GlossaryResponse,
     Feature<Point>,
     Feature<Gridpoint>,
     Feature<Forecast>,

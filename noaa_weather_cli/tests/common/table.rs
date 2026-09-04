@@ -600,7 +600,14 @@ pub const GLOSSARY_FAMILY: &[Invocation] = &[Invocation {
     body: GLOSSARY,
     media: JSON_LD,
     binary: false,
-    renders: &["Term", "Definition"],
+    renders: &[
+        "Term",
+        "Definition",
+        "1-2-3 Rule",
+        "forecast track error",
+        "100-year Flood",
+        "historical floods",
+    ],
     live: Live::Check(Expectation {
         // A vocabulary of three thousand terms that does not change with the
         // weather, so an empty one is drift.
