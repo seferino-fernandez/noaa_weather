@@ -71,10 +71,10 @@ mod tests {
             .await;
 
         let response = client_for(&server).glossary().terms().await.unwrap();
-        assert_eq!(response.glossary[0].term.as_deref(), Some("Virga"));
+        assert_eq!(response.glossary[0].term, "Virga");
         assert_eq!(
-            response.glossary[0].definition.as_deref(),
-            Some("Precipitation that evaporates before reaching the ground.")
+            response.glossary[0].definition,
+            "Precipitation that evaporates before reaching the ground."
         );
         let requests = server.received_requests().await.unwrap();
         assert_eq!(requests[0].url.query(), None);

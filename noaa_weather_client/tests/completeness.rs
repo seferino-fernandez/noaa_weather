@@ -17,8 +17,8 @@ use std::path::Path;
 use noaa_weather_client::models::radar_station::{CommandChannel, CommandChannelMode};
 use noaa_weather_client::models::{
     ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CwsuOffice, Forecast,
-    Gridpoint, Observation, ObservationStation, Point, RadarStationFeature, Sigmet,
-    TerminalAerodromeForecastsResponse, Zone, ZoneForecast,
+    GlossaryResponse, Gridpoint, Observation, ObservationStation, Point, RadarStationFeature,
+    Sigmet, TerminalAerodromeForecastsResponse, Zone, ZoneForecast,
 };
 use noaa_weather_client::{Feature, FeatureCollection};
 use serde::Serialize;
@@ -248,6 +248,7 @@ fn captured_responses_preserve_every_non_whitelisted_key_path() {
         ),
         ("aviation/cwa.json", Feature<CenterWeatherAdvisory>),
         ("aviation/cwsu.json", CwsuOffice),
+        ("glossary/terms.json", GlossaryResponse),
         ("radar/KFSX.json", RadarStationFeature),
         ("radar/KLNX.json", RadarStationFeature),
         ("radar/TSLC.json", RadarStationFeature),
@@ -459,6 +460,8 @@ async fn live_responses_preserve_every_non_whitelisted_key_path() {
     live!("/radar/stations/TSLC", GEO_JSON, RadarStationFeature);
 
     live!("/points/39.7456,-97.0892", GEO_JSON, Feature<Point>);
+
+    live!("/glossary", JSON_LD, GlossaryResponse);
 
     live!("/gridpoints/TOP/31,80", GEO_JSON, Feature<Gridpoint>);
     live!(
