@@ -1,0 +1,88 @@
+---
+source: noaa_weather_summary/tests/zones.rs
+expression: "zone().summarize(&SummaryOptions::default())"
+---
+title: Zone
+subtitle: UTZ101 — Great Salt Lake Desert and Mountains
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: Zone ID
+          key: id
+          also: []
+          value:
+            Identifier: UTZ101
+          emphasis: None
+        - label: Name
+          key: name
+          also: []
+          value:
+            Text: Great Salt Lake Desert and Mountains
+          emphasis: None
+        - label: Type
+          key: type
+          also: []
+          value:
+            Text: public
+          emphasis: None
+        - label: State
+          key: state
+          also: []
+          value:
+            Text: UT
+          emphasis: None
+        - label: Effective
+          key: effectiveDate
+          also:
+            - expirationDate
+          value:
+            Interval:
+              start: "2026-04-16T18:00:00+00:00"
+              end: "2200-01-01T00:00:00+00:00"
+          emphasis: None
+        - label: Time Zone(s)
+          key: timeZone
+          also: []
+          value:
+            Lines:
+              - Text: America/Denver
+          emphasis: None
+        - label: Forecast Office
+          key: forecastOffice
+          also: []
+          value:
+            Identifier: SLC
+          emphasis: None
+        - label: Grid Identifier
+          key: gridIdentifier
+          also: []
+          value:
+            Identifier: SLC
+          emphasis: None
+        - label: AWIPS Location
+          key: awipsLocationIdentifier
+          also: []
+          value:
+            Identifier: SLC
+          emphasis: None
+        - label: Radar Station
+          key: radarStation
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Observation Stations
+          key: observationStations
+          also: []
+          value:
+            List:
+              - Identifier: ARAU1
+              - Identifier: KDPG
+              - Identifier: KENV
+              - Identifier: RSBU1
+              - Identifier: UT33
+              - Identifier: UTCUR
+              - Identifier: UTGRS
+          emphasis: None
+notes: []

@@ -16,6 +16,7 @@ pub mod stations;
 pub mod units;
 mod value;
 pub mod vtec;
+pub mod zones;
 
 pub use audit::coverage_gaps;
 pub use units::QuantityKind;

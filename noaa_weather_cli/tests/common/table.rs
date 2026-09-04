@@ -1441,7 +1441,15 @@ pub const ZONES: &[Invocation] = &[
         body: ZONE_LIST,
         media: GEO_JSON,
         binary: false,
-        renders: &["Zone ID"],
+        renders: &[
+            "Zones",
+            "AKC013",
+            "Aleutians East",
+            "county",
+            "AK",
+            "America/Anchorage",
+            "AFC",
+        ],
         live: features(true),
     },
     Invocation {
@@ -1452,7 +1460,7 @@ pub const ZONES: &[Invocation] = &[
         body: ZONE_LIST,
         media: GEO_JSON,
         binary: false,
-        renders: &["Zone ID"],
+        renders: &["Zones", "AKC013", "Aleutians East", "America/Anchorage"],
         live: features(true),
     },
     Invocation {
@@ -1466,7 +1474,7 @@ pub const ZONES: &[Invocation] = &[
         body: ZONE_LIST,
         media: GEO_JSON,
         binary: false,
-        renders: &["Zone ID"],
+        renders: &["Zones", "AKC013", "Aleutians East", "county"],
         live: features(true),
     },
     Invocation {
@@ -1477,7 +1485,16 @@ pub const ZONES: &[Invocation] = &[
         body: ZONE,
         media: GEO_JSON,
         binary: false,
-        renders: &["Zone ID"],
+        renders: &[
+            "Zone",
+            "UTZ101",
+            "Great Salt Lake Desert and Mountains",
+            "public",
+            "UT",
+            "America/Denver",
+            "SLC",
+            "ARAU1",
+        ],
         live: Live::Check(Expectation {
             payload: "/properties",
             keys: &["name", "state", "forecastOffices"],
@@ -1493,7 +1510,14 @@ pub const ZONES: &[Invocation] = &[
         body: ZONE_FORECAST,
         media: GEO_JSON,
         binary: false,
-        renders: &["Day/Night"],
+        renders: &[
+            "Zone forecast",
+            "UTZ101",
+            "Updated",
+            "Day/Night",
+            "Today",
+            "Sunny in the morning",
+        ],
         live: Live::Check(Expectation {
             payload: "/properties/periods",
             keys: &[],

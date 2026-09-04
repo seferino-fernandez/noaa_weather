@@ -54,8 +54,6 @@ pub mod nws_regional_hqid;
 pub use self::nws_regional_hqid::NwsRegionalHqid;
 pub mod nws_unit_code;
 pub use self::nws_unit_code::NwsUnitCode;
-pub mod nws_zone_type;
-pub use self::nws_zone_type::NwsZoneType;
 pub mod noaa_weather_radio;
 pub use self::noaa_weather_radio::NoaaWeatherRadio;
 pub mod observation;
@@ -131,13 +129,9 @@ pub use self::units::{Quantity, Unit, UnitCodeType, ValueUnit};
 pub mod wmo_unit_code;
 pub use self::wmo_unit_code::WmoUnitCode;
 pub mod zone;
-pub use self::zone::Zone;
-pub mod zone_forecast;
-pub use self::zone_forecast::ZoneForecast;
-pub mod zone_forecast_periods_inner;
-pub use self::zone_forecast_periods_inner::ZoneForecastPeriodsInner;
-pub mod zone_state;
-pub use self::zone_state::ZoneState;
+pub use self::zone::{
+    Zone, ZoneForecast, ZoneForecastPeriod, ZoneResourceType, ZoneState, ZoneType,
+};
 pub mod radio_broadcast;
 pub use self::radio_broadcast::*;
 pub mod radio_transmitter;

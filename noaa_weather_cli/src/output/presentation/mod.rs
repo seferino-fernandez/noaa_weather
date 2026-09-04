@@ -8,7 +8,7 @@ use jiff::tz::TimeZone;
 use noaa_weather_client::models::{
     ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CwsuOffice, Forecast,
     Gridpoint, Observation, ObservationStation, Point, Sigmet, TerminalAerodromeForecast,
-    TerminalAerodromeForecastsResponse,
+    TerminalAerodromeForecastsResponse, Zone, ZoneForecast,
 };
 use noaa_weather_client::{Feature, FeatureCollection};
 use noaa_weather_summary::SummaryOptions;
@@ -23,7 +23,6 @@ pub mod offices;
 pub mod products;
 pub mod radar;
 pub mod radio;
-pub mod zones;
 
 /// Owns the policy used to turn typed NOAA responses into default output.
 pub(crate) struct DefaultPresenter {
@@ -112,6 +111,9 @@ summarized!(
     TerminalAerodromeForecastsResponse,
     TerminalAerodromeForecast,
     noaa_weather_summary::stations::ZoneObservations,
+    Feature<Zone>,
+    FeatureCollection<Zone>,
+    Feature<ZoneForecast>,
 );
 
 /// A failure to construct a complete default presentation document.

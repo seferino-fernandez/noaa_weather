@@ -534,4 +534,24 @@ mod schema {
         assert!(zone["items"]["pattern"].is_string(), "{zone}");
         assert!(value.get("$defs").is_none(), "{value}");
     }
+
+    #[test]
+    fn zones_query_publishes_the_zone_type_choices() {
+        let schema = schemars::schema_for!(ZonesQuery);
+        let zone_types = &schema.as_value()["properties"]["type"]["items"];
+        let choices = zone_types["oneOf"]
+            .as_array()
+            .expect("zone types are an enumerated schema")
+            .iter()
+            .map(|choice| choice["const"].clone())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            choices,
+            [
+                "land", "marine", "forecast", "public", "coastal", "offshore", "fire", "county"
+            ]
+            .map(serde_json::Value::from),
+            "{zone_types}"
+        );
+    }
 }
