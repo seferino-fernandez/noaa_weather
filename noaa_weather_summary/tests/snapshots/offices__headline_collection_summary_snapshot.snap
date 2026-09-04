@@ -1,0 +1,72 @@
+---
+source: noaa_weather_summary/tests/offices.rs
+expression: "decode::<OfficeHeadlineCollection>(HEADLINES).summarize(&SummaryOptions::default())"
+---
+title: NWS office headlines
+subtitle: 2 headlines
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: ID
+          key: id
+          also:
+            - "@graph"
+          align: Left
+        - title: Title
+          key: title
+          also: []
+          align: Left
+        - title: Summary
+          key: summary
+          also: []
+          align: Left
+        - title: Important
+          key: important
+          also: []
+          align: Left
+        - title: Issued
+          key: issuanceTime
+          also: []
+          align: Left
+        - title: Link
+          key: link
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Identifier: 8efe6a38d9d74abb80d62e71fba34189
+            emphasis: None
+          - value:
+              Text: "Phoenix, Yuma, and El Centro August 2026 Climate Data"
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              YesNo: false
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-01T09:27:00+00:00"
+            emphasis: None
+          - value:
+              Text: "https://www.weather.gov/psr/August2026ClimateData"
+            emphasis: None
+        - - value:
+              Identifier: 593627f70073a49e2483c3e0bf4f8221
+            emphasis: None
+          - value:
+              Text: This Day in Weather History
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              YesNo: false
+            emphasis: None
+          - value:
+              Timestamp: "2023-09-20T06:06:00+00:00"
+            emphasis: None
+          - value:
+              Text: "https://www.weather.gov/psr/history.html"
+            emphasis: None
+notes: []

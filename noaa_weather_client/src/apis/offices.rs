@@ -296,6 +296,42 @@ mod tests {
 
     use crate::{Error, OfficeId, client::test_support::client_for};
 
+    fn office_body(office: &str, path: &str) -> serde_json::Value {
+        serde_json::json!({
+            "@id": format!("https://api.weather.gov{path}"),
+            "@type": "GovernmentOrganization",
+            "id": office,
+            "name": format!("NWS {office}"),
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "123 Weather Way",
+                "addressLocality": "Forecast City",
+                "addressRegion": "AZ",
+                "postalCode": "85001"
+            },
+            "telephone": "555-0100",
+            "faxNumber": "",
+            "email": "forecast@example.test",
+            "sameAs": "https://www.weather.gov/example",
+            "nwsRegion": "wr"
+        })
+    }
+
+    fn story_body() -> serde_json::Value {
+        serde_json::json!({
+            "officeId": "PSR",
+            "startTime": "2026-09-04T10:00:00+00:00",
+            "endTime": "2026-09-05T10:00:00+00:00",
+            "updateTime": "2026-09-04T11:00:00+00:00",
+            "title": "Heat outlook",
+            "description": "Hot weather continues.",
+            "altText": "A forecast heat map.",
+            "priority": false,
+            "order": 0,
+            "download": "https://api.weather.gov/offices/PSR/weatherstories/download/story-1"
+        })
+    }
+
     fn psr() -> OfficeId {
         "psr".parse().unwrap()
     }
@@ -307,10 +343,16 @@ mod tests {
             Mock::given(method("GET"))
                 .and(path(expected_path))
                 .and(header("Accept", "application/ld+json"))
-                .respond_with(ResponseTemplate::new(200).set_body_raw(
-                    format!(r#"{{"id":"https://api.weather.gov{expected_path}"}}"#),
-                    "application/ld+json",
-                ))
+                .respond_with(
+                    ResponseTemplate::new(200).set_body_raw(
+                        serde_json::to_string(&office_body(
+                            &office.to_ascii_uppercase(),
+                            expected_path,
+                        ))
+                        .unwrap(),
+                        "application/ld+json",
+                    ),
+                )
                 .expect(1)
                 .mount(&server)
                 .await;
@@ -320,10 +362,7 @@ mod tests {
                 .get(&office.parse().unwrap())
                 .await
                 .unwrap();
-            assert_eq!(
-                response.id.as_deref(),
-                Some(format!("https://api.weather.gov{expected_path}").as_str())
-            );
+            assert_eq!(response.id.as_str(), office.to_ascii_uppercase());
             let requests = server.received_requests().await.unwrap();
             assert_eq!(requests[0].url.query(), None);
         }
@@ -363,7 +402,21 @@ mod tests {
         Mock::given(method("GET"))
             .and(path("/offices/PSR/headlines/headline%20%2F%25%3F"))
             .and(header("Accept", "application/ld+json"))
-            .respond_with(ResponseTemplate::new(200).set_body_raw("{}", "application/ld+json"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(
+                r#"{
+                    "@id":"https://api.weather.gov/offices/PSR/headlines/headline-id",
+                    "id":"headline-id",
+                    "office":"https://api.weather.gov/offices/PSR",
+                    "important":false,
+                    "issuanceTime":"2026-09-04T10:00:00+00:00",
+                    "link":"https://www.weather.gov/psr/news",
+                    "name":"news",
+                    "title":"Forecast news",
+                    "summary":null,
+                    "content":"<p>Forecast news</p>"
+                }"#,
+                "application/ld+json",
+            ))
             .expect(1)
             .mount(&server)
             .await;
@@ -378,19 +431,26 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn briefing_accepts_direct_wrapped_and_null_responses() {
-        for (body, expect_context, expect_title) in [
+    async fn briefing_accepts_active_and_null_live_shapes() {
+        for (body, expect_title) in [
             (
-                r#"{"id":"brief-1","officeId":"PSR","title":"Monsoon outlook"}"#,
-                false,
+                r#"{
+                    "@context":{"@version":"1.1"},
+                    "briefing":{
+                        "id":"brief-1",
+                        "officeId":"PSR",
+                        "startTime":"2026-09-04T10:00:00+00:00",
+                        "endTime":"2026-09-05T10:00:00+00:00",
+                        "updateTime":"2026-09-04T11:00:00+00:00",
+                        "title":"Monsoon outlook",
+                        "description":"Daily weather briefing",
+                        "priority":false,
+                        "download":"https://api.weather.gov/offices/PSR/briefing/download/brief-1"
+                    }
+                }"#,
                 Some("Monsoon outlook"),
             ),
-            (
-                r#"{"@context":{"@version":"1.1"},"briefing":{"title":"Wrapped"}}"#,
-                true,
-                Some("Wrapped"),
-            ),
-            (r#"{"briefing":null}"#, false, None),
+            (r#"{"@context":{"@version":"1.1"},"briefing":null}"#, None),
         ] {
             let server = MockServer::start().await;
             Mock::given(method("GET"))
@@ -406,12 +466,11 @@ mod tests {
                 .briefing(&psr())
                 .await
                 .unwrap();
-            assert_eq!(response.context.is_some(), expect_context, "{body}");
             assert_eq!(
                 response
                     .briefing
                     .as_ref()
-                    .and_then(|briefing| briefing.title.as_deref()),
+                    .map(|briefing| briefing.title.as_str()),
                 expect_title,
                 "{body}"
             );
@@ -419,47 +478,50 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn weather_stories_accept_bare_and_wrapped_responses() {
-        let bare_server = MockServer::start().await;
+    async fn weather_stories_accept_populated_and_empty_live_shapes() {
+        let populated_server = MockServer::start().await;
         Mock::given(method("GET"))
             .and(path("/offices/PSR/weatherstories"))
             .and(header("Accept", "application/ld+json"))
-            .respond_with(ResponseTemplate::new(200).set_body_raw(
-                r#"[{"title":"Heat","order":0},{"title":null,"description":null}]"#,
-                "application/ld+json",
-            ))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_raw(
+                    serde_json::to_string(
+                        &serde_json::json!({"@context": {}, "stories": [story_body()]}),
+                    )
+                    .unwrap(),
+                    "application/ld+json",
+                ),
+            )
             .expect(1)
-            .mount(&bare_server)
+            .mount(&populated_server)
             .await;
 
-        let bare = client_for(&bare_server)
+        let populated = client_for(&populated_server)
             .offices()
             .weather_stories(&psr())
             .await
             .unwrap();
-        assert_eq!(bare.context, None);
-        assert_eq!(bare.stories.len(), 2);
-        assert_eq!(bare.stories[0].order, Some(0));
-        assert_eq!(bare.stories[1].title, None);
+        assert_eq!(populated.stories.len(), 1);
+        assert_eq!(populated.stories[0].order, 0);
+        assert_eq!(populated.stories[0].office_id.as_str(), "PSR");
 
-        let wrapped_server = MockServer::start().await;
+        let empty_server = MockServer::start().await;
         Mock::given(method("GET"))
             .and(path("/offices/PSR/weatherstories"))
             .respond_with(ResponseTemplate::new(200).set_body_raw(
-                r#"{"@context":{"@version":"1.1"},"stories":[{"officeId":"PSR"}]}"#,
+                r#"{"@context":{"@version":"1.1"},"stories":[]}"#,
                 "application/ld+json",
             ))
             .expect(1)
-            .mount(&wrapped_server)
+            .mount(&empty_server)
             .await;
 
-        let wrapped = client_for(&wrapped_server)
+        let empty = client_for(&empty_server)
             .offices()
             .weather_stories(&psr())
             .await
             .unwrap();
-        assert!(wrapped.context.is_some());
-        assert_eq!(wrapped.stories[0].office_id.as_deref(), Some("PSR"));
+        assert!(empty.stories.is_empty());
     }
 
     #[tokio::test]

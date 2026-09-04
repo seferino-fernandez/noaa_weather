@@ -1,0 +1,89 @@
+---
+source: noaa_weather_summary/tests/offices.rs
+expression: "decode::<Office>(OFFICE).summarize(&SummaryOptions::default())"
+---
+title: NWS Phoenix
+subtitle: NWS office PSR
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: ID
+          key: id
+          also: []
+          value:
+            Identifier: PSR
+          emphasis: None
+        - label: Address
+          key: address
+          also:
+            - streetAddress
+            - addressLocality
+            - addressRegion
+            - postalCode
+          value:
+            Lines:
+              - Text: "PAB 1TA, C/O SRP\n1667 N Priest Dr."
+              - Text: "Tempe, AZ 85288"
+          emphasis: None
+        - label: Phone
+          key: telephone
+          also: []
+          value:
+            Text: (602) 275-0073
+          emphasis: None
+        - label: Fax
+          key: faxNumber
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Email
+          key: email
+          also: []
+          value:
+            Text: w-psr.webmaster@noaa.gov
+          emphasis: None
+        - label: Website
+          key: sameAs
+          also: []
+          value:
+            Text: "https://www.weather.gov/psr"
+          emphasis: None
+        - label: Region
+          key: nwsRegion
+          also: []
+          value:
+            Text: wr
+          emphasis: None
+        - label: Parent Organization
+          key: parentOrganization
+          also: []
+          value:
+            Identifier: WRH
+          emphasis: None
+        - label: Responsible Counties
+          key: responsibleCounties
+          also: []
+          value:
+            Count: 8
+          emphasis: None
+        - label: Forecast Zones
+          key: responsibleForecastZones
+          also: []
+          value:
+            Count: 45
+          emphasis: None
+        - label: Fire Zones
+          key: responsibleFireZones
+          also: []
+          value:
+            Count: 6
+          emphasis: None
+        - label: Observation Stations
+          key: approvedObservationStations
+          also: []
+          value:
+            Count: 28
+          emphasis: None
+notes: []

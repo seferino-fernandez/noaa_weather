@@ -79,7 +79,12 @@ impl Summarize for CwsuOffice {
                 heading: None,
                 facts: vec![
                     Fact::new("ID", Some("id"), Value::identifier(self.id.to_string())),
-                    Fact::new("Address", Some("address"), address(self)),
+                    Fact::new("Address", Some("address"), address(self)).also(&[
+                        "streetAddress",
+                        "addressLocality",
+                        "addressRegion",
+                        "postalCode",
+                    ]),
                     Fact::new(
                         "Phone",
                         Some("telephone"),

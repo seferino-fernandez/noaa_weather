@@ -61,17 +61,10 @@ pub use self::observation::{Observation, ObservationCloudLayer};
 pub mod observation_station;
 pub use self::observation_station::{ObservationStation, ObservationType};
 pub mod office;
-pub use self::office::Office;
-pub mod office_address;
-pub use self::office_address::OfficeAddress;
-pub mod office_headline;
-pub use self::office_headline::OfficeHeadline;
-pub mod office_headline_collection;
-pub use self::office_headline_collection::OfficeHeadlineCollection;
-pub mod office_documents;
-pub use self::office_documents::{
-    NwsConnectDocumentMetadata, OfficeBriefing, OfficeBriefingResponse, OfficeWeatherStory,
-    OfficeWeatherStoryCollection,
+pub use self::office::{
+    NwsConnectDocumentMetadata, Office, OfficeAddress, OfficeBriefing, OfficeBriefingResponse,
+    OfficeHeadline, OfficeHeadlineCollection, OfficeResourceType, OfficeWeatherStory,
+    OfficeWeatherStoryCollection, PostalAddressResourceType,
 };
 pub mod point;
 pub use self::point::{Point, PointType, RelativeLocation};

@@ -1,0 +1,51 @@
+---
+source: noaa_weather_summary/tests/offices.rs
+expression: "decode::<OfficeHeadline>(HEADLINE).summarize(&SummaryOptions::default())"
+---
+title: "Phoenix, Yuma, and El Centro August 2026 Climate Data"
+subtitle: NWS PSR headline
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: ID
+          key: id
+          also: []
+          value:
+            Identifier: 8efe6a38d9d74abb80d62e71fba34189
+          emphasis: None
+        - label: Office
+          key: office
+          also: []
+          value:
+            Identifier: PSR
+          emphasis: None
+        - label: Important
+          key: important
+          also: []
+          value:
+            YesNo: false
+          emphasis: None
+        - label: Issued
+          key: issuanceTime
+          also: []
+          value:
+            Timestamp: "2026-09-01T09:27:00+00:00"
+          emphasis: None
+        - label: Link
+          key: link
+          also: []
+          value:
+            Text: "https://www.weather.gov/psr/August2026ClimateData"
+          emphasis: None
+        - label: Name
+          key: name
+          also: []
+          value:
+            Identifier: August2026ClimateData
+          emphasis: None
+  - Empty:
+      key: summary
+      message: No short summary supplied
+notes: []

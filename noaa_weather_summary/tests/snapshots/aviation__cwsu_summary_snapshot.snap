@@ -17,7 +17,11 @@ sections:
           emphasis: None
         - label: Address
           key: address
-          also: []
+          also:
+            - streetAddress
+            - addressLocality
+            - addressRegion
+            - postalCode
           value:
             Lines:
               - Text: 8000 Louisiana Blvd NE
