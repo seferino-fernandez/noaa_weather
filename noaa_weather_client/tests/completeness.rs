@@ -16,8 +16,9 @@ use std::path::Path;
 
 use noaa_weather_client::models::radar_station::{CommandChannel, CommandChannelMode};
 use noaa_weather_client::models::{
-    ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, Forecast, Gridpoint,
-    Observation, ObservationStation, Point, RadarStationFeature, Sigmet, Zone, ZoneForecast,
+    ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CwsuOffice, Forecast,
+    Gridpoint, Observation, ObservationStation, Point, RadarStationFeature, Sigmet, Zone,
+    ZoneForecast,
 };
 use noaa_weather_client::{Feature, FeatureCollection};
 use serde::Serialize;
@@ -245,6 +246,7 @@ fn captured_responses_preserve_every_non_whitelisted_key_path() {
             FeatureCollection<CenterWeatherAdvisory>
         ),
         ("aviation/cwa.json", Feature<CenterWeatherAdvisory>),
+        ("aviation/cwsu.json", CwsuOffice),
         ("radar/KFSX.json", RadarStationFeature),
         ("radar/KLNX.json", RadarStationFeature),
         ("radar/TSLC.json", RadarStationFeature),
@@ -511,6 +513,7 @@ async fn live_responses_preserve_every_non_whitelisted_key_path() {
         GEO_JSON,
         FeatureCollection<CenterWeatherAdvisory>
     );
+    live!("/aviation/cwsus/ZAB", JSON_LD, CwsuOffice);
     match first_member(&advisories, "features") {
         Some(first) => {
             let properties = &first["properties"];

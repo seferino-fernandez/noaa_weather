@@ -6,7 +6,8 @@ use std::fmt;
 
 use jiff::tz::TimeZone;
 use noaa_weather_client::models::{
-    ActiveAlertCounts, Alert, AlertEventTypes, Forecast, Gridpoint, Point,
+    ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CwsuOffice, Forecast,
+    Gridpoint, Point, Sigmet,
 };
 use noaa_weather_client::{Feature, FeatureCollection};
 use noaa_weather_summary::SummaryOptions;
@@ -16,7 +17,6 @@ use super::PresentationDocument;
 
 mod values;
 
-pub mod aviation;
 pub mod glossary;
 pub mod offices;
 pub mod products;
@@ -100,6 +100,11 @@ summarized!(
     Feature<Point>,
     Feature<Gridpoint>,
     Feature<Forecast>,
+    CwsuOffice,
+    Feature<CenterWeatherAdvisory>,
+    FeatureCollection<CenterWeatherAdvisory>,
+    Feature<Sigmet>,
+    FeatureCollection<Sigmet>,
 );
 
 /// A failure to construct a complete default presentation document.

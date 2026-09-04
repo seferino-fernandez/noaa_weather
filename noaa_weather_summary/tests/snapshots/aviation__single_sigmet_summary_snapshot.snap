@@ -1,0 +1,56 @@
+---
+source: noaa_weather_summary/tests/aviation.rs
+expression: "sigmet().summarize(&SummaryOptions::default())"
+---
+title: SIGMET or AIRMET
+subtitle: KKCI sequence 19W
+emphasis: None
+sections:
+  - Facts:
+      heading: ~
+      facts:
+        - label: ID
+          key: id
+          also: []
+          value:
+            Identifier: "0655"
+          emphasis: None
+        - label: Issue time
+          key: issueTime
+          also: []
+          value:
+            Timestamp: "2026-09-02T06:55:00+00:00"
+          emphasis: None
+        - label: ATSU
+          key: atsu
+          also: []
+          value:
+            Identifier: KKCI
+          emphasis: None
+        - label: FIR
+          key: fir
+          also: []
+          value:
+            Text: KZLC
+          emphasis: None
+        - label: Sequence
+          key: sequence
+          also: []
+          value:
+            Text: 19W
+          emphasis: None
+        - label: Phenomenon
+          key: phenomenon
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Valid
+          key: start
+          also:
+            - end
+          value:
+            Interval:
+              start: "2026-09-02T06:55:00+00:00"
+              end: "2026-09-02T08:55:00+00:00"
+          emphasis: None
+notes: []
