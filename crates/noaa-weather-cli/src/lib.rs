@@ -4,6 +4,8 @@
 //! live here so integration tests can import [`Cli`] and walk the clap
 //! command tree, which a `bin`-only crate cannot offer them.
 
+use std::sync::LazyLock;
+
 use anyhow::Result;
 use clap::{CommandFactory as _, FromArgMatches as _, Parser};
 use clap_complete::CompleteEnv;
@@ -21,12 +23,24 @@ pub use client_args::{ClientBuildError, Fault};
 pub use exit::ExitCode;
 pub use output::{OutputFailure, UsageFailure};
 
+static COMMAND_VERSION: LazyLock<String> = LazyLock::new(|| {
+    format!(
+        "{} (api.weather.gov spec {})",
+        env!("CARGO_PKG_VERSION"),
+        noaa_weather_client::API_SPEC_VERSION
+    )
+});
+
+fn command_version() -> &'static str {
+    COMMAND_VERSION.as_str()
+}
+
 /// The whole command line: one subcommand plus the global argument groups.
 #[derive(Parser, Debug)]
 #[command(
     name = "noaa-weather",
     author,
-    version,
+    version = command_version(),
     about,
     long_about = "Fetches weather forecasts and alerts from the NOAA Weather API.",
     after_long_help = client_args::ENVIRONMENT_HELP

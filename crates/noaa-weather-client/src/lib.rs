@@ -14,6 +14,12 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(docsrs, doc(auto_cfg))]
 
+/// The NOAA API specification release whose contract this client implements.
+///
+/// This is the API release from the specification's `info.version`, not the
+/// version of the OpenAPI document format used to describe it.
+pub const API_SPEC_VERSION: &str = "3.11.0";
+
 #[macro_use]
 mod macros;
 

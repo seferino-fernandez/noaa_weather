@@ -51,6 +51,7 @@ mod tests {
             .get_info();
 
         assert_eq!(info.server_info.name, "noaa_weather_mcp");
+        assert_eq!(info.server_info.version, env!("CARGO_PKG_VERSION"));
         assert!(info.capabilities.tools.is_none());
     }
 }
