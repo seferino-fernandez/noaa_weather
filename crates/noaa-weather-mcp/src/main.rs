@@ -6,6 +6,7 @@ mod commands;
 mod server;
 
 use std::path::PathBuf;
+use std::sync::LazyLock;
 
 use clap::{CommandFactory as _, Parser, Subcommand};
 use clap_complete::CompleteEnv;
@@ -14,11 +15,23 @@ use rmcp::ServiceExt as _;
 use commands::completions::CompletionShell;
 use server::NoaaWeatherServer;
 
+static COMMAND_VERSION: LazyLock<String> = LazyLock::new(|| {
+    format!(
+        "{} (api.weather.gov spec {})",
+        env!("CARGO_PKG_VERSION"),
+        noaa_weather_client::API_SPEC_VERSION
+    )
+});
+
+fn command_version() -> &'static str {
+    COMMAND_VERSION.as_str()
+}
+
 #[derive(Debug, Parser)]
 #[command(
     name = "noaa-weather-mcp",
     author,
-    version,
+    version = command_version(),
     about = "Serve the NOAA weather.gov API over MCP using stdio"
 )]
 struct Cli {
