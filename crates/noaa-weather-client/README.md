@@ -24,7 +24,7 @@ cargo add noaa_weather_client --features schemars
 ## Quick start
 
 ```rust,no_run
-use noaa_weather_client::{Client, Coordinates, apis::alerts::ActiveAlertsQuery};
+use noaa_weather_client::{Client, Coordinates, alerts::ActiveAlertsQuery};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -59,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 - **Query structs.** Every operation with optional parameters takes one `*Query` struct with plain `pub` fields. Build it with struct-update syntax so unset filters stay absent:
 
   ```rust,no_run
-  use noaa_weather_client::{Client, StationId, apis::stations::ObservationsQuery};
+  use noaa_weather_client::{Client, StationId, stations::ObservationsQuery};
 
   # async fn example() -> Result<(), Box<dyn std::error::Error>> {
   let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;
@@ -90,7 +90,7 @@ Paged responses expose NOAA's opaque next-page token through
 pages yourself:
 
 ```rust,no_run
-use noaa_weather_client::{Client, apis::alerts::AlertsQuery};
+use noaa_weather_client::{Client, alerts::AlertsQuery};
 
 # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;
@@ -120,7 +120,7 @@ argument is the maximum number of pages to fetch:
 ```rust,no_run
 use std::num::NonZeroU16;
 
-use noaa_weather_client::{Client, apis::alerts::AlertsQuery};
+use noaa_weather_client::{Client, alerts::AlertsQuery};
 
 # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;
@@ -223,7 +223,7 @@ The deprecated `/points/{point}/stations` operation is intentionally not exposed
 
 ```rust,no_run
 use noaa_weather_client::{Client, StationId};
-use noaa_weather_client::models::terminal_aerodrome_forecast::{
+use noaa_weather_client::stations::taf::{
     ForecastReport, ForecastWeather,
 };
 
@@ -249,7 +249,7 @@ if let Some(base) = taf.base_forecast() {
 # }
 ```
 
-The IWXXM wire structs and decoder are implementation details. Consumers should use the accessors and non-exhaustive semantic enums under `models::terminal_aerodrome_forecast`.
+The IWXXM wire structs and decoder are implementation details. Consumers should use the accessors and non-exhaustive semantic enums under `stations::taf`.
 
 ## Forecast values in 3.11
 
@@ -258,7 +258,7 @@ Textual forecasts always request NOAA's quantitative temperature and wind format
 Both forecast endpoints return `Feature<Forecast>`; `forecast.forecast_generator` says which one produced it.
 
 ```rust,no_run
-use noaa_weather_client::{Client, GridpointId, apis::gridpoints::{ForecastQuery, ForecastUnits}};
+use noaa_weather_client::{Client, GridpointId, gridpoints::{ForecastQuery, ForecastUnits}};
 
 # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 let client = Client::builder("my-weather-app/2.0 (weather@example.com)").build()?;

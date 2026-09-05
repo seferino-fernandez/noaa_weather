@@ -1,11 +1,11 @@
 use anyhow::Result;
 use clap::Subcommand;
 use jiff::Timestamp;
-use noaa_weather_client::apis::alerts::{ActiveAlertsQuery, AlertsQuery, RegionType};
-use noaa_weather_client::models::{
-    AlertCertainty, AlertMessageType, AlertSeverity, AlertStatus, AlertUrgency, AreaCode,
-    MarineRegionCode,
+use noaa_weather_client::alerts::{
+    ActiveAlertsQuery, AlertCertainty, AlertMessageType, AlertSeverity, AlertStatus, AlertUrgency,
+    AlertsQuery, RegionType,
 };
+use noaa_weather_client::geo::{AreaCode, MarineRegionCode};
 use noaa_weather_client::{AlertId, Client, Coordinates, Cursor, ZoneId};
 
 use super::{Run, parse};

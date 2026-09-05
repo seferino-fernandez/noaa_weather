@@ -11,7 +11,7 @@
 //! Conversion arithmetic is not here: [`Quantity::in_unit`] already converts
 //! the value and both bounds together and declines across dimensions.
 
-use noaa_weather_client::models::{Quantity, Unit};
+use noaa_weather_client::units::{Quantity, Unit};
 
 use crate::{SummaryOptions, UnitSystem, Value};
 
@@ -205,7 +205,7 @@ impl Value {
     /// and [`probabilityOfThunder`] — has nothing to convert to, so the
     /// number is shown as sent, at the precision its kind asks for.
     ///
-    /// [`probabilityOfThunder`]: noaa_weather_client::models::Gridpoint::probability_of_thunder
+    /// [`probabilityOfThunder`]: noaa_weather_client::gridpoints::Gridpoint::probability_of_thunder
     pub fn reading(
         value: Option<f64>,
         unit: Option<&Unit>,

@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::{Args, Subcommand};
 use jiff::Timestamp;
 use jiff::civil::Date;
-use noaa_weather_client::apis::aviation::SigmetsQuery;
+use noaa_weather_client::aviation::SigmetsQuery;
 use noaa_weather_client::{AtsuId, Client, CwsuId};
 
 use super::{Run, parse};

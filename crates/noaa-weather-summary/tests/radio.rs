@@ -1,6 +1,6 @@
 //! Radio summaries against every captured response shape.
 
-use noaa_weather_client::models::{RadioBroadcast, RadioTransmitter, RadioTransmitterCollection};
+use noaa_weather_client::radio::{RadioBroadcast, RadioTransmitter, RadioTransmitterCollection};
 use noaa_weather_summary::{Section, Summarize, SummaryOptions, coverage_gaps};
 
 const TRANSMITTER: &str =

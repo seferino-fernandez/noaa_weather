@@ -2,7 +2,7 @@
 //!
 //! [`Client`] owns everything that applies to every NOAA request: the base
 //! URL, identity headers, timeouts, redirect handling, retry policy, and the
-//! response size cap. Endpoint functions under [`crate::apis`] borrow a
+//! response size cap. Endpoint handles such as [`crate::alerts`] borrow a
 //! `Client` and describe only their path, query, and media type.
 
 use std::{fmt, sync::Arc, time::Duration};
@@ -11,10 +11,15 @@ use reqwest::header::HeaderValue;
 use url::Url;
 
 pub(crate) mod http;
+pub(crate) mod pagination;
+mod problem_detail;
 mod redirect;
+mod response;
 pub(crate) mod retry;
 mod secret;
 
+pub use problem_detail::ProblemDetail;
+pub use response::{BinaryPayload, Error, ProtocolError, RedirectReason, ResponseContent};
 pub use retry::RetryPolicy;
 use secret::Secret;
 
@@ -30,7 +35,7 @@ const DEFAULT_MAX_RESPONSE_BYTES: usize = 32 * 1024 * 1024;
 ///
 /// Create one with [`Client::builder`] and share it across tasks; clones
 /// reuse the same connection pool. Every endpoint function in
-/// [`crate::apis`] takes `&Client` as its first argument.
+/// Each domain handle takes `&Client` as its first argument.
 ///
 /// # Examples
 ///
@@ -205,7 +210,7 @@ impl ClientBuilder {
     /// the body is read. A streamed body without a usable length is read
     /// only until it passes the cap. Bodies are counted after transparent
     /// gzip decompression, and either case fails with
-    /// [`ProtocolError::ResponseTooLarge`](crate::ProtocolError::ResponseTooLarge).
+    /// [`ProtocolError::ResponseTooLarge`].
     #[must_use]
     pub const fn max_response_bytes(mut self, bytes: usize) -> Self {
         self.max_response_bytes = bytes;

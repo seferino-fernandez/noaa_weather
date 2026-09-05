@@ -8,8 +8,9 @@
 //! Run with: just example-alerts
 //! Or: cargo run --example weather_alerts --manifest-path crates/noaa-weather-client/Cargo.toml
 
-use noaa_weather_client::apis::alerts::ActiveAlertsQuery;
-use noaa_weather_client::models::{AlertSeverity, AreaCode, StateTerritoryCode};
+use noaa_weather_client::alerts::ActiveAlertsQuery;
+use noaa_weather_client::alerts::AlertSeverity;
+use noaa_weather_client::geo::{AreaCode, StateTerritoryCode};
 use noaa_weather_client::{AlertId, Client};
 
 #[tokio::main]

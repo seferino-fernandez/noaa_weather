@@ -3,7 +3,7 @@ use std::{fmt, str::FromStr};
 use serde::{Deserialize, Serialize};
 
 use super::{InvalidValue, OfficeId, ValueKind};
-use crate::models::Point;
+use crate::points::Point;
 
 const SHAPE: &str = "must be OFFICE/x,y (for example TOP/31,80)";
 const OFFICE: &str = "office code must be 3 to 4 ASCII letters or digits";
@@ -143,7 +143,7 @@ impl TryFrom<&Point> for GridpointId {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::NwsForecastOfficeId;
+    use crate::ids::NwsForecastOfficeId;
 
     fn top() -> OfficeId {
         "TOP".parse().unwrap()

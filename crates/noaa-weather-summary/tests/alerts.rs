@@ -3,7 +3,7 @@
 //! Each fixture is decoded through the client types, summarized, rendered as
 //! markdown with the source offsets, and checked for coverage gaps.
 
-use noaa_weather_client::models::{ActiveAlertCounts, Alert, AlertEventTypes};
+use noaa_weather_client::alerts::{ActiveAlertCounts, Alert, AlertEventTypes};
 use noaa_weather_client::{Feature, FeatureCollection, Pagination};
 use noaa_weather_summary::render::{RenderOptions, markdown};
 use noaa_weather_summary::{Section, Summarize, SummaryOptions, coverage_gaps};

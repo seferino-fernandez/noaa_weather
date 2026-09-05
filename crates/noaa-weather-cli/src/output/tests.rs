@@ -604,7 +604,7 @@ async fn rendered_with_units<T: DefaultPresentation + 'static>(value: T, units: 
 #[tokio::test]
 async fn the_units_flag_reaches_the_summary_through_the_configured_output() {
     use noaa_weather_client::Feature;
-    use noaa_weather_client::models::Forecast;
+    use noaa_weather_client::gridpoints::Forecast;
 
     let forecast = || -> Feature<Forecast> {
         serde_json::from_str(FORECAST_FIXTURE).expect("forecast.json decodes")
@@ -632,7 +632,7 @@ async fn the_units_flag_reaches_the_summary_through_the_configured_output() {
 #[tokio::test]
 async fn the_units_flag_reaches_a_summary_title() {
     use noaa_weather_client::Feature;
-    use noaa_weather_client::models::Point;
+    use noaa_weather_client::points::Point;
 
     let point =
         || -> Feature<Point> { serde_json::from_str(POINT_FIXTURE).expect("point.json decodes") };

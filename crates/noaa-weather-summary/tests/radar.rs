@@ -1,6 +1,6 @@
 //! Radar summaries against every captured response shape.
 
-use noaa_weather_client::models::{
+use noaa_weather_client::radar::{
     RadarQueuesResponse, RadarServerTelemetry, RadarServersResponse, RadarSpgdsResponse,
     RadarStationAlarmsResponse, RadarStationTelemetry, RadarStationsResponse,
 };

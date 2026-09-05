@@ -1,15 +1,16 @@
 //! Smoke tests for every endpoint handle through the public interface only.
 
 use jiff::civil::date;
-use noaa_weather_client::apis::alerts::ActiveAlertsQuery;
-use noaa_weather_client::apis::aviation::SigmetsQuery;
-use noaa_weather_client::apis::gridpoints::{ForecastQuery, ForecastUnits};
-use noaa_weather_client::apis::products::ProductsQuery;
-use noaa_weather_client::apis::radar::RadarQueueQuery;
-use noaa_weather_client::apis::radio::TransmittersQuery;
-use noaa_weather_client::apis::stations::ObservationsQuery;
-use noaa_weather_client::apis::zones::{ZoneType, ZonesQuery};
-use noaa_weather_client::models::{AlertSeverity, RadarQueueHost};
+use noaa_weather_client::alerts::ActiveAlertsQuery;
+use noaa_weather_client::alerts::AlertSeverity;
+use noaa_weather_client::aviation::SigmetsQuery;
+use noaa_weather_client::gridpoints::{ForecastQuery, ForecastUnits};
+use noaa_weather_client::products::ProductsQuery;
+use noaa_weather_client::radar::RadarQueueHost;
+use noaa_weather_client::radar::RadarQueueQuery;
+use noaa_weather_client::radio::TransmittersQuery;
+use noaa_weather_client::stations::ObservationsQuery;
+use noaa_weather_client::zones::{ZoneType, ZonesQuery};
 use noaa_weather_client::{
     AtsuId, CallSign, Client, Coordinates, CwsuId, Error, GridpointId, Interval, OfficeId,
     ProductTypeCode, RadarStationId, RetryPolicy, StationId, ZoneId,
@@ -418,19 +419,17 @@ fn handles_are_copy_and_borrow_the_client() {
 
 #[cfg(feature = "schemars")]
 mod schema {
-    use noaa_weather_client::apis::alerts::{ActiveAlertsQuery, AlertsQuery};
-    use noaa_weather_client::apis::aviation::SigmetsQuery;
-    use noaa_weather_client::apis::gridpoints::{ForecastQuery, GridpointStationsQuery};
-    use noaa_weather_client::apis::products::ProductsQuery;
-    use noaa_weather_client::apis::radar::{
+    use noaa_weather_client::alerts::{ActiveAlertsQuery, AlertsQuery};
+    use noaa_weather_client::aviation::SigmetsQuery;
+    use noaa_weather_client::gridpoints::{ForecastQuery, GridpointStationsQuery};
+    use noaa_weather_client::products::ProductsQuery;
+    use noaa_weather_client::radar::{
         RadarQueueQuery, RadarServerQuery, RadarServersQuery, RadarStationQuery,
         RadarStationsQuery, SpgdsQuery, WindProfilerQuery,
     };
-    use noaa_weather_client::apis::radio::TransmittersQuery;
-    use noaa_weather_client::apis::stations::{
-        LatestObservationQuery, ObservationsQuery, StationsQuery,
-    };
-    use noaa_weather_client::apis::zones::{
+    use noaa_weather_client::radio::TransmittersQuery;
+    use noaa_weather_client::stations::{LatestObservationQuery, ObservationsQuery, StationsQuery};
+    use noaa_weather_client::zones::{
         ZoneObservationsQuery, ZoneQuery, ZoneStationsQuery, ZonesQuery,
     };
 

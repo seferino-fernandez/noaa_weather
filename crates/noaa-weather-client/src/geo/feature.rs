@@ -9,7 +9,7 @@ use super::Geometry;
 /// Every single-resource GeoJSON operation (`/points/{point}`,
 /// `/alerts/{id}`, `/stations/{id}`, `/zones/{type}/{id}`, ...) returns a
 /// `Feature<T>` whose `properties` is the resource model from
-/// [`crate::models`]. `Feature<T>` dereferences to `T`, so
+/// a domain module. `Feature<T>` dereferences to `T`, so
 /// `alert.event` reads the property directly.
 ///
 /// # Field name clash

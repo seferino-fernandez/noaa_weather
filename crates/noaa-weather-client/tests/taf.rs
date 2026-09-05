@@ -1,5 +1,5 @@
-use noaa_weather_client::models::TerminalAerodromeForecast;
-use noaa_weather_client::models::terminal_aerodrome_forecast::{
+use noaa_weather_client::stations::TerminalAerodromeForecast;
+use noaa_weather_client::stations::taf::{
     ForecastGroupKind, ForecastReport, MissingForecastReason, MissingReason,
 };
 

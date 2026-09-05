@@ -8,7 +8,7 @@
 //! Run with: just example-basic
 //! Or: cargo run --example basic_usage --manifest-path crates/noaa-weather-client/Cargo.toml
 
-use noaa_weather_client::apis::alerts::ActiveAlertsQuery;
+use noaa_weather_client::alerts::ActiveAlertsQuery;
 use noaa_weather_client::{Client, Coordinates};
 
 #[tokio::main]

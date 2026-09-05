@@ -4,7 +4,7 @@
 //! snapshotted as a format-independent summary, and audited so a newly
 //! arriving NOAA key cannot disappear from human output unnoticed.
 
-use noaa_weather_client::models::{CenterWeatherAdvisory, CwsuOffice, Sigmet};
+use noaa_weather_client::aviation::{CenterWeatherAdvisory, CwsuOffice, Sigmet};
 use noaa_weather_client::{Feature, FeatureCollection};
 use noaa_weather_summary::{Section, Summarize, SummaryOptions, coverage_gaps};
 

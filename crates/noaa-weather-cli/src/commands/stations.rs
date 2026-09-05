@@ -1,10 +1,8 @@
 use anyhow::Result;
 use clap::Subcommand;
 use jiff::Timestamp;
-use noaa_weather_client::apis::stations::{
-    LatestObservationQuery, ObservationsQuery, StationsQuery,
-};
-use noaa_weather_client::models::AreaCode;
+use noaa_weather_client::geo::AreaCode;
+use noaa_weather_client::stations::{LatestObservationQuery, ObservationsQuery, StationsQuery};
 use noaa_weather_client::{Client, Cursor, StationId};
 
 use super::{Run, parse};

@@ -1,6 +1,6 @@
 //! Glossary summary coverage against the captured NOAA fixture.
 
-use noaa_weather_client::models::GlossaryResponse;
+use noaa_weather_client::glossary::GlossaryResponse;
 use noaa_weather_summary::{Section, Summarize, SummaryOptions, coverage_gaps};
 
 const GLOSSARY: &str = include_str!("../../noaa-weather-client/tests/fixtures/glossary/terms.json");

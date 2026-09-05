@@ -1,10 +1,10 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::apis::radar::{
+use noaa_weather_client::radar::RadarQueueHost;
+use noaa_weather_client::radar::{
     RadarQueueQuery, RadarServerQuery, RadarServersQuery, RadarStationQuery, RadarStationsQuery,
     SpgdsQuery, WindProfilerQuery,
 };
-use noaa_weather_client::models::RadarQueueHost;
 use noaa_weather_client::{Client, Interval, RadarStationId};
 
 use super::Run;

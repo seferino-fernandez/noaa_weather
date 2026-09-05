@@ -1418,7 +1418,11 @@ pub const STATIONS: &[Invocation] = &[
         ],
         live: Live::Check(Expectation {
             payload: "/properties",
-            keys: &["textDescription", "temperature"],
+            // `textDescription` is a required key but can legitimately be an
+            // empty string (observed at KPHX on 2026-09-04). Fixture
+            // completeness guards the key; this live probe needs a populated
+            // measurement rather than prose for the current conditions.
+            keys: &["temperature"],
             non_empty: true,
             equals: &[],
         }),

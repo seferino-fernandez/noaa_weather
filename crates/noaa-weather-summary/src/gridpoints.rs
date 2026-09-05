@@ -23,10 +23,11 @@
 //! warning, the office's firmest word — escalates to [`Emphasis::Danger`].
 //! Coloring a temperature would invent a threshold NOAA does not state.
 
-use noaa_weather_client::models::{
-    Forecast, ForecastGenerator, ForecastPeriod, Gridpoint, GridpointLayer, HazardPeriod, Quantity,
-    Unit, WeatherCondition, WeatherCoverage, WeatherIntensity, WeatherPeriod, WeatherPhenomenon,
+use noaa_weather_client::gridpoints::{
+    Forecast, ForecastGenerator, ForecastPeriod, Gridpoint, GridpointLayer, HazardPeriod,
+    WeatherCondition, WeatherCoverage, WeatherIntensity, WeatherPeriod, WeatherPhenomenon,
 };
+use noaa_weather_client::units::{Quantity, Unit};
 use noaa_weather_client::{Feature, Interval, OffsetDateTime};
 
 use crate::render::{RangeStyle, RenderOptions, format_value};

@@ -1,14 +1,14 @@
 //! Human summaries for observation stations, surface observations, and TAFs.
 
 use noaa_weather_client::geo::Geometry;
-use noaa_weather_client::models::terminal_aerodrome_forecast::{
+use noaa_weather_client::stations::taf::{
     CloudAmount, CloudLayer, CloudType, Comparison, ForecastClouds, ForecastConditions,
     ForecastElement, ForecastGroup, ForecastGroupKind, ForecastReport, ForecastValue,
     ForecastWeather, ForecastWind, MissingForecastReason, MissingReason, PermissibleUsage,
     PermissibleUsageReason, ReportStatus, SurfaceWind, TemperatureForecast, TimeRange, Weather,
     WeatherDescriptor, WeatherIntensity, WeatherPhenomenon, WindDirection, WindSpeed,
 };
-use noaa_weather_client::models::{
+use noaa_weather_client::stations::{
     Observation, ObservationCloudLayer, ObservationStation, TerminalAerodromeForecast,
     TerminalAerodromeForecastsResponse,
 };
@@ -32,7 +32,7 @@ fn identifier_from_optional_url(url: Option<&str>) -> Value {
 }
 
 fn quantity_or_missing(
-    quantity: Option<&noaa_weather_client::models::Quantity>,
+    quantity: Option<&noaa_weather_client::units::Quantity>,
     kind: QuantityKind,
     options: &SummaryOptions,
 ) -> Value {

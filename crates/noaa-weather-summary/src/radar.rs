@@ -1,6 +1,6 @@
 //! Human summaries for NOAA radar infrastructure telemetry.
 
-use noaa_weather_client::models::{
+use noaa_weather_client::radar::{
     CommandChannel, CommandChannelMode, RadarMeasurement, RadarPosition, RadarQueuesResponse,
     RadarServerTelemetry, RadarServersResponse, RadarSpgdsResponse, RadarStationAlarmsResponse,
     RadarStationTelemetry, RadarStationsResponse,

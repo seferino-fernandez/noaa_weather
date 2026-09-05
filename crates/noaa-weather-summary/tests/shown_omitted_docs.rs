@@ -5,16 +5,27 @@ use std::fmt::Write as _;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use noaa_weather_client::models::{
-    ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CwsuOffice, Forecast,
-    GlossaryResponse, Gridpoint, Observation, ObservationStation, Office, OfficeBriefingResponse,
-    OfficeHeadline, OfficeHeadlineCollection, OfficeWeatherStoryCollection, Point,
-    RadarQueuesResponse, RadarServerTelemetry, RadarServersResponse, RadarSpgdsResponse,
-    RadarStationAlarmsResponse, RadarStationTelemetry, RadarStationsResponse, RadioBroadcast,
-    RadioTransmitter, RadioTransmitterCollection, Sigmet, TerminalAerodromeForecast,
-    TerminalAerodromeForecastsResponse, TextProduct, TextProductCollection,
-    TextProductLocationCollection, TextProductTypeCollection, Zone, ZoneForecast,
+use noaa_weather_client::alerts::{ActiveAlertCounts, Alert, AlertEventTypes};
+use noaa_weather_client::aviation::{CenterWeatherAdvisory, CwsuOffice, Sigmet};
+use noaa_weather_client::glossary::GlossaryResponse;
+use noaa_weather_client::gridpoints::{Forecast, Gridpoint};
+use noaa_weather_client::offices::{
+    Office, OfficeBriefingResponse, OfficeHeadline, OfficeHeadlineCollection,
+    OfficeWeatherStoryCollection,
 };
+use noaa_weather_client::points::Point;
+use noaa_weather_client::products::{
+    TextProduct, TextProductCollection, TextProductLocationCollection, TextProductTypeCollection,
+};
+use noaa_weather_client::radar::{
+    RadarQueuesResponse, RadarServerTelemetry, RadarServersResponse, RadarSpgdsResponse,
+    RadarStationAlarmsResponse, RadarStationTelemetry, RadarStationsResponse,
+};
+use noaa_weather_client::radio::{RadioBroadcast, RadioTransmitter, RadioTransmitterCollection};
+use noaa_weather_client::stations::{
+    Observation, ObservationStation, TerminalAerodromeForecast, TerminalAerodromeForecastsResponse,
+};
+use noaa_weather_client::zones::{Zone, ZoneForecast};
 use noaa_weather_client::{Feature, FeatureCollection};
 use noaa_weather_summary::stations::ZoneObservations;
 use noaa_weather_summary::{Summarize, SummaryOptions};

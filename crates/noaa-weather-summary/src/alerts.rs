@@ -11,7 +11,7 @@
 
 use std::collections::BTreeMap;
 
-use noaa_weather_client::models::{ActiveAlertCounts, Alert, AlertEventTypes, AlertSeverity};
+use noaa_weather_client::alerts::{ActiveAlertCounts, Alert, AlertEventTypes, AlertSeverity};
 use noaa_weather_client::{Feature, FeatureCollection};
 
 use crate::{

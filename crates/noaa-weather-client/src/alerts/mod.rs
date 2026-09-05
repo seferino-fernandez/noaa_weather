@@ -1,0 +1,845 @@
+//! Weather alerts, warnings, and watches: the `/alerts` family.
+//!
+//! Obtain the handle with [`Client::alerts`]. Filtering operations take one
+//! query struct each ([`ActiveAlertsQuery`], [`AlertsQuery`]); build them with
+//! struct-update syntax so unset filters stay absent:
+//!
+//! ```no_run
+//! use noaa_weather_client::{Client, alerts::{ActiveAlertsQuery, AlertSeverity}};
+//!
+//! # async fn run() -> Result<(), noaa_weather_client::Error> {
+//! let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+//! let severe = client
+//!     .alerts()
+//!     .active(&ActiveAlertsQuery {
+//!         severity: vec![AlertSeverity::Severe, AlertSeverity::Extreme],
+//!         ..Default::default()
+//!     })
+//!     .await?;
+//! println!("{} severe alerts", severe.len());
+//! # Ok(())
+//! # }
+//! ```
+
+use std::{fmt, num::NonZeroU16, str::FromStr};
+
+use jiff::Timestamp;
+use serde::{Deserialize, Serialize};
+
+use crate::client::{
+    Client, Error, http,
+    pagination::{self, Paged},
+};
+use crate::geo::{AreaCode, Coordinates, Feature, FeatureCollection, MarineRegionCode};
+use crate::ids::{AlertId, Cursor, ZoneId};
+
+mod model;
+
+pub use model::{
+    ActiveAlertCounts, Alert, AlertCategory, AlertCertainty, AlertEventTypes, AlertGeocode,
+    AlertMessageType, AlertReference, AlertResponse, AlertScope, AlertSeverity, AlertStatus,
+    AlertUrgency,
+};
+
+/// The land or marine half of the alert system, for the `region_type`
+/// filter.
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
+)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema), schemars(inline))]
+pub enum RegionType {
+    /// Alerts for land areas.
+    #[serde(rename = "land")]
+    #[default]
+    Land,
+    /// Alerts for marine areas.
+    #[serde(rename = "marine")]
+    Marine,
+}
+
+impl fmt::Display for RegionType {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(match self {
+            Self::Land => "land",
+            Self::Marine => "marine",
+        })
+    }
+}
+
+impl FromStr for RegionType {
+    type Err = String;
+
+    fn from_str(text: &str) -> Result<Self, Self::Err> {
+        match text.to_ascii_lowercase().as_str() {
+            "land" => Ok(Self::Land),
+            "marine" => Ok(Self::Marine),
+            _ => Err(format!("Invalid region type: {text}")),
+        }
+    }
+}
+
+/// Filters for [`Alerts::active`] (`GET /alerts/active`).
+///
+/// NOAA treats `area`, `point`, `region`, `region_type`, and `zone` as
+/// mutually exclusive location filters; the server rejects combinations.
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", default)]
+pub struct ActiveAlertsQuery {
+    /// Alert statuses (actual, exercise, system, test, draft).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub status: Vec<AlertStatus>,
+    /// Message types (alert, update, cancel).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub message_type: Vec<AlertMessageType>,
+    /// Event names such as `Tornado Warning` or `Flood Watch`.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub event: Vec<String>,
+    /// NWS public zone/county codes or SAME codes.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub code: Vec<String>,
+    /// State/territory or marine area codes.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
+    pub area: Vec<AreaCode>,
+    /// A point whose alerts to return.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub point: Option<Coordinates>,
+    /// Marine region codes.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
+    pub region: Vec<MarineRegionCode>,
+    /// Land or marine.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub region_type: Option<RegionType>,
+    /// NWS public zone or county identifiers.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub zone: Vec<ZoneId>,
+    /// Alert urgencies.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub urgency: Vec<AlertUrgency>,
+    /// Alert severities.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub severity: Vec<AlertSeverity>,
+    /// Alert certainties.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub certainty: Vec<AlertCertainty>,
+}
+
+impl http::QueryParams for ActiveAlertsQuery {
+    fn append_to(&self, request: &mut http::ContractRequest<'_>) {
+        request.list("status", &self.status);
+        request.list("message_type", &self.message_type);
+        request.list("event", &self.event);
+        request.list("code", &self.code);
+        request.list("area", &self.area);
+        request.scalar("point", self.point.as_ref());
+        request.list("region", &self.region);
+        request.scalar("region_type", self.region_type.as_ref());
+        request.list("zone", &self.zone);
+        request.list("urgency", &self.urgency);
+        request.list("severity", &self.severity);
+        request.list("certainty", &self.certainty);
+    }
+}
+
+/// Filters and paging for [`Alerts::search`] (`GET /alerts`).
+///
+/// The same location-filter exclusivity as [`ActiveAlertsQuery`] applies.
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", default)]
+pub struct AlertsQuery {
+    /// Earliest alert time to include.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
+    pub start: Option<Timestamp>,
+    /// Latest alert time to include.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
+    pub end: Option<Timestamp>,
+    /// Alert statuses (actual, exercise, system, test, draft).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub status: Vec<AlertStatus>,
+    /// Message types (alert, update, cancel).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub message_type: Vec<AlertMessageType>,
+    /// Event names such as `Tornado Warning`.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub event: Vec<String>,
+    /// NWS public zone/county codes or SAME codes.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub code: Vec<String>,
+    /// State/territory or marine area codes.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
+    pub area: Vec<AreaCode>,
+    /// A point whose alerts to return.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub point: Option<Coordinates>,
+    /// Marine region codes.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "schemars", schemars(with = "Vec<String>"))]
+    pub region: Vec<MarineRegionCode>,
+    /// Land or marine.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub region_type: Option<RegionType>,
+    /// NWS public zone or county identifiers.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub zone: Vec<ZoneId>,
+    /// Alert urgencies.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub urgency: Vec<AlertUrgency>,
+    /// Alert severities.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub severity: Vec<AlertSeverity>,
+    /// Alert certainties.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub certainty: Vec<AlertCertainty>,
+    /// Maximum number of alerts per page (1 to 500).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schemars", schemars(range(min = 1, max = 500)))]
+    pub limit: Option<u16>,
+    /// Opaque pagination cursor from a previous page, obtained from
+    /// [`FeatureCollection::next_cursor`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cursor: Option<Cursor>,
+}
+
+impl Paged for AlertsQuery {
+    fn at_cursor(&self, cursor: Cursor) -> Self {
+        Self {
+            cursor: Some(cursor),
+            ..self.clone()
+        }
+    }
+}
+
+impl http::QueryParams for AlertsQuery {
+    fn append_to(&self, request: &mut http::ContractRequest<'_>) {
+        request.instant("start", self.start.as_ref());
+        request.instant("end", self.end.as_ref());
+        request.list("status", &self.status);
+        request.list("message_type", &self.message_type);
+        request.list("event", &self.event);
+        request.list("code", &self.code);
+        request.list("area", &self.area);
+        request.scalar("point", self.point.as_ref());
+        request.list("region", &self.region);
+        request.scalar("region_type", self.region_type.as_ref());
+        request.list("zone", &self.zone);
+        request.list("urgency", &self.urgency);
+        request.list("severity", &self.severity);
+        request.list("certainty", &self.certainty);
+        request.scalar("limit", self.limit.as_ref());
+        request.scalar("cursor", self.cursor.as_ref());
+    }
+}
+
+/// The `/alerts` endpoints, obtained from [`Client::alerts`].
+#[derive(Clone, Copy, Debug)]
+pub struct Alerts<'a> {
+    client: &'a Client,
+}
+
+impl Client {
+    /// Returns the handle for the `/alerts` endpoints.
+    #[must_use]
+    pub fn alerts(&self) -> Alerts<'_> {
+        Alerts { client: self }
+    }
+}
+
+impl Alerts<'_> {
+    /// Returns currently active alerts matching `query`.
+    ///
+    /// `GET /alerts/active`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, alerts::ActiveAlertsQuery};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let alerts = client
+    ///     .alerts()
+    ///     .active(&ActiveAlertsQuery {
+    ///         area: vec!["CA".parse().unwrap()],
+    ///         ..Default::default()
+    ///     })
+    ///     .await?;
+    /// # let _ = alerts;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn active(
+        &self,
+        query: &ActiveAlertsQuery,
+    ) -> Result<FeatureCollection<Alert>, Error> {
+        http::request(self.client, "/alerts/active")
+            .query(query)
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns active alerts for one state, territory, or marine area.
+    ///
+    /// `GET /alerts/active/area/{area}`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::Client;
+    /// use noaa_weather_client::geo::AreaCode;
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let area: AreaCode = "AZ".parse().unwrap();
+    /// let alerts = client.alerts().active_for_area(&area).await?;
+    /// # let _ = alerts;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn active_for_area(
+        &self,
+        area: &AreaCode,
+    ) -> Result<FeatureCollection<Alert>, Error> {
+        http::request(self.client, "/alerts/active/area")
+            .path_segment(area)
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns active alerts for one marine region.
+    ///
+    /// `GET /alerts/active/region/{region}`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::Client;
+    /// use noaa_weather_client::geo::MarineRegionCode;
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let alerts = client
+    ///     .alerts()
+    ///     .active_for_marine_region(MarineRegionCode::Gm)
+    ///     .await?;
+    /// # let _ = alerts;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn active_for_marine_region(
+        &self,
+        region: MarineRegionCode,
+    ) -> Result<FeatureCollection<Alert>, Error> {
+        http::request(self.client, "/alerts/active/region")
+            .path_segment(region)
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns active alerts for one NWS public zone or county.
+    ///
+    /// `GET /alerts/active/zone/{zoneId}`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, ZoneId};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let zone: ZoneId = "CAZ043".parse()?;
+    /// let alerts = client.alerts().active_for_zone(&zone).await?;
+    /// # let _ = alerts;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn active_for_zone(&self, zone: &ZoneId) -> Result<FeatureCollection<Alert>, Error> {
+        http::request(self.client, "/alerts/active/zone")
+            .path_segment(zone)
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns counts of active alerts by area, region, and zone.
+    ///
+    /// `GET /alerts/active/count`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::Client;
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let count = client.alerts().active_count().await?;
+    /// println!("{} active alerts, {} on land", count.total, count.land);
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn active_count(&self) -> Result<ActiveAlertCounts, Error> {
+        http::request(self.client, "/alerts/active/count")
+            .json(http::JsonMedia::JsonLd)
+            .await
+    }
+
+    /// Returns alerts, including past ones, matching `query`.
+    ///
+    /// `GET /alerts`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{Client, alerts::AlertsQuery};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let page = client
+    ///     .alerts()
+    ///     .search(&AlertsQuery {
+    ///         start: Some("2026-08-30T00:00:00Z".parse().unwrap()),
+    ///         limit: Some(50),
+    ///         ..Default::default()
+    ///     })
+    ///     .await?;
+    /// # let _ = page;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn search(&self, query: &AlertsQuery) -> Result<FeatureCollection<Alert>, Error> {
+        http::request(self.client, "/alerts")
+            .query(query)
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns up to `max_pages` pages of [`Alerts::search`] merged into one
+    /// collection.
+    ///
+    /// `GET /alerts`, repeated with each page's cursor.
+    ///
+    /// The first page is fetched with `query` as given, cursor included;
+    /// later pages follow `pagination.next`. Features are concatenated in
+    /// NOAA's order and `title` and `updated` come from the first page. The
+    /// result's `pagination` is `None` when every page was fetched, or the
+    /// last page's link when `max_pages` stopped the walk with more
+    /// available, so `next_cursor()` resumes it. An error on any page is
+    /// returned as is; there is no partial result.
+    ///
+    /// ```no_run
+    /// use std::num::NonZeroU16;
+    ///
+    /// use noaa_weather_client::{Client, alerts::AlertsQuery};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let recent = client
+    ///     .alerts()
+    ///     .list_all(
+    ///         &AlertsQuery {
+    ///             start: Some("2026-08-30T00:00:00Z".parse().unwrap()),
+    ///             limit: Some(500),
+    ///             ..Default::default()
+    ///         },
+    ///         NonZeroU16::new(4).unwrap(),
+    ///     )
+    ///     .await?;
+    /// println!("{} alerts, more: {}", recent.len(), recent.next_cursor().is_some());
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if any page request fails or cannot be decoded.
+    pub async fn list_all(
+        &self,
+        query: &AlertsQuery,
+        max_pages: NonZeroU16,
+    ) -> Result<FeatureCollection<Alert>, Error> {
+        let alerts = *self;
+        pagination::collect(query, max_pages, |page| async move {
+            alerts.search(&page).await
+        })
+        .await
+    }
+
+    /// Returns one alert by its identifier.
+    ///
+    /// `GET /alerts/{id}`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::{AlertId, Client};
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let id: AlertId = "urn:oid:2.49.0.1.840.0.1234".parse()?;
+    /// let alert = client.alerts().get(&id).await?;
+    /// # let _ = alert;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails, the alert is not found, or
+    /// the response cannot be decoded.
+    pub async fn get(&self, id: &AlertId) -> Result<Feature<Alert>, Error> {
+        http::request(self.client, "/alerts")
+            .path_segment(id)
+            .json(http::JsonMedia::GeoJson)
+            .await
+    }
+
+    /// Returns the event types the alert system recognizes.
+    ///
+    /// `GET /alerts/types`
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::Client;
+    ///
+    /// # async fn run() -> Result<(), noaa_weather_client::Error> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build().unwrap();
+    /// let types = client.alerts().types().await?;
+    /// println!("{} event types", types.event_types.len());
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] if the request fails or the response cannot be
+    /// decoded.
+    pub async fn types(&self) -> Result<AlertEventTypes, Error> {
+        http::request(self.client, "/alerts/types")
+            .json(http::JsonMedia::JsonLd)
+            .await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use wiremock::{
+        Mock, MockServer, ResponseTemplate,
+        matchers::{header, method, path},
+    };
+
+    use super::{ActiveAlertsQuery, AlertsQuery, RegionType};
+    use crate::alerts::{
+        AlertCertainty, AlertMessageType, AlertSeverity, AlertStatus, AlertUrgency,
+    };
+    use crate::client::test_support::client_for;
+    use crate::geo::{AreaCode, MarineRegionCode, StateTerritoryCode};
+
+    const COLLECTION: &str = r#"{"type":"FeatureCollection","features":[]}"#;
+    const FEATURE: &str = r#"{"type":"Feature","geometry":null,"properties":{
+        "id":"urn:oid:2.49.0.1.840.0.abc.001.1","areaDesc":"Kent",
+        "sent":"2026-09-02T03:48:00-04:00","effective":"2026-09-02T03:48:00-04:00",
+        "expires":"2026-09-02T04:45:00-04:00","status":"Actual","messageType":"Alert",
+        "category":"Met","severity":"Moderate","certainty":"Observed","urgency":"Expected",
+        "event":"Special Weather Statement","sender":"w-nws.webmaster@noaa.gov",
+        "senderName":"NWS Grand Rapids MI","scope":"Public"}}"#;
+    const COUNTS: &str = r#"{"total":1,"land":1,"marine":0,"areas":{"MI":1}}"#;
+    const TYPES: &str = r#"{"eventTypes":["Special Weather Statement"]}"#;
+
+    async fn mount(server: &MockServer, route: &str, body: &'static str, media: &'static str) {
+        Mock::given(method("GET"))
+            .and(path(route))
+            .and(header("Accept", media))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(body, media))
+            .expect(1)
+            .mount(server)
+            .await;
+    }
+
+    async fn query_of(server: &MockServer) -> Option<String> {
+        let requests = server.received_requests().await.unwrap();
+        requests[0].url.query().map(str::to_owned)
+    }
+
+    #[tokio::test]
+    async fn active_encodes_every_filter_once_in_declaration_order() {
+        let server = MockServer::start().await;
+        mount(
+            &server,
+            "/alerts/active",
+            COLLECTION,
+            "application/geo+json",
+        )
+        .await;
+
+        client_for(&server)
+            .alerts()
+            .active(&ActiveAlertsQuery {
+                status: vec![AlertStatus::Actual, AlertStatus::Test],
+                message_type: vec![AlertMessageType::Alert],
+                event: vec!["Flood Watch".to_owned(), "Wind/Warning".to_owned()],
+                code: vec!["AZC013".to_owned()],
+                area: vec![AreaCode::StateTerritoryCode(StateTerritoryCode::Az)],
+                point: Some("39.7456,-97.0892".parse().unwrap()),
+                region: vec![MarineRegionCode::Gm],
+                region_type: Some(RegionType::Marine),
+                zone: vec!["AZZ540".parse().unwrap(), "azc013".parse().unwrap()],
+                urgency: vec![AlertUrgency::Immediate],
+                severity: vec![AlertSeverity::Severe, AlertSeverity::Extreme],
+                certainty: vec![AlertCertainty::Observed],
+            })
+            .await
+            .unwrap();
+
+        assert_eq!(
+            query_of(&server).await.as_deref(),
+            Some(
+                "status=actual%2Ctest&message_type=Alert&event=Flood+Watch%2CWind%2FWarning\
+                 &code=AZC013&area=AZ&point=39.7456%2C-97.0892&region=GM&region_type=marine\
+                 &zone=AZZ540%2CAZC013&urgency=Immediate&severity=Severe%2CExtreme\
+                 &certainty=Observed"
+            )
+        );
+    }
+
+    #[tokio::test]
+    async fn active_with_default_query_sends_no_query_string() {
+        let server = MockServer::start().await;
+        mount(
+            &server,
+            "/alerts/active",
+            COLLECTION,
+            "application/geo+json",
+        )
+        .await;
+
+        client_for(&server)
+            .alerts()
+            .active(&ActiveAlertsQuery::default())
+            .await
+            .unwrap();
+
+        assert_eq!(query_of(&server).await, None);
+    }
+
+    #[tokio::test]
+    async fn search_encodes_timestamps_as_whole_second_rfc_3339_and_paging_last() {
+        let server = MockServer::start().await;
+        mount(&server, "/alerts", COLLECTION, "application/geo+json").await;
+
+        client_for(&server)
+            .alerts()
+            .search(&AlertsQuery {
+                start: Some("2026-08-30T00:00:00.123456789Z".parse().unwrap()),
+                end: Some("2026-08-30T06:30:00-05:00".parse().unwrap()),
+                event: vec!["Tornado Warning".to_owned()],
+                limit: Some(25),
+                cursor: Some("bmV4dA==".parse().unwrap()),
+                ..Default::default()
+            })
+            .await
+            .unwrap();
+
+        let query = query_of(&server).await.unwrap();
+        assert_eq!(
+            query,
+            "start=2026-08-30T00%3A00%3A00Z&end=2026-08-30T11%3A30%3A00Z\
+             &event=Tornado+Warning&limit=25&cursor=bmV4dA%3D%3D"
+        );
+        assert!(!query.contains("active"));
+    }
+
+    #[tokio::test]
+    async fn search_encodes_every_field_once_in_declaration_order() {
+        let server = MockServer::start().await;
+        mount(&server, "/alerts", COLLECTION, "application/geo+json").await;
+
+        client_for(&server)
+            .alerts()
+            .search(&AlertsQuery {
+                start: Some("2026-08-30T00:00:00Z".parse().unwrap()),
+                end: Some("2026-08-30T06:30:00-05:00".parse().unwrap()),
+                status: vec![AlertStatus::Actual, AlertStatus::Test],
+                message_type: vec![AlertMessageType::Alert],
+                event: vec!["Flood Watch".to_owned(), "Wind/Warning".to_owned()],
+                code: vec!["AZC013".to_owned()],
+                area: vec![AreaCode::StateTerritoryCode(StateTerritoryCode::Az)],
+                point: Some("39.7456,-97.0892".parse().unwrap()),
+                region: vec![MarineRegionCode::Gm],
+                region_type: Some(RegionType::Marine),
+                zone: vec!["AZZ540".parse().unwrap(), "azc013".parse().unwrap()],
+                urgency: vec![AlertUrgency::Immediate],
+                severity: vec![AlertSeverity::Severe, AlertSeverity::Extreme],
+                certainty: vec![AlertCertainty::Observed],
+                limit: Some(25),
+                cursor: Some("bmV4dA==".parse().unwrap()),
+            })
+            .await
+            .unwrap();
+
+        assert_eq!(
+            query_of(&server).await.as_deref(),
+            Some(
+                "start=2026-08-30T00%3A00%3A00Z&end=2026-08-30T11%3A30%3A00Z\
+                 &status=actual%2Ctest&message_type=Alert&event=Flood+Watch%2CWind%2FWarning\
+                 &code=AZC013&area=AZ&point=39.7456%2C-97.0892&region=GM&region_type=marine\
+                 &zone=AZZ540%2CAZC013&urgency=Immediate&severity=Severe%2CExtreme\
+                 &certainty=Observed&limit=25&cursor=bmV4dA%3D%3D"
+            )
+        );
+    }
+
+    #[tokio::test]
+    async fn alert_id_is_one_encoded_path_segment_requested_as_geo_json() {
+        let server = MockServer::start().await;
+        mount(
+            &server,
+            "/alerts/urn:oid:2.49.0.1.840.0.abc.001.1",
+            FEATURE,
+            "application/geo+json",
+        )
+        .await;
+
+        let alert = client_for(&server)
+            .alerts()
+            .get(&"urn:oid:2.49.0.1.840.0.abc.001.1".parse().unwrap())
+            .await
+            .unwrap();
+        assert_eq!(
+            alert.properties.id.as_str(),
+            "urn:oid:2.49.0.1.840.0.abc.001.1"
+        );
+        assert_eq!(alert.sent.to_string(), "2026-09-02T03:48:00-04:00");
+    }
+
+    #[tokio::test]
+    async fn count_and_types_are_requested_as_json_ld() {
+        let server = MockServer::start().await;
+        mount(
+            &server,
+            "/alerts/active/count",
+            COUNTS,
+            "application/ld+json",
+        )
+        .await;
+        mount(&server, "/alerts/types", TYPES, "application/ld+json").await;
+
+        let client = client_for(&server);
+        let counts = client.alerts().active_count().await.unwrap();
+        assert_eq!((counts.total, counts.land, counts.marine), (1, 1, 0));
+        assert_eq!(counts.areas["MI"], 1);
+        let types = client.alerts().types().await.unwrap();
+        assert_eq!(types.event_types, ["Special Weather Statement"]);
+    }
+
+    #[tokio::test]
+    async fn scoped_active_routes_place_typed_values_in_the_path() {
+        let server = MockServer::start().await;
+        mount(
+            &server,
+            "/alerts/active/area/CA",
+            COLLECTION,
+            "application/geo+json",
+        )
+        .await;
+        mount(
+            &server,
+            "/alerts/active/region/GM",
+            COLLECTION,
+            "application/geo+json",
+        )
+        .await;
+        mount(
+            &server,
+            "/alerts/active/zone/CAZ043",
+            COLLECTION,
+            "application/geo+json",
+        )
+        .await;
+
+        let client = client_for(&server);
+        let alerts = client.alerts();
+        alerts
+            .active_for_area(&AreaCode::StateTerritoryCode(StateTerritoryCode::Ca))
+            .await
+            .unwrap();
+        alerts
+            .active_for_marine_region(MarineRegionCode::Gm)
+            .await
+            .unwrap();
+        alerts
+            .active_for_zone(&"caz043".parse().unwrap())
+            .await
+            .unwrap();
+        for request in server.received_requests().await.unwrap() {
+            assert_eq!(request.url.query(), None);
+        }
+    }
+
+    #[test]
+    fn region_type_round_trips_text_and_json() {
+        assert_eq!("Marine".parse::<RegionType>().unwrap(), RegionType::Marine);
+        assert_eq!(RegionType::Land.to_string(), "land");
+        assert_eq!(
+            serde_json::to_string(&RegionType::Marine).unwrap(),
+            "\"marine\""
+        );
+        assert!("ocean".parse::<RegionType>().is_err());
+    }
+
+    #[cfg(feature = "schemars")]
+    #[test]
+    fn query_schemas_list_the_alert_vocabularies_inline() {
+        let schema = schemars::schema_for!(ActiveAlertsQuery);
+        let value = schema.as_value();
+        // Documented variants become a `oneOf` of string `const`s.
+        let variants = |field: &str| -> Vec<String> {
+            let items = &value["properties"][field]["items"];
+            items["oneOf"]
+                .as_array()
+                .unwrap_or_else(|| panic!("{field} items should be a oneOf: {items}"))
+                .iter()
+                .map(|variant| variant["const"].as_str().unwrap().to_owned())
+                .collect()
+        };
+        assert_eq!(value["properties"]["severity"]["type"], "array", "{value}");
+        assert_eq!(
+            variants("severity"),
+            ["Extreme", "Severe", "Moderate", "Minor", "Unknown"]
+        );
+        assert!(variants("status").contains(&"Actual".to_owned()));
+        assert!(value.get("$defs").is_none(), "{value}");
+    }
+
+    #[test]
+    fn query_json_omits_unset_filters() {
+        let json = serde_json::to_value(AlertsQuery {
+            limit: Some(10),
+            zone: vec!["AZZ540".parse().unwrap()],
+            ..Default::default()
+        })
+        .unwrap();
+        assert_eq!(json, serde_json::json!({"limit": 10, "zone": ["AZZ540"]}));
+        let parsed: AlertsQuery = serde_json::from_value(json).unwrap();
+        assert_eq!(parsed.limit, Some(10));
+        assert_eq!(parsed.zone[0].as_str(), "AZZ540");
+    }
+}

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
 use jiff::Timestamp;
-use noaa_weather_client::apis::products::ProductsQuery;
+use noaa_weather_client::products::ProductsQuery;
 use noaa_weather_client::{Client, OfficeId, ProductId, ProductTypeCode};
 
 use super::{Run, parse};

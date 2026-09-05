@@ -14,16 +14,28 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
 
-use noaa_weather_client::models::{
-    ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CommandChannel,
-    CommandChannelMode, CwsuOffice, Forecast, GlossaryResponse, Gridpoint, Observation,
-    ObservationStation, Office, OfficeBriefingResponse, OfficeHeadline, OfficeHeadlineCollection,
-    OfficeWeatherStoryCollection, Point, RadarQueuesResponse, RadarServerTelemetry,
-    RadarServersResponse, RadarSpgdsResponse, RadarStationAlarmsResponse, RadarStationTelemetry,
-    RadarStationsResponse, RadioTransmitter, RadioTransmitterCollection, Sigmet,
-    TerminalAerodromeForecastsResponse, TextProduct, TextProductCollection,
-    TextProductLocationCollection, TextProductTypeCollection, Zone, ZoneForecast,
+use noaa_weather_client::alerts::{ActiveAlertCounts, Alert, AlertEventTypes};
+use noaa_weather_client::aviation::{CenterWeatherAdvisory, CwsuOffice, Sigmet};
+use noaa_weather_client::glossary::GlossaryResponse;
+use noaa_weather_client::gridpoints::{Forecast, Gridpoint};
+use noaa_weather_client::offices::{
+    Office, OfficeBriefingResponse, OfficeHeadline, OfficeHeadlineCollection,
+    OfficeWeatherStoryCollection,
 };
+use noaa_weather_client::points::Point;
+use noaa_weather_client::products::{
+    TextProduct, TextProductCollection, TextProductLocationCollection, TextProductTypeCollection,
+};
+use noaa_weather_client::radar::{
+    CommandChannel, CommandChannelMode, RadarQueuesResponse, RadarServerTelemetry,
+    RadarServersResponse, RadarSpgdsResponse, RadarStationAlarmsResponse, RadarStationTelemetry,
+    RadarStationsResponse,
+};
+use noaa_weather_client::radio::{RadioTransmitter, RadioTransmitterCollection};
+use noaa_weather_client::stations::{
+    Observation, ObservationStation, TerminalAerodromeForecastsResponse,
+};
+use noaa_weather_client::zones::{Zone, ZoneForecast};
 use noaa_weather_client::{Feature, FeatureCollection};
 use serde::Serialize;
 use serde::de::DeserializeOwned;

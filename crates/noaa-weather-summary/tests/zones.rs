@@ -1,6 +1,6 @@
 //! Zone summaries against captured NOAA fixtures.
 
-use noaa_weather_client::models::{Zone, ZoneForecast};
+use noaa_weather_client::zones::{Zone, ZoneForecast};
 use noaa_weather_client::{Feature, FeatureCollection};
 use noaa_weather_summary::{Section, Summarize, SummaryOptions, coverage_gaps};
 

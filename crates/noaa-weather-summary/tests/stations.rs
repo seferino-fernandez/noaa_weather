@@ -1,6 +1,6 @@
 //! Station, observation, and TAF summaries against captured NOAA fixtures.
 
-use noaa_weather_client::models::{
+use noaa_weather_client::stations::{
     Observation, ObservationStation, TerminalAerodromeForecast, TerminalAerodromeForecastsResponse,
 };
 use noaa_weather_client::{Feature, FeatureCollection};
