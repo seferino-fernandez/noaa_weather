@@ -25,6 +25,40 @@ const BEGIN: &str = "<!-- BEGIN GENERATED SHOWN/OMITTED -->";
 const END: &str = "<!-- END GENERATED SHOWN/OMITTED -->";
 const UPDATE_ENV: &str = "UPDATE_SHOWN_OMITTED_DOCS";
 
+// NOAA's checked-in response is empty because healthy radar stations usually
+// have no alarms. This in-memory structural sample exists only to exercise the
+// populated branch of `Summarize`; its values are intentionally irrelevant and
+// never enter the generated docs. Deserializing through the public response
+// wrapper keeps the documented property names tied to the real wire shape.
+const POPULATED_RADAR_ALARM_SHAPE: &str = r#"{
+    "@id": "https://api.weather.gov/radar/stations/KABQ/alarms",
+    "@graph": [{
+        "@type": "wx:RadarStationAlarm",
+        "stationId": "KABQ",
+        "status": "active",
+        "timestamp": "2026-09-04T00:00:00Z",
+        "activeChannel": 1,
+        "message": "alarm"
+    }]
+}"#;
+
+// Reused from the populated summary sample in `tests/offices.rs`. The captured
+// NOAA fixture is null, so both values are registered to cover active and empty
+// briefing responses without changing the production seam.
+const POPULATED_BRIEFING: &str = r#"{
+    "briefing": {
+        "id": "f25c1906-57d1-4f86-80cf-a20dce3bddaa",
+        "officeId": "TOP",
+        "startTime": "2026-09-04T08:02:00+00:00",
+        "endTime": "2026-09-05T08:02:00+00:00",
+        "updateTime": "2026-09-04T18:55:11+00:00",
+        "title": "Click to view briefing",
+        "description": "Extreme Heat Warning Through Tuesday Evening",
+        "priority": false,
+        "download": "https://api.weather.gov/offices/TOP/briefing/download/f25c1906-57d1-4f86-80cf-a20dce3bddaa"
+    }
+}"#;
+
 #[derive(Clone, Copy)]
 enum PropertyShape {
     Api,
@@ -55,22 +89,45 @@ fn register<T: Summarize>(
     value: T,
     shape: PropertyShape,
 ) -> RegisteredResponse {
-    let json = serde_json::to_value(&value).expect("response serializes to JSON");
-    let shown = value
-        .summarize(&SummaryOptions::default())
-        .keys()
-        .into_iter()
-        .map(str::to_owned)
-        .collect::<BTreeSet<_>>();
+    register_variants(guide, name, rust_impl, [value], shape)
+}
+
+fn register_variants<T: Summarize>(
+    guide: &'static str,
+    name: &'static str,
+    rust_impl: &'static str,
+    values: impl IntoIterator<Item = T>,
+    shape: PropertyShape,
+) -> RegisteredResponse {
+    let mut shown = BTreeSet::new();
+    let mut properties = BTreeSet::new();
+    let mut registered_values = 0_usize;
+
+    for value in values {
+        registered_values += 1;
+        let json = serde_json::to_value(&value).expect("response serializes to JSON");
+        shown.extend(
+            value
+                .summarize(&SummaryOptions::default())
+                .keys()
+                .into_iter()
+                .map(str::to_owned),
+        );
+        properties.extend(match shape {
+            PropertyShape::Api => api_property_keys(&json),
+            PropertyShape::SemanticTopLevel => json
+                .as_object()
+                .into_iter()
+                .flat_map(|object| object.keys().cloned())
+                .collect(),
+        });
+    }
+    assert!(
+        registered_values > 0,
+        "{name}: no response variants registered"
+    );
+
     let omitted = T::OMITTED.iter().copied().collect::<BTreeMap<_, _>>();
-    let mut properties = match shape {
-        PropertyShape::Api => api_property_keys(&json),
-        PropertyShape::SemanticTopLevel => json
-            .as_object()
-            .into_iter()
-            .flat_map(|object| object.keys().cloned())
-            .collect(),
-    };
     properties.extend(shown.iter().cloned());
     properties.extend(omitted.keys().map(|key| (*key).to_owned()));
 
@@ -78,10 +135,11 @@ fn register<T: Summarize>(
         .into_iter()
         .map(|property| {
             if shown.contains(&property) {
+                let reason = omitted.get(property.as_str()).copied();
                 PropertyRow {
                     property,
                     treatment: "Shown",
-                    reason: None,
+                    reason,
                 }
             } else if let Some(reason) = omitted.get(property.as_str()) {
                 PropertyRow {
@@ -212,11 +270,17 @@ fn registry() -> Vec<RegisteredResponse> {
             "OfficeHeadlineCollection",
             include_str!("../../noaa_weather_client/tests/fixtures/offices/headlines.json"),
         ),
-        register_json::<OfficeBriefingResponse>(
+        register_variants(
             "docs/cli/offices.md",
             "Active briefing metadata",
             "OfficeBriefingResponse",
-            include_str!("../../noaa_weather_client/tests/fixtures/offices/briefing.json"),
+            [
+                fixture::<OfficeBriefingResponse>(include_str!(
+                    "../../noaa_weather_client/tests/fixtures/offices/briefing.json"
+                )),
+                fixture::<OfficeBriefingResponse>(POPULATED_BRIEFING),
+            ],
+            PropertyShape::Api,
         ),
         register_json::<OfficeWeatherStoryCollection>(
             "docs/cli/offices.md",
@@ -266,11 +330,17 @@ fn registry() -> Vec<RegisteredResponse> {
             "RadarStationsResponse",
             include_str!("../../noaa_weather_client/tests/fixtures/radar/stations.json"),
         ),
-        register_json::<RadarStationAlarmsResponse>(
+        register_variants(
             "docs/cli/radar.md",
             "Radar station alarms",
             "RadarStationAlarmsResponse",
-            include_str!("../../noaa_weather_client/tests/fixtures/radar/alarms.json"),
+            [
+                fixture::<RadarStationAlarmsResponse>(include_str!(
+                    "../../noaa_weather_client/tests/fixtures/radar/alarms.json"
+                )),
+                fixture::<RadarStationAlarmsResponse>(POPULATED_RADAR_ALARM_SHAPE),
+            ],
+            PropertyShape::Api,
         ),
         register_json::<RadarQueuesResponse>(
             "docs/cli/radar.md",
@@ -640,4 +710,71 @@ fn block_replacement_preserves_surrounding_prose() {
         replace_block(&source, &replacement, path),
         format!("before\n{BEGIN}\nnew\n{END}\nafter\n")
     );
+}
+
+#[test]
+fn populated_variants_contribute_conditional_summary_properties() {
+    let registry = registry();
+    for (response_name, expected) in [
+        (
+            "Radar station alarms",
+            &[
+                "activeChannel",
+                "message",
+                "stationId",
+                "status",
+                "timestamp",
+            ][..],
+        ),
+        (
+            "Active briefing metadata",
+            &[
+                "description",
+                "download",
+                "endTime",
+                "id",
+                "officeId",
+                "priority",
+                "startTime",
+                "title",
+                "updateTime",
+            ][..],
+        ),
+    ] {
+        let response = registry
+            .iter()
+            .find(|response| response.name == response_name)
+            .expect("response is registered");
+        let properties = response
+            .rows
+            .iter()
+            .map(|row| row.property.as_str())
+            .collect::<BTreeSet<_>>();
+        assert!(
+            expected
+                .iter()
+                .all(|property| properties.contains(property)),
+            "{response_name} is missing populated-shape properties"
+        );
+    }
+
+    let rendered = rendered_guides(&registry).into_values().collect::<String>();
+    assert!(!rendered.contains("f25c1906-57d1-4f86-80cf-a20dce3bddaa"));
+    assert!(!rendered.contains("2026-09-04T00:00:00Z"));
+}
+
+#[test]
+fn shown_properties_keep_their_omission_reason() {
+    let registry = registry();
+    let graph = registry
+        .iter()
+        .find(|response| response.name == "Radar station alarms")
+        .expect("radar alarms are registered")
+        .rows
+        .iter()
+        .find(|row| row.property == "@graph")
+        .expect("alarm collection property is documented");
+
+    assert_eq!(graph.treatment, "Shown");
+    assert_eq!(graph.reason, Some("each alarm is one table row"));
 }

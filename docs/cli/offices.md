@@ -58,6 +58,15 @@ The table is generated from the summary contracts. `Shown` properties appear in 
 | Response | Property | Treatment | Reason |
 | :--- | :--- | :--- | :--- |
 | Active briefing metadata | `briefing` | Shown | — |
+| Active briefing metadata | `description` | Shown | — |
+| Active briefing metadata | `download` | Shown | — |
+| Active briefing metadata | `endTime` | Shown | — |
+| Active briefing metadata | `id` | Shown | — |
+| Active briefing metadata | `officeId` | Shown | — |
+| Active briefing metadata | `priority` | Shown | — |
+| Active briefing metadata | `startTime` | Shown | — |
+| Active briefing metadata | `title` | Shown | — |
+| Active briefing metadata | `updateTime` | Shown | — |
 | Active weather-story metadata | `altText` | Shown | — |
 | Active weather-story metadata | `description` | Shown | — |
 | Active weather-story metadata | `download` | Shown | — |
