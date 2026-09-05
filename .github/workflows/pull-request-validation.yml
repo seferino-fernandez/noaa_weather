@@ -30,11 +30,17 @@ jobs:
             - name: Install cargo nextest
               uses: taiki-e/install-action@cargo-nextest
 
+            - name: Install cargo hack
+              uses: taiki-e/install-action@cargo-hack
+
             - name: Check formatting
               run: cargo fmt --all --check
 
             - name: Lint with clippy
               run: cargo clippy --all-targets -- -D warnings
+
+            - name: Check feature matrix
+              run: cargo hack check --workspace --each-feature --no-dev-deps
 
             - name: Run tests
               run: cargo nextest --verbose run
