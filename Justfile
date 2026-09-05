@@ -88,6 +88,10 @@ example-alerts:
 # Run all examples
 examples: example-basic example-alerts
 
+# Compile every example without making live NOAA requests
+check-examples:
+    cargo build --workspace --examples --all-features
+
 # Capture representative live NOAA responses for completeness tests
 fixtures:
     crates/noaa-weather-client/tests/fixtures/capture.sh
@@ -102,7 +106,8 @@ verify:
     cargo clippy --workspace --all-targets --all-features -- -D warnings
     cargo clippy -p noaa_weather_client --no-default-features -- -D warnings
     just feature-matrix
+    just check-examples
     cargo nextest run --workspace --all-targets --all-features
     cargo test --doc --workspace
-    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features -p noaa_weather_client -p noaa_weather_summary
+    RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features
     cargo build --release

@@ -20,6 +20,7 @@ jobs:
         steps:
             - uses: actions/checkout@v7
               with:
+                  fetch-depth: 0
                   lfs: true
 
             - name: Install Rust toolchain
@@ -33,6 +34,25 @@ jobs:
             - name: Install cargo hack
               uses: taiki-e/install-action@cargo-hack
 
+            - name: Detect stable API baseline
+              id: semver_baseline
+              run: |
+                  if git rev-parse --verify --quiet refs/tags/v2.0.0 >/dev/null; then
+                      echo "available=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "available=false" >> "$GITHUB_OUTPUT"
+                      echo "Skipping semver checks until release-plz creates v2.0.0."
+                  fi
+
+            - name: Check public API compatibility
+              if: steps.semver_baseline.outputs.available == 'true'
+              uses: obi1kenobi/cargo-semver-checks-action@v2
+              with:
+                  package: noaa_weather_client
+                  feature-group: all-features
+                  release-type: minor
+                  rust-toolchain: manual
+
             - name: Check formatting
               run: cargo fmt --all --check
 
@@ -41,6 +61,14 @@ jobs:
 
             - name: Check feature matrix
               run: cargo hack check --workspace --each-feature --no-dev-deps
+
+            - name: Build examples
+              run: cargo build --workspace --examples --all-features
+
+            - name: Check documentation
+              run: cargo doc --workspace --no-deps --all-features
+              env:
+                  RUSTDOCFLAGS: "-D warnings"
 
             - name: Run tests
               run: cargo nextest --verbose run
