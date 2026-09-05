@@ -1,0 +1,31 @@
+[package]
+name = "noaa_weather_mcp"
+version = "0.1.0"
+edition = "2024"
+description = "Model Context Protocol server for the NOAA weather.gov API"
+publish = false
+license = "MIT"
+repository = "https://github.com/seferino-fernandez/noaa_weather"
+keywords = ["weather", "noaa", "nws", "mcp"]
+categories = ["command-line-utilities"]
+homepage = "https://github.com/seferino-fernandez/noaa_weather"
+
+[[bin]]
+name = "noaa-weather-mcp"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap = { workspace = true, features = ["derive"] }
+clap_complete.workspace = true
+clap_complete_nushell.workspace = true
+clap_mangen.workspace = true
+noaa_weather_client = { workspace = true, features = ["schemars"] }
+noaa_weather_summary.workspace = true
+rmcp = { workspace = true, features = ["server", "transport-io"] }
+tokio = { workspace = true, features = ["io-std", "macros", "rt"] }
+
+[dev-dependencies]
+assert_cmd.workspace = true
+predicates.workspace = true
+tempfile.workspace = true

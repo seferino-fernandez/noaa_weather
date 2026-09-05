@@ -1,0 +1,644 @@
+use std::cell::{Cell, RefCell};
+use std::fmt;
+use std::io;
+use std::path::Path;
+use std::rc::Rc;
+
+use anyhow::Result;
+use serde::ser::Error as _;
+use serde::{Serialize, Serializer};
+use wiremock::{
+    Mock, MockServer, ResponseTemplate,
+    matchers::{method, path},
+};
+
+use super::binary::Sealed;
+use super::presentation::{DefaultPresentation, DefaultPresenter, PresentationError};
+use super::render::{ColorMode, TimeZoneChoice};
+use super::sink::{DestinationAdapter, MediaKind, SinkTransaction};
+use super::{BinaryPresentation, Format, Output, OutputArgs, PresentationDocument, Units};
+
+#[derive(Serialize)]
+struct Example {
+    value: &'static str,
+}
+
+impl DefaultPresentation for Example {
+    fn present_default(
+        &self,
+        _presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::Summary(Box::new(
+            noaa_weather_summary::Summary::new(format!("value: {}", self.value)),
+        )))
+    }
+}
+
+struct InvalidJson;
+
+impl Serialize for InvalidJson {
+    fn serialize<S>(&self, _serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        Err(S::Error::custom("intentional serialization failure"))
+    }
+}
+
+impl DefaultPresentation for InvalidJson {
+    fn present_default(
+        &self,
+        _presenter: &DefaultPresenter,
+    ) -> Result<PresentationDocument, PresentationError> {
+        Ok(PresentationDocument::Summary(Box::new(
+            noaa_weather_summary::Summary::new("unused"),
+        )))
+    }
+}
+
+struct FakeBinary {
+    bytes: Vec<u8>,
+}
+
+impl Sealed for FakeBinary {}
+
+impl BinaryPresentation for FakeBinary {
+    fn bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    fn content_type(&self) -> &str {
+        "application/pdf"
+    }
+
+    fn source_url(&self) -> &str {
+        "https://api.weather.gov/example.pdf"
+    }
+}
+
+#[derive(Debug)]
+struct FetchError;
+
+impl fmt::Display for FetchError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("root fetch failure")
+    }
+}
+
+impl std::error::Error for FetchError {}
+
+#[tokio::test]
+async fn default_text_has_one_trailing_newline() {
+    let (output, bytes) = memory_output(Format::Default);
+
+    output
+        .show(async { Ok::<_, FetchError>(Example { value: "forecast" }) })
+        .await
+        .unwrap();
+
+    assert_eq!(&*bytes.borrow(), b"value: forecast\n");
+}
+
+#[test]
+fn json_configuration_does_not_construct_a_default_presenter() {
+    let output = Output::configured(
+        OutputArgs {
+            format: Format::Default,
+            json: true,
+            color: ColorMode::Never,
+            width: None,
+            units: Units::Us,
+            time_zone: TimeZoneChoice::Source,
+            output: None,
+        },
+        "test operation".into(),
+    );
+
+    assert!(output.default_presenter.is_none());
+}
+
+#[tokio::test]
+async fn json_is_pretty_and_has_one_trailing_newline() {
+    let (output, bytes) = memory_output(Format::Json);
+
+    output
+        .show(async { Ok::<_, FetchError>(Example { value: "forecast" }) })
+        .await
+        .unwrap();
+
+    assert_eq!(
+        String::from_utf8(bytes.borrow().clone()).unwrap(),
+        "{\n  \"value\": \"forecast\"\n}\n"
+    );
+}
+
+#[tokio::test]
+async fn normalized_taf_meaning_flows_through_the_default_output_seam() {
+    use noaa_weather_client::{Client, StationId};
+
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/stations/KXYZ/tafs/2026-08-30/1200"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            include_str!("../../../noaa-weather-client/tests/fixtures/taf/semantic_edges.xml"),
+            "application/vnd.wmo.iwxxm+xml",
+        ))
+        .mount(&server)
+        .await;
+    let client = Client::builder("noaa-weather-tests/1.0")
+        .base_url(server.uri())
+        .build()
+        .unwrap();
+    let (output, bytes) = memory_output(Format::Default);
+
+    output
+        .show(client.stations().taf(
+            &"KXYZ".parse::<StationId>().unwrap(),
+            "2026-08-30T12:00:00Z".parse().unwrap(),
+        ))
+        .await
+        .unwrap();
+
+    let rendered = String::from_utf8(bytes.borrow().clone()).unwrap();
+    for expected in [
+        "KXYZ",
+        "INITIAL FORECAST",
+        "Vertical visibility 300 ft",
+        "Maximum 7 °C",
+        "minimum -5 °C",
+        "Unavailable (not observable)",
+        "No significant weather",
+        "No significant cloud",
+        "Unchanged from prevailing conditions",
+        "CHANGE — PROBABILITY 40% —",
+        "TEMPORARY",
+    ] {
+        assert!(
+            rendered.contains(expected),
+            "missing {expected:?} in:\n{rendered}"
+        );
+    }
+    assert!(rendered.ends_with('\n'));
+    assert!(!rendered.ends_with("\n\n"));
+}
+
+#[tokio::test]
+async fn normalized_taf_json_flows_through_the_output_seam() {
+    use noaa_weather_client::{Client, StationId};
+
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/stations/KCXL/tafs/2026-08-30/1500"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            include_str!("../../../noaa-weather-client/tests/fixtures/taf/cancellation.xml"),
+            "application/vnd.wmo.iwxxm+xml",
+        ))
+        .mount(&server)
+        .await;
+    let client = Client::builder("noaa-weather-tests/1.0")
+        .base_url(server.uri())
+        .build()
+        .unwrap();
+    let (output, bytes) = memory_output(Format::Json);
+
+    output
+        .show(client.stations().taf(
+            &"KCXL".parse::<StationId>().unwrap(),
+            "2026-08-30T15:00:00Z".parse().unwrap(),
+        ))
+        .await
+        .unwrap();
+
+    let rendered = String::from_utf8(bytes.borrow().clone()).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&rendered).unwrap();
+    assert_eq!(json["aerodrome"]["icaoIdentifier"], "KCXL");
+    assert_eq!(json["report"]["kind"], "cancellation");
+    assert_eq!(
+        json["report"]["cancelledPeriod"]["start"],
+        "2026-08-30T12:00:00Z"
+    );
+    for wire_artifact in ["ns0", "ns1", "xlink", "xmlns", "meteorologicalInformation"] {
+        assert!(!rendered.contains(wire_artifact));
+    }
+    assert!(rendered.ends_with('\n'));
+}
+
+#[tokio::test]
+async fn raw_json_ignores_the_default_presentation() {
+    let (output, bytes) = memory_output(Format::Default);
+
+    output
+        .raw_json(async { Ok::<_, FetchError>(serde_json::json!({"raw": true})) })
+        .await
+        .unwrap();
+
+    assert_eq!(
+        String::from_utf8(bytes.borrow().clone()).unwrap(),
+        "{\n  \"raw\": true\n}\n"
+    );
+}
+
+#[tokio::test]
+async fn binary_policy_is_validated_before_polling() {
+    let polled = Cell::new(false);
+    let output = Output::configured(
+        OutputArgs {
+            format: Format::Default,
+            json: false,
+            color: ColorMode::Never,
+            width: None,
+            units: Units::Us,
+            time_zone: TimeZoneChoice::Source,
+            output: None,
+        },
+        "test operation".into(),
+    );
+
+    let error = output
+        .download(async {
+            polled.set(true);
+            Ok::<_, FetchError>(FakeBinary { bytes: vec![1] })
+        })
+        .await
+        .unwrap_err();
+
+    assert!(!polled.get());
+    assert!(format!("{error:#}").contains("requires --output <PATH>"));
+}
+
+#[tokio::test]
+async fn json_rejection_precedes_binary_destination_validation() {
+    let polled = Cell::new(false);
+    let output = Output::configured(
+        OutputArgs {
+            format: Format::Default,
+            json: true,
+            color: ColorMode::Never,
+            width: None,
+            units: Units::Us,
+            time_zone: TimeZoneChoice::Source,
+            output: None,
+        },
+        "test operation".into(),
+    );
+
+    let error = output
+        .download(async {
+            polled.set(true);
+            Ok::<_, FetchError>(FakeBinary { bytes: vec![1] })
+        })
+        .await
+        .unwrap_err();
+
+    assert!(!polled.get());
+    assert!(format!("{error:#}").contains("--json cannot be used"));
+}
+
+#[tokio::test]
+async fn binary_bytes_are_not_text_framed() {
+    let (output, bytes) = memory_output(Format::Default);
+
+    output
+        .download(async {
+            Ok::<_, FetchError>(FakeBinary {
+                bytes: vec![0, 1, 2, 255],
+            })
+        })
+        .await
+        .unwrap();
+
+    assert_eq!(&*bytes.borrow(), &[0, 1, 2, 255]);
+}
+
+#[tokio::test]
+async fn empty_binary_payload_is_rejected_without_committing() {
+    let (output, bytes) = memory_output(Format::Default);
+
+    let error = output
+        .download(async { Ok::<_, FetchError>(FakeBinary { bytes: vec![] }) })
+        .await
+        .unwrap_err();
+
+    assert!(format!("{error:#}").contains("empty binary payload"));
+    assert!(bytes.borrow().is_empty());
+}
+
+#[tokio::test]
+async fn operation_context_preserves_the_fetch_source() {
+    let (output, _) = memory_output(Format::Default);
+
+    let error = output
+        .show(async { Err::<Example, _>(FetchError) })
+        .await
+        .unwrap_err();
+    let chain = format!("{error:#}");
+
+    assert!(chain.contains("test operation"));
+    assert!(chain.contains("root fetch failure"));
+    assert!(error.chain().any(|cause| cause.is::<FetchError>()));
+}
+
+#[tokio::test]
+async fn broken_pipe_is_success_for_stdout_like_destinations() {
+    let output = Output::with_destination(
+        Format::Default,
+        Box::new(FailingDestination {
+            kind: io::ErrorKind::BrokenPipe,
+            broken_pipe_is_success: true,
+        }),
+    );
+
+    output
+        .show(async { Ok::<_, FetchError>(Example { value: "forecast" }) })
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+async fn other_write_failures_retain_operation_and_sink_context() {
+    let output = Output::with_destination(
+        Format::Default,
+        Box::new(FailingDestination {
+            kind: io::ErrorKind::WriteZero,
+            broken_pipe_is_success: false,
+        }),
+    );
+
+    let error = output
+        .show(async { Ok::<_, FetchError>(Example { value: "forecast" }) })
+        .await
+        .unwrap_err();
+    let chain = format!("{error:#}");
+
+    assert!(chain.contains("test operation"));
+    assert!(chain.contains("writing output to failing adapter"));
+}
+
+#[tokio::test]
+async fn serialization_failure_leaves_existing_file_unchanged() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("output.json");
+    std::fs::write(&path, "existing\n").unwrap();
+    let output = Output::configured(
+        OutputArgs {
+            format: Format::Default,
+            json: true,
+            color: ColorMode::Never,
+            width: None,
+            units: Units::Us,
+            time_zone: TimeZoneChoice::Source,
+            output: Some(path.clone()),
+        },
+        "test operation".into(),
+    );
+
+    output
+        .show(async { Ok::<_, FetchError>(InvalidJson) })
+        .await
+        .unwrap_err();
+
+    assert_eq!(std::fs::read_to_string(path).unwrap(), "existing\n");
+}
+
+#[tokio::test]
+async fn missing_parent_is_rejected_before_polling() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("missing").join("output.txt");
+    let polled = Cell::new(false);
+    let output = Output::configured(
+        OutputArgs {
+            format: Format::Default,
+            json: false,
+            color: ColorMode::Never,
+            width: None,
+            units: Units::Us,
+            time_zone: TimeZoneChoice::Source,
+            output: Some(path),
+        },
+        "test operation".into(),
+    );
+
+    output
+        .show(async {
+            polled.set(true);
+            Ok::<_, FetchError>(Example { value: "forecast" })
+        })
+        .await
+        .unwrap_err();
+
+    assert!(!polled.get());
+}
+
+fn memory_output(format: Format) -> (Output, Rc<RefCell<Vec<u8>>>) {
+    let bytes = Rc::new(RefCell::new(Vec::new()));
+    let destination = MemoryDestination {
+        committed: Rc::clone(&bytes),
+    };
+    (
+        Output::with_destination(format, Box::new(destination)),
+        bytes,
+    )
+}
+
+struct MemoryDestination {
+    committed: Rc<RefCell<Vec<u8>>>,
+}
+
+impl DestinationAdapter for MemoryDestination {
+    fn validate(&self, _media: MediaKind) -> Result<()> {
+        Ok(())
+    }
+
+    fn label(&self) -> std::borrow::Cow<'_, str> {
+        "memory".into()
+    }
+
+    fn is_terminal(&self) -> bool {
+        false
+    }
+
+    fn begin(&self) -> Result<Box<dyn SinkTransaction>> {
+        Ok(Box::new(MemoryTransaction {
+            pending: Vec::new(),
+            committed: Rc::clone(&self.committed),
+        }))
+    }
+}
+
+struct MemoryTransaction {
+    pending: Vec<u8>,
+    committed: Rc<RefCell<Vec<u8>>>,
+}
+
+impl io::Write for MemoryTransaction {
+    fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+        self.pending.extend_from_slice(buffer);
+        Ok(buffer.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+impl SinkTransaction for MemoryTransaction {
+    fn commit(self: Box<Self>) -> Result<()> {
+        *self.committed.borrow_mut() = self.pending;
+        Ok(())
+    }
+}
+
+struct FailingDestination {
+    kind: io::ErrorKind,
+    broken_pipe_is_success: bool,
+}
+
+impl DestinationAdapter for FailingDestination {
+    fn validate(&self, _media: MediaKind) -> Result<()> {
+        Ok(())
+    }
+
+    fn label(&self) -> std::borrow::Cow<'_, str> {
+        "failing adapter".into()
+    }
+
+    fn is_terminal(&self) -> bool {
+        false
+    }
+
+    fn begin(&self) -> Result<Box<dyn SinkTransaction>> {
+        Ok(Box::new(FailingTransaction {
+            kind: self.kind,
+            broken_pipe_is_success: self.broken_pipe_is_success,
+        }))
+    }
+}
+
+struct FailingTransaction {
+    kind: io::ErrorKind,
+    broken_pipe_is_success: bool,
+}
+
+impl io::Write for FailingTransaction {
+    fn write(&mut self, _buffer: &[u8]) -> io::Result<usize> {
+        Err(io::Error::from(self.kind))
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Err(io::Error::from(self.kind))
+    }
+}
+
+impl SinkTransaction for FailingTransaction {
+    fn broken_pipe_is_success(&self) -> bool {
+        self.broken_pipe_is_success
+    }
+
+    fn commit(self: Box<Self>) -> Result<()> {
+        Err(io::Error::from(self.kind).into())
+    }
+}
+
+#[test]
+fn dash_selects_explicit_stdout_but_binary_still_requires_a_file() {
+    let output = Output::configured(
+        OutputArgs {
+            format: Format::Default,
+            json: false,
+            color: ColorMode::Never,
+            width: None,
+            units: Units::Us,
+            time_zone: TimeZoneChoice::Source,
+            output: Some(Path::new("-").to_path_buf()),
+        },
+        "test operation".into(),
+    );
+    let error = output.destination.validate(MediaKind::Binary).unwrap_err();
+    assert!(format!("{error:#}").contains("filesystem path"));
+}
+
+const POINT_FIXTURE: &str =
+    include_str!("../../../noaa-weather-client/tests/fixtures/points/point.json");
+const FORECAST_FIXTURE: &str =
+    include_str!("../../../noaa-weather-client/tests/fixtures/gridpoints/forecast.json");
+
+/// Renders `value` through a fully configured [`Output`], the way the binary
+/// does, and returns what was written.
+///
+/// The file destination is the only one [`Output::configured`] can be asked
+/// for in a test; `memory_output` goes through `Output::with_destination`,
+/// which hard-codes the summary options and so cannot see this flag at all.
+async fn rendered_with_units<T: DefaultPresentation + 'static>(value: T, units: Units) -> String {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("rendered.txt");
+    let output = Output::configured(
+        OutputArgs {
+            format: Format::Default,
+            json: false,
+            color: ColorMode::Never,
+            width: Some(100),
+            units,
+            time_zone: TimeZoneChoice::Source,
+            output: Some(path.clone()),
+        },
+        "test operation".into(),
+    );
+
+    output
+        .show(async { Ok::<_, FetchError>(value) })
+        .await
+        .unwrap();
+    std::fs::read_to_string(path).unwrap()
+}
+
+/// `--units` has exactly one wire into the summary crate: `OutputArgs.units`
+/// through `From<Units> for UnitSystem` into the `SummaryOptions` that
+/// `Output::configured` hands `DefaultPresenter`, which the `summarized!`
+/// macro reads back through `summary_options()`.
+///
+/// Nothing else in the suite walks that wire — the render snapshots build a
+/// `SummaryOptions` by hand and never construct a `DefaultPresenter` — so
+/// pinning either half to a constant would leave every other test green while
+/// `--units si` silently answered in US customary. This test exists to fail
+/// in that case.
+#[tokio::test]
+async fn the_units_flag_reaches_the_summary_through_the_configured_output() {
+    use noaa_weather_client::Feature;
+    use noaa_weather_client::models::Forecast;
+
+    let forecast = || -> Feature<Forecast> {
+        serde_json::from_str(FORECAST_FIXTURE).expect("forecast.json decodes")
+    };
+    let us = rendered_with_units(forecast(), Units::Us).await;
+    let si = rendered_with_units(forecast(), Units::Si).await;
+
+    assert_ne!(us, si, "--units must change what is rendered");
+    for expected in ["75 \u{b0}F", "10 mph", "10 to 15 mph"] {
+        assert!(us.contains(expected), "missing {expected:?} in:\n{us}");
+    }
+    for absent in ["\u{b0}C", "km/h"] {
+        assert!(!us.contains(absent), "unexpected {absent:?} in:\n{us}");
+    }
+    for expected in ["24 \u{b0}C", "16 km/h", "16 to 24 km/h"] {
+        assert!(si.contains(expected), "missing {expected:?} in:\n{si}");
+    }
+    for absent in ["\u{b0}F", "mph"] {
+        assert!(!si.contains(absent), "unexpected {absent:?} in:\n{si}");
+    }
+}
+
+/// The same wire, on the family whose unit choice reaches the title rather
+/// than a table cell.
+#[tokio::test]
+async fn the_units_flag_reaches_a_summary_title() {
+    use noaa_weather_client::Feature;
+    use noaa_weather_client::models::Point;
+
+    let point =
+        || -> Feature<Point> { serde_json::from_str(POINT_FIXTURE).expect("point.json decodes") };
+    let us = rendered_with_units(point(), Units::Us).await;
+    let si = rendered_with_units(point(), Units::Si).await;
+
+    assert!(us.contains("4.2 mi N of Linn, KS"), "{us}");
+    assert!(si.contains("6.7 km N of Linn, KS"), "{si}");
+}
