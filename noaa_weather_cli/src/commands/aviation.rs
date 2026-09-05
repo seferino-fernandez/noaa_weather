@@ -5,7 +5,7 @@ use jiff::civil::Date;
 use noaa_weather_client::apis::aviation::SigmetsQuery;
 use noaa_weather_client::{AtsuId, Client, CwsuId};
 
-use super::parse;
+use super::{Run, parse};
 use crate::output::Output;
 
 /// Arguments for fetching a specific Center Weather Advisory (CWA).
@@ -103,73 +103,30 @@ pub enum AviationCommands {
     Sigmets(SigmetsArgs),
 }
 
-/// Handles the execution of aviation-related subcommands.
-///
-/// Dispatches the command to the matching `client.aviation()` method based
-/// on the provided `AviationCommands` variant and arguments.
-///
-/// # Arguments
-///
-/// * `command` - The specific aviation subcommand and its arguments to execute.
-/// * `output` - The configured output policy.
-/// * `client` - The NOAA API client.
-///
-pub async fn handle_command(
-    command: &AviationCommands,
-    output: &Output,
-    client: &Client,
-) -> Result<()> {
-    let aviation = client.aviation();
-    match command {
-        AviationCommands::Cwa(args) => {
-            output
-                .show(
-                    format!(
-                        "getting CWA {} for {} on {}",
-                        args.sequence, args.cwsu_id, args.date
-                    ),
-                    aviation.cwa(&args.cwsu_id, args.date, args.sequence),
-                )
-                .await
-        }
-        AviationCommands::Cwas(args) => {
-            output
-                .show(
-                    format!("getting CWAs for CWSU {}", args.cwsu_id),
-                    aviation.cwas(&args.cwsu_id),
-                )
-                .await
-        }
-        AviationCommands::Cwsu(args) => {
-            output
-                .show(
-                    format!("getting CWSU {} metadata", args.cwsu_id),
-                    aviation.cwsu(&args.cwsu_id),
-                )
-                .await
-        }
-        AviationCommands::Sigmet(args) => {
-            output
-                .show(
-                    format!(
-                        "getting SIGMET from {} issued at {}",
-                        args.atsu, args.issued
-                    ),
-                    aviation.sigmet(&args.atsu, args.issued),
-                )
-                .await
-        }
-        AviationCommands::Sigmets(args) => {
-            let query = SigmetsQuery {
-                start: args.start,
-                end: args.end,
-                date: args.date,
-                atsu: args.atsu.clone(),
-                sequence: args.sequence.clone(),
-            };
-            output
-                .show("querying SIGMETs", aviation.sigmets(&query))
-                .await
+impl Run for AviationCommands {
+    async fn run(&self, client: &Client, output: &Output) -> Result<()> {
+        let aviation = client.aviation();
+        match self {
+            AviationCommands::Cwa(args) => {
+                output
+                    .show(aviation.cwa(&args.cwsu_id, args.date, args.sequence))
+                    .await
+            }
+            AviationCommands::Cwas(args) => output.show(aviation.cwas(&args.cwsu_id)).await,
+            AviationCommands::Cwsu(args) => output.show(aviation.cwsu(&args.cwsu_id)).await,
+            AviationCommands::Sigmet(args) => {
+                output.show(aviation.sigmet(&args.atsu, args.issued)).await
+            }
+            AviationCommands::Sigmets(args) => {
+                let query = SigmetsQuery {
+                    start: args.start,
+                    end: args.end,
+                    date: args.date,
+                    atsu: args.atsu.clone(),
+                    sequence: args.sequence.clone(),
+                };
+                output.show(aviation.sigmets(&query)).await
+            }
         }
     }
 }

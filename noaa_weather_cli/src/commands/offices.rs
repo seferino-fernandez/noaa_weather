@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::{Args, Subcommand};
 use noaa_weather_client::{Client, OfficeId};
 
-use super::parse;
+use super::{Run, parse};
 use crate::output::Output;
 
 /// Arguments requiring a NWS office ID.
@@ -60,108 +60,45 @@ pub enum OfficeCommands {
     },
 }
 
-/// Handles the execution of office-related subcommands.
-///
-/// Dispatches the command to the matching `client.offices()` method based on
-/// the provided `OfficeCommands` variant and arguments.
-///
-/// # Arguments
-///
-/// * `command` - The specific office subcommand and its arguments to execute.
-/// * `output` - The configured output policy.
-/// * `client` - The NOAA API client.
-///
-pub async fn handle_command(
-    command: &OfficeCommands,
-    output: &Output,
-    client: &Client,
-) -> Result<()> {
-    let offices = client.offices();
-    match command {
-        OfficeCommands::Metadata(args) => {
-            output
-                .show(
-                    format!("getting NWS forecast office {} metadata", args.id),
-                    offices.get(&args.id),
-                )
-                .await
-        }
-        OfficeCommands::Headlines(args) => {
-            output
-                .show(
-                    format!("getting NWS forecast office {} headlines", args.id),
-                    offices.headlines(&args.id),
-                )
-                .await
-        }
-        OfficeCommands::Headline {
-            office_args,
-            headline_id,
-        } => {
-            output
-                .show(
-                    format!(
-                        "getting headline {headline_id} for NWS forecast office {}",
-                        office_args.id
-                    ),
-                    offices.headline(&office_args.id, headline_id),
-                )
-                .await
-        }
-        OfficeCommands::Briefing(args) => {
-            output
-                .show(
-                    format!("getting NWS forecast office {} briefing", args.id),
-                    offices.briefing(&args.id),
-                )
-                .await
-        }
-        OfficeCommands::BriefingDownload {
-            office_args,
-            document_id,
-        } => {
-            output
-                .download(
-                    format!(
-                        "downloading briefing document {document_id} for NWS forecast office {}",
-                        office_args.id
-                    ),
-                    offices.briefing_document(&office_args.id, document_id),
-                )
-                .await
-        }
-        OfficeCommands::BriefingDownloadLatest(args) => {
-            output
-                .download(
-                    format!(
-                        "downloading latest briefing document for NWS forecast office {}",
-                        args.id
-                    ),
-                    offices.latest_briefing_document(&args.id),
-                )
-                .await
-        }
-        OfficeCommands::WeatherStories(args) => {
-            output
-                .show(
-                    format!("getting NWS forecast office {} weather stories", args.id),
-                    offices.weather_stories(&args.id),
-                )
-                .await
-        }
-        OfficeCommands::WeatherStoryImage {
-            office_args,
-            story_id,
-        } => {
-            output
-                .download(
-                    format!(
-                        "downloading weather-story image {story_id} for NWS forecast office {}",
-                        office_args.id
-                    ),
-                    offices.weather_story_image(&office_args.id, story_id),
-                )
-                .await
+impl Run for OfficeCommands {
+    async fn run(&self, client: &Client, output: &Output) -> Result<()> {
+        let offices = client.offices();
+        match self {
+            OfficeCommands::Metadata(args) => output.show(offices.get(&args.id)).await,
+            OfficeCommands::Headlines(args) => output.show(offices.headlines(&args.id)).await,
+            OfficeCommands::Headline {
+                office_args,
+                headline_id,
+            } => {
+                output
+                    .show(offices.headline(&office_args.id, headline_id))
+                    .await
+            }
+            OfficeCommands::Briefing(args) => output.show(offices.briefing(&args.id)).await,
+            OfficeCommands::BriefingDownload {
+                office_args,
+                document_id,
+            } => {
+                output
+                    .download(offices.briefing_document(&office_args.id, document_id))
+                    .await
+            }
+            OfficeCommands::BriefingDownloadLatest(args) => {
+                output
+                    .download(offices.latest_briefing_document(&args.id))
+                    .await
+            }
+            OfficeCommands::WeatherStories(args) => {
+                output.show(offices.weather_stories(&args.id)).await
+            }
+            OfficeCommands::WeatherStoryImage {
+                office_args,
+                story_id,
+            } => {
+                output
+                    .download(offices.weather_story_image(&office_args.id, story_id))
+                    .await
+            }
         }
     }
 }

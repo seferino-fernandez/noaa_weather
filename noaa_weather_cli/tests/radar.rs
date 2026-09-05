@@ -87,7 +87,7 @@ async fn test_radar_spgds_error_surfaces_unmodelled_problem_members() {
     let stderr = stderr(&output);
 
     assert_eq!(output.status.code(), Some(3), "{stderr}");
-    assert!(stderr.contains("getting radar SPGDS telemetry"), "{stderr}");
+    assert!(stderr.contains("noaa-weather radar spgds"), "{stderr}");
     assert!(stderr.contains("HTTP 400 Bad Request"), "{stderr}");
 
     // This string is in `parameterErrors` and nowhere else in the body, so

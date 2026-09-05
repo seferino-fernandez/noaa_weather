@@ -8,7 +8,7 @@ use noaa_weather_client::models::{
 };
 use noaa_weather_client::{AlertId, Client, Coordinates, Cursor, ZoneId};
 
-use super::parse;
+use super::{Run, parse};
 use crate::output::Output;
 
 /// Subcommands for interacting with the NWS Alerts API.
@@ -199,131 +199,90 @@ pub enum AlertCommands {
     Types,
 }
 
-/// Handles the dispatch of alert-related subcommands.
-///
-/// Takes a parsed `AlertCommands` enum variant and the API [`Client`],
-/// calls the matching `client.alerts()` method, and renders the result
-/// through the configured [`Output`].
-///
-/// # Arguments
-///
-/// * `command`: The specific alert subcommand to execute.
-/// * `output`: The configured output policy.
-/// * `client`: The NOAA API client.
-///
-pub async fn handle_command(
-    command: &AlertCommands,
-    output: &Output,
-    client: &Client,
-) -> Result<()> {
-    let alerts = client.alerts();
-    match command {
-        AlertCommands::Active {
-            status,
-            message_type,
-            event,
-            code,
-            area,
-            point,
-            marine_region,
-            region_type,
-            zone,
-            urgency,
-            severity,
-            certainty,
-        } => {
-            let query = ActiveAlertsQuery {
-                status: status.clone(),
-                message_type: message_type.clone(),
-                event: event.clone(),
-                code: code.clone(),
-                area: area.clone(),
-                point: *point,
-                region: marine_region.clone(),
-                region_type: *region_type,
-                zone: zone.clone(),
-                urgency: urgency.clone(),
-                severity: severity.clone(),
-                certainty: certainty.clone(),
-            };
+impl Run for AlertCommands {
+    async fn run(&self, client: &Client, output: &Output) -> Result<()> {
+        let alerts = client.alerts();
+        match self {
+            AlertCommands::Active {
+                status,
+                message_type,
+                event,
+                code,
+                area,
+                point,
+                marine_region,
+                region_type,
+                zone,
+                urgency,
+                severity,
+                certainty,
+            } => {
+                let query = ActiveAlertsQuery {
+                    status: status.clone(),
+                    message_type: message_type.clone(),
+                    event: event.clone(),
+                    code: code.clone(),
+                    area: area.clone(),
+                    point: *point,
+                    region: marine_region.clone(),
+                    region_type: *region_type,
+                    zone: zone.clone(),
+                    urgency: urgency.clone(),
+                    severity: severity.clone(),
+                    certainty: certainty.clone(),
+                };
 
-            output
-                .show("fetching active alerts", alerts.active(&query))
-                .await
-        }
-        AlertCommands::Area { area } => {
-            output
-                .show(
-                    format!("fetching active alerts for area {area}"),
-                    alerts.active_for_area(area),
-                )
-                .await
-        }
-        AlertCommands::Count => {
-            output
-                .show("fetching active alert count", alerts.active_count())
-                .await
-        }
-        AlertCommands::MarineRegion { marine_region } => {
-            output
-                .show(
-                    format!("fetching active alerts for marine region {marine_region}"),
-                    alerts.active_for_marine_region(*marine_region),
-                )
-                .await
-        }
-        AlertCommands::Zone { zone_id } => {
-            output
-                .show(
-                    format!("fetching active alerts for zone {zone_id}"),
-                    alerts.active_for_zone(zone_id),
-                )
-                .await
-        }
-        AlertCommands::List {
-            start,
-            end,
-            status,
-            message_type,
-            event,
-            code,
-            area,
-            point,
-            marine_region,
-            region_type,
-            zone,
-            urgency,
-            severity,
-            certainty,
-            limit,
-            cursor,
-        } => {
-            let query = AlertsQuery {
-                start: *start,
-                end: *end,
-                status: status.clone(),
-                message_type: message_type.clone(),
-                event: event.clone(),
-                code: code.clone(),
-                area: area.clone(),
-                point: *point,
-                region: marine_region.clone(),
-                region_type: *region_type,
-                zone: zone.clone(),
-                urgency: urgency.clone(),
-                severity: severity.clone(),
-                certainty: certainty.clone(),
-                limit: *limit,
-                cursor: cursor.clone(),
-            };
+                output.show(alerts.active(&query)).await
+            }
+            AlertCommands::Area { area } => output.show(alerts.active_for_area(area)).await,
+            AlertCommands::Count => output.show(alerts.active_count()).await,
+            AlertCommands::MarineRegion { marine_region } => {
+                output
+                    .show(alerts.active_for_marine_region(*marine_region))
+                    .await
+            }
+            AlertCommands::Zone { zone_id } => output.show(alerts.active_for_zone(zone_id)).await,
+            AlertCommands::List {
+                start,
+                end,
+                status,
+                message_type,
+                event,
+                code,
+                area,
+                point,
+                marine_region,
+                region_type,
+                zone,
+                urgency,
+                severity,
+                certainty,
+                limit,
+                cursor,
+            } => {
+                let query = AlertsQuery {
+                    start: *start,
+                    end: *end,
+                    status: status.clone(),
+                    message_type: message_type.clone(),
+                    event: event.clone(),
+                    code: code.clone(),
+                    area: area.clone(),
+                    point: *point,
+                    region: marine_region.clone(),
+                    region_type: *region_type,
+                    zone: zone.clone(),
+                    urgency: urgency.clone(),
+                    severity: severity.clone(),
+                    certainty: certainty.clone(),
+                    limit: *limit,
+                    cursor: cursor.clone(),
+                };
 
-            output.show("querying alerts", alerts.search(&query)).await
+                output.show(alerts.search(&query)).await
+            }
+            AlertCommands::Alert { id } => output.show(alerts.get(id)).await,
+            AlertCommands::Types => output.show(alerts.types()).await,
         }
-        AlertCommands::Alert { id } => {
-            output
-                .show(format!("getting alert {id}"), alerts.get(id))
-                .await
-        }
-        AlertCommands::Types => output.show("fetching alert types", alerts.types()).await,
     }
 }
