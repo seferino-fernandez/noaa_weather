@@ -16,16 +16,19 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow.workspace = true
-clap = { workspace = true, features = ["derive"] }
+clap = { workspace = true, features = ["derive", "env"] }
 clap_complete.workspace = true
 clap_complete_nushell.workspace = true
 clap_mangen.workspace = true
 noaa_weather_client = { workspace = true, features = ["schemars"] }
-noaa_weather_summary.workspace = true
 rmcp = { workspace = true, features = ["server", "transport-io"] }
+schemars.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
 tokio = { workspace = true, features = ["io-std", "macros", "rt"] }
 
 [dev-dependencies]
 assert_cmd.workspace = true
 predicates.workspace = true
 tempfile.workspace = true
+wiremock.workspace = true
