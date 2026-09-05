@@ -64,7 +64,7 @@ The table is generated from the summary contracts. `Shown` properties appear in 
 | Zone list | `forecastOffices` | Otherwise accounted for | deprecated office URLs duplicate forecastOffice |
 | Zone list | `geometry` | Otherwise accounted for | catalog rows use the zone name and identifier |
 | Zone list | `gridIdentifier` | Otherwise accounted for | available from the single-zone metadata command |
-| Zone list | `id` | Shown | — |
+| Zone list | `id` | Shown | the feature URL duplicates the typed zone identifier |
 | Zone list | `name` | Shown | — |
 | Zone list | `observationStations` | Shown | — |
 | Zone list | `pagination` | Otherwise accounted for | surfaced as the more-zones note |
@@ -73,7 +73,7 @@ The table is generated from the summary contracts. `Shown` properties appear in 
 | Zone list | `state` | Shown | — |
 | Zone list | `timeZone` | Shown | — |
 | Zone list | `title` | Otherwise accounted for | zone collections do not carry a title |
-| Zone list | `type` | Shown | — |
+| Zone list | `type` | Shown | always FeatureCollection or Feature; the zone type is shown |
 | Zone list | `updated` | Otherwise accounted for | zone collections do not carry an update time |
 | Zone metadata | `@id` | Otherwise accounted for | the typed zone identifier is enough for the next command |
 | Zone metadata | `@type` | Otherwise accounted for | always wx:Zone |
@@ -85,13 +85,13 @@ The table is generated from the summary contracts. `Shown` properties appear in 
 | Zone metadata | `forecastOffices` | Otherwise accounted for | deprecated office URLs duplicate forecastOffice |
 | Zone metadata | `geometry` | Otherwise accounted for | the zone name and identifier are more useful in text output |
 | Zone metadata | `gridIdentifier` | Shown | — |
-| Zone metadata | `id` | Shown | — |
+| Zone metadata | `id` | Shown | the envelope URL duplicates the typed zone identifier |
 | Zone metadata | `name` | Shown | — |
 | Zone metadata | `observationStations` | Shown | — |
 | Zone metadata | `properties` | Otherwise accounted for | the zone; its keys are accounted for one by one |
 | Zone metadata | `radarStation` | Shown | — |
 | Zone metadata | `state` | Shown | — |
 | Zone metadata | `timeZone` | Shown | — |
-| Zone metadata | `type` | Shown | — |
+| Zone metadata | `type` | Shown | the feature envelope is always Feature; the zone type is shown |
 
 <!-- END GENERATED SHOWN/OMITTED -->

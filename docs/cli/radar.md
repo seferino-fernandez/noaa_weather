@@ -107,7 +107,7 @@ The table is generated from the summary contracts. `Shown` properties appear in 
 | Radar server list | `hardware` | Otherwise accounted for | load1 is folded into the row |
 | Radar server list | `id` | Shown | — |
 | Radar server list | `ingestHost` | Otherwise accounted for | available from the single-server command |
-| Radar server list | `ldm` | Shown | — |
+| Radar server list | `ldm` | Shown | active state and count are folded into the row |
 | Radar server list | `load1` | Shown | — |
 | Radar server list | `locked` | Otherwise accounted for | available from the single-server command |
 | Radar server list | `network` | Otherwise accounted for | available from the single-server command |
@@ -139,7 +139,7 @@ The table is generated from the summary contracts. `Shown` properties appear in 
 | Radar server telemetry | `lastReceived` | Shown | — |
 | Radar server telemetry | `lastReceivedTime` | Shown | — |
 | Radar server telemetry | `latestProduct` | Shown | — |
-| Radar server telemetry | `ldm` | Shown | — |
+| Radar server telemetry | `ldm` | Shown | expanded as Local Data Manager facts |
 | Radar server telemetry | `load1` | Shown | — |
 | Radar server telemetry | `load15` | Shown | — |
 | Radar server telemetry | `load5` | Shown | — |
@@ -160,16 +160,21 @@ The table is generated from the summary contracts. `Shown` properties appear in 
 | Radar server telemetry | `server` | Shown | — |
 | Radar server telemetry | `storageSize` | Shown | — |
 | Radar server telemetry | `targets` | Otherwise accounted for | each target category is summarized as up over total |
-| Radar server telemetry | `timestamp` | Shown | — |
+| Radar server telemetry | `timestamp` | Shown | shown within each telemetry section |
 | Radar server telemetry | `transDropped` | Otherwise accounted for | low-level interface counter |
 | Radar server telemetry | `transError` | Shown | — |
 | Radar server telemetry | `transNoError` | Shown | — |
 | Radar server telemetry | `transOverrun` | Otherwise accounted for | low-level interface counter |
 | Radar server telemetry | `type` | Shown | — |
 | Radar server telemetry | `uptime` | Shown | — |
-| Radar station alarms | `@graph` | Shown | — |
+| Radar station alarms | `@graph` | Shown | each alarm is one table row |
 | Radar station alarms | `@id` | Otherwise accounted for | identifies the queried alarm collection |
 | Radar station alarms | `@type` | Otherwise accounted for | always a radar-station alarm |
+| Radar station alarms | `activeChannel` | Shown | — |
+| Radar station alarms | `message` | Shown | — |
+| Radar station alarms | `stationId` | Shown | — |
+| Radar station alarms | `status` | Shown | — |
+| Radar station alarms | `timestamp` | Shown | — |
 | Radar station list | `@id` | Otherwise accounted for | the station id identifies the same resource |
 | Radar station list | `@type` | Otherwise accounted for | always a radar-station resource |
 | Radar station list | `elevation` | Shown | — |
@@ -250,7 +255,7 @@ The table is generated from the summary contracts. `Shown` properties appear in 
 | Radar station telemetry | `rda` | Otherwise accounted for | expanded as radar data acquisition facts |
 | Radar station telemetry | `receiverBias` | Otherwise accounted for | low-level calibration diagnostic |
 | Radar station telemetry | `reflectivityCalibrationCorrection` | Otherwise accounted for | low-level calibration diagnostic |
-| Radar station telemetry | `reportingHost` | Shown | — |
+| Radar station telemetry | `reportingHost` | Shown | shown with the RDA and latency sections |
 | Radar station telemetry | `resolutionVersion` | Shown | — |
 | Radar station telemetry | `shelterTemperature` | Shown | — |
 | Radar station telemetry | `shortPulseHorizontaldBZ0` | Otherwise accounted for | low-level calibration diagnostic |
