@@ -1,11 +1,15 @@
 default:
     @just --list
 
-# Run all tests: full feature matrix, default features, and doctests
+# Run all tests with all and default features, plus doctests
 test:
 	cargo nextest run --all-targets --all-features
 	cargo nextest run
 	cargo test --doc
+
+# Check every feature independently, including the no-feature build
+feature-matrix:
+	cargo hack check --workspace --each-feature --no-dev-deps
 
 # Run the tests that need a real terminal, and so cannot run under a harness
 test-live:
@@ -72,6 +76,7 @@ verify:
     cargo fmt --all --check
     cargo clippy --workspace --all-targets --all-features -- -D warnings
     cargo clippy -p noaa_weather_client --no-default-features -- -D warnings
+    just feature-matrix
     cargo nextest run --workspace --all-targets --all-features
     cargo test --doc --workspace
     RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features -p noaa_weather_client -p noaa_weather_summary
