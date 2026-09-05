@@ -1,18 +1,44 @@
+use std::collections::BTreeSet;
 use std::num::NonZeroUsize;
 
-use noaa_weather_client::stations::TerminalAerodromeForecast;
+use noaa_weather_client::alerts::Alert;
+use noaa_weather_client::geo::Feature;
+use noaa_weather_client::gridpoints::Forecast;
+use noaa_weather_client::points::Point;
+use noaa_weather_client::stations::{Observation, TerminalAerodromeForecast};
 use noaa_weather_client::{
     CallSign, Client, Error as ClientError, InvalidValue, RetryPolicy, ValueKind,
 };
-use rmcp::ServerHandler as _;
 use rmcp::handler::server::tool::IntoCallToolResult as _;
-use rmcp::model::{CallToolResponse, CallToolResult, ContentBlock};
+use rmcp::model::{
+    CallToolRequestParams, CallToolResponse, CallToolResult, ContentBlock, NumberOrString,
+};
+use rmcp::service::{RequestContext, serve_directly};
+use rmcp::{RoleServer, ServerHandler as _};
 use serde_json::{Value, json};
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, ResponseTemplate};
 
+use super::super::NoaaWeatherServer;
 use super::super::result_limit;
 use super::test_support::{projected_failure, server, server_with_limit};
+
+const POINT: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../noaa-weather-client/tests/fixtures/points/point.json"
+));
+const ALERT: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../noaa-weather-client/tests/fixtures/alerts/single.json"
+));
+const FORECAST: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../noaa-weather-client/tests/fixtures/gridpoints/forecast.json"
+));
+const LATEST_OBSERVATION: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../noaa-weather-client/tests/fixtures/stations/latest.json"
+));
 
 fn limit(bytes: usize) -> NonZeroUsize {
     NonZeroUsize::new(bytes).expect("test limit must be nonzero")
@@ -41,21 +67,310 @@ fn text(result: &CallToolResult) -> &str {
         .expect("tool result must contain text")
 }
 
+async fn call_tool(
+    server: &NoaaWeatherServer,
+    name: &'static str,
+    arguments: Value,
+) -> CallToolResult {
+    let (server_transport, _client_transport) = tokio::io::duplex(1_048_576);
+    let running = serve_directly::<RoleServer, _, _, _, _>(server.clone(), server_transport, None);
+    let request = CallToolRequestParams::new(name).with_arguments(
+        arguments
+            .as_object()
+            .expect("tool arguments must be an object")
+            .clone(),
+    );
+    let context = RequestContext::new(NumberOrString::Number(1), running.peer().clone());
+    let response = running
+        .service()
+        .call_tool(request, context)
+        .await
+        .unwrap_or_else(|error| panic!("{name} call must complete: {error}"));
+    running
+        .cancel()
+        .await
+        .expect("test server must cancel cleanly");
+    let CallToolResponse::Complete(result) = response else {
+        panic!("{name} must return a complete result");
+    };
+    result
+}
+
 #[test]
-fn server_advertises_tools_capability_with_an_empty_foundation_inventory() {
-    let server = super::super::NoaaWeatherServer::new(limit(1_048_576))
+fn server_advertises_the_exact_typed_tool_contract() {
+    let server = NoaaWeatherServer::new(limit(1_048_576))
         .expect("the built-in NOAA client configuration must be valid");
     let info = server.get_info();
+    let tools = server.tool_router.list_all();
 
     assert_eq!(info.server_info.name, "noaa_weather_mcp");
     assert_eq!(info.server_info.version, env!("CARGO_PKG_VERSION"));
     assert!(info.capabilities.tools.is_some());
-    assert!(server.tool_router.list_all().is_empty());
+    assert_eq!(
+        tools
+            .iter()
+            .map(|tool| tool.name.as_ref())
+            .collect::<Vec<_>>(),
+        [
+            "alerts_active",
+            "alerts_get",
+            "gridpoints_forecast",
+            "gridpoints_forecast_hourly",
+            "points_forecast",
+            "points_get",
+            "stations_observation_latest",
+            "stations_observations",
+            "stations_taf_get",
+            "stations_taf_list",
+        ]
+    );
+    for tool in &tools {
+        assert!(
+            tool.description
+                .as_deref()
+                .is_some_and(|description| !description.trim().is_empty()),
+            "{} must have a description",
+            tool.name
+        );
+        let annotations = tool
+            .annotations
+            .as_ref()
+            .unwrap_or_else(|| panic!("{} must have annotations", tool.name));
+        assert!(
+            annotations
+                .title
+                .as_deref()
+                .is_some_and(|title| !title.trim().is_empty()),
+            "{} must have a title",
+            tool.name
+        );
+        assert_eq!(annotations.read_only_hint, Some(true), "{}", tool.name);
+        assert_eq!(annotations.open_world_hint, Some(true), "{}", tool.name);
+        assert_eq!(annotations.destructive_hint, None, "{}", tool.name);
+        assert_eq!(annotations.idempotent_hint, None, "{}", tool.name);
+        assert_eq!(tool.input_schema.get("type"), Some(&json!("object")));
+        let properties = tool.input_schema["properties"]
+            .as_object()
+            .unwrap_or_else(|| panic!("{} input properties must be an object", tool.name));
+        assert!(!properties.contains_key("query"), "{}", tool.name);
+        let actual = properties
+            .keys()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>();
+        let expected = match tool.name.as_ref() {
+            "alerts_active" => BTreeSet::from([
+                "area",
+                "certainty",
+                "code",
+                "event",
+                "messageType",
+                "point",
+                "region",
+                "regionType",
+                "severity",
+                "status",
+                "urgency",
+                "zone",
+            ]),
+            "alerts_get" => BTreeSet::from(["alertId"]),
+            "gridpoints_forecast" | "gridpoints_forecast_hourly" => {
+                BTreeSet::from(["gridpointId", "units"])
+            }
+            "points_forecast" | "points_get" => BTreeSet::from(["point"]),
+            "stations_observation_latest" => BTreeSet::from(["requireQc", "stationId"]),
+            "stations_observations" => {
+                BTreeSet::from(["cursor", "end", "limit", "start", "stationId"])
+            }
+            "stations_taf_get" => BTreeSet::from(["issued", "stationId"]),
+            "stations_taf_list" => BTreeSet::from(["stationId"]),
+            name => panic!("unexpected tool {name}"),
+        };
+        assert_eq!(actual, expected, "{}", tool.name);
+        let output = tool
+            .output_schema
+            .as_ref()
+            .unwrap_or_else(|| panic!("{} must have an output schema", tool.name));
+        assert_eq!(output.get("type"), Some(&json!("object")), "{}", tool.name);
+    }
     assert!(
         info.instructions
             .as_deref()
             .is_some_and(|instructions| instructions.contains("structured JSON"))
     );
+}
+
+#[tokio::test]
+async fn representative_family_calls_return_exact_structured_and_text_json() {
+    let point_expected: Feature<Point> = serde_json::from_str(POINT).expect("point must decode");
+    let alert_expected: Feature<Alert> = serde_json::from_str(ALERT).expect("alert must decode");
+    let forecast_expected: Feature<Forecast> =
+        serde_json::from_str(FORECAST).expect("forecast must decode");
+    let observation_expected: Feature<Observation> =
+        serde_json::from_str(LATEST_OBSERVATION).expect("observation must decode");
+    let alert_id = alert_expected.properties.id.as_str().to_owned();
+    let (upstream, server) = server().await;
+    Mock::given(method("GET"))
+        .and(path("/points/39.7456,-97.0892"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(POINT, "application/geo+json"))
+        .expect(1)
+        .mount(&upstream)
+        .await;
+    Mock::given(method("GET"))
+        .and(path(format!("/alerts/{alert_id}")))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(ALERT, "application/geo+json"))
+        .expect(1)
+        .mount(&upstream)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/gridpoints/TOP/31,80/forecast"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(FORECAST, "application/geo+json"))
+        .expect(1)
+        .mount(&upstream)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/stations/KSLC/observations/latest"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw(LATEST_OBSERVATION, "application/geo+json"),
+        )
+        .expect(1)
+        .mount(&upstream)
+        .await;
+
+    let point = call_tool(
+        &server,
+        "points_get",
+        json!({ "point": "39.7456,-97.0892" }),
+    )
+    .await;
+    let alert = call_tool(&server, "alerts_get", json!({ "alertId": alert_id })).await;
+    let forecast = call_tool(
+        &server,
+        "gridpoints_forecast",
+        json!({ "gridpointId": "TOP/31,80" }),
+    )
+    .await;
+    let observation = call_tool(
+        &server,
+        "stations_observation_latest",
+        json!({ "stationId": "KSLC" }),
+    )
+    .await;
+
+    for (family, result, expected) in [
+        (
+            "points",
+            point,
+            serde_json::to_value(point_expected).expect("point must serialize"),
+        ),
+        (
+            "alerts",
+            alert,
+            serde_json::to_value(alert_expected).expect("alert must serialize"),
+        ),
+        (
+            "gridpoints",
+            forecast,
+            serde_json::to_value(forecast_expected).expect("forecast must serialize"),
+        ),
+        (
+            "stations",
+            observation,
+            serde_json::to_value(observation_expected).expect("observation must serialize"),
+        ),
+    ] {
+        assert_eq!(result.is_error, Some(false), "{family}");
+        assert_eq!(
+            result.structured_content.as_ref(),
+            Some(&expected),
+            "{family}"
+        );
+        assert_eq!(result.content.len(), 1, "{family}");
+        assert_eq!(text(&result), expected.to_string(), "{family}");
+        assert_eq!(
+            serde_json::from_str::<Value>(text(&result)).expect("fallback must be JSON"),
+            expected,
+            "{family}"
+        );
+    }
+    upstream.verify().await;
+}
+
+#[tokio::test]
+async fn tool_client_error_is_one_bounded_json_error_without_structured_content() {
+    let (upstream, server) = server().await;
+    Mock::given(method("GET"))
+        .and(path("/points/39.7456,-97.0892"))
+        .respond_with(ResponseTemplate::new(503).set_body_string("unexposed upstream body"))
+        .expect(1)
+        .mount(&upstream)
+        .await;
+
+    let result = call_tool(
+        &server,
+        "points_get",
+        json!({ "point": "39.7456,-97.0892" }),
+    )
+    .await;
+    assert_eq!(result.is_error, Some(true));
+    assert!(result.structured_content.is_none());
+    assert_eq!(result.content.len(), 1);
+    assert!(text(&result).len() <= 4_096);
+    assert!(!text(&result).contains("unexposed upstream body"));
+    let failure: Value = serde_json::from_str(text(&result)).expect("failure must be JSON");
+    assert_eq!(failure["code"], "upstream_http_error");
+    assert_eq!(failure["status"], 503);
+    upstream.verify().await;
+}
+
+#[tokio::test]
+async fn invalid_typed_parameter_is_rmcp_native_and_makes_no_http_request() {
+    let (upstream, server) = server().await;
+    let result = call_tool(&server, "points_get", json!({ "point": "91,0" })).await;
+
+    assert_eq!(result.is_error, Some(true));
+    assert!(result.structured_content.is_none());
+    assert_eq!(result.content.len(), 1);
+    assert!(text(&result).starts_with("failed to deserialize parameters:"));
+    assert!(serde_json::from_str::<Value>(text(&result)).is_err());
+    assert!(
+        upstream
+            .received_requests()
+            .await
+            .expect("recorded requests must be available")
+            .is_empty()
+    );
+}
+
+#[tokio::test]
+async fn actual_tool_response_over_the_configured_limit_becomes_a_tool_error() {
+    let expected: Feature<Point> = serde_json::from_str(POINT).expect("point must decode");
+    let expected = serde_json::to_value(expected).expect("point must serialize");
+    let measured = serde_json::to_vec(&expected)
+        .expect("point must serialize")
+        .len();
+    let configured = measured - 1;
+    let (upstream, server) = server_with_limit(limit(configured)).await;
+    Mock::given(method("GET"))
+        .and(path("/points/39.7456,-97.0892"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(POINT, "application/geo+json"))
+        .expect(1)
+        .mount(&upstream)
+        .await;
+
+    let result = call_tool(
+        &server,
+        "points_get",
+        json!({ "point": "39.7456,-97.0892" }),
+    )
+    .await;
+    assert_eq!(result.is_error, Some(true));
+    assert!(result.structured_content.is_none());
+    assert_eq!(result.content.len(), 1);
+    let failure: Value = serde_json::from_str(text(&result)).expect("failure must be JSON");
+    assert_eq!(failure["code"], "response_too_large");
+    assert_eq!(failure["bytes"], measured);
+    assert_eq!(failure["limit"], configured);
+    upstream.verify().await;
 }
 
 #[tokio::test]

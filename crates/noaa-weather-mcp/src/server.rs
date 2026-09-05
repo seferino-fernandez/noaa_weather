@@ -17,7 +17,6 @@ use rmcp::{ErrorData, RoleServer, ServerHandler};
 /// Owns the shared NOAA client, composed tool router, and response limit.
 #[derive(Clone, Debug)]
 pub struct NoaaWeatherServer {
-    #[allow(dead_code, reason = "family tools use the client after foundation")]
     client: Client,
     tool_router: ToolRouter<Self>,
     max_response_bytes: NonZeroUsize,

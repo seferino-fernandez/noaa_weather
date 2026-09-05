@@ -1,10 +1,6 @@
 //! Tool-family routers and shared tool behavior.
 
 mod alerts;
-#[allow(
-    dead_code,
-    reason = "family tools consume shared error projection after foundation"
-)]
 mod error;
 mod gridpoints;
 mod points;
