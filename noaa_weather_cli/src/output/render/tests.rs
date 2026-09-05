@@ -216,9 +216,8 @@ fn color_auto_into_a_pipe_writes_no_escapes() {
     assert!(!options.render(&synthetic_summary()).contains('\u{1b}'));
 }
 
-/// The choke point decides styling from the resolved color mode, never from
-/// this process's stdout, and that decision reaches the tables the un-ported
-/// families still build by hand.
+/// The table-rendering primitive follows the resolved color mode rather than
+/// this process's stdout.
 #[test]
 fn applying_options_to_a_hand_built_table_follows_the_color_mode() {
     for (color, expected) in [(ColorMode::Never, false), (ColorMode::Always, true)] {
@@ -230,7 +229,7 @@ fn applying_options_to_a_hand_built_table_follows_the_color_mode() {
         assert_eq!(
             table.should_style(),
             expected,
-            "{color:?} must decide styling for an un-ported table"
+            "{color:?} must decide styling for a rendered table"
         );
         assert_eq!(
             table.to_string().contains('\u{1b}'),

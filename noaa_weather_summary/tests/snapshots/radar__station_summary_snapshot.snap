@@ -1,0 +1,243 @@
+---
+source: noaa_weather_summary/tests/radar.rs
+expression: "decode::<RadarStationTelemetry>(STATION).summarize(&SummaryOptions::default())"
+---
+title: Radar station
+subtitle: KXYZ — Example Radar
+emphasis: None
+sections:
+  - Facts:
+      heading: Station information
+      facts:
+        - label: Station ID
+          key: id
+          also: []
+          value:
+            Identifier: KXYZ
+          emphasis: None
+        - label: Name
+          key: name
+          also: []
+          value:
+            Text: Example Radar
+          emphasis: None
+        - label: Station Type
+          key: stationType
+          also: []
+          value:
+            Text: WSR-88D
+          emphasis: None
+        - label: Elevation
+          key: elevation
+          also: []
+          value:
+            Quantity:
+              value: 1377.9527559055118
+              unit: ft
+              precision: 0
+          emphasis: None
+        - label: Time Zone
+          key: timeZone
+          also: []
+          value:
+            Text: America/Phoenix
+          emphasis: None
+        - label: Location
+          key: geometry
+          also: []
+          value:
+            Coordinates:
+              lat: 33.2903
+              lon: -112.1469
+          emphasis: None
+  - Facts:
+      heading: Latency
+      facts:
+        - label: Current
+          key: current
+          also: []
+          value:
+            Quantity:
+              value: 1.25
+              unit: s
+              precision: 0
+          emphasis: None
+        - label: Average
+          key: average
+          also: []
+          value:
+            Quantity:
+              value: 2.5
+              unit: ~
+              precision: 2
+          emphasis: None
+        - label: Maximum
+          key: max
+          also: []
+          value:
+            Quantity:
+              value: 9.75
+              unit: s
+              precision: 0
+          emphasis: None
+        - label: Last Level II Product
+          key: levelTwoLastReceivedTime
+          also: []
+          value:
+            Timestamp: "2026-08-31T16:00:00+00:00"
+          emphasis: None
+        - label: Maximum At
+          key: maxLatencyTime
+          also: []
+          value:
+            Timestamp: "2026-08-31T15:59:00+00:00"
+          emphasis: None
+        - label: Reporting Host
+          key: reportingHost
+          also: []
+          value:
+            Text: ldm.example
+          emphasis: None
+        - label: Data Host
+          key: host
+          also: []
+          value:
+            Text: data.example
+          emphasis: None
+  - Facts:
+      heading: Radar data acquisition
+      facts:
+        - label: Observed
+          key: timestamp
+          also: []
+          value:
+            Timestamp: "2026-08-31T16:01:00+00:00"
+          emphasis: None
+        - label: Reporting Host
+          key: reportingHost
+          also: []
+          value:
+            Text: rda.example
+          emphasis: None
+        - label: Status
+          key: status
+          also: []
+          value:
+            Text: Operate
+          emphasis: None
+        - label: Operability
+          key: operabilityStatus
+          also: []
+          value:
+            Text: RDA - On-line
+          emphasis: None
+        - label: Mode
+          key: mode
+          also: []
+          value:
+            Text: Operational
+          emphasis: None
+        - label: Control
+          key: controlStatus
+          also: []
+          value:
+            Text: RPG (Remote) Only
+          emphasis: None
+        - label: Alarm Summary
+          key: alarmSummary
+          also: []
+          value:
+            Text: No Alarms
+          emphasis: None
+        - label: Coverage Pattern
+          key: volumeCoveragePattern
+          also: []
+          value:
+            Text: R212
+          emphasis: None
+        - label: Build
+          key: buildNumber
+          also: []
+          value:
+            Quantity:
+              value: 24.1
+              unit: ~
+              precision: 1
+          emphasis: None
+        - label: Resolution Version
+          key: resolutionVersion
+          also: []
+          value:
+            Count: 4
+          emphasis: None
+  - Facts:
+      heading: Performance highlights
+      facts:
+        - label: Observed
+          key: timestamp
+          also: []
+          value:
+            Timestamp: "2026-08-31T16:02:00+00:00"
+          emphasis: None
+        - label: Performance Check
+          key: performanceCheckTime
+          also: []
+          value:
+            Timestamp: "2026-08-31T16:02:30+00:00"
+          emphasis: None
+        - label: NTP Status
+          key: ntp_status
+          also: []
+          value:
+            Count: 0
+          emphasis: None
+        - label: Command Channel
+          key: commandChannel
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Power Source
+          key: powerSource
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Shelter Temperature
+          key: shelterTemperature
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Radome Temperature
+          key: radomeAirTemperature
+          also: []
+          value: Missing
+          emphasis: None
+        - label: Fuel Level
+          key: fuelLevel
+          also: []
+          value: Missing
+          emphasis: None
+  - Facts:
+      heading: Adaptation highlights
+      facts:
+        - label: Observed
+          key: timestamp
+          also: []
+          value:
+            Timestamp: "2026-08-31T16:03:00+00:00"
+          emphasis: None
+        - label: Transmitter Frequency
+          key: transmitterFrequency
+          also: []
+          value:
+            Quantity:
+              value: 2800
+              unit: MHz
+              precision: 0
+          emphasis: None
+        - label: Spectrum Filter Installed
+          key: transmitterSpectrumFilterInstalled
+          also: []
+          value:
+            Text: "yes"
+          emphasis: None
+notes: []

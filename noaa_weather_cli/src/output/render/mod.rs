@@ -5,8 +5,7 @@
 //! so this module implements exactly that and nothing else.
 //!
 //! [`RenderOptions`] is built once from the global flags and then applies to
-//! everything the CLI writes: summaries rendered here, and the tables the
-//! eleven un-ported presenters still build by hand.
+//! every summary the CLI renders.
 
 use std::env;
 
@@ -109,27 +108,17 @@ impl RenderOptions {
         }
     }
 
-    /// The zone the un-ported presenters format their timestamps in.
-    ///
-    /// Those presenters cannot express "keep the source offset", so
-    /// `--time-zone source` leaves them on this machine's zone.
-    pub(crate) fn presenter_time_zone(&self) -> TimeZone {
-        self.time_zone
-            .clone()
-            .unwrap_or_else(|| TimeZone::try_system().unwrap_or(TimeZone::UTC))
-    }
-
     /// Renders a summary for a terminal.
     pub(crate) fn render(&self, summary: &Summary) -> String {
         table::render(summary, self)
     }
 
-    /// Applies color and width policy to a table built anywhere in the CLI.
+    /// Applies color and width policy to a rendered summary table.
     ///
     /// comfy-table otherwise decides styling from this process's stdout,
     /// which is the wrong question, and crossterm keeps attributes such as
     /// bold under `NO_COLOR` even while it drops colors. Deciding here means
-    /// one policy covers the ported families and the un-ported ones alike.
+    /// one policy covers every summarized response family.
     pub(crate) fn apply(&self, table: &mut Table) {
         table.force_no_tty();
         if self.styled {

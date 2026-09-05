@@ -10,6 +10,7 @@
   "radarNetworkUp": true,
   "collectionTime": "2026-08-31T16:10:00Z",
   "reportingHost": "ops.example",
+  "ingestHost": "dns.example",
   "ping": {
     "timestamp": "2026-08-31T16:09:00Z",
     "targets": {
@@ -21,14 +22,20 @@
   "command": {
     "timestamp": "2026-08-31T16:08:00Z",
     "lastExecuted": "restart",
-    "lastExecutedTime": "2026-08-31T16:07:00Z"
+    "lastExecutedTime": "2026-08-31T16:07:00Z",
+    "lastNexradDataTime": "2026-08-31T16:06:30Z",
+    "lastReceived": "restart",
+    "lastReceivedTime": "2026-08-31T16:07:00Z"
   },
   "hardware": {
     "timestamp": "2026-08-31T16:06:00Z",
     "cpuIdle": 97.5,
+    "ioUtilization": 0.05,
+    "disk": 4,
     "load1": 0.1,
     "load5": 0.2,
     "load15": 0.3,
+    "memory": 31.25,
     "uptime": "2026-08-01T00:00:00Z"
   },
   "ldm": {
@@ -53,6 +60,17 @@
       "recvDropped": 6,
       "recvOverrun": 7
     },
-    "eth1": {}
+    "eth1": {
+      "interface": "eno2",
+      "active": false,
+      "transNoError": 0,
+      "transError": 0,
+      "transDropped": 0,
+      "transOverrun": 0,
+      "recvNoError": 0,
+      "recvError": 0,
+      "recvDropped": 0,
+      "recvOverrun": 0
+    }
   }
 }

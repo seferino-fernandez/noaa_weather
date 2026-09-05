@@ -73,30 +73,19 @@ pub use self::problem_detail::ProblemDetail;
 pub mod quality_control;
 pub use self::quality_control::QualityControl;
 pub mod radar;
-pub use self::radar::{RadarNormalizationError, RadarServerTelemetry, RadarStationTelemetry};
-pub mod radar_queue;
-pub use self::radar_queue::RadarQueue;
+pub use self::radar::{
+    CommandChannel, CommandChannelMode, RadarAdaptationProperties, RadarAdaptationTelemetry,
+    RadarCommandTelemetry, RadarDataAcquisitionProperties, RadarDataAcquisitionTelemetry,
+    RadarHardwareTelemetry, RadarLdmTelemetry, RadarMeasurement, RadarNetworkInterfaceTelemetry,
+    RadarNetworkTelemetry, RadarPerformanceProperties, RadarPerformanceTelemetry, RadarPingSummary,
+    RadarPingTargets, RadarPingTelemetry, RadarPosition, RadarQueue, RadarQueuesResponse,
+    RadarServerTelemetry, RadarServersResponse, RadarSpgdsDiskStatus, RadarSpgdsEntry,
+    RadarSpgdsGatewayStatus, RadarSpgdsLdmStatus, RadarSpgdsResponse, RadarSpgdsStatus,
+    RadarSpgdsThroughput, RadarSpgdsUptime, RadarStationAlarm, RadarStationAlarmsResponse,
+    RadarStationDetails, RadarStationLatency, RadarStationTelemetry, RadarStationsResponse,
+};
 pub mod radar_queue_host;
 pub use self::radar_queue_host::RadarQueueHost;
-pub mod radar_queues_response;
-pub use self::radar_queues_response::RadarQueuesResponse;
-pub mod radar_server;
-pub use self::radar_server::RadarServer;
-pub mod radar_servers_response;
-pub use self::radar_servers_response::RadarServersResponse;
-pub mod radar_station_alarm;
-pub use self::radar_station_alarm::RadarStationAlarm;
-pub mod radar_station_alarms_response;
-pub use self::radar_station_alarms_response::RadarStationAlarmsResponse;
-pub mod radar_station;
-pub use self::radar_station::{RadarStation, RadarStationFeature};
-pub mod radar_stations_response;
-pub use self::radar_stations_response::RadarStationsResponse;
-pub mod radar_spgds;
-pub use self::radar_spgds::{
-    RadarSpgdsDiskStatus, RadarSpgdsEntry, RadarSpgdsGatewayStatus, RadarSpgdsLdmStatus,
-    RadarSpgdsResponse, RadarSpgdsStatus, RadarSpgdsThroughput, RadarSpgdsUptime,
-};
 pub mod region_code;
 pub use self::region_code::RegionCode;
 pub mod sigmet;
@@ -113,7 +102,7 @@ pub use self::product::{
     TextProductTypeCollection,
 };
 pub mod units;
-pub use self::units::{Quantity, Unit, UnitCodeType, ValueUnit};
+pub use self::units::{Quantity, Unit};
 pub mod wmo_unit_code;
 pub use self::wmo_unit_code::WmoUnitCode;
 pub mod zone;

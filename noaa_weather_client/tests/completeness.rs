@@ -14,12 +14,13 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
 
-use noaa_weather_client::models::radar_station::{CommandChannel, CommandChannelMode};
 use noaa_weather_client::models::{
-    ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CwsuOffice, Forecast,
-    GlossaryResponse, Gridpoint, Observation, ObservationStation, Office, OfficeBriefingResponse,
-    OfficeHeadline, OfficeHeadlineCollection, OfficeWeatherStoryCollection, Point,
-    RadarStationFeature, RadioTransmitter, RadioTransmitterCollection, Sigmet,
+    ActiveAlertCounts, Alert, AlertEventTypes, CenterWeatherAdvisory, CommandChannel,
+    CommandChannelMode, CwsuOffice, Forecast, GlossaryResponse, Gridpoint, Observation,
+    ObservationStation, Office, OfficeBriefingResponse, OfficeHeadline, OfficeHeadlineCollection,
+    OfficeWeatherStoryCollection, Point, RadarQueuesResponse, RadarServerTelemetry,
+    RadarServersResponse, RadarSpgdsResponse, RadarStationAlarmsResponse, RadarStationTelemetry,
+    RadarStationsResponse, RadioTransmitter, RadioTransmitterCollection, Sigmet,
     TerminalAerodromeForecastsResponse, TextProduct, TextProductCollection,
     TextProductLocationCollection, TextProductTypeCollection, Zone, ZoneForecast,
 };
@@ -34,14 +35,6 @@ const WHITELIST: &[(&str, &str)] = &[
         "JSON-LD vocabulary, identical on every response, no weather data",
     ),
     ("observationStations", "duplicates features[].id"),
-    (
-        "shortPulseVerticaldBZ0",
-        "present on both WSR-88D fixtures KFSX and KLNX captured 2026-09-03; radar curation is deferred",
-    ),
-    (
-        "longPulseVerticaldBZ0",
-        "present on both WSR-88D fixtures KFSX and KLNX captured 2026-09-03; radar curation is deferred",
-    ),
 ];
 
 const PATH_WHITELIST: &[(&str, &str)] = &[
@@ -115,6 +108,18 @@ fn value_at_path<'a>(value: &'a Value, path: &str) -> Option<&'a Value> {
 }
 
 fn is_whitelisted(label: &str, path: &str, raw: &Value) -> bool {
+    let target_category = path
+        .strip_suffix("[]")
+        .and_then(|path| path.rsplit_once(".ping.targets."))
+        .map(|(_, category)| category)
+        .or_else(|| path.strip_suffix("[]")?.strip_prefix("ping.targets."));
+    if target_category
+        .is_some_and(|category| matches!(category, "client" | "ldm" | "radar" | "server" | "misc"))
+    {
+        // NOAA represents an empty ping-target map as `[]`; the public model
+        // deliberately gives callers one stable map shape for every category.
+        return true;
+    }
     if PATH_WHITELIST
         .iter()
         .any(|(whitelisted, _)| path == *whitelisted)
@@ -272,9 +277,16 @@ fn captured_responses_preserve_every_non_whitelisted_key_path() {
             "offices/weather_stories.json",
             OfficeWeatherStoryCollection
         ),
-        ("radar/KFSX.json", RadarStationFeature),
-        ("radar/KLNX.json", RadarStationFeature),
-        ("radar/TSLC.json", RadarStationFeature),
+        ("radar/KFSX.json", RadarStationTelemetry),
+        ("radar/KLNX.json", RadarStationTelemetry),
+        ("radar/TSLC.json", RadarStationTelemetry),
+        ("radar/station.json", RadarStationTelemetry),
+        ("radar/stations.json", RadarStationsResponse),
+        ("radar/queue.json", RadarQueuesResponse),
+        ("radar/server.json", RadarServerTelemetry),
+        ("radar/servers.json", RadarServersResponse),
+        ("radar/alarms.json", RadarStationAlarmsResponse),
+        ("radar/spgds.json", RadarSpgdsResponse),
     );
 }
 
@@ -289,7 +301,7 @@ fn radar_command_channel_round_trips_as_the_original_json_scalar() {
             .join(path);
         let source = fs::read_to_string(&fixture)
             .unwrap_or_else(|error| panic!("failed to read {}: {error}", fixture.display()));
-        let station: RadarStationFeature = serde_json::from_str(&source)
+        let station: RadarStationTelemetry = serde_json::from_str(&source)
             .unwrap_or_else(|error| panic!("failed to deserialize {path}: {error}"));
         let serialized = serde_json::to_string(&station)
             .unwrap_or_else(|error| panic!("failed to serialize {path}: {error}"));
@@ -315,9 +327,9 @@ fn radar_empty_properties_arrays_deserialize_as_absent() {
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/radar/TSLC.json");
     let source = fs::read_to_string(&fixture)
         .unwrap_or_else(|error| panic!("failed to read {}: {error}", fixture.display()));
-    let station: RadarStationFeature = serde_json::from_str(&source)
+    let station: RadarStationTelemetry = serde_json::from_str(&source)
         .unwrap_or_else(|error| panic!("failed to deserialize {}: {error}", fixture.display()));
-    let station = station.radar_station.as_ref().expect("TSLC properties");
+    let station = &station.station;
 
     assert!(
         station
@@ -478,9 +490,23 @@ async fn live_responses_preserve_every_non_whitelisted_key_path() {
         Feature<Observation>
     );
 
-    live!("/radar/stations/KFSX", GEO_JSON, RadarStationFeature);
-    live!("/radar/stations/KLNX", GEO_JSON, RadarStationFeature);
-    live!("/radar/stations/TSLC", GEO_JSON, RadarStationFeature);
+    live!("/radar/queues/rds?limit=5", JSON_LD, RadarQueuesResponse);
+    live!("/radar/servers", JSON_LD, RadarServersResponse);
+    live!("/radar/servers/ldm1", JSON_LD, RadarServerTelemetry);
+    live!(
+        "/radar/stations?stationType=WSR-88D",
+        GEO_JSON,
+        RadarStationsResponse
+    );
+    live!("/radar/stations/KFSX", GEO_JSON, RadarStationTelemetry);
+    live!("/radar/stations/KLNX", GEO_JSON, RadarStationTelemetry);
+    live!("/radar/stations/TSLC", GEO_JSON, RadarStationTelemetry);
+    live!(
+        "/radar/stations/KABQ/alarms",
+        JSON_LD,
+        RadarStationAlarmsResponse
+    );
+    live!("/radar/spgds", JSON_LD, RadarSpgdsResponse);
 
     live!("/points/39.7456,-97.0892", GEO_JSON, Feature<Point>);
 

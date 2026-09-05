@@ -141,7 +141,6 @@ pub struct RadarStationsQuery {
     pub reporting_host: Option<String>,
     /// Only stations served by this queue host.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
     pub host: Option<RadarQueueHost>,
 }
 
@@ -163,7 +162,6 @@ pub struct RadarStationQuery {
     pub reporting_host: Option<String>,
     /// Report the station as served by this queue host.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "schemars", schemars(with = "Option<String>"))]
     pub host: Option<RadarQueueHost>,
 }
 
@@ -326,7 +324,7 @@ impl Radar<'_> {
         &self,
         server_id: &str,
         query: &RadarServerQuery,
-    ) -> Result<models::RadarServer, Error> {
+    ) -> Result<models::RadarServerTelemetry, Error> {
         http::request(self.client, "/radar/servers")
             .path_segment(server_id)
             .query(query)
@@ -387,7 +385,7 @@ impl Radar<'_> {
         &self,
         station: &RadarStationId,
         query: &RadarStationQuery,
-    ) -> Result<models::RadarStationFeature, Error> {
+    ) -> Result<models::RadarStationTelemetry, Error> {
         http::request(self.client, "/radar/stations")
             .path_segment(station)
             .query(query)
@@ -470,6 +468,10 @@ mod tests {
     };
     use crate::{Error, client::test_support::client_for, models::RadarQueueHost};
 
+    const STATION: &str = include_str!("../../tests/fixtures/radar/KFSX.json");
+    const SERVER: &str = include_str!("../../tests/fixtures/radar/server.json");
+    const SPGDS: &str = include_str!("../../tests/fixtures/radar/spgds.json");
+
     async fn mount(server: &MockServer, route: &str, body: &'static str, media: &'static str) {
         Mock::given(method("GET"))
             .and(path(route))
@@ -518,7 +520,7 @@ mod tests {
         mount(
             &server,
             "/radar/stations/KABQ",
-            r#"{"type":"Feature","geometry":null,"properties":{}}"#,
+            STATION,
             "application/geo+json",
         )
         .await;
@@ -639,7 +641,7 @@ mod tests {
         mount(
             &server,
             "/radar/servers/ldm%2Fone%20host",
-            r#"{"id":"ldm/one host"}"#,
+            SERVER,
             "application/ld+json",
         )
         .await;
@@ -662,7 +664,7 @@ mod tests {
             )
             .await
             .unwrap();
-        assert_eq!(response.id.as_deref(), Some("ldm/one host"));
+        assert_eq!(response.id, "ldm1");
 
         let requests = server.received_requests().await.unwrap();
         assert_eq!(requests[0].url.query(), Some("reportingHost=report%2Fhost"));
@@ -701,27 +703,12 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn spgds_omits_query_by_default_and_decodes_tolerant_telemetry() {
+    async fn spgds_omits_query_by_default_and_decodes_curated_telemetry() {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
             .and(path("/radar/spgds"))
             .and(header("Accept", "application/ld+json"))
-            .respond_with(ResponseTemplate::new(200).set_body_raw(
-                r#"{
-                    "@context": {},
-                    "@graph": [{
-                        "@type": "SPGDS",
-                        "id": 7,
-                        "timestamp": true,
-                        "dataflow": {"state": 1, "unknown": []},
-                        "ldm": {"conns": 47.5},
-                        "throughput": {"in": false, "out": "42"},
-                        "spg": {"TXYZ": {"swimDataState": 0, "ldmPingState": true}},
-                        "unknown": {"nested": "ignored"}
-                    }]
-                }"#,
-                "application/ld+json",
-            ))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(SPGDS, "application/ld+json"))
             .expect(1)
             .mount(&server)
             .await;
@@ -732,11 +719,11 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.spgds.len(), 1);
+        assert_eq!(response.spgds.len(), 2);
         let entry = &response.spgds[0];
-        assert_eq!(entry.id.as_deref(), Some("7"));
-        assert_eq!(entry.ldm.as_ref().unwrap().conns.as_deref(), Some("47.5"));
-        assert_eq!(entry.spg["TXYZ"].swim_data_state.as_deref(), Some("0"));
+        assert_eq!(entry.id, "spgds1");
+        assert_eq!(entry.ldm.conns, "47");
+        assert_eq!(entry.spg["TADW"].swim_data_state, "1");
         assert_eq!(first_query(&server).await, None);
     }
 
