@@ -1,6 +1,6 @@
 use noaa_weather_client::models::TerminalAerodromeForecast;
 use noaa_weather_client::models::terminal_aerodrome_forecast::{
-    ForecastReport, MissingForecastReason, MissingReason,
+    ForecastGroupKind, ForecastReport, MissingForecastReason, MissingReason,
 };
 
 fn decode(bytes: &[u8]) -> TerminalAerodromeForecast {
@@ -21,6 +21,24 @@ fn kflg_normal_decodes_as_an_ordered_ordinary_forecast() {
     let forecast = decode(include_bytes!("fixtures/taf/kflg_normal.xml"));
 
     assert_ordinary_forecast(&forecast, "KFLG");
+    assert_eq!(
+        forecast
+            .groups()
+            .iter()
+            .map(|group| group.kind())
+            .collect::<Vec<_>>(),
+        [
+            &ForecastGroupKind::Base,
+            &ForecastGroupKind::Temporary,
+            &ForecastGroupKind::From,
+            &ForecastGroupKind::Probability {
+                percent: 30,
+                temporary: false,
+            },
+            &ForecastGroupKind::From,
+            &ForecastGroupKind::Temporary,
+        ],
+    );
 }
 
 #[test]
