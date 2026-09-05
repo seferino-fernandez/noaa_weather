@@ -1,6 +1,6 @@
 //! Human summaries for NWS text products and their catalogs.
 
-use noaa_weather_client::models::{
+use noaa_weather_client::products::{
     TextProduct, TextProductCollection, TextProductLocationCollection, TextProductTypeCollection,
 };
 

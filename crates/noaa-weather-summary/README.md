@@ -44,7 +44,7 @@ sets the emphasis: `Extreme` and `Severe` are `Danger`, `Moderate` is
 
 ```rust,no_run
 use noaa_weather_client::FeatureCollection;
-use noaa_weather_client::models::Alert;
+use noaa_weather_client::alerts::Alert;
 use noaa_weather_summary::render::{RenderOptions, markdown};
 use noaa_weather_summary::{Summarize, SummaryOptions};
 

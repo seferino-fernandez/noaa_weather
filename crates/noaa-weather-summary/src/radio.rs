@@ -1,6 +1,6 @@
 //! Human summaries for NOAA Weather Radio transmitters and broadcasts.
 
-use noaa_weather_client::models::{
+use noaa_weather_client::radio::{
     Paragraph, RadioBroadcast, RadioTransmitter, RadioTransmitterCollection,
 };
 

@@ -1,6 +1,6 @@
 //! Human summary for the NWS glossary.
 
-use noaa_weather_client::models::GlossaryResponse;
+use noaa_weather_client::glossary::GlossaryResponse;
 
 use crate::{Column, Section, Summarize, Summary, SummaryOptions, Value};
 

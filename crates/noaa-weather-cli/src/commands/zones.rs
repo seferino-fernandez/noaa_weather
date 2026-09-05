@@ -1,10 +1,10 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
 use jiff::Timestamp;
-use noaa_weather_client::apis::zones::{
+use noaa_weather_client::geo::{AreaCode, RegionCode};
+use noaa_weather_client::zones::{
     ZoneObservationsQuery, ZoneQuery, ZoneStationsQuery, ZoneType, ZonesQuery,
 };
-use noaa_weather_client::models::{AreaCode, RegionCode};
 use noaa_weather_client::{Client, Coordinates, Cursor, ZoneId};
 
 use super::{Run, parse};

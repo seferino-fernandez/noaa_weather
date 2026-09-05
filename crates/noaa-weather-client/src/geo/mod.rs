@@ -18,7 +18,7 @@
 //! # Envelopes
 //!
 //! NOAA returns most resources as GeoJSON (RFC 7946). A single resource is a
-//! [`Feature<T>`] whose `properties` is the model from [`crate::models`]; a
+//! [`Feature<T>`] whose `properties` is a domain model; a
 //! list is a [`FeatureCollection<T>`] of such features, optionally decorated
 //! with `title`, `updated`, and [`Pagination`]. Both envelopes are generic so
 //! one pair of types serves every operation, and `Feature<T>` dereferences to
@@ -29,14 +29,28 @@
 //! The JSON-LD `@context` member and the `observationStations` list that
 //! duplicates `features[].id` are the only response members not represented.
 
+mod area_code;
 mod coordinates;
 mod feature;
 mod feature_collection;
 mod geometry;
+mod json_ld_context;
+mod land_region_code;
+mod marine_area_code;
+mod marine_region_code;
 mod position;
+mod region_code;
+mod state_territory_code;
 
+pub use area_code::AreaCode;
 pub use coordinates::Coordinates;
 pub use feature::Feature;
 pub use feature_collection::{FeatureCollection, Pagination};
 pub use geometry::Geometry;
+pub use json_ld_context::{JsonLdContext, JsonLdContextElement};
+pub use land_region_code::LandRegionCode;
+pub use marine_area_code::MarineAreaCode;
+pub use marine_region_code::MarineRegionCode;
 pub use position::Position;
+pub use region_code::RegionCode;
+pub use state_territory_code::StateTerritoryCode;

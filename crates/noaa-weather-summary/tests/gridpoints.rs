@@ -5,7 +5,7 @@
 //! that arrives under a name this crate does not know must show up as a gap
 //! rather than pass unnoticed, and the last test here proves it does.
 
-use noaa_weather_client::models::{Forecast, Gridpoint};
+use noaa_weather_client::gridpoints::{Forecast, Gridpoint};
 use noaa_weather_client::{Feature, Interval};
 use noaa_weather_summary::{
     Emphasis, Section, Summarize, SummaryOptions, UnitSystem, Value, coverage_gaps,

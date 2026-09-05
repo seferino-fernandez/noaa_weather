@@ -1,6 +1,6 @@
 //! Human summaries for NWS office metadata, news, briefings, and weather stories.
 
-use noaa_weather_client::models::{
+use noaa_weather_client::offices::{
     NwsConnectDocumentMetadata, Office, OfficeAddress, OfficeBriefingResponse, OfficeHeadline,
     OfficeHeadlineCollection, OfficeWeatherStory, OfficeWeatherStoryCollection,
 };

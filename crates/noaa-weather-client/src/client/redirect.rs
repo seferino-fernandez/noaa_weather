@@ -10,7 +10,7 @@ use reqwest::{
 };
 use url::Url;
 
-use crate::apis::{ProtocolError, RedirectReason};
+use super::{ProtocolError, RedirectReason};
 
 const API_KEY_HEADER: &str = "X-Api-Key";
 const FEATURE_FLAGS_HEADER: &str = "Feature-Flags";
@@ -133,8 +133,8 @@ mod tests {
     use reqwest::header::HeaderValue;
     use url::Url;
 
+    use super::RedirectReason;
     use super::{resolve_location, same_origin};
-    use crate::apis::RedirectReason;
 
     fn url(text: &str) -> Url {
         Url::parse(text).unwrap()

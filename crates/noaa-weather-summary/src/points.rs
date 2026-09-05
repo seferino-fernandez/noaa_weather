@@ -9,7 +9,7 @@
 
 use noaa_weather_client::Feature;
 use noaa_weather_client::geo::Geometry;
-use noaa_weather_client::models::{Point, RelativeLocation};
+use noaa_weather_client::points::{Point, RelativeLocation};
 
 use crate::render::{RangeStyle, RenderOptions, format_value};
 use crate::{Fact, QuantityKind, Section, Summarize, Summary, SummaryOptions, Value};

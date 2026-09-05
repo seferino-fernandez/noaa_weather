@@ -1,6 +1,6 @@
 //! Office summaries against every captured response shape.
 
-use noaa_weather_client::models::{
+use noaa_weather_client::offices::{
     Office, OfficeBriefingResponse, OfficeHeadline, OfficeHeadlineCollection,
     OfficeWeatherStoryCollection,
 };

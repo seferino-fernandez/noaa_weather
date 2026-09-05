@@ -18,13 +18,13 @@ use serde::de::DeserializeOwned;
 use tracing::Instrument as _;
 use url::Url;
 
+use super::{BinaryPayload, Error, ProtocolError, ResponseContent};
 use super::{
     Client, Inner,
     redirect::{self, HopError, HopHeaders},
     retry,
     secret::Secret,
 };
-use crate::apis::{BinaryPayload, Error, ProtocolError, ResponseContent};
 
 pub(crate) use crate::time::RFC3339_SECONDS;
 
@@ -927,7 +927,7 @@ mod tests {
         assert!(matches!(
             protocol.as_ref(),
             ProtocolError::Redirect {
-                reason: crate::apis::RedirectReason::MissingLocation,
+                reason: crate::RedirectReason::MissingLocation,
                 ..
             }
         ));

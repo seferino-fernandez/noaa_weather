@@ -4,22 +4,48 @@
 #[macro_use]
 mod macros;
 
-pub mod apis;
+pub mod alerts;
+pub mod aviation;
 pub mod client;
 pub mod geo;
+pub mod glossary;
+pub mod gridpoints;
 pub mod ids;
-pub mod models;
+pub mod offices;
+pub mod points;
+pub mod prelude;
+pub mod products;
+pub mod radar;
+pub mod radio;
+pub mod stations;
 pub mod time;
-pub mod utils;
+pub mod units;
+pub mod zones;
 
-pub use apis::{
-    Alerts, Aviation, BinaryPayload, Error, Glossary, Gridpoints, Offices, Points, Products,
-    ProtocolError, Radar, Radio, RedirectReason, ResponseContent, Stations, Zones,
+pub use alerts::Alerts;
+pub use aviation::Aviation;
+pub use client::{
+    BinaryPayload, BuildError, Client, ClientBuilder, Error, ProtocolError, RedirectReason,
+    ResponseContent, RetryPolicy,
 };
-pub use client::{BuildError, Client, ClientBuilder, RetryPolicy};
-pub use geo::{Coordinates, Feature, FeatureCollection, Geometry, Pagination, Position};
+pub use geo::{
+    AreaCode, Coordinates, Feature, FeatureCollection, Geometry, LandRegionCode, MarineAreaCode,
+    MarineRegionCode, Pagination, Position, RegionCode, StateTerritoryCode,
+};
+pub use glossary::Glossary;
+pub use gridpoints::Gridpoints;
 pub use ids::{
-    AlertId, AtsuId, CallSign, Cursor, CwsuId, GridpointId, InvalidValue, OfficeId, ProductId,
-    ProductTypeCode, RadarStationId, StationId, ValueKind, ZoneId,
+    AlertId, AtsuId, CallSign, Cursor, CwsuId, GridpointId, InvalidValue,
+    NwsCenterWeatherServiceUnitId, NwsForecastOfficeId, NwsNationalHqid, NwsOfficeId,
+    NwsRegionalHqid, OfficeId, ParseNwsOfficeIdError, ProductId, ProductTypeCode, RadarStationId,
+    StationId, ValueKind, ZoneId,
 };
+pub use offices::Offices;
+pub use points::Points;
+pub use products::Products;
+pub use radar::Radar;
+pub use radio::Radio;
+pub use stations::Stations;
 pub use time::{Interval, OffsetDateTime};
+pub use units::{NwsUnitCode, Quantity, Unit, WmoUnitCode};
+pub use zones::Zones;

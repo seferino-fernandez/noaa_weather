@@ -5,7 +5,7 @@
 //! up: the distance in the title is `4.2 mi` under US and `6.7 km` under SI.
 
 use noaa_weather_client::Feature;
-use noaa_weather_client::models::Point;
+use noaa_weather_client::points::Point;
 use noaa_weather_summary::{Summarize, SummaryOptions, UnitSystem, coverage_gaps};
 
 const POINT: &str = include_str!("../../noaa-weather-client/tests/fixtures/points/point.json");

@@ -1,6 +1,6 @@
 use super::codes::{Case, Chars, Rule};
 use super::{InvalidValue, ValueKind};
-use crate::models::{NwsForecastOfficeId, NwsOfficeId};
+use crate::ids::{NwsForecastOfficeId, NwsOfficeId};
 
 const OFFICE: Rule = Rule {
     kind: ValueKind::OfficeId,
@@ -125,7 +125,7 @@ mod tests {
     /// Every variant of the forecast office enum, read from its source so the
     /// list here cannot drift from the model without this test noticing.
     fn enum_variants() -> Vec<NwsForecastOfficeId> {
-        let source = include_str!("../models/nws_forecast_office_id.rs");
+        let source = include_str!("nws_forecast_office_id.rs");
         let codes: Vec<serde_json::Value> = source
             .lines()
             .filter_map(|line| line.trim().strip_prefix("#[serde(rename = \""))
@@ -167,7 +167,7 @@ mod tests {
 
     #[test]
     fn converts_from_any_office_enum() {
-        let regional = NwsOfficeId::from(crate::models::NwsRegionalHqid::Wrh);
+        let regional = NwsOfficeId::from(crate::ids::NwsRegionalHqid::Wrh);
         assert_eq!(OfficeId::from(regional).as_str(), "WRH");
         assert_eq!(OfficeId::from(&regional).as_str(), "WRH");
         assert!(!OfficeId::from(regional).is_known());

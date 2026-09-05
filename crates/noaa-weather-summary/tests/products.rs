@@ -1,6 +1,6 @@
 //! Product summaries against every captured response shape.
 
-use noaa_weather_client::models::{
+use noaa_weather_client::products::{
     TextProduct, TextProductCollection, TextProductLocationCollection, TextProductTypeCollection,
 };
 use noaa_weather_summary::{Section, Summarize, SummaryOptions, coverage_gaps};

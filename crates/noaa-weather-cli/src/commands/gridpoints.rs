@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::apis::gridpoints::{ForecastQuery, GridpointStationsQuery};
+use noaa_weather_client::gridpoints::{ForecastQuery, GridpointStationsQuery};
 use noaa_weather_client::{Client, GridpointId};
 
 use super::Run;

@@ -1,6 +1,6 @@
 //! Human summaries for zone metadata and text forecasts.
 
-use noaa_weather_client::models::{Zone, ZoneForecast};
+use noaa_weather_client::zones::{Zone, ZoneForecast};
 use noaa_weather_client::{Feature, FeatureCollection};
 
 use crate::{Cell, Column, Fact, Section, Summarize, Summary, SummaryOptions, Value};

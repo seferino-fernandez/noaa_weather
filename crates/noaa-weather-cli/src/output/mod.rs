@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context as _, Result, anyhow, bail};
 use clap::{ArgMatches, Args, ValueEnum};
-use noaa_weather_client::apis::BinaryPayload;
+use noaa_weather_client::BinaryPayload;
 use noaa_weather_summary::{SummaryOptions, UnitSystem};
 use serde::Serialize;
 use serde_json::Value;

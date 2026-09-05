@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use noaa_weather_client::apis::radio::TransmittersQuery;
+use noaa_weather_client::radio::TransmittersQuery;
 use noaa_weather_client::{CallSign, Client, Coordinates, Cursor, ZoneId};
 
 use super::Run;

@@ -5,7 +5,7 @@
 //! the same facts as columns, so a caller can scan products without losing the
 //! identifiers and validity windows needed for a follow-up request.
 
-use noaa_weather_client::models::{CenterWeatherAdvisory, CwsuOffice, Sigmet};
+use noaa_weather_client::aviation::{CenterWeatherAdvisory, CwsuOffice, Sigmet};
 use noaa_weather_client::{Feature, FeatureCollection};
 
 use crate::{Align, Column, Fact, Section, Summarize, Summary, SummaryOptions, Value};
