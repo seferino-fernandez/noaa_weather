@@ -74,6 +74,7 @@ Note the direction of that rule. A failure is classified by what went wrong, and
 - [Alerts](cli/alerts.md)
 - [Aviation](cli/aviation.md)
 - [Gridpoints](cli/gridpoints.md)
+- [Glossary](cli/glossary.md)
 - [Offices](cli/offices.md)
 - [Points](cli/points.md)
 - [Products](cli/products.md)

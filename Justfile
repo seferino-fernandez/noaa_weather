@@ -71,6 +71,10 @@ examples: example-basic example-alerts
 fixtures:
     noaa_weather_client/tests/fixtures/capture.sh
 
+# Regenerate the CLI guides' human-summary property tables
+shown-omitted-docs:
+    UPDATE_SHOWN_OMITTED_DOCS=1 cargo test -p noaa_weather_summary --test shown_omitted_docs
+
 # Run the pull request validation acceptance gate
 verify:
     cargo fmt --all --check
