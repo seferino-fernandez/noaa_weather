@@ -1,6 +1,6 @@
 # NOAA Weather Client Library
 
-An asynchronous, typed Rust client for version 3.11.0 of the [NOAA Weather API](https://www.weather.gov/documentation/services-web-api). One `Client` exposes eleven endpoint handles (`client.alerts()`, `client.points()`, ...) covering all 64 NOAA operations (65 methods including the composed `points().forecast_for`): forecasts, alerts, observations, offices, radar, aviation, text products, zones, glossary terms, and NOAA Weather Radio.
+An asynchronous, typed Rust client for version 3.11.0 of the [NOAA Weather API](https://www.weather.gov/documentation/services-web-api). One `Client` exposes eleven endpoint handles (`client.alerts()`, `client.points()`, ...) covering all 64 NOAA operations (68 methods including four composed pagination and forecast helpers): forecasts, alerts, observations, offices, radar, aviation, text products, zones, glossary terms, and NOAA Weather Radio.
 
 This project uses NOAA/NWS data but is not an official NOAA/NWS library.
 
@@ -145,75 +145,75 @@ walked this way:
   `/stations/{id}/observations` rather than the zone. Their query deliberately
   has no cursor; use `Stations::observations_all` per station for history.
 
-## NOAA path → handle method
+## NOAA endpoints by module and handle method
 
-| NOAA path | Handle method |
-| --- | --- |
-| `GET /alerts` | `alerts().search(&AlertsQuery)` |
-| `GET /alerts/active` | `alerts().active(&ActiveAlertsQuery)` |
-| `GET /alerts/active/count` | `alerts().active_count()` |
-| `GET /alerts/active/zone/{zoneId}` | `alerts().active_for_zone(&ZoneId)` |
-| `GET /alerts/active/area/{area}` | `alerts().active_for_area(&AreaCode)` |
-| `GET /alerts/active/region/{region}` | `alerts().active_for_marine_region(MarineRegionCode)` |
-| `GET /alerts/types` | `alerts().types()` |
-| `GET /alerts/{id}` | `alerts().get(&AlertId)` |
-| `GET /aviation/cwsus/{cwsuId}` | `aviation().cwsu(&CwsuId)` |
-| `GET /aviation/cwsus/{cwsuId}/cwas` | `aviation().cwas(&CwsuId)` |
-| `GET /aviation/cwsus/{cwsuId}/cwas/{date}/{sequence}` | `aviation().cwa(&CwsuId, Date, u32)` |
-| `GET /aviation/sigmets` | `aviation().sigmets(&SigmetsQuery)` |
-| `GET /aviation/sigmets/{atsu}` | `aviation().sigmets_for_atsu(&AtsuId)` |
-| `GET /aviation/sigmets/{atsu}/{date}` | `aviation().sigmets_for_atsu_on(&AtsuId, Date)` |
-| `GET /aviation/sigmets/{atsu}/{date}/{time}` | `aviation().sigmet(&AtsuId, Timestamp)` |
-| `GET /glossary` | `glossary().terms()` |
-| `GET /gridpoints/{wfo}/{x},{y}` | `gridpoints().get(&GridpointId)` |
-| `GET /gridpoints/{wfo}/{x},{y}/forecast` | `gridpoints().forecast(&GridpointId, &ForecastQuery)` |
-| `GET /gridpoints/{wfo}/{x},{y}/forecast/hourly` | `gridpoints().forecast_hourly(&GridpointId, &ForecastQuery)` |
-| `GET /gridpoints/{wfo}/{x},{y}/stations` | `gridpoints().stations(&GridpointId, &GridpointStationsQuery)` |
-| `GET /offices/{officeId}` | `offices().get(&OfficeId)` |
-| `GET /offices/{officeId}/headlines` | `offices().headlines(&OfficeId)` |
-| `GET /offices/{officeId}/headlines/{headlineId}` | `offices().headline(&OfficeId, &str)` |
-| `GET /offices/{officeId}/briefing` | `offices().briefing(&OfficeId)` |
-| `GET /offices/{officeId}/briefing/download/latest` | `offices().latest_briefing_document(&OfficeId)` |
-| `GET /offices/{officeId}/briefing/download/{briefingId}` | `offices().briefing_document(&OfficeId, &str)` |
-| `GET /offices/{officeId}/weatherstories` | `offices().weather_stories(&OfficeId)` |
-| `GET /offices/{officeId}/weatherstories/download/{imageId}` | `offices().weather_story_image(&OfficeId, &str)` |
-| `GET /points/{point}` | `points().get(Coordinates)` |
-| `GET /points/{point}` + `/gridpoints/.../forecast` | `points().forecast_for(Coordinates)` |
-| `GET /points/{point}/radio` | `radio().for_point(Coordinates)` |
-| `GET /products` | `products().search(&ProductsQuery)` |
-| `GET /products/locations` | `products().locations()` |
-| `GET /products/types` | `products().types()` |
-| `GET /products/{productId}` | `products().get(&ProductId)` |
-| `GET /products/types/{typeId}` | `products().by_type(&ProductTypeCode)` |
-| `GET /products/types/{typeId}/locations` | `products().locations_for_type(&ProductTypeCode)` |
-| `GET /products/locations/{locationId}/types` | `products().types_for_location(&OfficeId)` |
-| `GET /products/types/{typeId}/locations/{locationId}` | `products().by_type_and_location(&ProductTypeCode, &OfficeId)` |
-| `GET /products/types/{typeId}/locations/{locationId}/latest` | `products().latest(&ProductTypeCode, &OfficeId)` |
-| `GET /radar/servers` | `radar().servers(&RadarServersQuery)` |
-| `GET /radar/servers/{id}` | `radar().server(&str, &RadarServerQuery)` |
-| `GET /radar/stations` | `radar().stations(&RadarStationsQuery)` |
-| `GET /radar/stations/{stationId}` | `radar().station(&RadarStationId, &RadarStationQuery)` |
-| `GET /radar/stations/{stationId}/alarms` | `radar().station_alarms(&RadarStationId)` |
-| `GET /radar/queues/{host}` | `radar().queue(&RadarQueueHost, &RadarQueueQuery)` |
-| `GET /radar/profilers/{stationId}` | `radar().wind_profiler(&str, &WindProfilerQuery)` |
-| `GET /radar/spgds` | `radar().spgds(&SpgdsQuery)` |
-| `GET /radio` | `radio().transmitters(&TransmittersQuery)` |
-| `GET /radio/{callSign}` | `radio().transmitter(&CallSign)` |
-| `GET /radio/{callSign}/broadcast` | `radio().broadcast(&CallSign)` |
-| `GET /zones/county/{zoneId}/radio` | `radio().transmitters_for_county(&ZoneId)` |
-| `GET /stations` | `stations().list(&StationsQuery)` |
-| `GET /stations/{stationId}` | `stations().get(&StationId)` |
-| `GET /stations/{stationId}/observations` | `stations().observations(&StationId, &ObservationsQuery)` |
-| `GET /stations/{stationId}/observations/latest` | `stations().latest_observation(&StationId, &LatestObservationQuery)` |
-| `GET /stations/{stationId}/observations/{time}` | `stations().observation_at(&StationId, Timestamp)` |
-| `GET /stations/{stationId}/tafs` | `stations().tafs(&StationId)` |
-| `GET /stations/{stationId}/tafs/{date}/{time}` | `stations().taf(&StationId, Timestamp)` |
-| `GET /zones` | `zones().list(&ZonesQuery)` |
-| `GET /zones/{type}` | `zones().list_of_type(ZoneType, &ZonesQuery)` |
-| `GET /zones/{type}/{zoneId}` | `zones().get(ZoneType, &ZoneId, &ZoneQuery)` |
-| `GET /zones/{type}/{zoneId}/forecast` | `zones().forecast(ZoneType, &ZoneId)` |
-| `GET /zones/forecast/{zoneId}/observations` | `zones().observations(&ZoneId, &ZoneObservationsQuery)` |
-| `GET /zones/forecast/{zoneId}/stations` | `zones().stations(&ZoneId, &ZoneStationsQuery)` |
+| NOAA endpoint | Module | Handle method |
+| --- | --- | --- |
+| `GET /alerts` | [`alerts`] | `alerts().search(&AlertsQuery)` |
+| `GET /alerts/active` | [`alerts`] | `alerts().active(&ActiveAlertsQuery)` |
+| `GET /alerts/active/count` | [`alerts`] | `alerts().active_count()` |
+| `GET /alerts/active/zone/{zoneId}` | [`alerts`] | `alerts().active_for_zone(&ZoneId)` |
+| `GET /alerts/active/area/{area}` | [`alerts`] | `alerts().active_for_area(&AreaCode)` |
+| `GET /alerts/active/region/{region}` | [`alerts`] | `alerts().active_for_marine_region(MarineRegionCode)` |
+| `GET /alerts/types` | [`alerts`] | `alerts().types()` |
+| `GET /alerts/{id}` | [`alerts`] | `alerts().get(&AlertId)` |
+| `GET /aviation/cwsus/{cwsuId}` | [`aviation`] | `aviation().cwsu(&CwsuId)` |
+| `GET /aviation/cwsus/{cwsuId}/cwas` | [`aviation`] | `aviation().cwas(&CwsuId)` |
+| `GET /aviation/cwsus/{cwsuId}/cwas/{date}/{sequence}` | [`aviation`] | `aviation().cwa(&CwsuId, Date, u32)` |
+| `GET /aviation/sigmets` | [`aviation`] | `aviation().sigmets(&SigmetsQuery)` |
+| `GET /aviation/sigmets/{atsu}` | [`aviation`] | `aviation().sigmets_for_atsu(&AtsuId)` |
+| `GET /aviation/sigmets/{atsu}/{date}` | [`aviation`] | `aviation().sigmets_for_atsu_on(&AtsuId, Date)` |
+| `GET /aviation/sigmets/{atsu}/{date}/{time}` | [`aviation`] | `aviation().sigmet(&AtsuId, Timestamp)` |
+| `GET /glossary` | [`glossary`] | `glossary().terms()` |
+| `GET /gridpoints/{wfo}/{x},{y}` | [`gridpoints`] | `gridpoints().get(&GridpointId)` |
+| `GET /gridpoints/{wfo}/{x},{y}/forecast` | [`gridpoints`] | `gridpoints().forecast(&GridpointId, &ForecastQuery)` |
+| `GET /gridpoints/{wfo}/{x},{y}/forecast/hourly` | [`gridpoints`] | `gridpoints().forecast_hourly(&GridpointId, &ForecastQuery)` |
+| `GET /gridpoints/{wfo}/{x},{y}/stations` | [`gridpoints`] | `gridpoints().stations(&GridpointId, &GridpointStationsQuery)` |
+| `GET /offices/{officeId}` | [`offices`] | `offices().get(&OfficeId)` |
+| `GET /offices/{officeId}/headlines` | [`offices`] | `offices().headlines(&OfficeId)` |
+| `GET /offices/{officeId}/headlines/{headlineId}` | [`offices`] | `offices().headline(&OfficeId, &str)` |
+| `GET /offices/{officeId}/briefing` | [`offices`] | `offices().briefing(&OfficeId)` |
+| `GET /offices/{officeId}/briefing/download/latest` | [`offices`] | `offices().latest_briefing_document(&OfficeId)` |
+| `GET /offices/{officeId}/briefing/download/{briefingId}` | [`offices`] | `offices().briefing_document(&OfficeId, &str)` |
+| `GET /offices/{officeId}/weatherstories` | [`offices`] | `offices().weather_stories(&OfficeId)` |
+| `GET /offices/{officeId}/weatherstories/download/{imageId}` | [`offices`] | `offices().weather_story_image(&OfficeId, &str)` |
+| `GET /points/{point}` | [`points`] | `points().get(Coordinates)` |
+| `GET /points/{point}` + `/gridpoints/.../forecast` | [`points`] | `points().forecast_for(Coordinates)` |
+| `GET /points/{point}/radio` | [`radio`] | `radio().for_point(Coordinates)` |
+| `GET /products` | [`products`] | `products().search(&ProductsQuery)` |
+| `GET /products/locations` | [`products`] | `products().locations()` |
+| `GET /products/types` | [`products`] | `products().types()` |
+| `GET /products/{productId}` | [`products`] | `products().get(&ProductId)` |
+| `GET /products/types/{typeId}` | [`products`] | `products().by_type(&ProductTypeCode)` |
+| `GET /products/types/{typeId}/locations` | [`products`] | `products().locations_for_type(&ProductTypeCode)` |
+| `GET /products/locations/{locationId}/types` | [`products`] | `products().types_for_location(&OfficeId)` |
+| `GET /products/types/{typeId}/locations/{locationId}` | [`products`] | `products().by_type_and_location(&ProductTypeCode, &OfficeId)` |
+| `GET /products/types/{typeId}/locations/{locationId}/latest` | [`products`] | `products().latest(&ProductTypeCode, &OfficeId)` |
+| `GET /radar/servers` | [`radar`] | `radar().servers(&RadarServersQuery)` |
+| `GET /radar/servers/{id}` | [`radar`] | `radar().server(&str, &RadarServerQuery)` |
+| `GET /radar/stations` | [`radar`] | `radar().stations(&RadarStationsQuery)` |
+| `GET /radar/stations/{stationId}` | [`radar`] | `radar().station(&RadarStationId, &RadarStationQuery)` |
+| `GET /radar/stations/{stationId}/alarms` | [`radar`] | `radar().station_alarms(&RadarStationId)` |
+| `GET /radar/queues/{host}` | [`radar`] | `radar().queue(&RadarQueueHost, &RadarQueueQuery)` |
+| `GET /radar/profilers/{stationId}` | [`radar`] | `radar().wind_profiler(&str, &WindProfilerQuery)` |
+| `GET /radar/spgds` | [`radar`] | `radar().spgds(&SpgdsQuery)` |
+| `GET /radio` | [`radio`] | `radio().transmitters(&TransmittersQuery)` |
+| `GET /radio/{callSign}` | [`radio`] | `radio().transmitter(&CallSign)` |
+| `GET /radio/{callSign}/broadcast` | [`radio`] | `radio().broadcast(&CallSign)` |
+| `GET /zones/county/{zoneId}/radio` | [`radio`] | `radio().transmitters_for_county(&ZoneId)` |
+| `GET /stations` | [`stations`] | `stations().list(&StationsQuery)` |
+| `GET /stations/{stationId}` | [`stations`] | `stations().get(&StationId)` |
+| `GET /stations/{stationId}/observations` | [`stations`] | `stations().observations(&StationId, &ObservationsQuery)` |
+| `GET /stations/{stationId}/observations/latest` | [`stations`] | `stations().latest_observation(&StationId, &LatestObservationQuery)` |
+| `GET /stations/{stationId}/observations/{time}` | [`stations`] | `stations().observation_at(&StationId, Timestamp)` |
+| `GET /stations/{stationId}/tafs` | [`stations`] | `stations().tafs(&StationId)` |
+| `GET /stations/{stationId}/tafs/{date}/{time}` | [`stations`] | `stations().taf(&StationId, Timestamp)` |
+| `GET /zones` | [`zones`] | `zones().list(&ZonesQuery)` |
+| `GET /zones/{type}` | [`zones`] | `zones().list_of_type(ZoneType, &ZonesQuery)` |
+| `GET /zones/{type}/{zoneId}` | [`zones`] | `zones().get(ZoneType, &ZoneId, &ZoneQuery)` |
+| `GET /zones/{type}/{zoneId}/forecast` | [`zones`] | `zones().forecast(ZoneType, &ZoneId)` |
+| `GET /zones/forecast/{zoneId}/observations` | [`zones`] | `zones().observations(&ZoneId, &ZoneObservationsQuery)` |
+| `GET /zones/forecast/{zoneId}/stations` | [`zones`] | `zones().stations(&ZoneId, &ZoneStationsQuery)` |
 
 The deprecated `/points/{point}/stations` operation is intentionally not exposed. Use `points().get` to obtain the gridpoint, then `gridpoints().stations`, or query the station endpoints directly.
 
@@ -368,3 +368,15 @@ The API is free and does not normally require a key. `ClientBuilder::api_key`, w
 - [National Weather Service](https://www.weather.gov/)
 
 Licensed under the [MIT License](../LICENSE.md).
+
+[`alerts`]: https://docs.rs/noaa_weather_client/latest/noaa_weather_client/alerts/index.html
+[`aviation`]: https://docs.rs/noaa_weather_client/latest/noaa_weather_client/aviation/index.html
+[`glossary`]: https://docs.rs/noaa_weather_client/latest/noaa_weather_client/glossary/index.html
+[`gridpoints`]: https://docs.rs/noaa_weather_client/latest/noaa_weather_client/gridpoints/index.html
+[`offices`]: https://docs.rs/noaa_weather_client/latest/noaa_weather_client/offices/index.html
+[`points`]: https://docs.rs/noaa_weather_client/latest/noaa_weather_client/points/index.html
+[`products`]: https://docs.rs/noaa_weather_client/latest/noaa_weather_client/products/index.html
+[`radar`]: https://docs.rs/noaa_weather_client/latest/noaa_weather_client/radar/index.html
+[`radio`]: https://docs.rs/noaa_weather_client/latest/noaa_weather_client/radio/index.html
+[`stations`]: https://docs.rs/noaa_weather_client/latest/noaa_weather_client/stations/index.html
+[`zones`]: https://docs.rs/noaa_weather_client/latest/noaa_weather_client/zones/index.html

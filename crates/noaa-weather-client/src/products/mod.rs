@@ -83,6 +83,17 @@ pub struct Products<'a> {
 
 impl Client {
     /// Returns the handle for the `/products` endpoints.
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::Client;
+    ///
+    /// # fn main() -> Result<(), noaa_weather_client::BuildError> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build()?;
+    /// let products = client.products();
+    /// # let _ = products;
+    /// # Ok(())
+    /// # }
+    /// ```
     #[must_use]
     pub fn products(&self) -> Products<'_> {
         Products { client: self }

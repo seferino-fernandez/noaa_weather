@@ -100,6 +100,17 @@ pub struct Gridpoints<'a> {
 
 impl Client {
     /// Returns the handle for the `/gridpoints` endpoints.
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::Client;
+    ///
+    /// # fn main() -> Result<(), noaa_weather_client::BuildError> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build()?;
+    /// let gridpoints = client.gridpoints();
+    /// # let _ = gridpoints;
+    /// # Ok(())
+    /// # }
+    /// ```
     #[must_use]
     pub fn gridpoints(&self) -> Gridpoints<'_> {
         Gridpoints { client: self }

@@ -244,6 +244,17 @@ pub struct Alerts<'a> {
 
 impl Client {
     /// Returns the handle for the `/alerts` endpoints.
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::Client;
+    ///
+    /// # fn main() -> Result<(), noaa_weather_client::BuildError> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build()?;
+    /// let alerts = client.alerts();
+    /// # let _ = alerts;
+    /// # Ok(())
+    /// # }
+    /// ```
     #[must_use]
     pub fn alerts(&self) -> Alerts<'_> {
         Alerts { client: self }
