@@ -2,125 +2,185 @@ use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
+/// Identifies a United States state, district, territory, or associated state.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema), schemars(inline))]
 pub enum StateTerritoryCode {
+    /// Identifies Alabama (`AL`).
     #[serde(rename = "AL")]
     Al,
+    /// Identifies Alaska (`AK`).
     #[serde(rename = "AK")]
     Ak,
+    /// Identifies American Samoa (`AS`).
     #[serde(rename = "AS")]
     As,
+    /// Identifies Arkansas (`AR`).
     #[serde(rename = "AR")]
     Ar,
+    /// Identifies Arizona (`AZ`).
     #[serde(rename = "AZ")]
     Az,
+    /// Identifies California (`CA`).
     #[serde(rename = "CA")]
     Ca,
+    /// Identifies Colorado (`CO`).
     #[serde(rename = "CO")]
     Co,
+    /// Identifies Connecticut (`CT`).
     #[serde(rename = "CT")]
     Ct,
+    /// Identifies Delaware (`DE`).
     #[serde(rename = "DE")]
     De,
+    /// Identifies the District of Columbia (`DC`).
     #[serde(rename = "DC")]
     Dc,
+    /// Identifies Florida (`FL`).
     #[serde(rename = "FL")]
     Fl,
+    /// Identifies Georgia (`GA`).
     #[serde(rename = "GA")]
     Ga,
+    /// Identifies Guam (`GU`).
     #[serde(rename = "GU")]
     Gu,
+    /// Identifies Hawaii (`HI`).
     #[serde(rename = "HI")]
     Hi,
+    /// Identifies Idaho (`ID`).
     #[serde(rename = "ID")]
     Id,
+    /// Identifies Illinois (`IL`).
     #[serde(rename = "IL")]
     Il,
+    /// Identifies Indiana (`IN`).
     #[serde(rename = "IN")]
     In,
+    /// Identifies Iowa (`IA`).
     #[serde(rename = "IA")]
     Ia,
+    /// Identifies Kansas (`KS`).
     #[serde(rename = "KS")]
     Ks,
+    /// Identifies Kentucky (`KY`).
     #[serde(rename = "KY")]
     Ky,
+    /// Identifies Louisiana (`LA`).
     #[serde(rename = "LA")]
     La,
+    /// Identifies Maine (`ME`).
     #[serde(rename = "ME")]
     Me,
+    /// Identifies Maryland (`MD`).
     #[serde(rename = "MD")]
     Md,
+    /// Identifies Massachusetts (`MA`).
     #[serde(rename = "MA")]
     Ma,
+    /// Identifies Michigan (`MI`).
     #[serde(rename = "MI")]
     Mi,
+    /// Identifies Minnesota (`MN`).
     #[serde(rename = "MN")]
     Mn,
+    /// Identifies Mississippi (`MS`).
     #[serde(rename = "MS")]
     Ms,
+    /// Identifies Missouri (`MO`).
     #[serde(rename = "MO")]
     Mo,
+    /// Identifies Montana (`MT`).
     #[serde(rename = "MT")]
     Mt,
+    /// Identifies Nebraska (`NE`).
     #[serde(rename = "NE")]
     Ne,
+    /// Identifies Nevada (`NV`).
     #[serde(rename = "NV")]
     Nv,
+    /// Identifies New Hampshire (`NH`).
     #[serde(rename = "NH")]
     Nh,
+    /// Identifies New Jersey (`NJ`).
     #[serde(rename = "NJ")]
     Nj,
+    /// Identifies New Mexico (`NM`).
     #[serde(rename = "NM")]
     Nm,
+    /// Identifies New York (`NY`).
     #[serde(rename = "NY")]
     Ny,
+    /// Identifies North Carolina (`NC`).
     #[serde(rename = "NC")]
     Nc,
+    /// Identifies North Dakota (`ND`).
     #[serde(rename = "ND")]
     Nd,
+    /// Identifies Ohio (`OH`).
     #[serde(rename = "OH")]
     Oh,
+    /// Identifies Oklahoma (`OK`).
     #[serde(rename = "OK")]
     Ok,
+    /// Identifies Oregon (`OR`).
     #[serde(rename = "OR")]
     Or,
+    /// Identifies Pennsylvania (`PA`).
     #[serde(rename = "PA")]
     Pa,
+    /// Identifies Puerto Rico (`PR`).
     #[serde(rename = "PR")]
     Pr,
+    /// Identifies Rhode Island (`RI`).
     #[serde(rename = "RI")]
     Ri,
+    /// Identifies South Carolina (`SC`).
     #[serde(rename = "SC")]
     Sc,
+    /// Identifies South Dakota (`SD`).
     #[serde(rename = "SD")]
     Sd,
+    /// Identifies Tennessee (`TN`).
     #[serde(rename = "TN")]
     Tn,
+    /// Identifies Texas (`TX`).
     #[serde(rename = "TX")]
     Tx,
+    /// Identifies Utah (`UT`).
     #[serde(rename = "UT")]
     Ut,
+    /// Identifies Vermont (`VT`).
     #[serde(rename = "VT")]
     Vt,
+    /// Identifies the United States Virgin Islands (`VI`).
     #[serde(rename = "VI")]
     Vi,
+    /// Identifies Virginia (`VA`).
     #[serde(rename = "VA")]
     Va,
+    /// Identifies Washington (`WA`).
     #[serde(rename = "WA")]
     Wa,
+    /// Identifies West Virginia (`WV`).
     #[serde(rename = "WV")]
     Wv,
+    /// Identifies Wisconsin (`WI`).
     #[serde(rename = "WI")]
     Wi,
+    /// Identifies Wyoming (`WY`).
     #[serde(rename = "WY")]
     Wy,
+    /// Identifies the Northern Mariana Islands (`MP`).
     #[serde(rename = "MP")]
     Mp,
+    /// Identifies Palau (`PW`).
     #[serde(rename = "PW")]
     Pw,
+    /// Identifies the Federated States of Micronesia (`FM`).
     #[serde(rename = "FM")]
     Fm,
+    /// Identifies the Marshall Islands (`MH`).
     #[serde(rename = "MH")]
     Mh,
 }

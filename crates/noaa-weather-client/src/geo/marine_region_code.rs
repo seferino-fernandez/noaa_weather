@@ -13,17 +13,23 @@ use serde::{Deserialize, Serialize};
     Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
 )]
 pub enum MarineRegionCode {
+    /// Groups Alaska marine areas (`AL`).
     #[serde(rename = "AL")]
     #[default]
     Al,
+    /// Groups western North Atlantic marine areas (`AT`).
     #[serde(rename = "AT")]
     At,
+    /// Groups the Great Lakes and upper St. Lawrence River (`GL`).
     #[serde(rename = "GL")]
     Gl,
+    /// Groups Gulf of Mexico marine areas (`GM`).
     #[serde(rename = "GM")]
     Gm,
+    /// Groups eastern Pacific and United States West Coast marine areas (`PA`).
     #[serde(rename = "PA")]
     Pa,
+    /// Groups central and western Pacific marine areas (`PI`).
     #[serde(rename = "PI")]
     Pi,
 }

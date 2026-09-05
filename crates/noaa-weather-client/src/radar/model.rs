@@ -33,14 +33,19 @@ use crate::units::{Quantity, Unit};
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarMeasurement {
+    /// The observed numeric value, or `None` when NOAA reports no value.
     #[serde(default)]
     pub value: Option<f64>,
+    /// The lower bound NOAA supplied for the measurement.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub min_value: Option<f64>,
+    /// The upper bound NOAA supplied for the measurement.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_value: Option<f64>,
+    /// The unit associated with the value and bounds.
     #[serde(rename = "unitCode", default, skip_serializing_if = "Option::is_none")]
     pub unit: Option<Unit>,
+    /// The quality-control flag assigned to the measurement.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub quality_control: Option<QualityControl>,
 }
@@ -78,6 +83,7 @@ pub enum CommandChannel {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema), schemars(inline))]
 #[non_exhaustive]
 pub enum CommandChannelMode {
+    /// A single, non-redundant command channel.
     #[serde(rename = "Single")]
     Single,
 }
@@ -86,17 +92,28 @@ pub enum CommandChannelMode {
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum RadarPosition {
+    /// The station response contains no geometry.
     Missing,
+    /// The station geometry is present but is not a point.
     Invalid,
-    Coordinates { longitude: f64, latitude: f64 },
+    /// The station is located at the given longitude and latitude.
+    Coordinates {
+        /// The station longitude in degrees.
+        longitude: f64,
+        /// The station latitude in degrees.
+        latitude: f64,
+    },
 }
 
 /// One radar station GeoJSON feature, normalized for callers.
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct RadarStationTelemetry {
+    /// The GeoJSON feature identifier, when NOAA supplies one.
     pub feature_id: Option<String>,
+    /// The station geometry from the GeoJSON feature.
     pub geometry: Option<Geometry>,
+    /// The station identity and operational telemetry.
     pub station: RadarStationDetails,
 }
 
@@ -164,21 +181,32 @@ impl schemars::JsonSchema for RadarStationTelemetry {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarStationDetails {
+    /// The JSON-LD resource identifier from the `@id` property.
     #[serde(rename = "@id")]
     pub at_id: String,
+    /// The JSON-LD resource type from the `@type` property.
     #[serde(rename = "@type")]
     pub at_type: String,
+    /// The radar station identifier.
     pub id: RadarStationId,
+    /// The human-readable station name.
     pub name: String,
+    /// The radar installation type, such as `WSR-88D` or `TDWR`.
     pub station_type: String,
+    /// The station elevation and its reported unit.
     pub elevation: RadarMeasurement,
+    /// The station's civil time zone.
     #[serde(with = "jiff::fmt::serde::tz::required")]
     #[cfg_attr(feature = "schemars", schemars(with = "String"))]
     pub time_zone: TimeZone,
+    /// Product-delivery latency observed for the station.
     pub latency: RadarStationLatency,
+    /// Radar Data Acquisition telemetry, when available for the station.
     pub rda: Option<RadarDataAcquisitionTelemetry>,
+    /// Detailed radar performance telemetry, when available.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub performance: Option<RadarPerformanceTelemetry>,
+    /// Radar adaptation and calibration values, when available.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub adaptation: Option<RadarAdaptationTelemetry>,
 }
@@ -189,13 +217,20 @@ pub struct RadarStationDetails {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarStationLatency {
+    /// The most recently measured product-delivery latency.
     pub current: Option<RadarMeasurement>,
+    /// The average product-delivery latency reported by NOAA.
     pub average: Option<RadarMeasurement>,
+    /// The maximum product-delivery latency reported by NOAA.
     #[serde(rename = "max")]
     pub maximum: Option<RadarMeasurement>,
+    /// The time the latest Level II product was received.
     pub level_two_last_received_time: Option<OffsetDateTime>,
+    /// The time at which the reported maximum latency occurred.
     pub max_latency_time: Option<OffsetDateTime>,
+    /// The host that reported the latency telemetry.
     pub reporting_host: Option<String>,
+    /// The Local Data Manager host serving the station products.
     pub host: Option<String>,
 }
 
@@ -205,8 +240,11 @@ pub struct RadarStationLatency {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarDataAcquisitionTelemetry {
+    /// The time associated with the acquisition-system report.
     pub timestamp: OffsetDateTime,
+    /// The host that reported the acquisition-system telemetry.
     pub reporting_host: String,
+    /// The reported acquisition-system operating properties.
     pub properties: RadarDataAcquisitionProperties,
 }
 
@@ -216,21 +254,34 @@ pub struct RadarDataAcquisitionTelemetry {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarDataAcquisitionProperties {
+    /// The Level II data resolution version.
     pub resolution_version: Option<i32>,
+    /// The internal path used for Level II radar products.
     pub nl2_path: String,
+    /// The active volume coverage pattern identifier.
     pub volume_coverage_pattern: String,
+    /// The radar control authority and connection status.
     pub control_status: String,
+    /// The installed radar software build number.
     pub build_number: f64,
+    /// The acquisition system's alarm summary.
     pub alarm_summary: String,
+    /// The acquisition system's operating mode.
     pub mode: String,
+    /// The radar product generator state, when reported.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub generator_state: Option<String>,
+    /// The super-resolution processing status, when reported.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub super_resolution_status: Option<String>,
+    /// The acquisition system's operability status.
     pub operability_status: String,
+    /// The acquisition system's current operating status.
     pub status: String,
+    /// The average transmitter output power, when reported.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub average_transmitter_power: Option<RadarMeasurement>,
+    /// The reflectivity calibration correction, when reported.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reflectivity_calibration_correction: Option<RadarMeasurement>,
 }
@@ -241,8 +292,11 @@ pub struct RadarDataAcquisitionProperties {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarPerformanceTelemetry {
+    /// The time associated with the performance report.
     pub timestamp: Option<OffsetDateTime>,
+    /// The host that reported the performance telemetry.
     pub reporting_host: String,
+    /// The detailed performance measurements, when the response contains an object.
     #[serde(
         default,
         deserialize_with = "deserialize_object_or_empty_array",
@@ -257,84 +311,110 @@ pub struct RadarPerformanceTelemetry {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarPerformanceProperties {
+    /// The reported Network Time Protocol synchronization status code.
     #[serde(
         rename = "ntp_status",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub ntp_status: Option<i32>,
+    /// The command channel number or named operating mode.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub command_channel: Option<CommandChannel>,
+    /// The air temperature within the antenna radome.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub radome_air_temperature: Option<RadarMeasurement>,
+    /// The transitional electrical power source status.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub transitional_power_source: Option<String>,
+    /// The horizontal receiver noise measured with short pulses.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub horizontal_short_pulse_noise: Option<RadarMeasurement>,
+    /// The elevation encoder indicator state.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub elevation_encoder_light: Option<String>,
+    /// The horizontal receiver noise measured with long pulses.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub horizontal_long_pulse_noise: Option<RadarMeasurement>,
+    /// The azimuth encoder indicator state.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub azimuth_encoder_light: Option<String>,
+    /// The equivalent noise temperature of the horizontal receiver channel.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub horizontal_noise_temperature: Option<RadarMeasurement>,
+    /// The receiver linearity value as reported by NOAA.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub linearity: Option<f64>,
+    /// The transmitter's measured peak output power.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub transmitter_peak_power: Option<RadarMeasurement>,
+    /// The horizontal-channel reflectivity calibration offset at zero dBZ.
     #[serde(
         rename = "horizontalDeltadBZ0",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub horizontal_delta_dbz0: Option<RadarMeasurement>,
+    /// The transmitter recycle event count.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub transmitter_recycle_count: Option<i32>,
+    /// The vertical-channel reflectivity calibration offset at zero dBZ.
     #[serde(
         rename = "verticalDeltadBZ0",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub vertical_delta_dbz0: Option<RadarMeasurement>,
+    /// The measured receiver bias.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub receiver_bias: Option<RadarMeasurement>,
+    /// The short-pulse horizontal-channel reflectivity baseline at zero dBZ.
     #[serde(
         rename = "shortPulseHorizontaldBZ0",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub short_pulse_horizontal_dbz0: Option<RadarMeasurement>,
+    /// The measured imbalance in the transmitter signal.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub transmitter_imbalance: Option<RadarMeasurement>,
+    /// The long-pulse horizontal-channel reflectivity baseline at zero dBZ.
     #[serde(
         rename = "longPulseHorizontaldBZ0",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub long_pulse_horizontal_dbz0: Option<RadarMeasurement>,
+    /// The time the performance check was performed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub performance_check_time: Option<OffsetDateTime>,
+    /// The temperature of air leaving the transmitter enclosure.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub transmitter_leaving_air_temperature: Option<RadarMeasurement>,
+    /// The temperature inside the radar equipment shelter.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shelter_temperature: Option<RadarMeasurement>,
+    /// The electrical power source supplying the radar equipment.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub power_source: Option<String>,
+    /// The receiver dynamic range.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dynamic_range: Option<RadarMeasurement>,
+    /// The short-pulse vertical-channel reflectivity baseline at zero dBZ.
     #[serde(
         rename = "shortPulseVerticaldBZ0",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub short_pulse_vertical_dbz0: Option<RadarMeasurement>,
+    /// The long-pulse vertical-channel reflectivity baseline at zero dBZ.
     #[serde(
         rename = "longPulseVerticaldBZ0",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub long_pulse_vertical_dbz0: Option<RadarMeasurement>,
+    /// The backup generator fuel level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fuel_level: Option<RadarMeasurement>,
 }
@@ -345,8 +425,11 @@ pub struct RadarPerformanceProperties {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarAdaptationTelemetry {
+    /// The time associated with the adaptation report.
     pub timestamp: Option<OffsetDateTime>,
+    /// The host that reported the adaptation telemetry.
     pub reporting_host: String,
+    /// The detailed adaptation values, when the response contains an object.
     #[serde(
         default,
         deserialize_with = "deserialize_object_or_empty_array",
@@ -361,86 +444,109 @@ pub struct RadarAdaptationTelemetry {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarAdaptationProperties {
+    /// The configured radar transmitter frequency.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub transmitter_frequency: Option<RadarMeasurement>,
+    /// The signal loss through the WG04 circulator path.
     #[serde(
         rename = "pathLossWG04Circulator",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub path_loss_wg04_circulator: Option<RadarMeasurement>,
+    /// The antenna gain including attenuation from the radome.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub antenna_gain_including_radome: Option<RadarMeasurement>,
+    /// The signal loss through the A6 arc-detector path.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub path_loss_a6_arc_detector: Option<RadarMeasurement>,
+    /// The coherent oscillator power measured at A1 J4.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub coho_power_at_a1_j4: Option<RadarMeasurement>,
+    /// The horizontal test-signal power reported by the antenna measurement equipment.
     #[serde(
         rename = "ameHorzizontalTestSignalPower",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub ame_horizontal_test_signal_power: Option<RadarMeasurement>,
+    /// The path-loss correction for transmitter coupler coupling.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub path_loss_transmitter_coupler_coupling: Option<RadarMeasurement>,
+    /// The stable local oscillator power measured at A1 J2.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stalo_power_at_a1_j2: Option<RadarMeasurement>,
+    /// The horizontal noise source's excess-noise ratio.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ame_noise_source_horizontal_excess_noise_ratio: Option<RadarMeasurement>,
+    /// The signal loss from the vertical IF Heliax path to 4AT16.
     #[serde(
         rename = "pathLossVerticalIFHeliaxTo4AT16",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub path_loss_vertical_if_heliax_to_4at16: Option<RadarMeasurement>,
+    /// The signal loss through the AT4 attenuator.
     #[serde(
         rename = "pathLossAT4Attenuator",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub path_loss_at4_attenuator: Option<RadarMeasurement>,
+    /// The signal loss from the horizontal IF Heliax path to 4AT17.
     #[serde(
         rename = "pathLossHorzontalIFHeliaxTo4AT17",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub path_loss_horizontal_if_heliax_to_4at17: Option<RadarMeasurement>,
+    /// The signal loss through the IFDR IF anti-alias filter.
     #[serde(
         rename = "pathLossIFDRIFAntiAliasFilter",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub path_loss_ifdrif_anti_alias_filter: Option<RadarMeasurement>,
+    /// The signal loss through the IFD burst anti-alias filter.
     #[serde(
         rename = "pathLossIFDBurstAntiAliasFilter",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub path_loss_ifd_burst_anti_alias_filter: Option<RadarMeasurement>,
+    /// The signal loss through the WG02 harmonic filter.
     #[serde(
         rename = "pathLossWG02HarmonicFilter",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub path_loss_wg02_harmonic_filter: Option<RadarMeasurement>,
+    /// The factor that converts transmitter power data to watts.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub transmitter_power_data_watts_factor: Option<RadarMeasurement>,
+    /// The waveguide path loss from the klystron to the switch.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub path_loss_waveguide_klystron_to_switch: Option<RadarMeasurement>,
+    /// The configured transmitter output width for short pulses.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pulse_width_transmitter_output_short_pulse: Option<RadarMeasurement>,
+    /// The configured transmitter output width for long pulses.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pulse_width_transmitter_output_long_pulse: Option<RadarMeasurement>,
+    /// The signal loss through the WG06 spectrum filter.
     #[serde(
         rename = "pathLossWG06SpectrumFilter",
         default,
         skip_serializing_if = "Option::is_none"
     )]
     pub path_loss_wg06_spectrum_filter: Option<RadarMeasurement>,
+    /// The horizontal receiver noise measured with short pulses.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub horizontal_receiver_noise_short_pulse: Option<RadarMeasurement>,
+    /// The horizontal receiver noise measured with long pulses.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub horizontal_receiver_noise_long_pulse: Option<RadarMeasurement>,
+    /// Whether the transmitter spectrum filter is installed, as reported by NOAA.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub transmitter_spectrum_filter_installed: Option<String>,
 }
@@ -449,19 +555,23 @@ pub struct RadarAdaptationProperties {
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 #[non_exhaustive]
 pub struct RadarStationsResponse {
+    /// The radar station features returned by NOAA.
     #[serde(rename = "features", default)]
     pub stations: Vec<RadarStationTelemetry>,
 }
 
 impl RadarStationsResponse {
+    /// Returns the number of radar stations in the response.
     #[must_use]
     pub fn len(&self) -> usize {
         self.stations.len()
     }
+    /// Returns `true` when the response contains no radar stations.
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.stations.is_empty()
     }
+    /// Returns an iterator over the radar stations in response order.
     pub fn iter(&self) -> impl Iterator<Item = &RadarStationTelemetry> {
         self.stations.iter()
     }
@@ -499,31 +609,48 @@ impl schemars::JsonSchema for RadarStationsResponse {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarServerTelemetry {
+    /// The JSON-LD resource identifier from the `@id` property.
     #[serde(rename = "@id")]
     pub at_id: String,
+    /// The JSON-LD resource type from the `@type` property.
     #[serde(rename = "@type")]
     pub at_type: String,
+    /// The radar server identifier.
     pub id: String,
+    /// The server's role or service type.
     #[serde(rename = "type")]
     pub server_type: String,
+    /// Whether the server is active, when NOAA reports the role flag.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub active: Option<bool>,
+    /// Whether the server is primary, when NOAA reports the role flag.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub primary: Option<bool>,
+    /// Whether the server aggregates radar products, when NOAA reports the role flag.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub aggregate: Option<bool>,
+    /// Whether the server is administratively locked, when NOAA reports the flag.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub locked: Option<bool>,
+    /// Whether the radar network is reachable, when NOAA reports the flag.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub radar_network_up: Option<bool>,
+    /// The time NOAA collected this server telemetry.
     pub collection_time: OffsetDateTime,
+    /// The host that reported the server telemetry.
     pub reporting_host: String,
+    /// The host from which the server ingests radar products.
     pub ingest_host: String,
+    /// Reachability measurements for the server's ping targets.
     pub ping: RadarPingTelemetry,
+    /// Command processing telemetry, when the server reports it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub command: Option<RadarCommandTelemetry>,
+    /// Host hardware and utilization telemetry.
     pub hardware: RadarHardwareTelemetry,
+    /// Local Data Manager storage and product telemetry.
     pub ldm: RadarLdmTelemetry,
+    /// Network interface counters and link state.
     pub network: RadarNetworkTelemetry,
 }
 
@@ -538,7 +665,9 @@ impl<'de> Deserialize<'de> for RadarServerTelemetry {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[non_exhaustive]
 pub struct RadarPingTelemetry {
+    /// The ping results grouped by target category.
     pub targets: RadarPingTargets,
+    /// The time associated with the ping report.
     pub timestamp: OffsetDateTime,
 }
 
@@ -547,14 +676,19 @@ pub struct RadarPingTelemetry {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[non_exhaustive]
 pub struct RadarPingTargets {
+    /// Reachability keyed by client target name.
     #[serde(default, deserialize_with = "deserialize_map_or_empty_array")]
     pub client: BTreeMap<String, bool>,
+    /// Reachability keyed by Local Data Manager target name.
     #[serde(default, deserialize_with = "deserialize_map_or_empty_array")]
     pub ldm: BTreeMap<String, bool>,
+    /// Reachability keyed by radar target name.
     #[serde(default, deserialize_with = "deserialize_map_or_empty_array")]
     pub radar: BTreeMap<String, bool>,
+    /// Reachability keyed by server target name.
     #[serde(default, deserialize_with = "deserialize_map_or_empty_array")]
     pub server: BTreeMap<String, bool>,
+    /// Reachability keyed by miscellaneous target name.
     #[serde(default, deserialize_with = "deserialize_map_or_empty_array")]
     pub misc: BTreeMap<String, bool>,
 }
@@ -562,27 +696,34 @@ pub struct RadarPingTargets {
 /// Count of reachable targets in one ping category.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct RadarPingSummary {
+    /// The number of targets reported as reachable.
     pub up: usize,
+    /// The total number of targets in the category.
     pub total: usize,
 }
 
 impl RadarPingTargets {
+    /// Returns reachability counts for client targets.
     #[must_use]
     pub fn client_summary(&self) -> RadarPingSummary {
         ping_summary(&self.client)
     }
+    /// Returns reachability counts for Local Data Manager targets.
     #[must_use]
     pub fn ldm_summary(&self) -> RadarPingSummary {
         ping_summary(&self.ldm)
     }
+    /// Returns reachability counts for radar targets.
     #[must_use]
     pub fn radar_summary(&self) -> RadarPingSummary {
         ping_summary(&self.radar)
     }
+    /// Returns reachability counts for server targets.
     #[must_use]
     pub fn server_summary(&self) -> RadarPingSummary {
         ping_summary(&self.server)
     }
+    /// Returns reachability counts for miscellaneous targets.
     #[must_use]
     pub fn misc_summary(&self) -> RadarPingSummary {
         ping_summary(&self.misc)
@@ -595,11 +736,17 @@ impl RadarPingTargets {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarCommandTelemetry {
+    /// The most recent command executed by the server.
     pub last_executed: String,
+    /// The time the most recent command was executed.
     pub last_executed_time: OffsetDateTime,
+    /// The timestamp of the latest NEXRAD data known to the command service.
     pub last_nexrad_data_time: OffsetDateTime,
+    /// The most recent command received by the server.
     pub last_received: String,
+    /// The time the most recent command was received.
     pub last_received_time: OffsetDateTime,
+    /// The time associated with the command telemetry report.
     pub timestamp: OffsetDateTime,
 }
 
@@ -609,14 +756,23 @@ pub struct RadarCommandTelemetry {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarHardwareTelemetry {
+    /// The time associated with the hardware report.
     pub timestamp: OffsetDateTime,
+    /// The percentage of processor capacity that was idle.
     pub cpu_idle: f64,
+    /// The reported input/output utilization.
     pub io_utilization: f64,
+    /// The reported disk utilization value.
     pub disk: i32,
+    /// The one-minute system load average.
     pub load1: f64,
+    /// The five-minute system load average.
     pub load5: f64,
+    /// The fifteen-minute system load average.
     pub load15: f64,
+    /// The reported memory utilization.
     pub memory: f64,
+    /// The time at which the server last started.
     pub uptime: OffsetDateTime,
 }
 
@@ -626,11 +782,17 @@ pub struct RadarHardwareTelemetry {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarLdmTelemetry {
+    /// The time associated with the Local Data Manager report.
     pub timestamp: OffsetDateTime,
+    /// The creation time of the newest stored radar product.
     pub latest_product: OffsetDateTime,
+    /// The creation time of the oldest stored radar product.
     pub oldest_product: OffsetDateTime,
+    /// The total storage occupied by radar products, in bytes.
     pub storage_size: u64,
+    /// The number of radar products in storage.
     pub count: u64,
+    /// Whether the Local Data Manager is active.
     pub active: bool,
 }
 
@@ -639,8 +801,11 @@ pub struct RadarLdmTelemetry {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[non_exhaustive]
 pub struct RadarNetworkTelemetry {
+    /// The time associated with the network report.
     pub timestamp: OffsetDateTime,
+    /// Telemetry for the server's first reported Ethernet interface.
     pub eth0: RadarNetworkInterfaceTelemetry,
+    /// Telemetry for the server's second reported Ethernet interface.
     pub eth1: RadarNetworkInterfaceTelemetry,
 }
 
@@ -650,15 +815,25 @@ pub struct RadarNetworkTelemetry {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarNetworkInterfaceTelemetry {
+    /// The operating-system name of the network interface.
     pub interface: String,
+    /// Whether the network interface is active.
     pub active: bool,
+    /// The number of transmitted packets without an error.
     pub trans_no_error: u64,
+    /// The number of transmission errors.
     pub trans_error: u64,
+    /// The number of transmitted packets dropped.
     pub trans_dropped: u64,
+    /// The number of transmission overruns.
     pub trans_overrun: u64,
+    /// The number of received packets without an error.
     pub recv_no_error: u64,
+    /// The number of receive errors.
     pub recv_error: u64,
+    /// The number of received packets dropped.
     pub recv_dropped: u64,
+    /// The number of receive overruns.
     pub recv_overrun: u64,
 }
 
@@ -667,19 +842,23 @@ pub struct RadarNetworkInterfaceTelemetry {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[non_exhaustive]
 pub struct RadarServersResponse {
+    /// The radar servers returned by NOAA.
     #[serde(rename = "@graph", default)]
     pub servers: Vec<RadarServerTelemetry>,
 }
 
 impl RadarServersResponse {
+    /// Returns the number of radar servers in the response.
     #[must_use]
     pub fn len(&self) -> usize {
         self.servers.len()
     }
+    /// Returns `true` when the response contains no radar servers.
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.servers.is_empty()
     }
+    /// Returns an iterator over the radar servers in response order.
     pub fn iter(&self) -> impl Iterator<Item = &RadarServerTelemetry> {
         self.servers.iter()
     }
@@ -691,17 +870,27 @@ impl RadarServersResponse {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarQueue {
+    /// The JSON-LD resource type from the `@type` property.
     #[serde(rename = "@type")]
     pub at_type: String,
+    /// The Local Data Manager host holding the queued product.
     pub host: String,
+    /// The time the product arrived at the queue host.
     pub arrival_time: OffsetDateTime,
+    /// The time the radar product was created.
     pub creation_time: OffsetDateTime,
+    /// The station that produced the radar product.
     pub station_id: RadarStationId,
+    /// The radar product type from the wire `type` property.
     #[serde(rename = "type")]
     pub data_type: String,
+    /// The product's originating data feed.
     pub feed: String,
+    /// The Level II data resolution version.
     pub resolution_version: i32,
+    /// The product sequence identifier reported by the queue.
     pub sequence_number: String,
+    /// The product size in bytes.
     pub size: u64,
 }
 
@@ -710,21 +899,26 @@ pub struct RadarQueue {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[non_exhaustive]
 pub struct RadarQueuesResponse {
+    /// The JSON-LD resource identifier from the `@id` property.
     #[serde(rename = "@id", default, skip_serializing_if = "Option::is_none")]
     pub at_id: Option<String>,
+    /// The queued radar products returned by NOAA.
     #[serde(rename = "@graph", default)]
     pub entries: Vec<RadarQueue>,
 }
 
 impl RadarQueuesResponse {
+    /// Returns the number of queued radar products in the response.
     #[must_use]
     pub fn len(&self) -> usize {
         self.entries.len()
     }
+    /// Returns `true` when the response contains no queued radar products.
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
+    /// Returns an iterator over queued products in response order.
     pub fn iter(&self) -> impl Iterator<Item = &RadarQueue> {
         self.entries.iter()
     }
@@ -736,16 +930,22 @@ impl RadarQueuesResponse {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarStationAlarm {
+    /// The JSON-LD resource type from the `@type` property.
     #[serde(rename = "@type", default, skip_serializing_if = "Option::is_none")]
     pub at_type: Option<String>,
+    /// The station associated with the alarm.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub station_id: Option<RadarStationId>,
+    /// The alarm status reported by the station.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
+    /// The time associated with the alarm report.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timestamp: Option<OffsetDateTime>,
+    /// The command channel that was active when the alarm was reported.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub active_channel: Option<i32>,
+    /// The human-readable alarm message.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
 }
@@ -755,21 +955,26 @@ pub struct RadarStationAlarm {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[non_exhaustive]
 pub struct RadarStationAlarmsResponse {
+    /// The JSON-LD resource identifier from the `@id` property.
     #[serde(rename = "@id", default, skip_serializing_if = "Option::is_none")]
     pub at_id: Option<String>,
+    /// The station alarms returned by NOAA.
     #[serde(rename = "@graph", default)]
     pub alarms: Vec<RadarStationAlarm>,
 }
 
 impl RadarStationAlarmsResponse {
+    /// Returns the number of station alarms in the response.
     #[must_use]
     pub fn len(&self) -> usize {
         self.alarms.len()
     }
+    /// Returns `true` when the response contains no station alarms.
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.alarms.is_empty()
     }
+    /// Returns an iterator over station alarms in response order.
     pub fn iter(&self) -> impl Iterator<Item = &RadarStationAlarm> {
         self.alarms.iter()
     }
@@ -780,19 +985,23 @@ impl RadarStationAlarmsResponse {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[non_exhaustive]
 pub struct RadarSpgdsResponse {
+    /// The SPGDS host reports returned by NOAA.
     #[serde(rename = "@graph", default)]
     pub spgds: Vec<RadarSpgdsEntry>,
 }
 
 impl RadarSpgdsResponse {
+    /// Returns the number of SPGDS host reports in the response.
     #[must_use]
     pub fn len(&self) -> usize {
         self.spgds.len()
     }
+    /// Returns `true` when the response contains no SPGDS host reports.
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.spgds.is_empty()
     }
+    /// Returns an iterator over SPGDS host reports in response order.
     pub fn iter(&self) -> impl Iterator<Item = &RadarSpgdsEntry> {
         self.spgds.iter()
     }
@@ -804,19 +1013,30 @@ impl RadarSpgdsResponse {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarSpgdsEntry {
+    /// The JSON-LD resource type from the `@type` property.
     #[serde(rename = "@type")]
     pub at_type: String,
+    /// The SPGDS host identifier.
     pub id: String,
+    /// The time associated with the host report.
     pub timestamp: OffsetDateTime,
+    /// The radar product data-flow state and its source timestamps.
     pub dataflow: RadarSpgdsStatus,
+    /// The connection-queue state and its source timestamps.
     pub connect_q: RadarSpgdsStatus,
+    /// The SPGDS application state and its source timestamps.
     pub app_running: RadarSpgdsStatus,
+    /// The Local Data Manager connection count and validation time.
     pub ldm: RadarSpgdsLdmStatus,
+    /// The secondary disk's state and utilization.
     #[serde(rename = "secondHD")]
     pub second_hd: RadarSpgdsDiskStatus,
+    /// The SPGDS host's startup time and validation time.
     #[serde(rename = "spgdsUpSince")]
     pub uptime: RadarSpgdsUptime,
+    /// The host's inbound and outbound throughput telemetry.
     pub throughput: RadarSpgdsThroughput,
+    /// Gateway telemetry keyed by gateway identifier.
     #[serde(default)]
     pub spg: BTreeMap<String, RadarSpgdsGatewayStatus>,
 }
@@ -827,8 +1047,11 @@ pub struct RadarSpgdsEntry {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarSpgdsStatus {
+    /// The state value reported by the SPGDS host.
     pub state: String,
+    /// The source-provided epoch-second time at which the state began.
     pub state_since: String,
+    /// The source-provided epoch-second time at which the state was validated.
     pub state_valid: String,
 }
 
@@ -838,7 +1061,9 @@ pub struct RadarSpgdsStatus {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarSpgdsLdmStatus {
+    /// The Local Data Manager connection count as source text.
     pub conns: String,
+    /// The source-provided epoch-second time at which the count was validated.
     pub conns_valid: String,
 }
 
@@ -848,11 +1073,16 @@ pub struct RadarSpgdsLdmStatus {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarSpgdsDiskStatus {
+    /// The secondary disk state reported by the SPGDS host.
     pub state: String,
+    /// The source-provided epoch-second time at which the disk state began.
     pub state_since: String,
+    /// The source-provided epoch-second time at which the disk state was validated.
     pub state_valid: String,
+    /// The secondary disk utilization percentage as source text.
     #[serde(rename = "pctUsed")]
     pub percent_used: String,
+    /// The source-provided epoch-second time at which utilization was validated.
     #[serde(rename = "pctUsedValid")]
     pub percent_used_valid: String,
 }
@@ -863,7 +1093,9 @@ pub struct RadarSpgdsDiskStatus {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarSpgdsUptime {
+    /// The source-provided epoch-second time at which the host started.
     pub up_since: String,
+    /// The source-provided epoch-second time at which the startup time was validated.
     pub up_since_valid: String,
 }
 
@@ -872,16 +1104,22 @@ pub struct RadarSpgdsUptime {
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[non_exhaustive]
 pub struct RadarSpgdsThroughput {
+    /// The inbound throughput value as source text.
     #[serde(rename = "in")]
     pub inbound: String,
+    /// The source-provided epoch-second time associated with inbound throughput.
     #[serde(rename = "inDateTime")]
     pub inbound_date_time: String,
+    /// The source-provided epoch-second time at which inbound throughput was validated.
     #[serde(rename = "inValid")]
     pub inbound_valid: String,
+    /// The outbound throughput value as source text.
     #[serde(rename = "out")]
     pub outbound: String,
+    /// The source-provided epoch-second time associated with outbound throughput.
     #[serde(rename = "outDateTime")]
     pub outbound_date_time: String,
+    /// The source-provided epoch-second time at which outbound throughput was validated.
     #[serde(rename = "outValid")]
     pub outbound_valid: String,
 }
@@ -892,11 +1130,17 @@ pub struct RadarSpgdsThroughput {
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct RadarSpgdsGatewayStatus {
+    /// The gateway's SWIM data state.
     pub swim_data_state: String,
+    /// The source-provided epoch-second time at which the SWIM data state began.
     pub swim_data_state_since: String,
+    /// The source-provided epoch-second time at which the SWIM data state was validated.
     pub swim_data_state_valid: String,
+    /// The gateway's Local Data Manager ping state.
     pub ldm_ping_state: String,
+    /// The source-provided epoch-second time at which the ping state began.
     pub ldm_ping_state_since: String,
+    /// The source-provided epoch-second time at which the ping state was validated.
     pub ldm_ping_state_valid: String,
 }
 

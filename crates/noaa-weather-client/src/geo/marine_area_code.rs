@@ -20,34 +20,49 @@ use serde::{Deserialize, Serialize};
 /// * SL: St. Lawrence River above St. Regis
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum MarineAreaCode {
+    /// Covers western Atlantic waters south of Currituck Beach Light and the Caribbean (`AM`).
     #[serde(rename = "AM")]
     Am,
+    /// Covers Atlantic waters from the Canadian border to Currituck Beach Light (`AN`).
     #[serde(rename = "AN")]
     An,
+    /// Covers the Gulf of Mexico and the United States Gulf Coast (`GM`).
     #[serde(rename = "GM")]
     Gm,
+    /// Covers Lake St. Clair (`LC`).
     #[serde(rename = "LC")]
     Lc,
+    /// Covers Lake Erie (`LE`).
     #[serde(rename = "LE")]
     Le,
+    /// Covers Lake Huron (`LH`).
     #[serde(rename = "LH")]
     Lh,
+    /// Covers Lake Michigan (`LM`).
     #[serde(rename = "LM")]
     Lm,
+    /// Covers Lake Ontario (`LO`).
     #[serde(rename = "LO")]
     Lo,
+    /// Covers Lake Superior (`LS`).
     #[serde(rename = "LS")]
     Ls,
+    /// Covers the central Pacific Ocean, including Hawaiian waters (`PH`).
     #[serde(rename = "PH")]
     Ph,
+    /// Covers North Pacific waters near Alaska, the Bering Sea, and the Gulf of Alaska (`PK`).
     #[serde(rename = "PK")]
     Pk,
+    /// Covers the western Pacific Ocean, including Mariana Islands waters (`PM`).
     #[serde(rename = "PM")]
     Pm,
+    /// Covers the south-central Pacific Ocean, including American Samoa waters (`PS`).
     #[serde(rename = "PS")]
     Ps,
+    /// Covers the eastern North Pacific along the United States West Coast (`PZ`).
     #[serde(rename = "PZ")]
     Pz,
+    /// Covers the St. Lawrence River above St. Regis (`SL`).
     #[serde(rename = "SL")]
     Sl,
 }

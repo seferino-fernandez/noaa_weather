@@ -3,6 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Identifies a unit from the WMO common-unit code list.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum WmoUnitCode {
     /// Original label: "minute (angle)", Code: "111", Notation: ""

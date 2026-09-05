@@ -2,54 +2,76 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-/// Three-letter identifier for a Center Weather Service Unit (CWSU).
+/// Identifies a Center Weather Service Unit accepted by NOAA aviation endpoints.
 #[derive(
     Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
 )]
 pub enum NwsCenterWeatherServiceUnitId {
+    /// The `ZAB` identifier for the Albuquerque CWSU in Albuquerque, New Mexico.
     #[serde(rename = "ZAB")]
     #[default]
     Zab,
+    /// The `ZAN` identifier for the Anchorage CWSU in Anchorage, Alaska.
     #[serde(rename = "ZAN")]
     Zan,
+    /// The `ZAU` identifier for the Chicago CWSU in Aurora, Illinois.
     #[serde(rename = "ZAU")]
     Zau,
+    /// The `ZBW` identifier for the Boston CWSU.
     #[serde(rename = "ZBW")]
     Zbw,
+    /// The `ZDC` identifier for the Washington CWSU in Leesburg, Virginia.
     #[serde(rename = "ZDC")]
     Zdc,
+    /// The `ZDV` identifier for the Denver CWSU in Longmont, Colorado.
     #[serde(rename = "ZDV")]
     Zdv,
+    /// The `ZFA` identifier for the FAA Academy in Oklahoma City, Oklahoma.
     #[serde(rename = "ZFA")]
     Zfa,
+    /// The `ZFW` identifier for the Fort Worth CWSU in Fort Worth, Texas.
     #[serde(rename = "ZFW")]
     Zfw,
+    /// The `ZHU` identifier for the Houston CWSU in Houston, Texas.
     #[serde(rename = "ZHU")]
     Zhu,
+    /// The `ZID` identifier for the Indianapolis CWSU in Indianapolis, Indiana.
     #[serde(rename = "ZID")]
     Zid,
+    /// The `ZJX` identifier for the Jacksonville CWSU in Hilliard, Florida.
     #[serde(rename = "ZJX")]
     Zjx,
+    /// The `ZKC` identifier for the Kansas City CWSU in Olathe, Kansas.
     #[serde(rename = "ZKC")]
     Zkc,
+    /// The `ZLA` identifier for the Los Angeles CWSU in Palmdale, California.
     #[serde(rename = "ZLA")]
     Zla,
+    /// The `ZLC` identifier for the Salt Lake City CWSU in Salt Lake City, Utah.
     #[serde(rename = "ZLC")]
     Zlc,
+    /// The `ZMA` identifier for the Miami CWSU in Miami, Florida.
     #[serde(rename = "ZMA")]
     Zma,
+    /// The `ZME` identifier for the Memphis CWSU in Memphis, Tennessee.
     #[serde(rename = "ZME")]
     Zme,
+    /// The `ZMP` identifier for the Minneapolis CWSU in Farmington, Minnesota.
     #[serde(rename = "ZMP")]
     Zmp,
+    /// The `ZNY` identifier for the New York CWSU.
     #[serde(rename = "ZNY")]
     Zny,
+    /// The `ZOA` identifier for the Oakland CWSU in Fremont, California.
     #[serde(rename = "ZOA")]
     Zoa,
+    /// The `ZOB` identifier for the Cleveland CWSU in Oberlin, Ohio.
     #[serde(rename = "ZOB")]
     Zob,
+    /// The `ZSE` identifier for the Seattle CWSU in Auburn, Washington.
     #[serde(rename = "ZSE")]
     Zse,
+    /// The `ZTL` identifier for the Atlanta CWSU in Hampton, Georgia.
     #[serde(rename = "ZTL")]
     Ztl,
 }
