@@ -16,6 +16,17 @@ pub struct Glossary<'a> {
 
 impl Client {
     /// Returns the handle for the `/glossary` endpoint.
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::Client;
+    ///
+    /// # fn main() -> Result<(), noaa_weather_client::BuildError> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build()?;
+    /// let glossary = client.glossary();
+    /// # let _ = glossary;
+    /// # Ok(())
+    /// # }
+    /// ```
     #[must_use]
     pub fn glossary(&self) -> Glossary<'_> {
         Glossary { client: self }

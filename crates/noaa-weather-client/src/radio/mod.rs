@@ -59,6 +59,17 @@ pub struct Radio<'a> {
 
 impl Client {
     /// Returns the handle for the NOAA Weather Radio endpoints.
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::Client;
+    ///
+    /// # fn main() -> Result<(), noaa_weather_client::BuildError> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build()?;
+    /// let radio = client.radio();
+    /// # let _ = radio;
+    /// # Ok(())
+    /// # }
+    /// ```
     #[must_use]
     pub fn radio(&self) -> Radio<'_> {
         Radio { client: self }

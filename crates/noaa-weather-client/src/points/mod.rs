@@ -40,6 +40,17 @@ pub struct Points<'a> {
 
 impl Client {
     /// Returns the handle for the `/points` endpoints.
+    ///
+    /// ```no_run
+    /// use noaa_weather_client::Client;
+    ///
+    /// # fn main() -> Result<(), noaa_weather_client::BuildError> {
+    /// let client = Client::builder("app/1.0 (contact@example.com)").build()?;
+    /// let points = client.points();
+    /// # let _ = points;
+    /// # Ok(())
+    /// # }
+    /// ```
     #[must_use]
     pub fn points(&self) -> Points<'_> {
         Points { client: self }
