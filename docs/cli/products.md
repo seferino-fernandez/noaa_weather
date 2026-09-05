@@ -57,3 +57,35 @@ noaa-weather products locations
 ```bash
 noaa-weather products latest --type-id <TYPE_ID> --location-id <LOCATION_ID>
 ```
+
+<!-- BEGIN GENERATED SHOWN/OMITTED -->
+
+## Human-summary property coverage
+
+The table is generated from the summary contracts. `Shown` properties appear in keyed human-summary content; `Otherwise accounted for` properties are deliberately handled without a keyed table or fact.
+
+| Response | Property | Treatment | Reason |
+| :--- | :--- | :--- | :--- |
+| Product location list | `locations` | Shown | — |
+| Product type list | `@graph` | Shown | — |
+| Product type list | `productCode` | Shown | — |
+| Product type list | `productName` | Shown | — |
+| Text product | `@id` | Otherwise accounted for | the server-issued product identifier is shown |
+| Text product | `id` | Shown | — |
+| Text product | `issuanceTime` | Shown | — |
+| Text product | `issuingOffice` | Shown | — |
+| Text product | `productCode` | Shown | — |
+| Text product | `productName` | Shown | — |
+| Text product | `productText` | Shown | — |
+| Text product | `wmoCollectiveId` | Shown | — |
+| Text product list | `@graph` | Otherwise accounted for | each product is one table row |
+| Text product list | `@id` | Otherwise accounted for | the server-issued product identifier is shown |
+| Text product list | `id` | Shown | — |
+| Text product list | `issuanceTime` | Shown | — |
+| Text product list | `issuingOffice` | Shown | — |
+| Text product list | `productCode` | Shown | — |
+| Text product list | `productName` | Otherwise accounted for | the product code is compact; names are available from the product-types command |
+| Text product list | `productText` | Otherwise accounted for | catalog endpoints omit the full product text |
+| Text product list | `wmoCollectiveId` | Otherwise accounted for | the product code, office, and issuance time identify catalog rows |
+
+<!-- END GENERATED SHOWN/OMITTED -->
