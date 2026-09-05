@@ -43,6 +43,23 @@ pub enum QuantityKind {
 }
 
 impl QuantityKind {
+    /// The presentation kind a wire unit ordinarily represents.
+    ///
+    /// Metres default to height: a gridpoint key supplies the exceptional
+    /// visibility context, because a unit alone cannot distinguish the two.
+    pub(crate) fn of_unit(unit: &Unit) -> Self {
+        match symbol(unit.code()) {
+            "degC" | "Cel" | "degF" | "K" => Self::Temperature,
+            "m_s-1" | "km_h-1" | "mi_h-1" | "kt" | "nmi_h-1" => Self::Speed,
+            "mm" | "cm" | "in" => Self::Depth,
+            "m" | "km" | "ft" | "mi" | "nmi" => Self::Height,
+            "Pa" | "hPa" | "kPa" | "mbar" | "mb" | "inHg" => Self::Pressure,
+            "percent" => Self::Percent,
+            "degree_(angle)" => Self::Angle,
+            _ => Self::Index,
+        }
+    }
+
     /// The wire unit code this kind is shown in under `system`, or `None` for
     /// the kinds that have nothing to convert to.
     const fn target(self, system: UnitSystem) -> Option<&'static str> {
@@ -286,6 +303,71 @@ mod tests {
         for (kind, quantity, us, si) in cases {
             assert_eq!(shown(&quantity, kind, UnitSystem::Us), us, "{kind:?} US");
             assert_eq!(shown(&quantity, kind, UnitSystem::Si), si, "{kind:?} SI");
+        }
+    }
+
+    #[test]
+    fn unit_symbols_pick_their_presentation_kind() {
+        let cases = [
+            ("degC", QuantityKind::Temperature),
+            ("Cel", QuantityKind::Temperature),
+            ("degF", QuantityKind::Temperature),
+            ("K", QuantityKind::Temperature),
+            ("m_s-1", QuantityKind::Speed),
+            ("km_h-1", QuantityKind::Speed),
+            ("mi_h-1", QuantityKind::Speed),
+            ("kt", QuantityKind::Speed),
+            ("nmi_h-1", QuantityKind::Speed),
+            ("mm", QuantityKind::Depth),
+            ("cm", QuantityKind::Depth),
+            ("in", QuantityKind::Depth),
+            ("m", QuantityKind::Height),
+            ("km", QuantityKind::Height),
+            ("ft", QuantityKind::Height),
+            ("mi", QuantityKind::Height),
+            ("nmi", QuantityKind::Height),
+            ("Pa", QuantityKind::Pressure),
+            ("hPa", QuantityKind::Pressure),
+            ("kPa", QuantityKind::Pressure),
+            ("mbar", QuantityKind::Pressure),
+            ("mb", QuantityKind::Pressure),
+            ("inHg", QuantityKind::Pressure),
+            ("percent", QuantityKind::Percent),
+            ("degree_(angle)", QuantityKind::Angle),
+            ("unknown", QuantityKind::Index),
+        ];
+        for (symbol, expected) in cases {
+            let unit = Unit::from(symbol);
+            assert_eq!(QuantityKind::of_unit(&unit), expected, "{symbol}");
+        }
+    }
+
+    #[test]
+    fn every_non_unitless_target_has_a_non_index_unit_policy() {
+        for kind in [
+            QuantityKind::Temperature,
+            QuantityKind::Speed,
+            QuantityKind::Height,
+            QuantityKind::Distance,
+            QuantityKind::Depth,
+            QuantityKind::Pressure,
+        ] {
+            for system in [UnitSystem::Us, UnitSystem::Si] {
+                let target = Unit::from(kind.target(system).expect("non-unitless kind"));
+                let expected = if kind == QuantityKind::Distance {
+                    // The unit policy has no gridpoint key, so distance targets
+                    // conventionally metres as heights until that context arrives.
+                    QuantityKind::Height
+                } else {
+                    kind
+                };
+                assert_eq!(
+                    QuantityKind::of_unit(&target),
+                    expected,
+                    "{kind:?} {system:?}"
+                );
+                assert_ne!(QuantityKind::of_unit(&target), QuantityKind::Index);
+            }
         }
     }
 

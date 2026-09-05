@@ -260,16 +260,7 @@ fn layer_kind(key: &str, unit: Option<&Unit>) -> QuantityKind {
     let Some(unit) = unit else {
         return QuantityKind::Index;
     };
-    match crate::units::symbol(unit.code()) {
-        "degC" | "Cel" | "degF" | "K" => QuantityKind::Temperature,
-        "m_s-1" | "km_h-1" | "mi_h-1" | "kt" | "nmi_h-1" => QuantityKind::Speed,
-        "mm" | "cm" | "in" => QuantityKind::Depth,
-        "m" | "km" | "ft" | "mi" | "nmi" => QuantityKind::Height,
-        "Pa" | "hPa" | "kPa" | "mbar" | "mb" | "inHg" => QuantityKind::Pressure,
-        "percent" => QuantityKind::Percent,
-        "degree_(angle)" => QuantityKind::Angle,
-        _ => QuantityKind::Index,
-    }
+    QuantityKind::of_unit(unit)
 }
 
 /// An interval as a value, with its end resolved.
@@ -785,35 +776,21 @@ mod tests {
     }
 
     #[test]
-    fn a_layer_kind_comes_from_its_unit_with_two_named_exceptions() {
-        let cases = [
-            (
-                "temperature",
-                Some("wmoUnit:degC"),
-                QuantityKind::Temperature,
-            ),
-            ("windSpeed", Some("wmoUnit:km_h-1"), QuantityKind::Speed),
-            ("snowfallAmount", Some("wmoUnit:mm"), QuantityKind::Depth),
-            ("pressure", Some("wmoUnit:Pa"), QuantityKind::Pressure),
-            ("skyCover", Some("wmoUnit:percent"), QuantityKind::Percent),
-            (
-                "windDirection",
-                Some("wmoUnit:degree_(angle)"),
-                QuantityKind::Angle,
-            ),
-            ("heatRisk", None, QuantityKind::Index),
-            // Everything on the ambiguous metre is a height...
-            ("ceilingHeight", Some("wmoUnit:m"), QuantityKind::Height),
-            ("mixingHeight", Some("wmoUnit:m"), QuantityKind::Height),
-            ("waveHeight", Some("wmoUnit:m"), QuantityKind::Height),
-            // ...except the two layers named for it.
-            ("visibility", Some("wmoUnit:m"), QuantityKind::Distance),
-            ("probabilityOfThunder", None, QuantityKind::Percent),
-        ];
-        for (key, code, expected) in cases {
-            let unit = code.map(Unit::from);
-            assert_eq!(layer_kind(key, unit.as_ref()), expected, "{key}");
-        }
+    fn a_layer_kind_delegates_to_unit_policy_except_for_context() {
+        let metre = Unit::from("wmoUnit:m");
+        assert_eq!(
+            layer_kind("ceilingHeight", Some(&metre)),
+            QuantityKind::Height
+        );
+        assert_eq!(layer_kind("heatRisk", None), QuantityKind::Index);
+        assert_eq!(
+            layer_kind("visibility", Some(&metre)),
+            QuantityKind::Distance
+        );
+        assert_eq!(
+            layer_kind("probabilityOfThunder", None),
+            QuantityKind::Percent
+        );
     }
 
     /// The exceptions are named layers, not named units: whatever unit NOAA
