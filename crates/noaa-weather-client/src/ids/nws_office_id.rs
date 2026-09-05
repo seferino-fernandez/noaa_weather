@@ -6,8 +6,11 @@ use std::{fmt, str::FromStr};
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum NwsOfficeId {
+    /// A Weather Forecast Office or forecast grid domain identifier.
     NwsForecastOfficeId(NwsForecastOfficeId),
+    /// An NWS regional headquarters identifier.
     NwsRegionalHqid(NwsRegionalHqid),
+    /// The NWS national headquarters identifier.
     NwsNationalHqid(NwsNationalHqid),
 }
 

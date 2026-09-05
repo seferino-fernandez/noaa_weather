@@ -1,22 +1,27 @@
 use serde::{Deserialize, Serialize};
 
-/// NwsRegionalHqid : Three-letter identifier for a NWS Regional HQ.
-/// Three-letter identifier for a NWS Regional HQ.
+/// Identifies an NWS regional headquarters office.
 #[derive(
     Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
 )]
 pub enum NwsRegionalHqid {
+    /// The `ARH` identifier for Alaska Region Headquarters in Anchorage, Alaska.
     #[serde(rename = "ARH")]
     #[default]
     Arh,
+    /// The `CRH` identifier for Central Region Headquarters in Kansas City, Missouri.
     #[serde(rename = "CRH")]
     Crh,
+    /// The `ERH` identifier for Eastern Region Headquarters in Bohemia, New York.
     #[serde(rename = "ERH")]
     Erh,
+    /// The `PRH` identifier for Pacific Region Headquarters in Honolulu, Hawaii.
     #[serde(rename = "PRH")]
     Prh,
+    /// The `SRH` identifier for Southern Region Headquarters in Fort Worth, Texas.
     #[serde(rename = "SRH")]
     Srh,
+    /// The `WRH` identifier for Western Region Headquarters in Salt Lake City, Utah.
     #[serde(rename = "WRH")]
     Wrh,
 }

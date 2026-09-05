@@ -4,10 +4,13 @@ use std::str::FromStr;
 use crate::geo::{LandRegionCode, MarineRegionCode};
 use serde::{Deserialize, Serialize};
 
+/// Identifies either an NWS land region or a grouped marine region.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RegionCode {
+    /// Contains a [`LandRegionCode`] for one of the six NWS regions.
     Land(LandRegionCode),
+    /// Contains a [`MarineRegionCode`] grouping related marine forecast areas.
     Marine(MarineRegionCode),
 }
 

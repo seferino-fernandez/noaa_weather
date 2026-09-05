@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-/// NwsNationalHqid : Three-letter identifier for NWS National HQ.
-/// Three-letter identifier for NWS National HQ.
+/// Identifies the NWS national headquarters office.
 #[derive(
     Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize, Default,
 )]
 pub enum NwsNationalHqid {
+    /// The `NWS` identifier for National Weather Service headquarters.
     #[serde(rename = "NWS")]
     #[default]
     Nws,

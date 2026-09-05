@@ -1,17 +1,23 @@
-//! Units with the namespace "nwsUnit" are currently custom and do not align to any standard.
+//! Units in NOAA's custom `nwsUnit` namespace.
 
 use serde::{Deserialize, Serialize};
 
+/// Identifies a unit in NOAA's custom `nwsUnit` namespace.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum NwsUnitCode {
+    /// Measures a duration in seconds (`nwsUnit:s`).
     #[serde(rename = "nwsUnit:s")]
     Second,
+    /// Measures a duration in nanoseconds (`nwsUnit:ns`).
     #[serde(rename = "nwsUnit:ns")]
     Nanosecond,
+    /// Measures a frequency in megahertz (`nwsUnit:MHz`).
     #[serde(rename = "nwsUnit:MHz")]
     Megahertz,
+    /// Measures radar reflectivity in decibels relative to Z (`nwsUnit:dBZ`).
     #[serde(rename = "nwsUnit:dBZ")]
     DecibelZ,
+    /// Measures a logarithmic ratio in decibels (`nwsUnit:dB`).
     #[serde(rename = "nwsUnit:dB")]
     Decibel,
 }

@@ -3,275 +3,407 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-/// NwsForecastOfficeId : Three-letter identifier for a NWS office.
-/// Three-letter identifier for a NWS office.
+/// Identifies a forecast office or forecast grid domain accepted by NOAA.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema), schemars(inline))]
 pub enum NwsForecastOfficeId {
+    /// The `AKQ` identifier for the Wakefield, Virginia forecast office.
     #[serde(rename = "AKQ")]
     Akq,
+    /// The `ALY` identifier for the Albany, New York forecast office.
     #[serde(rename = "ALY")]
     Aly,
+    /// The `BGM` identifier for the Binghamton, New York forecast office.
     #[serde(rename = "BGM")]
     Bgm,
+    /// The `BOX` identifier for the Boston/Norton, Massachusetts forecast office.
     #[serde(rename = "BOX")]
     Box,
+    /// The `BTV` identifier for the Burlington, Vermont forecast office.
     #[serde(rename = "BTV")]
     Btv,
+    /// The `BUF` identifier for the Buffalo, New York forecast office.
     #[serde(rename = "BUF")]
     Buf,
+    /// The `CAE` identifier for the Columbia, South Carolina forecast office.
     #[serde(rename = "CAE")]
     Cae,
+    /// The `CAR` identifier for the Caribou, Maine forecast office.
     #[serde(rename = "CAR")]
     Car,
+    /// The `CHS` identifier for the Charleston, South Carolina forecast office.
     #[serde(rename = "CHS")]
     Chs,
+    /// The `CLE` identifier for the Cleveland, Ohio forecast office.
     #[serde(rename = "CLE")]
     Cle,
+    /// The `CTP` identifier for the State College, Pennsylvania forecast office.
     #[serde(rename = "CTP")]
     Ctp,
+    /// The `GSP` identifier for the Greenville-Spartanburg, South Carolina forecast office.
     #[serde(rename = "GSP")]
     Gsp,
+    /// The `GYX` identifier for the Gray/Portland, Maine forecast office.
     #[serde(rename = "GYX")]
     Gyx,
+    /// The `ILM` identifier for the Wilmington, North Carolina forecast office.
     #[serde(rename = "ILM")]
     Ilm,
+    /// The `ILN` identifier for the Wilmington, Ohio forecast office.
     #[serde(rename = "ILN")]
     Iln,
+    /// The `LWX` identifier for the Baltimore/Washington forecast office.
     #[serde(rename = "LWX")]
     Lwx,
+    /// The `MHX` identifier for the Newport/Morehead City, North Carolina forecast office.
     #[serde(rename = "MHX")]
     Mhx,
+    /// The `OKX` identifier for the New York, New York forecast office.
     #[serde(rename = "OKX")]
     Okx,
+    /// The `PBZ` identifier for the Pittsburgh, Pennsylvania forecast office.
     #[serde(rename = "PBZ")]
     Pbz,
+    /// The `PHI` identifier for the Philadelphia/Mount Holly forecast office.
     #[serde(rename = "PHI")]
     Phi,
+    /// The `RAH` identifier for the Raleigh, North Carolina forecast office.
     #[serde(rename = "RAH")]
     Rah,
+    /// The `RLX` identifier for the Charleston, West Virginia forecast office.
     #[serde(rename = "RLX")]
     Rlx,
+    /// The `RNK` identifier for the Blacksburg, Virginia forecast office.
     #[serde(rename = "RNK")]
     Rnk,
+    /// The `ABQ` identifier for the Albuquerque, New Mexico forecast office.
     #[serde(rename = "ABQ")]
     Abq,
+    /// The `AMA` identifier for the Amarillo, Texas forecast office.
     #[serde(rename = "AMA")]
     Ama,
+    /// The `BMX` identifier for the Birmingham, Alabama forecast office.
     #[serde(rename = "BMX")]
     Bmx,
+    /// The `BRO` identifier for the Brownsville/Rio Grande Valley, Texas forecast office.
     #[serde(rename = "BRO")]
     Bro,
+    /// The `CRP` identifier for the Corpus Christi, Texas forecast office.
     #[serde(rename = "CRP")]
     Crp,
+    /// The `EPZ` identifier for the El Paso, Texas forecast office.
     #[serde(rename = "EPZ")]
     Epz,
+    /// The `EWX` identifier for the Austin/San Antonio, Texas forecast office.
     #[serde(rename = "EWX")]
     Ewx,
+    /// The `FFC` identifier for the Atlanta/Peachtree City, Georgia forecast office.
     #[serde(rename = "FFC")]
     Ffc,
+    /// The `FWD` identifier for the Fort Worth/Dallas, Texas forecast office.
     #[serde(rename = "FWD")]
     Fwd,
+    /// The `HGX` identifier for the Houston/Galveston, Texas forecast office.
     #[serde(rename = "HGX")]
     Hgx,
+    /// The `HUN` identifier for the Huntsville, Alabama forecast office.
     #[serde(rename = "HUN")]
     Hun,
+    /// The `JAN` identifier for the Jackson, Mississippi forecast office.
     #[serde(rename = "JAN")]
     Jan,
+    /// The `JAX` identifier for the Jacksonville, Florida forecast office.
     #[serde(rename = "JAX")]
     Jax,
+    /// The `KEY` identifier for the Key West, Florida forecast office.
     #[serde(rename = "KEY")]
     Key,
+    /// The `LCH` identifier for the Lake Charles, Louisiana forecast office.
     #[serde(rename = "LCH")]
     Lch,
+    /// The `LIX` identifier for the New Orleans/Baton Rouge forecast office.
     #[serde(rename = "LIX")]
     Lix,
+    /// The `LUB` identifier for the Lubbock, Texas forecast office.
     #[serde(rename = "LUB")]
     Lub,
+    /// The `LZK` identifier for the Little Rock, Arkansas forecast office.
     #[serde(rename = "LZK")]
     Lzk,
+    /// The `MAF` identifier for the Midland/Odessa forecast office.
     #[serde(rename = "MAF")]
     Maf,
+    /// The `MEG` identifier for the Memphis, Tennessee forecast office.
     #[serde(rename = "MEG")]
     Meg,
+    /// The `MFL` identifier for the Miami/South Florida forecast office.
     #[serde(rename = "MFL")]
     Mfl,
+    /// The `MLB` identifier for the Melbourne, Florida forecast office.
     #[serde(rename = "MLB")]
     Mlb,
+    /// The `MOB` identifier for the Mobile/Pensacola forecast office.
     #[serde(rename = "MOB")]
     Mob,
+    /// The `MRX` identifier for the Morristown, Tennessee forecast office.
     #[serde(rename = "MRX")]
     Mrx,
+    /// The `OHX` identifier for the Nashville, Tennessee forecast office.
     #[serde(rename = "OHX")]
     Ohx,
+    /// The `OUN` identifier for the Norman, Oklahoma forecast office.
     #[serde(rename = "OUN")]
     Oun,
+    /// The `SHV` identifier for the Shreveport, Louisiana forecast office.
     #[serde(rename = "SHV")]
     Shv,
+    /// The `SJT` identifier for the San Angelo, Texas forecast office.
     #[serde(rename = "SJT")]
     Sjt,
+    /// The `SJU` identifier for the San Juan, Puerto Rico forecast office.
     #[serde(rename = "SJU")]
     Sju,
+    /// The `TAE` identifier for the Tallahassee, Florida forecast office.
     #[serde(rename = "TAE")]
     Tae,
+    /// The `TBW` identifier for the Tampa Bay Area, Florida forecast office.
     #[serde(rename = "TBW")]
     Tbw,
+    /// The `TSA` identifier for the Tulsa, Oklahoma forecast office.
     #[serde(rename = "TSA")]
     Tsa,
+    /// The `ABR` identifier for the Aberdeen, South Dakota forecast office.
     #[serde(rename = "ABR")]
     Abr,
+    /// The `APX` identifier for the Gaylord, Michigan forecast office.
     #[serde(rename = "APX")]
     Apx,
+    /// The `ARX` identifier for the La Crosse, Wisconsin forecast office.
     #[serde(rename = "ARX")]
     Arx,
+    /// The `BIS` identifier for the Bismarck, North Dakota forecast office.
     #[serde(rename = "BIS")]
     Bis,
+    /// The `BOU` identifier for the Denver/Boulder, Colorado forecast office.
     #[serde(rename = "BOU")]
     Bou,
+    /// The `CYS` identifier for the Cheyenne, Wyoming forecast office.
     #[serde(rename = "CYS")]
     Cys,
+    /// The `DDC` identifier for the Dodge City, Kansas forecast office.
     #[serde(rename = "DDC")]
     Ddc,
+    /// The `DLH` identifier for the Duluth, Minnesota forecast office.
     #[serde(rename = "DLH")]
     Dlh,
+    /// The `DMX` identifier for the Des Moines, Iowa forecast office.
     #[serde(rename = "DMX")]
     Dmx,
+    /// The `DTX` identifier for the Detroit/Pontiac, Michigan forecast office.
     #[serde(rename = "DTX")]
     Dtx,
+    /// The `DVN` identifier for the Quad Cities, Iowa/Illinois forecast office.
     #[serde(rename = "DVN")]
     Dvn,
+    /// The `EAX` identifier for the Kansas City/Pleasant Hill, Missouri forecast office.
     #[serde(rename = "EAX")]
     Eax,
+    /// The `FGF` identifier for the Grand Forks, North Dakota forecast office.
     #[serde(rename = "FGF")]
     Fgf,
+    /// The `FSD` identifier for the Sioux Falls, South Dakota forecast office.
     #[serde(rename = "FSD")]
     Fsd,
+    /// The `GID` identifier for the Hastings, Nebraska forecast office.
     #[serde(rename = "GID")]
     Gid,
+    /// The `GJT` identifier for the Grand Junction, Colorado forecast office.
     #[serde(rename = "GJT")]
     Gjt,
+    /// The `GLD` identifier for the Goodland, Kansas forecast office.
     #[serde(rename = "GLD")]
     Gld,
+    /// The `GRB` identifier for the Green Bay, Wisconsin forecast office.
     #[serde(rename = "GRB")]
     Grb,
+    /// The `GRR` identifier for the Grand Rapids, Michigan forecast office.
     #[serde(rename = "GRR")]
     Grr,
+    /// The `ICT` identifier for the Wichita, Kansas forecast office.
     #[serde(rename = "ICT")]
     Ict,
+    /// The `ILX` identifier for the Central Illinois forecast office.
     #[serde(rename = "ILX")]
     Ilx,
+    /// The `IND` identifier for the Indianapolis, Indiana forecast office.
     #[serde(rename = "IND")]
     Ind,
+    /// The `IWX` identifier for the Northern Indiana forecast office.
     #[serde(rename = "IWX")]
     Iwx,
+    /// The `JKL` identifier for the Jackson, Kentucky forecast office.
     #[serde(rename = "JKL")]
     Jkl,
+    /// The `LBF` identifier for the North Platte, Nebraska forecast office.
     #[serde(rename = "LBF")]
     Lbf,
+    /// The `LMK` identifier for the Louisville, Kentucky forecast office.
     #[serde(rename = "LMK")]
     Lmk,
+    /// The `LOT` identifier for the Chicago, Illinois forecast office.
     #[serde(rename = "LOT")]
     Lot,
+    /// The `LSX` identifier for the St. Louis, Missouri forecast office.
     #[serde(rename = "LSX")]
     Lsx,
+    /// The `MKX` identifier for the Milwaukee/Sullivan, Wisconsin forecast office.
     #[serde(rename = "MKX")]
     Mkx,
+    /// The `MPX` identifier for the Twin Cities, Minnesota forecast office.
     #[serde(rename = "MPX")]
     Mpx,
+    /// The `MQT` identifier for the Marquette, Michigan forecast office.
     #[serde(rename = "MQT")]
     Mqt,
+    /// The `OAX` identifier for the Omaha/Valley, Nebraska forecast office.
     #[serde(rename = "OAX")]
     Oax,
+    /// The `PAH` identifier for the Paducah, Kentucky forecast office.
     #[serde(rename = "PAH")]
     Pah,
+    /// The `PUB` identifier for the Pueblo, Colorado forecast office.
     #[serde(rename = "PUB")]
     Pub,
+    /// The `RIW` identifier for the Western and Central Wyoming forecast office.
     #[serde(rename = "RIW")]
     Riw,
+    /// The `SGF` identifier for the Springfield, Missouri forecast office.
     #[serde(rename = "SGF")]
     Sgf,
+    /// The `TOP` identifier for the Topeka, Kansas forecast office.
     #[serde(rename = "TOP")]
     Top,
+    /// The `UNR` identifier for the Rapid City, South Dakota forecast office.
     #[serde(rename = "UNR")]
     Unr,
+    /// The `BOI` identifier for the Boise, Idaho forecast office.
     #[serde(rename = "BOI")]
     Boi,
+    /// The `BYZ` identifier for the Billings, Montana forecast office.
     #[serde(rename = "BYZ")]
     Byz,
+    /// The `EKA` identifier for the Eureka, California forecast office.
     #[serde(rename = "EKA")]
     Eka,
+    /// The `FGZ` identifier for the Flagstaff, Arizona forecast office.
     #[serde(rename = "FGZ")]
     Fgz,
+    /// The `GGW` identifier for the Glasgow, Montana forecast office.
     #[serde(rename = "GGW")]
     Ggw,
+    /// The `HNX` identifier for the San Joaquin Valley, California forecast office.
     #[serde(rename = "HNX")]
     Hnx,
+    /// The `LKN` identifier for the Elko, Nevada forecast office.
     #[serde(rename = "LKN")]
     Lkn,
+    /// The `LOX` identifier for the Los Angeles, California forecast office.
     #[serde(rename = "LOX")]
     Lox,
+    /// The `MFR` identifier for the Medford, Oregon forecast office.
     #[serde(rename = "MFR")]
     Mfr,
+    /// The `MSO` identifier for the Missoula, Montana forecast office.
     #[serde(rename = "MSO")]
     Mso,
+    /// The `MTR` identifier for the San Francisco Bay Area forecast office.
     #[serde(rename = "MTR")]
     Mtr,
+    /// The `OTX` identifier for the Spokane, Washington forecast office.
     #[serde(rename = "OTX")]
     Otx,
+    /// The `PDT` identifier for the Pendleton, Oregon forecast office.
     #[serde(rename = "PDT")]
     Pdt,
+    /// The `PIH` identifier for the Pocatello, Idaho forecast office.
     #[serde(rename = "PIH")]
     Pih,
+    /// The `PQR` identifier for the Portland, Oregon forecast office.
     #[serde(rename = "PQR")]
     Pqr,
+    /// The `PSR` identifier for the Phoenix, Arizona forecast office.
     #[serde(rename = "PSR")]
     Psr,
+    /// The `REV` identifier for the Reno, Nevada forecast office.
     #[serde(rename = "REV")]
     Rev,
+    /// The `SEW` identifier for the Seattle/Tacoma, Washington forecast office.
     #[serde(rename = "SEW")]
     Sew,
+    /// The `SGX` identifier for the San Diego, California forecast office.
     #[serde(rename = "SGX")]
     Sgx,
+    /// The `SLC` identifier for the Salt Lake City, Utah forecast office.
     #[serde(rename = "SLC")]
     Slc,
+    /// The `STO` identifier for the Sacramento, California forecast office.
     #[serde(rename = "STO")]
     Sto,
+    /// The `TFX` identifier for the Great Falls, Montana forecast office.
     #[serde(rename = "TFX")]
     Tfx,
+    /// The `TWC` identifier for the Tucson, Arizona forecast office.
     #[serde(rename = "TWC")]
     Twc,
+    /// The `VEF` identifier for the Las Vegas, Nevada forecast office.
     #[serde(rename = "VEF")]
     Vef,
+    /// The `AER` identifier for the Anchorage East forecast domain.
     #[serde(rename = "AER")]
     Aer,
+    /// The `AFC` identifier for the Anchorage, Alaska forecast office.
     #[serde(rename = "AFC")]
     Afc,
+    /// The `AFG` identifier for the Fairbanks, Alaska forecast office.
     #[serde(rename = "AFG")]
     Afg,
+    /// The `AJK` identifier for the Juneau, Alaska forecast office.
     #[serde(rename = "AJK")]
     Ajk,
+    /// The `ALU` identifier for the Anchorage West forecast domain.
     #[serde(rename = "ALU")]
     Alu,
+    /// The `GUM` identifier for the Tiyan, Guam forecast office.
     #[serde(rename = "GUM")]
     Gum,
+    /// The `HPA` identifier for the Hawaiian offshore waters forecast domain.
     #[serde(rename = "HPA")]
     Hpa,
+    /// The `HFO` identifier for the Honolulu, Hawaii forecast office.
     #[serde(rename = "HFO")]
     Hfo,
+    /// The `PPG` identifier for the Pago Pago, American Samoa weather office.
     #[serde(rename = "PPG")]
     Ppg,
+    /// The `STU` identifier for the Pago Pago, American Samoa weather office.
     #[serde(rename = "STU")]
     Stu,
+    /// The `NH1` identifier for the National Hurricane Center eastern Pacific domain.
     #[serde(rename = "NH1")]
     Nh1,
+    /// The `NH2` identifier for the National Hurricane Center Atlantic domain.
     #[serde(rename = "NH2")]
     Nh2,
+    /// The `ONA` identifier for the Ocean Prediction Center Atlantic domain.
     #[serde(rename = "ONA")]
     Ona,
+    /// The `ONP` identifier for the Ocean Prediction Center Pacific domain.
     #[serde(rename = "ONP")]
     Onp,
+    /// The `PQE` identifier for eastern Micronesia and the Marshall Islands.
     #[serde(rename = "PQE")]
     Pqe,
+    /// The `PQW` identifier for western Micronesia and Palau.
     #[serde(rename = "PQW")]
     Pqw,
 }

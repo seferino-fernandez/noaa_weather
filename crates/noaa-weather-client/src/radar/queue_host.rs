@@ -2,12 +2,15 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
+/// A Local Data Manager host serving one of NOAA's radar distribution queues.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema), schemars(inline))]
 #[non_exhaustive]
 pub enum RadarQueueHost {
+    /// The queue host represented as `tds` by the API.
     #[serde(rename = "tds")]
     Tds,
+    /// The queue host represented as `rds` by the API.
     #[serde(rename = "rds")]
     Rds,
 }

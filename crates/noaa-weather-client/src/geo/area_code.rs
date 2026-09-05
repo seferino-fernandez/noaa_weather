@@ -4,12 +4,13 @@ use std::str::FromStr;
 use crate::geo::{MarineAreaCode, StateTerritoryCode};
 use serde::{Deserialize, Serialize};
 
-/// AreaCode : State/territory codes and marine area codes
-/// State/territory codes and marine area codes
+/// Identifies either a state or territory, or an NWS marine forecast area.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum AreaCode {
+    /// Contains a [`StateTerritoryCode`] for a state or territory.
     StateTerritoryCode(StateTerritoryCode),
+    /// Contains a [`MarineAreaCode`] for an NWS marine forecast area.
     MarineAreaCode(MarineAreaCode),
 }
 

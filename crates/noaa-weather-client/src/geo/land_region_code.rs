@@ -10,16 +10,22 @@ use std::str::FromStr;
 /// * WR: Western Region
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum LandRegionCode {
+    /// Identifies the NWS Alaska Region (`AR`).
     #[serde(rename = "AR")]
     Ar,
+    /// Identifies the NWS Central Region (`CR`).
     #[serde(rename = "CR")]
     Cr,
+    /// Identifies the NWS Eastern Region (`ER`).
     #[serde(rename = "ER")]
     Er,
+    /// Identifies the NWS Pacific Region (`PR`).
     #[serde(rename = "PR")]
     Pr,
+    /// Identifies the NWS Southern Region (`SR`).
     #[serde(rename = "SR")]
     Sr,
+    /// Identifies the NWS Western Region (`WR`).
     #[serde(rename = "WR")]
     Wr,
 }
