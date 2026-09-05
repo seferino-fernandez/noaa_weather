@@ -92,9 +92,7 @@ async fn default_text_has_one_trailing_newline() {
     let (output, bytes) = memory_output(Format::Default);
 
     output
-        .show("showing example", async {
-            Ok::<_, FetchError>(Example { value: "forecast" })
-        })
+        .show(async { Ok::<_, FetchError>(Example { value: "forecast" }) })
         .await
         .unwrap();
 
@@ -103,15 +101,18 @@ async fn default_text_has_one_trailing_newline() {
 
 #[test]
 fn json_configuration_does_not_construct_a_default_presenter() {
-    let output = Output::configured(OutputArgs {
-        format: Format::Default,
-        json: true,
-        color: ColorMode::Never,
-        width: None,
-        units: Units::Us,
-        time_zone: TimeZoneChoice::Source,
-        output: None,
-    });
+    let output = Output::configured(
+        OutputArgs {
+            format: Format::Default,
+            json: true,
+            color: ColorMode::Never,
+            width: None,
+            units: Units::Us,
+            time_zone: TimeZoneChoice::Source,
+            output: None,
+        },
+        "test operation".into(),
+    );
 
     assert!(output.default_presenter.is_none());
 }
@@ -121,9 +122,7 @@ async fn json_is_pretty_and_has_one_trailing_newline() {
     let (output, bytes) = memory_output(Format::Json);
 
     output
-        .show("showing JSON", async {
-            Ok::<_, FetchError>(Example { value: "forecast" })
-        })
+        .show(async { Ok::<_, FetchError>(Example { value: "forecast" }) })
         .await
         .unwrap();
 
@@ -153,13 +152,10 @@ async fn normalized_taf_meaning_flows_through_the_default_output_seam() {
     let (output, bytes) = memory_output(Format::Default);
 
     output
-        .show(
-            "showing semantic TAF",
-            client.stations().taf(
-                &"KXYZ".parse::<StationId>().unwrap(),
-                "2026-08-30T12:00:00Z".parse().unwrap(),
-            ),
-        )
+        .show(client.stations().taf(
+            &"KXYZ".parse::<StationId>().unwrap(),
+            "2026-08-30T12:00:00Z".parse().unwrap(),
+        ))
         .await
         .unwrap();
 
@@ -206,13 +202,10 @@ async fn normalized_taf_json_flows_through_the_output_seam() {
     let (output, bytes) = memory_output(Format::Json);
 
     output
-        .show(
-            "showing semantic TAF JSON",
-            client.stations().taf(
-                &"KCXL".parse::<StationId>().unwrap(),
-                "2026-08-30T15:00:00Z".parse().unwrap(),
-            ),
-        )
+        .show(client.stations().taf(
+            &"KCXL".parse::<StationId>().unwrap(),
+            "2026-08-30T15:00:00Z".parse().unwrap(),
+        ))
         .await
         .unwrap();
 
@@ -235,9 +228,7 @@ async fn raw_json_ignores_the_default_presentation() {
     let (output, bytes) = memory_output(Format::Default);
 
     output
-        .raw_json("showing raw JSON", async {
-            Ok::<_, FetchError>(serde_json::json!({"raw": true}))
-        })
+        .raw_json(async { Ok::<_, FetchError>(serde_json::json!({"raw": true})) })
         .await
         .unwrap();
 
@@ -250,18 +241,21 @@ async fn raw_json_ignores_the_default_presentation() {
 #[tokio::test]
 async fn binary_policy_is_validated_before_polling() {
     let polled = Cell::new(false);
-    let output = Output::configured(OutputArgs {
-        format: Format::Default,
-        json: false,
-        color: ColorMode::Never,
-        width: None,
-        units: Units::Us,
-        time_zone: TimeZoneChoice::Source,
-        output: None,
-    });
+    let output = Output::configured(
+        OutputArgs {
+            format: Format::Default,
+            json: false,
+            color: ColorMode::Never,
+            width: None,
+            units: Units::Us,
+            time_zone: TimeZoneChoice::Source,
+            output: None,
+        },
+        "test operation".into(),
+    );
 
     let error = output
-        .download("downloading example", async {
+        .download(async {
             polled.set(true);
             Ok::<_, FetchError>(FakeBinary { bytes: vec![1] })
         })
@@ -275,18 +269,21 @@ async fn binary_policy_is_validated_before_polling() {
 #[tokio::test]
 async fn json_rejection_precedes_binary_destination_validation() {
     let polled = Cell::new(false);
-    let output = Output::configured(OutputArgs {
-        format: Format::Default,
-        json: true,
-        color: ColorMode::Never,
-        width: None,
-        units: Units::Us,
-        time_zone: TimeZoneChoice::Source,
-        output: None,
-    });
+    let output = Output::configured(
+        OutputArgs {
+            format: Format::Default,
+            json: true,
+            color: ColorMode::Never,
+            width: None,
+            units: Units::Us,
+            time_zone: TimeZoneChoice::Source,
+            output: None,
+        },
+        "test operation".into(),
+    );
 
     let error = output
-        .download("downloading example", async {
+        .download(async {
             polled.set(true);
             Ok::<_, FetchError>(FakeBinary { bytes: vec![1] })
         })
@@ -302,7 +299,7 @@ async fn binary_bytes_are_not_text_framed() {
     let (output, bytes) = memory_output(Format::Default);
 
     output
-        .download("downloading example", async {
+        .download(async {
             Ok::<_, FetchError>(FakeBinary {
                 bytes: vec![0, 1, 2, 255],
             })
@@ -318,9 +315,7 @@ async fn empty_binary_payload_is_rejected_without_committing() {
     let (output, bytes) = memory_output(Format::Default);
 
     let error = output
-        .download("downloading example", async {
-            Ok::<_, FetchError>(FakeBinary { bytes: vec![] })
-        })
+        .download(async { Ok::<_, FetchError>(FakeBinary { bytes: vec![] }) })
         .await
         .unwrap_err();
 
@@ -333,14 +328,12 @@ async fn operation_context_preserves_the_fetch_source() {
     let (output, _) = memory_output(Format::Default);
 
     let error = output
-        .show("fetching contextual example", async {
-            Err::<Example, _>(FetchError)
-        })
+        .show(async { Err::<Example, _>(FetchError) })
         .await
         .unwrap_err();
     let chain = format!("{error:#}");
 
-    assert!(chain.contains("fetching contextual example"));
+    assert!(chain.contains("test operation"));
     assert!(chain.contains("root fetch failure"));
     assert!(error.chain().any(|cause| cause.is::<FetchError>()));
 }
@@ -356,9 +349,7 @@ async fn broken_pipe_is_success_for_stdout_like_destinations() {
     );
 
     output
-        .show("writing a pipe", async {
-            Ok::<_, FetchError>(Example { value: "forecast" })
-        })
+        .show(async { Ok::<_, FetchError>(Example { value: "forecast" }) })
         .await
         .unwrap();
 }
@@ -374,14 +365,12 @@ async fn other_write_failures_retain_operation_and_sink_context() {
     );
 
     let error = output
-        .show("writing an example", async {
-            Ok::<_, FetchError>(Example { value: "forecast" })
-        })
+        .show(async { Ok::<_, FetchError>(Example { value: "forecast" }) })
         .await
         .unwrap_err();
     let chain = format!("{error:#}");
 
-    assert!(chain.contains("writing an example"));
+    assert!(chain.contains("test operation"));
     assert!(chain.contains("writing output to failing adapter"));
 }
 
@@ -390,20 +379,21 @@ async fn serialization_failure_leaves_existing_file_unchanged() {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("output.json");
     std::fs::write(&path, "existing\n").unwrap();
-    let output = Output::configured(OutputArgs {
-        format: Format::Default,
-        json: true,
-        color: ColorMode::Never,
-        width: None,
-        units: Units::Us,
-        time_zone: TimeZoneChoice::Source,
-        output: Some(path.clone()),
-    });
+    let output = Output::configured(
+        OutputArgs {
+            format: Format::Default,
+            json: true,
+            color: ColorMode::Never,
+            width: None,
+            units: Units::Us,
+            time_zone: TimeZoneChoice::Source,
+            output: Some(path.clone()),
+        },
+        "test operation".into(),
+    );
 
     output
-        .show("serializing example", async {
-            Ok::<_, FetchError>(InvalidJson)
-        })
+        .show(async { Ok::<_, FetchError>(InvalidJson) })
         .await
         .unwrap_err();
 
@@ -415,18 +405,21 @@ async fn missing_parent_is_rejected_before_polling() {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("missing").join("output.txt");
     let polled = Cell::new(false);
-    let output = Output::configured(OutputArgs {
-        format: Format::Default,
-        json: false,
-        color: ColorMode::Never,
-        width: None,
-        units: Units::Us,
-        time_zone: TimeZoneChoice::Source,
-        output: Some(path),
-    });
+    let output = Output::configured(
+        OutputArgs {
+            format: Format::Default,
+            json: false,
+            color: ColorMode::Never,
+            width: None,
+            units: Units::Us,
+            time_zone: TimeZoneChoice::Source,
+            output: Some(path),
+        },
+        "test operation".into(),
+    );
 
     output
-        .show("showing example", async {
+        .show(async {
             polled.set(true);
             Ok::<_, FetchError>(Example { value: "forecast" })
         })
@@ -548,15 +541,18 @@ impl SinkTransaction for FailingTransaction {
 
 #[test]
 fn dash_selects_explicit_stdout_but_binary_still_requires_a_file() {
-    let output = Output::configured(OutputArgs {
-        format: Format::Default,
-        json: false,
-        color: ColorMode::Never,
-        width: None,
-        units: Units::Us,
-        time_zone: TimeZoneChoice::Source,
-        output: Some(Path::new("-").to_path_buf()),
-    });
+    let output = Output::configured(
+        OutputArgs {
+            format: Format::Default,
+            json: false,
+            color: ColorMode::Never,
+            width: None,
+            units: Units::Us,
+            time_zone: TimeZoneChoice::Source,
+            output: Some(Path::new("-").to_path_buf()),
+        },
+        "test operation".into(),
+    );
     let error = output.destination.validate(MediaKind::Binary).unwrap_err();
     assert!(format!("{error:#}").contains("filesystem path"));
 }
@@ -575,18 +571,21 @@ const FORECAST_FIXTURE: &str =
 async fn rendered_with_units<T: DefaultPresentation + 'static>(value: T, units: Units) -> String {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("rendered.txt");
-    let output = Output::configured(OutputArgs {
-        format: Format::Default,
-        json: false,
-        color: ColorMode::Never,
-        width: Some(100),
-        units,
-        time_zone: TimeZoneChoice::Source,
-        output: Some(path.clone()),
-    });
+    let output = Output::configured(
+        OutputArgs {
+            format: Format::Default,
+            json: false,
+            color: ColorMode::Never,
+            width: Some(100),
+            units,
+            time_zone: TimeZoneChoice::Source,
+            output: Some(path.clone()),
+        },
+        "test operation".into(),
+    );
 
     output
-        .show("rendering a fixture", async { Ok::<_, FetchError>(value) })
+        .show(async { Ok::<_, FetchError>(value) })
         .await
         .unwrap();
     std::fs::read_to_string(path).unwrap()

@@ -7,7 +7,7 @@ use noaa_weather_client::apis::zones::{
 use noaa_weather_client::models::{AreaCode, RegionCode};
 use noaa_weather_client::{Client, Coordinates, Cursor, ZoneId};
 
-use super::parse;
+use super::{Run, parse};
 use crate::output::{Output, ZoneObservations};
 
 /// Helper struct for commands requiring both a zone type and ID.
@@ -106,112 +106,82 @@ pub enum ZoneCommands {
     },
 }
 
-/// Handles the execution of zone-related subcommands.
-///
-/// Dispatches the command to the matching `client.zones()` method based on
-/// the provided [`ZoneCommands`] variant and arguments.
-///
-/// # Arguments
-///
-/// * `command` - The specific zone subcommand and its arguments to execute.
-/// * `output` - The configured output policy.
-/// * `client` - The NOAA API client.
-///
-pub async fn handle_command(
-    command: &ZoneCommands,
-    output: &Output,
-    client: &Client,
-) -> Result<()> {
-    let zones = client.zones();
-    match command {
-        ZoneCommands::List {
-            id,
-            area,
-            region,
-            r#type,
-            point,
-            include_geometry,
-            limit,
-            effective,
-        } => {
-            let mut query = ZonesQuery {
-                id: id.clone(),
-                area: area.clone(),
-                region: region.clone(),
-                types: r#type.clone(),
-                point: *point,
-                include_geometry: *include_geometry,
-                limit: *limit,
-                effective: *effective,
-            };
-            output
-                .show("listing NWS zones", async {
-                    // A single type selects the narrower `/zones/{type}` route;
-                    // none or several go through `/zones` with a type filter.
-                    match r#type.as_slice() {
-                        [single] => {
-                            query.types.clear();
-                            zones.list_of_type(*single, &query).await
+impl Run for ZoneCommands {
+    async fn run(&self, client: &Client, output: &Output) -> Result<()> {
+        let zones = client.zones();
+        match self {
+            ZoneCommands::List {
+                id,
+                area,
+                region,
+                r#type,
+                point,
+                include_geometry,
+                limit,
+                effective,
+            } => {
+                let mut query = ZonesQuery {
+                    id: id.clone(),
+                    area: area.clone(),
+                    region: region.clone(),
+                    types: r#type.clone(),
+                    point: *point,
+                    include_geometry: *include_geometry,
+                    limit: *limit,
+                    effective: *effective,
+                };
+                output
+                    .show(async {
+                        // A single type selects the narrower `/zones/{type}` route;
+                        // none or several go through `/zones` with a type filter.
+                        match r#type.as_slice() {
+                            [single] => {
+                                query.types.clear();
+                                zones.list_of_type(*single, &query).await
+                            }
+                            _ => zones.list(&query).await,
                         }
-                        _ => zones.list(&query).await,
-                    }
-                })
-                .await
-        }
-        ZoneCommands::Metadata {
-            zone_args,
-            effective,
-        } => {
-            let query = ZoneQuery {
-                effective: *effective,
-            };
-            output
-                .show(
-                    format!("getting zone {}/{}", zone_args.r#type, zone_args.id),
-                    zones.get(zone_args.r#type, &zone_args.id, &query),
-                )
-                .await
-        }
-        ZoneCommands::Forecast { zone_args } => {
-            output
-                .show(
-                    format!(
-                        "getting forecast for zone {}/{}",
-                        zone_args.r#type, zone_args.id
-                    ),
-                    zones.forecast(zone_args.r#type, &zone_args.id),
-                )
-                .await
-        }
-        ZoneCommands::Stations { id, limit, cursor } => {
-            let query = ZoneStationsQuery {
-                limit: *limit,
-                cursor: cursor.clone(),
-            };
-            output
-                .show(
-                    format!("getting stations for forecast zone {id}"),
-                    zones.stations(id, &query),
-                )
-                .await
-        }
-        ZoneCommands::Observations {
-            id,
-            start,
-            end,
-            limit,
-        } => {
-            let query = ZoneObservationsQuery {
-                start: *start,
-                end: *end,
-                limit: *limit,
-            };
-            output
-                .show(
-                    format!("getting observations for forecast zone {id}"),
-                    async { zones.observations(id, &query).await.map(ZoneObservations) },
-                )
-                .await
+                    })
+                    .await
+            }
+            ZoneCommands::Metadata {
+                zone_args,
+                effective,
+            } => {
+                let query = ZoneQuery {
+                    effective: *effective,
+                };
+                output
+                    .show(zones.get(zone_args.r#type, &zone_args.id, &query))
+                    .await
+            }
+            ZoneCommands::Forecast { zone_args } => {
+                output
+                    .show(zones.forecast(zone_args.r#type, &zone_args.id))
+                    .await
+            }
+            ZoneCommands::Stations { id, limit, cursor } => {
+                let query = ZoneStationsQuery {
+                    limit: *limit,
+                    cursor: cursor.clone(),
+                };
+                output.show(zones.stations(id, &query)).await
+            }
+            ZoneCommands::Observations {
+                id,
+                start,
+                end,
+                limit,
+            } => {
+                let query = ZoneObservationsQuery {
+                    start: *start,
+                    end: *end,
+                    limit: *limit,
+                };
+                output
+                    .show(async { zones.observations(id, &query).await.map(ZoneObservations) })
+                    .await
+            }
         }
     }
 }

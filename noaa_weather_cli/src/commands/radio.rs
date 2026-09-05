@@ -3,6 +3,7 @@ use clap::{Args, Subcommand};
 use noaa_weather_client::apis::radio::TransmittersQuery;
 use noaa_weather_client::{CallSign, Client, Coordinates, Cursor, ZoneId};
 
+use super::Run;
 use crate::output::Output;
 
 /// Arguments for getting the radio broadcast for a geographic point.
@@ -56,66 +57,26 @@ pub enum RadioCommands {
     Station(StationRadioArgs),
 }
 
-/// Handles the execution of radio-related subcommands.
-///
-/// Dispatches the command to the matching `client.radio()` method based on
-/// the provided `RadioCommands` variant and arguments.
-///
-/// # Arguments
-///
-/// * `command` - The specific radio subcommand and its arguments to execute.
-/// * `output` - The configured output policy.
-/// * `client` - The NOAA API client.
-///
-pub async fn handle_command(
-    command: &RadioCommands,
-    output: &Output,
-    client: &Client,
-) -> Result<()> {
-    let radio = client.radio();
-    match command {
-        RadioCommands::Point(args) => {
-            output
-                .show(
-                    format!("getting radio broadcast for point {}", args.point),
-                    radio.for_point(args.point),
-                )
-                .await
-        }
-        RadioCommands::Station(args) => {
-            output
-                .show(
-                    format!("getting radio broadcast for station {}", args.call_sign),
-                    radio.broadcast(&args.call_sign),
-                )
-                .await
-        }
-        RadioCommands::Transmitters(args) => {
-            let query = TransmittersQuery {
-                cursor: args.cursor.clone(),
-            };
-            output
-                .show("listing radio transmitters", radio.transmitters(&query))
-                .await
-        }
-        RadioCommands::Transmitter(args) => {
-            output
-                .show(
-                    format!("getting radio transmitter {}", args.call_sign),
-                    radio.transmitter(&args.call_sign),
-                )
-                .await
-        }
-        RadioCommands::Zone(args) => {
-            output
-                .show(
-                    format!(
-                        "listing radio transmitters for county zone {}",
-                        args.zone_id
-                    ),
-                    radio.transmitters_for_county(&args.zone_id),
-                )
-                .await
+impl Run for RadioCommands {
+    async fn run(&self, client: &Client, output: &Output) -> Result<()> {
+        let radio = client.radio();
+        match self {
+            RadioCommands::Point(args) => output.show(radio.for_point(args.point)).await,
+            RadioCommands::Station(args) => output.show(radio.broadcast(&args.call_sign)).await,
+            RadioCommands::Transmitters(args) => {
+                let query = TransmittersQuery {
+                    cursor: args.cursor.clone(),
+                };
+                output.show(radio.transmitters(&query)).await
+            }
+            RadioCommands::Transmitter(args) => {
+                output.show(radio.transmitter(&args.call_sign)).await
+            }
+            RadioCommands::Zone(args) => {
+                output
+                    .show(radio.transmitters_for_county(&args.zone_id))
+                    .await
+            }
         }
     }
 }

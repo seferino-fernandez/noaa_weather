@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::error::Error as StdError;
 use std::fmt;
 use std::future::Future;
@@ -6,7 +5,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context as _, Result, anyhow, bail};
-use clap::{Args, ValueEnum};
+use clap::{ArgMatches, Args, ValueEnum};
 use noaa_weather_client::apis::BinaryPayload;
 use noaa_weather_summary::{SummaryOptions, UnitSystem};
 use serde::Serialize;
@@ -147,8 +146,22 @@ impl fmt::Display for UsageFailure {
 impl StdError for UsageFailure {}
 
 /// A user-facing description of the NOAA operation being performed.
-#[derive(Clone, Debug)]
-pub(crate) struct Operation(Cow<'static, str>);
+#[derive(Debug)]
+pub(crate) struct Operation(String);
+
+impl Operation {
+    /// Builds the canonical command path selected by clap.
+    pub(crate) fn from_matches(root: &str, matches: &ArgMatches) -> Self {
+        let mut path = root.to_owned();
+        let mut current = matches;
+        while let Some((name, child)) = current.subcommand() {
+            path.push(' ');
+            path.push_str(name);
+            current = child;
+        }
+        Self(path)
+    }
+}
 
 impl fmt::Display for Operation {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -156,15 +169,9 @@ impl fmt::Display for Operation {
     }
 }
 
-impl From<&'static str> for Operation {
-    fn from(value: &'static str) -> Self {
-        Self(Cow::Borrowed(value))
-    }
-}
-
-impl From<String> for Operation {
-    fn from(value: String) -> Self {
-        Self(Cow::Owned(value))
+impl From<&str> for Operation {
+    fn from(value: &str) -> Self {
+        Self(value.to_owned())
     }
 }
 
@@ -237,6 +244,7 @@ enum Format {
 
 /// Executes NOAA operations and owns all successful-output policy.
 pub(crate) struct Output {
+    operation: Operation,
     format: Format,
     destination: Box<dyn DestinationAdapter>,
     default_presenter: Option<DefaultPresenter>,
@@ -244,7 +252,7 @@ pub(crate) struct Output {
 }
 
 impl Output {
-    pub(crate) fn configured(args: OutputArgs) -> Self {
+    pub(crate) fn configured(args: OutputArgs, operation: Operation) -> Self {
         let OutputArgs {
             format,
             json,
@@ -269,6 +277,7 @@ impl Output {
         let default_presenter = (format == Format::Default).then(|| DefaultPresenter::new(summary));
 
         Self {
+            operation,
             format,
             destination,
             default_presenter,
@@ -287,14 +296,12 @@ impl Output {
     /// Runs a typed NOAA operation and selects its default or JSON presentation.
     pub(crate) async fn show<T, E>(
         &self,
-        operation: impl Into<Operation>,
         request: impl Future<Output = std::result::Result<T, E>>,
     ) -> Result<()>
     where
         T: DefaultPresentation,
         E: StdError + Send + Sync + 'static,
     {
-        let operation = operation.into();
         async {
             self.destination
                 .validate(MediaKind::Structured)
@@ -313,19 +320,17 @@ impl Output {
             }
         }
         .await
-        .with_context(|| operation.to_string())
+        .with_context(|| self.operation.to_string())
     }
 
     /// Runs an untyped NOAA operation whose only stable presentation is JSON.
     pub(crate) async fn raw_json<E>(
         &self,
-        operation: impl Into<Operation>,
         request: impl Future<Output = std::result::Result<Value, E>>,
     ) -> Result<()>
     where
         E: StdError + Send + Sync + 'static,
     {
-        let operation = operation.into();
         async {
             self.destination
                 .validate(MediaKind::Structured)
@@ -334,20 +339,18 @@ impl Output {
             self.write_json(&value).map_err(OutputFailure::wrap)
         }
         .await
-        .with_context(|| operation.to_string())
+        .with_context(|| self.operation.to_string())
     }
 
     /// Runs a NOAA binary operation after validating its file-only policy.
     pub(crate) async fn download<T, E>(
         &self,
-        operation: impl Into<Operation>,
         request: impl Future<Output = std::result::Result<T, E>>,
     ) -> Result<()>
     where
         T: BinaryPresentation,
         E: StdError + Send + Sync + 'static,
     {
-        let operation = operation.into();
         async {
             // Argv alone decides this one, so it is a usage error: no
             // request is made and no file is touched, and it would fail
@@ -387,7 +390,7 @@ impl Output {
             .map_err(OutputFailure::wrap)
         }
         .await
-        .with_context(|| operation.to_string())
+        .with_context(|| self.operation.to_string())
     }
 
     fn write_presentation(&self, document: PresentationDocument) -> Result<()> {
@@ -434,6 +437,7 @@ impl Output {
         let default_presenter =
             (format == Format::Default).then(|| DefaultPresenter::new(SummaryOptions::default()));
         Self {
+            operation: Operation::from("test operation"),
             format,
             destination,
             default_presenter,

@@ -7,7 +7,7 @@ use noaa_weather_client::apis::stations::{
 use noaa_weather_client::models::AreaCode;
 use noaa_weather_client::{Client, Cursor, StationId};
 
-use super::parse;
+use super::{Run, parse};
 use crate::output::Output;
 
 /// Access data related to NWS observation stations.
@@ -106,102 +106,62 @@ pub enum StationCommands {
     },
 }
 
-/// Handles the execution of station-related subcommands.
-///
-/// Dispatches the command to the matching `client.stations()` method based
-/// on the provided `StationCommands` variant and arguments.
-///
-/// # Arguments
-///
-/// * `command` - The specific station subcommand and its arguments to execute.
-/// * `output` - The configured output policy.
-/// * `client` - The NOAA API client.
-///
-pub async fn handle_command(
-    command: &StationCommands,
-    output: &Output,
-    client: &Client,
-) -> Result<()> {
-    let stations = client.stations();
-    match command {
-        StationCommands::Metadata { id } => {
-            output
-                .show(format!("getting station {id} metadata"), stations.get(id))
-                .await
-        }
-        StationCommands::List {
-            id,
-            state,
-            limit,
-            cursor,
-        } => {
-            let query = StationsQuery {
-                id: id.clone(),
-                state: state.clone(),
-                limit: *limit,
-                cursor: cursor.clone(),
-            };
-            output
-                .show("listing observation stations", stations.list(&query))
-                .await
-        }
-        StationCommands::LatestObservation {
-            station_id,
-            require_quality_controlled,
-        } => {
-            let query = LatestObservationQuery {
-                require_qc: Some(*require_quality_controlled),
-            };
-            output
-                .show(
-                    format!("getting latest observation for station {station_id}"),
-                    stations.latest_observation(station_id, &query),
-                )
-                .await
-        }
-        StationCommands::Observations {
-            station_id,
-            start,
-            end,
-            limit,
-            cursor,
-        } => {
-            let query = ObservationsQuery {
-                start: *start,
-                end: *end,
-                limit: *limit,
-                cursor: cursor.clone(),
-            };
-            output
-                .show(
-                    format!("listing observations for station {station_id}"),
-                    stations.observations(station_id, &query),
-                )
-                .await
-        }
-        StationCommands::Observation { station_id, time } => {
-            output
-                .show(
-                    format!("getting observation for station {station_id} at {time}"),
-                    stations.observation_at(station_id, *time),
-                )
-                .await
-        }
-        StationCommands::TerminalAerodromeForecasts { station_id } => {
-            output
-                .show(
-                    format!("getting TAFs for station {station_id}"),
-                    stations.tafs(station_id),
-                )
-                .await
-        }
-        StationCommands::TerminalAerodromeForecast { station_id, issued } => {
-            output
-                .show(
-                    format!("getting TAF for station {station_id} issued at {issued}"),
-                    stations.taf(station_id, *issued),
-                )
-                .await
+impl Run for StationCommands {
+    async fn run(&self, client: &Client, output: &Output) -> Result<()> {
+        let stations = client.stations();
+        match self {
+            StationCommands::Metadata { id } => output.show(stations.get(id)).await,
+            StationCommands::List {
+                id,
+                state,
+                limit,
+                cursor,
+            } => {
+                let query = StationsQuery {
+                    id: id.clone(),
+                    state: state.clone(),
+                    limit: *limit,
+                    cursor: cursor.clone(),
+                };
+                output.show(stations.list(&query)).await
+            }
+            StationCommands::LatestObservation {
+                station_id,
+                require_quality_controlled,
+            } => {
+                let query = LatestObservationQuery {
+                    require_qc: Some(*require_quality_controlled),
+                };
+                output
+                    .show(stations.latest_observation(station_id, &query))
+                    .await
+            }
+            StationCommands::Observations {
+                station_id,
+                start,
+                end,
+                limit,
+                cursor,
+            } => {
+                let query = ObservationsQuery {
+                    start: *start,
+                    end: *end,
+                    limit: *limit,
+                    cursor: cursor.clone(),
+                };
+                output.show(stations.observations(station_id, &query)).await
+            }
+            StationCommands::Observation { station_id, time } => {
+                output
+                    .show(stations.observation_at(station_id, *time))
+                    .await
+            }
+            StationCommands::TerminalAerodromeForecasts { station_id } => {
+                output.show(stations.tafs(station_id)).await
+            }
+            StationCommands::TerminalAerodromeForecast { station_id, issued } => {
+                output.show(stations.taf(station_id, *issued)).await
+            }
         }
     }
 }

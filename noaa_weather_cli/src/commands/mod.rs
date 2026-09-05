@@ -11,7 +11,16 @@ pub mod radio;
 pub mod stations;
 pub mod zones;
 
+use anyhow::Result;
 use clap::Subcommand;
+use noaa_weather_client::Client;
+
+use crate::output::Output;
+
+/// Executes one parsed command family through the configured client and output.
+pub(crate) trait Run {
+    async fn run(&self, client: &Client, output: &Output) -> Result<()>;
+}
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
@@ -26,7 +35,7 @@ pub enum Commands {
         command: Box<gridpoints::GridpointCommands>,
     },
     /// Get the NWS glossary of weather terms.
-    Glossary,
+    Glossary(glossary::GlossaryCommand),
     /// Get NWS office information
     Offices {
         #[command(subcommand)]
@@ -67,4 +76,22 @@ pub enum Commands {
         #[command(subcommand)]
         command: Box<radio::RadioCommands>,
     },
+}
+
+impl Run for Commands {
+    async fn run(&self, client: &Client, output: &Output) -> Result<()> {
+        match self {
+            Self::Alerts { command } => command.run(client, output).await,
+            Self::Gridpoints { command } => command.run(client, output).await,
+            Self::Glossary(command) => command.run(client, output).await,
+            Self::Offices { command } => command.run(client, output).await,
+            Self::Points { command } => command.run(client, output).await,
+            Self::Stations { command } => command.run(client, output).await,
+            Self::Zones { command } => command.run(client, output).await,
+            Self::Radar { command } => command.run(client, output).await,
+            Self::Aviation { command } => command.run(client, output).await,
+            Self::Products { command } => command.run(client, output).await,
+            Self::Radio { command } => command.run(client, output).await,
+        }
+    }
 }

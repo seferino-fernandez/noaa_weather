@@ -7,6 +7,7 @@ use noaa_weather_client::apis::radar::{
 use noaa_weather_client::models::RadarQueueHost;
 use noaa_weather_client::{Client, Interval, RadarStationId};
 
+use super::Run;
 use crate::output::Output;
 
 const DEFAULT_RADAR_DATA_QUEUE_LIMIT: u16 = 10;
@@ -173,110 +174,66 @@ pub struct RadarStationsArgs {
     host: Option<RadarQueueHost>,
 }
 
-/// Handles the execution of radar-related subcommands.
-///
-/// Dispatches the command to the matching `client.radar()` method based on
-/// the provided `RadarCommand` variant and arguments.
-///
-/// # Arguments
-///
-/// * `command` - The specific radar subcommand and its arguments to execute.
-/// * `output` - The configured output policy.
-/// * `client` - The NOAA API client.
-///
-pub async fn handle_command(
-    command: &RadarCommand,
-    output: &Output,
-    client: &Client,
-) -> Result<()> {
-    let radar = client.radar();
-    match command {
-        RadarCommand::WindProfiler(args) => {
-            let query = WindProfilerQuery {
-                time: args.time,
-                interval: args.interval,
-            };
-            output
-                .raw_json(
-                    format!("getting radar wind-profiler data for {}", args.id),
-                    radar.wind_profiler(&args.id, &query),
-                )
-                .await
-        }
-        RadarCommand::DataQueue(args) => {
-            let query = RadarQueueQuery {
-                limit: Some(args.limit.unwrap_or(DEFAULT_RADAR_DATA_QUEUE_LIMIT)),
-                arrived: args.arrived,
-                created: args.created,
-                published: args.published,
-                station: args.station.clone(),
-                data_type: args.r#type.clone(),
-                feed: args.feed.clone(),
-                resolution: args.resolution,
-            };
-            output
-                .show(
-                    format!("getting radar data queue for host {}", args.host),
-                    radar.queue(&args.host, &query),
-                )
-                .await
-        }
-        RadarCommand::Server(args) => {
-            let query = RadarServerQuery {
-                reporting_host: args.reporting_host.clone(),
-            };
-            output
-                .show(
-                    format!("getting radar server {}", args.id),
-                    radar.server(&args.id, &query),
-                )
-                .await
-        }
-        RadarCommand::Servers(args) => {
-            let query = RadarServersQuery {
-                reporting_host: args.reporting_host.clone(),
-            };
-            output
-                .show("listing radar servers", radar.servers(&query))
-                .await
-        }
-        RadarCommand::Station(args) => {
-            let query = RadarStationQuery {
-                reporting_host: args.reporting_host.clone(),
-                host: args.host.clone(),
-            };
-            output
-                .show(
-                    format!("getting radar station {}", args.station_id),
-                    radar.station(&args.station_id, &query),
-                )
-                .await
-        }
-        RadarCommand::StationAlarms(args) => {
-            output
-                .show(
-                    format!("getting alarms for radar station {}", args.station_id),
-                    radar.station_alarms(&args.station_id),
-                )
-                .await
-        }
-        RadarCommand::Stations(args) => {
-            let query = RadarStationsQuery {
-                station_type: args.station_type.clone(),
-                reporting_host: args.reporting_host.clone(),
-                host: args.host.clone(),
-            };
-            output
-                .show("listing radar stations", radar.stations(&query))
-                .await
-        }
-        RadarCommand::Spgds(args) => {
-            let query = SpgdsQuery {
-                published: args.published,
-            };
-            output
-                .show("getting radar SPGDS telemetry", radar.spgds(&query))
-                .await
+impl Run for RadarCommand {
+    async fn run(&self, client: &Client, output: &Output) -> Result<()> {
+        let radar = client.radar();
+        match self {
+            RadarCommand::WindProfiler(args) => {
+                let query = WindProfilerQuery {
+                    time: args.time,
+                    interval: args.interval,
+                };
+                output.raw_json(radar.wind_profiler(&args.id, &query)).await
+            }
+            RadarCommand::DataQueue(args) => {
+                let query = RadarQueueQuery {
+                    limit: Some(args.limit.unwrap_or(DEFAULT_RADAR_DATA_QUEUE_LIMIT)),
+                    arrived: args.arrived,
+                    created: args.created,
+                    published: args.published,
+                    station: args.station.clone(),
+                    data_type: args.r#type.clone(),
+                    feed: args.feed.clone(),
+                    resolution: args.resolution,
+                };
+                output.show(radar.queue(&args.host, &query)).await
+            }
+            RadarCommand::Server(args) => {
+                let query = RadarServerQuery {
+                    reporting_host: args.reporting_host.clone(),
+                };
+                output.show(radar.server(&args.id, &query)).await
+            }
+            RadarCommand::Servers(args) => {
+                let query = RadarServersQuery {
+                    reporting_host: args.reporting_host.clone(),
+                };
+                output.show(radar.servers(&query)).await
+            }
+            RadarCommand::Station(args) => {
+                let query = RadarStationQuery {
+                    reporting_host: args.reporting_host.clone(),
+                    host: args.host.clone(),
+                };
+                output.show(radar.station(&args.station_id, &query)).await
+            }
+            RadarCommand::StationAlarms(args) => {
+                output.show(radar.station_alarms(&args.station_id)).await
+            }
+            RadarCommand::Stations(args) => {
+                let query = RadarStationsQuery {
+                    station_type: args.station_type.clone(),
+                    reporting_host: args.reporting_host.clone(),
+                    host: args.host.clone(),
+                };
+                output.show(radar.stations(&query)).await
+            }
+            RadarCommand::Spgds(args) => {
+                let query = SpgdsQuery {
+                    published: args.published,
+                };
+                output.show(radar.spgds(&query)).await
+            }
         }
     }
 }

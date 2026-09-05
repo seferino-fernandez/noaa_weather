@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::{Args, Subcommand};
 use noaa_weather_client::{Client, Coordinates};
 
+use super::Run;
 use crate::output::Output;
 
 /// Arguments requiring a specific geographical point.
@@ -24,30 +25,10 @@ pub enum PointCommands {
     Metadata(PointArgs),
 }
 
-/// Handles the execution of point-related subcommands.
-///
-/// Dispatches the command to the matching `client.points()` method based on
-/// the provided `PointCommands` variant and arguments.
-///
-/// # Arguments
-///
-/// * `command` - The specific point subcommand and its arguments to execute.
-/// * `output` - The configured output policy.
-/// * `client` - The NOAA API client.
-///
-pub async fn handle_command(
-    command: &PointCommands,
-    output: &Output,
-    client: &Client,
-) -> Result<()> {
-    match command {
-        PointCommands::Metadata(args) => {
-            output
-                .show(
-                    format!("getting point metadata for {}", args.point),
-                    client.points().get(args.point),
-                )
-                .await
+impl Run for PointCommands {
+    async fn run(&self, client: &Client, output: &Output) -> Result<()> {
+        match self {
+            PointCommands::Metadata(args) => output.show(client.points().get(args.point)).await,
         }
     }
 }

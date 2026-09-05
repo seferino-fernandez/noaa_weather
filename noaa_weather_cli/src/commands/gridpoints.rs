@@ -3,6 +3,7 @@ use clap::{Args, Subcommand};
 use noaa_weather_client::apis::gridpoints::{ForecastQuery, GridpointStationsQuery};
 use noaa_weather_client::{Client, GridpointId};
 
+use super::Run;
 use crate::output::Output;
 
 /// The grid cell every gridpoint command addresses.
@@ -59,64 +60,36 @@ pub enum GridpointCommands {
     },
 }
 
-/// Handles the execution of gridpoint-related subcommands.
-///
-/// Dispatches the command to the matching `client.gridpoints()` method based
-/// on the provided `GridpointCommands` variant and arguments.
-///
-/// # Arguments
-///
-/// * `command` - The specific gridpoint subcommand and its arguments to execute.
-/// * `output` - The configured output policy.
-/// * `client` - The NOAA API client.
-///
-pub async fn handle_command(
-    command: &GridpointCommands,
-    output: &Output,
-    client: &Client,
-) -> Result<()> {
-    let gridpoints = client.gridpoints();
-    match command {
-        GridpointCommands::Gridpoint { location } => {
-            output
-                .show(
-                    format!("getting raw gridpoint data for {}", location.gridpoint),
-                    gridpoints.get(&location.gridpoint),
-                )
-                .await
-        }
-        // NOAA's own `units` parameter is inert under the feature flags this
-        // crate always sends, so the request never carries one and the global
-        // `--units` decides what the reader sees.
-        GridpointCommands::Forecast { location } => {
-            output
-                .show(
-                    format!("getting gridpoint forecast for {}", location.gridpoint),
-                    gridpoints.forecast(&location.gridpoint, &ForecastQuery::default()),
-                )
-                .await
-        }
-        GridpointCommands::ForecastHourly { location } => {
-            output
-                .show(
-                    format!(
-                        "getting hourly gridpoint forecast for {}",
-                        location.gridpoint
-                    ),
-                    gridpoints.forecast_hourly(&location.gridpoint, &ForecastQuery::default()),
-                )
-                .await
-        }
-        GridpointCommands::Stations { location, limit } => {
-            output
-                .show(
-                    format!("getting gridpoint stations for {}", location.gridpoint),
-                    gridpoints.stations(
+impl Run for GridpointCommands {
+    async fn run(&self, client: &Client, output: &Output) -> Result<()> {
+        let gridpoints = client.gridpoints();
+        match self {
+            GridpointCommands::Gridpoint { location } => {
+                output.show(gridpoints.get(&location.gridpoint)).await
+            }
+            // NOAA's own `units` parameter is inert under the feature flags this
+            // crate always sends, so the request never carries one and the global
+            // `--units` decides what the reader sees.
+            GridpointCommands::Forecast { location } => {
+                output
+                    .show(gridpoints.forecast(&location.gridpoint, &ForecastQuery::default()))
+                    .await
+            }
+            GridpointCommands::ForecastHourly { location } => {
+                output
+                    .show(
+                        gridpoints.forecast_hourly(&location.gridpoint, &ForecastQuery::default()),
+                    )
+                    .await
+            }
+            GridpointCommands::Stations { location, limit } => {
+                output
+                    .show(gridpoints.stations(
                         &location.gridpoint,
                         &GridpointStationsQuery { limit: *limit },
-                    ),
-                )
-                .await
+                    ))
+                    .await
+            }
         }
     }
 }

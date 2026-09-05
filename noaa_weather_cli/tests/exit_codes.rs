@@ -141,8 +141,8 @@ async fn a_refused_request_reports_every_fact_it_has_under_json() {
     assert!(
         report["message"]
             .as_str()
-            .is_some_and(|message| message.contains("alert count")),
-        "the message must keep the operation the command named: {report}"
+            .is_some_and(|message| message.starts_with("noaa-weather alerts count:")),
+        "the message must start with the clap command path: {report}"
     );
 
     // Embedded whole rather than flattened: NOAA's own `status` survives
@@ -154,6 +154,34 @@ async fn a_refused_request_reports_every_fact_it_has_under_json() {
         "{report}"
     );
     assert_eq!(report["problem"]["correlationId"], "1a2b3c4d", "{report}");
+}
+
+#[tokio::test]
+async fn operation_labels_follow_one_level_and_nested_clap_paths() {
+    for (arguments, expected) in [
+        (
+            vec!["glossary", "--base-url", "http://127.0.0.1:1"],
+            "noaa-weather glossary:",
+        ),
+        (
+            vec![
+                "gridpoints",
+                "forecast",
+                "PSR/159,100",
+                "--base-url",
+                "http://127.0.0.1:1",
+            ],
+            "noaa-weather gridpoints forecast:",
+        ),
+    ] {
+        let output = run(&[&arguments[..], &["--retries", "0"]].concat()).await;
+        assert_eq!(output.status.code(), Some(4), "{}", stderr(&output));
+        assert!(
+            stderr(&output).starts_with(&format!("noaa-weather: {expected}")),
+            "{arguments:?}: {}",
+            stderr(&output)
+        );
+    }
 }
 
 #[tokio::test]

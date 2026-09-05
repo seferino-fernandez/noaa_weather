@@ -4,7 +4,7 @@ use jiff::Timestamp;
 use noaa_weather_client::apis::products::ProductsQuery;
 use noaa_weather_client::{Client, OfficeId, ProductId, ProductTypeCode};
 
-use super::parse;
+use super::{Run, parse};
 use crate::output::Output;
 
 /// Arguments for commands requiring a product issuance location ID.
@@ -147,97 +147,48 @@ pub enum ProductCommands {
     Latest(LatestProductArgs),
 }
 
-/// Handles the execution of product-related subcommands.
-///
-/// Dispatches the command to the matching `client.products()` method based
-/// on the provided `ProductCommands` variant and arguments.
-///
-/// # Arguments
-///
-/// * `command` - The specific product subcommand and its arguments to execute.
-/// * `output` - The configured output policy.
-/// * `client` - The NOAA API client.
-///
-pub async fn handle_command(
-    command: &ProductCommands,
-    output: &Output,
-    client: &Client,
-) -> Result<()> {
-    let products = client.products();
-    match command {
-        ProductCommands::LocationProducts(args) => {
-            output
-                .show(
-                    format!("getting product types for location {}", args.location_id),
-                    products.types_for_location(&args.location_id),
-                )
-                .await
-        }
-        ProductCommands::Metadata(args) => {
-            output
-                .show(
-                    format!("getting product {}", args.id),
-                    products.get(&args.id),
-                )
-                .await
-        }
-        ProductCommands::Locations => {
-            output
-                .show("getting product locations", products.locations())
-                .await
-        }
-        ProductCommands::Types => output.show("getting product types", products.types()).await,
-        ProductCommands::ProductsList(args) => {
-            let query = ProductsQuery {
-                location_ids: args.location_ids.clone(),
-                start: args.start_time,
-                end: args.end_time,
-                office_ids: args.office_ids.clone(),
-                wmo_ids: args.wmo_ids.clone(),
-                product_type_codes: args.product_type_codes.clone(),
-                limit: Some(args.limit),
-            };
-            output
-                .show("querying products", products.search(&query))
-                .await
-        }
-        ProductCommands::ProductsType(args) => {
-            output
-                .show(
-                    format!("getting products of type {}", args.type_id),
-                    products.by_type(&args.type_id),
-                )
-                .await
-        }
-        ProductCommands::ProductsTypeLocation(args) => {
-            output
-                .show(
-                    format!(
-                        "getting products of type {} for location {}",
-                        args.type_id, args.location_id
-                    ),
-                    products.by_type_and_location(&args.type_id, &args.location_id),
-                )
-                .await
-        }
-        ProductCommands::ProductsTypeLocations(args) => {
-            output
-                .show(
-                    format!("getting locations for product type {}", args.type_id),
-                    products.locations_for_type(&args.type_id),
-                )
-                .await
-        }
-        ProductCommands::Latest(args) => {
-            output
-                .show(
-                    format!(
-                        "getting latest product of type {} for location {}",
-                        args.type_id, args.location_id
-                    ),
-                    products.latest(&args.type_id, &args.location_id),
-                )
-                .await
+impl Run for ProductCommands {
+    async fn run(&self, client: &Client, output: &Output) -> Result<()> {
+        let products = client.products();
+        match self {
+            ProductCommands::LocationProducts(args) => {
+                output
+                    .show(products.types_for_location(&args.location_id))
+                    .await
+            }
+            ProductCommands::Metadata(args) => output.show(products.get(&args.id)).await,
+            ProductCommands::Locations => output.show(products.locations()).await,
+            ProductCommands::Types => output.show(products.types()).await,
+            ProductCommands::ProductsList(args) => {
+                let query = ProductsQuery {
+                    location_ids: args.location_ids.clone(),
+                    start: args.start_time,
+                    end: args.end_time,
+                    office_ids: args.office_ids.clone(),
+                    wmo_ids: args.wmo_ids.clone(),
+                    product_type_codes: args.product_type_codes.clone(),
+                    limit: Some(args.limit),
+                };
+                output.show(products.search(&query)).await
+            }
+            ProductCommands::ProductsType(args) => {
+                output.show(products.by_type(&args.type_id)).await
+            }
+            ProductCommands::ProductsTypeLocation(args) => {
+                output
+                    .show(products.by_type_and_location(&args.type_id, &args.location_id))
+                    .await
+            }
+            ProductCommands::ProductsTypeLocations(args) => {
+                output
+                    .show(products.locations_for_type(&args.type_id))
+                    .await
+            }
+            ProductCommands::Latest(args) => {
+                output
+                    .show(products.latest(&args.type_id, &args.location_id))
+                    .await
+            }
         }
     }
 }

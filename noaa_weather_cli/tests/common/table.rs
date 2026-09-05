@@ -1534,7 +1534,7 @@ pub const ZONES: &[Invocation] = &[
     },
     Invocation {
         // A single `--type` selects the narrower `/zones/{type}` route and
-        // drops the filter, which is the branch in `zones::handle_command`
+        // drops the filter, which is the branch in `ZoneCommands::run`
         // no other test reaches.
         command: &["zones", "list"],
         arguments: &["--type", "land", "--area", "MI"],
