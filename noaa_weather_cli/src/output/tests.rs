@@ -5,7 +5,6 @@ use std::path::Path;
 use std::rc::Rc;
 
 use anyhow::Result;
-use comfy_table::Table;
 use serde::ser::Error as _;
 use serde::{Serialize, Serializer};
 use wiremock::{
@@ -32,29 +31,6 @@ impl DefaultPresentation for Example {
         Ok(PresentationDocument::Summary(Box::new(
             noaa_weather_summary::Summary::new(format!("value: {}", self.value)),
         )))
-    }
-}
-
-struct TableExample;
-
-impl Serialize for TableExample {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_unit()
-    }
-}
-
-impl DefaultPresentation for TableExample {
-    fn present_default(
-        &self,
-        _presenter: &DefaultPresenter,
-    ) -> Result<PresentationDocument, PresentationError> {
-        let mut table = Table::new();
-        table.set_header(["Column"]);
-        table.add_row(["Value"]);
-        Ok(PresentationDocument::table(table))
     }
 }
 
@@ -123,22 +99,6 @@ async fn default_text_has_one_trailing_newline() {
         .unwrap();
 
     assert_eq!(&*bytes.borrow(), b"value: forecast\n");
-}
-
-#[tokio::test]
-async fn default_table_is_written_by_lines_with_one_final_newline() {
-    let (output, bytes) = memory_output(Format::Default);
-
-    output
-        .show("showing table", async { Ok::<_, FetchError>(TableExample) })
-        .await
-        .unwrap();
-
-    let output = String::from_utf8(bytes.borrow().clone()).unwrap();
-    assert!(output.contains("Column"));
-    assert!(output.contains("Value"));
-    assert!(output.ends_with('\n'));
-    assert!(!output.ends_with("\n\n"));
 }
 
 #[test]
@@ -285,108 +245,6 @@ async fn raw_json_ignores_the_default_presentation() {
         String::from_utf8(bytes.borrow().clone()).unwrap(),
         "{\n  \"raw\": true\n}\n"
     );
-}
-
-#[tokio::test]
-async fn radar_station_default_presentation_uses_normalized_meaning() {
-    let station: noaa_weather_client::models::RadarStationFeature = serde_json::from_str(
-        include_str!("../../../noaa_weather_client/tests/fixtures/radar/station.json"),
-    )
-    .unwrap();
-    let (output, bytes) = memory_output(Format::Default);
-
-    output
-        .show("showing radar station", async {
-            Ok::<_, FetchError>(station)
-        })
-        .await
-        .unwrap();
-
-    let rendered = String::from_utf8(bytes.borrow().clone()).unwrap();
-    for expected in [
-        "KXYZ",
-        "Example Radar",
-        "Lon: -112.14690, Lat: 33.29030",
-        "1.25 s",
-        "9.75 s",
-        "ldm.example",
-        "America/Phoenix",
-    ] {
-        assert!(
-            rendered.contains(expected),
-            "missing {expected:?} in:\n{rendered}"
-        );
-    }
-    let maximum_time = "2026-08-31T15:59:00Z"
-        .parse::<jiff::Timestamp>()
-        .unwrap()
-        .to_zoned(jiff::tz::TimeZone::UTC)
-        .strftime("%D %r")
-        .to_string();
-    assert_eq!(rendered.matches(&maximum_time).count(), 1, "{rendered}");
-}
-
-#[tokio::test]
-async fn radar_server_default_presentation_uses_normalized_meaning() {
-    let server: noaa_weather_client::models::RadarServer = serde_json::from_str(include_str!(
-        "../../../noaa_weather_client/tests/fixtures/radar/server.json"
-    ))
-    .unwrap();
-    let (output, bytes) = memory_output(Format::Default);
-
-    output
-        .show("showing radar server", async {
-            Ok::<_, FetchError>(server)
-        })
-        .await
-        .unwrap();
-
-    let rendered = String::from_utf8(bytes.borrow().clone()).unwrap();
-    for expected in [
-        "Radar Server Status: ldm1",
-        "2 / 3 up",
-        "0 targets",
-        "eno1",
-        "100/2/3",
-        "eth1 Interface",
-        "2.00 KiB",
-    ] {
-        assert!(
-            rendered.contains(expected),
-            "missing {expected:?} in:\n{rendered}"
-        );
-    }
-}
-
-#[tokio::test]
-async fn malformed_radar_timestamp_fails_only_default_presentation() {
-    let malformed = noaa_weather_client::models::RadarServer {
-        id: Some("broken".to_owned()),
-        collection_time: Some("not-a-timestamp".to_owned()),
-        ..noaa_weather_client::models::RadarServer::default()
-    };
-    let (default_output, default_bytes) = memory_output(Format::Default);
-
-    let error = default_output
-        .show("showing malformed radar server", async {
-            Ok::<_, FetchError>(malformed.clone())
-        })
-        .await
-        .unwrap_err();
-    let chain = format!("{error:#}");
-    assert!(chain.contains("showing malformed radar server"), "{chain}");
-    assert!(chain.contains("collection_time"), "{chain}");
-    assert!(default_bytes.borrow().is_empty());
-
-    let (json_output, json_bytes) = memory_output(Format::Json);
-    json_output
-        .show("showing malformed radar JSON", async {
-            Ok::<_, FetchError>(malformed)
-        })
-        .await
-        .unwrap();
-    let json: serde_json::Value = serde_json::from_slice(&json_bytes.borrow()).unwrap();
-    assert_eq!(json["collectionTime"], "not-a-timestamp");
 }
 
 #[tokio::test]

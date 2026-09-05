@@ -7,7 +7,6 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context as _, Result, anyhow, bail};
 use clap::{Args, ValueEnum};
-use comfy_table::Table;
 use noaa_weather_client::apis::BinaryPayload;
 use noaa_weather_summary::{SummaryOptions, UnitSystem};
 use serde::Serialize;
@@ -171,16 +170,8 @@ impl From<String> for Operation {
 
 /// A successful default presentation before destination-specific rendering.
 pub(crate) enum PresentationDocument {
-    /// A ported family: meaning only, rendered by [`render`].
+    /// Semantic content rendered by [`render`].
     Summary(Box<noaa_weather_summary::Summary>),
-    /// An un-ported family that still draws its own table.
-    Table(Box<Table>),
-}
-
-impl PresentationDocument {
-    fn table(table: Table) -> Self {
-        Self::Table(Box::new(table))
-    }
 }
 
 mod binary {
@@ -275,8 +266,7 @@ impl Output {
         let summary = SummaryOptions {
             units: units.into(),
         };
-        let default_presenter = (format == Format::Default)
-            .then(|| DefaultPresenter::new(render.presenter_time_zone(), summary));
+        let default_presenter = (format == Format::Default).then(|| DefaultPresenter::new(summary));
 
         Self {
             format,
@@ -406,10 +396,6 @@ impl Output {
                 let text = self.render.render(&summary);
                 self.write_document(move |writer| write_text(writer, &text))
             }
-            PresentationDocument::Table(mut table) => {
-                self.render.apply(&mut table);
-                self.write_document(move |writer| write_table(writer, &table))
-            }
         }
     }
 
@@ -445,8 +431,8 @@ impl Output {
 
     #[cfg(test)]
     fn with_destination(format: Format, destination: Box<dyn DestinationAdapter>) -> Self {
-        let default_presenter = (format == Format::Default)
-            .then(|| DefaultPresenter::new(jiff::tz::TimeZone::UTC, SummaryOptions::default()));
+        let default_presenter =
+            (format == Format::Default).then(|| DefaultPresenter::new(SummaryOptions::default()));
         Self {
             format,
             destination,
@@ -459,16 +445,6 @@ impl Output {
             ),
         }
     }
-}
-
-fn write_table(writer: &mut dyn io::Write, table: &Table) -> Result<()> {
-    for line in table.lines() {
-        writer
-            .write_all(line.as_bytes())
-            .context("writing table row")?;
-        writer.write_all(b"\n").context("terminating table row")?;
-    }
-    Ok(())
 }
 
 fn write_text(writer: &mut dyn io::Write, text: &str) -> Result<()> {

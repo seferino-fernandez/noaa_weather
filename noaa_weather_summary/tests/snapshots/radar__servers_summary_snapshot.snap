@@ -1,0 +1,245 @@
+---
+source: noaa_weather_summary/tests/radar.rs
+expression: "decode::<RadarServersResponse>(SERVERS).summarize(&SummaryOptions::default())"
+---
+title: Radar servers
+subtitle: 6 servers
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: Server
+          key: id
+          also: []
+          align: Left
+        - title: Type
+          key: type
+          also: []
+          align: Left
+        - title: Active
+          key: active
+          also: []
+          align: Left
+        - title: Primary
+          key: primary
+          also: []
+          align: Left
+        - title: Network Up
+          key: radarNetworkUp
+          also: []
+          align: Left
+        - title: LDM Active
+          key: ldm
+          also: []
+          align: Left
+        - title: LDM Products
+          key: count
+          also: []
+          align: Right
+        - title: Load (1m)
+          key: load1
+          also: []
+          align: Right
+        - title: Collected
+          key: collectionTime
+          also: []
+          align: Left
+        - title: Reporter
+          key: reportingHost
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Identifier: rds
+            emphasis: None
+          - value:
+              Text: distribution
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              Count: 170793
+            emphasis: None
+          - value:
+              Quantity:
+                value: 7.48
+                unit: ~
+                precision: 2
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:56:05+00:00"
+            emphasis: None
+          - value:
+              Text: rdss
+            emphasis: None
+        - - value:
+              Identifier: tds
+            emphasis: None
+          - value:
+              Text: distribution
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value: Missing
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              Count: 171193
+            emphasis: None
+          - value:
+              Quantity:
+                value: 5.37
+                unit: ~
+                precision: 2
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:56:04+00:00"
+            emphasis: None
+          - value:
+              Text: tdss
+            emphasis: None
+        - - value:
+              Identifier: ldm2
+            emphasis: None
+          - value:
+              Text: ldm
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              YesNo: false
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              Count: 199941
+            emphasis: None
+          - value:
+              Quantity:
+                value: 0.1
+                unit: ~
+                precision: 2
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:55:09+00:00"
+            emphasis: None
+          - value:
+              Text: tdss
+            emphasis: None
+        - - value:
+              Identifier: ldm1
+            emphasis: None
+          - value:
+              Text: ldm
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              Count: 199904
+            emphasis: None
+          - value:
+              Quantity:
+                value: 0.06
+                unit: ~
+                precision: 2
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:55:44+00:00"
+            emphasis: None
+          - value:
+              Text: tdss
+            emphasis: None
+        - - value:
+              Identifier: ldm4
+            emphasis: None
+          - value:
+              Text: ldm
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              YesNo: false
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              Count: 199837
+            emphasis: None
+          - value:
+              Quantity:
+                value: 0.18
+                unit: ~
+                precision: 2
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:55:08+00:00"
+            emphasis: None
+          - value:
+              Text: tdss
+            emphasis: None
+        - - value:
+              Identifier: ldm3
+            emphasis: None
+          - value:
+              Text: ldm
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              Count: 199881
+            emphasis: None
+          - value:
+              Quantity:
+                value: 0.22
+                unit: ~
+                precision: 2
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:55:31+00:00"
+            emphasis: None
+          - value:
+              Text: tdss
+            emphasis: None
+notes: []

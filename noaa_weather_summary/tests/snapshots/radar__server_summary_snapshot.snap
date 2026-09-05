@@ -1,0 +1,315 @@
+---
+source: noaa_weather_summary/tests/radar.rs
+expression: "decode::<RadarServerTelemetry>(SERVER).summarize(&SummaryOptions::default())"
+---
+title: Radar server
+subtitle: ldm1
+emphasis: None
+sections:
+  - Facts:
+      heading: General
+      facts:
+        - label: Server ID
+          key: id
+          also: []
+          value:
+            Identifier: ldm1
+          emphasis: None
+        - label: Type
+          key: type
+          also: []
+          value:
+            Text: ldm
+          emphasis: None
+        - label: Active
+          key: active
+          also: []
+          value:
+            YesNo: true
+          emphasis: None
+        - label: Primary
+          key: primary
+          also: []
+          value:
+            YesNo: false
+          emphasis: None
+        - label: Aggregate
+          key: aggregate
+          also: []
+          value:
+            YesNo: true
+          emphasis: None
+        - label: Locked
+          key: locked
+          also: []
+          value:
+            YesNo: false
+          emphasis: None
+        - label: Radar Network Up
+          key: radarNetworkUp
+          also: []
+          value:
+            YesNo: true
+          emphasis: None
+        - label: Collected
+          key: collectionTime
+          also: []
+          value:
+            Timestamp: "2026-08-31T16:10:00+00:00"
+          emphasis: None
+        - label: Reporting Host
+          key: reportingHost
+          also: []
+          value:
+            Text: ops.example
+          emphasis: None
+        - label: Ingest Host
+          key: ingestHost
+          also: []
+          value:
+            Text: dns.example
+          emphasis: None
+  - Facts:
+      heading: Ping status
+      facts:
+        - label: Observed
+          key: timestamp
+          also: []
+          value:
+            Timestamp: "2026-08-31T16:09:00+00:00"
+          emphasis: None
+        - label: Client Targets
+          key: client
+          also: []
+          value:
+            Text: 2/3 up
+          emphasis: None
+        - label: LDM Targets
+          key: ldm
+          also: []
+          value:
+            Text: 0/0 up
+          emphasis: None
+        - label: Radar Targets
+          key: radar
+          also: []
+          value:
+            Text: 0/0 up
+          emphasis: None
+        - label: Server Targets
+          key: server
+          also: []
+          value:
+            Text: 0/1 up
+          emphasis: None
+        - label: Misc Targets
+          key: misc
+          also: []
+          value:
+            Text: 0/0 up
+          emphasis: None
+  - Facts:
+      heading: Command status
+      facts:
+        - label: Observed
+          key: timestamp
+          also: []
+          value:
+            Timestamp: "2026-08-31T16:08:00+00:00"
+          emphasis: None
+        - label: Last Executed
+          key: lastExecuted
+          also: []
+          value:
+            Text: restart
+          emphasis: None
+        - label: Last Executed At
+          key: lastExecutedTime
+          also: []
+          value:
+            Timestamp: "2026-08-31T16:07:00+00:00"
+          emphasis: None
+        - label: Last NEXRAD Data
+          key: lastNexradDataTime
+          also: []
+          value:
+            Timestamp: "2026-08-31T16:06:30+00:00"
+          emphasis: None
+        - label: Last Received
+          key: lastReceived
+          also: []
+          value:
+            Text: restart
+          emphasis: None
+        - label: Last Received At
+          key: lastReceivedTime
+          also: []
+          value:
+            Timestamp: "2026-08-31T16:07:00+00:00"
+          emphasis: None
+  - Facts:
+      heading: Hardware
+      facts:
+        - label: Observed
+          key: timestamp
+          also: []
+          value:
+            Timestamp: "2026-08-31T16:06:00+00:00"
+          emphasis: None
+        - label: CPU Idle
+          key: cpuIdle
+          also: []
+          value:
+            Percent: 97.5
+          emphasis: None
+        - label: I/O Utilization
+          key: ioUtilization
+          also: []
+          value:
+            Percent: 0.05
+          emphasis: None
+        - label: Disk
+          key: disk
+          also: []
+          value:
+            Quantity:
+              value: 4
+              unit: ~
+              precision: 0
+          emphasis: None
+        - label: Load (1m / 5m / 15m)
+          key: load1
+          also:
+            - load5
+            - load15
+          value:
+            List:
+              - Quantity:
+                  value: 0.1
+                  unit: ~
+                  precision: 2
+              - Quantity:
+                  value: 0.2
+                  unit: ~
+                  precision: 2
+              - Quantity:
+                  value: 0.3
+                  unit: ~
+                  precision: 2
+          emphasis: None
+        - label: Memory
+          key: memory
+          also: []
+          value:
+            Percent: 31.25
+          emphasis: None
+        - label: Up Since
+          key: uptime
+          also: []
+          value:
+            Timestamp: "2026-08-01T00:00:00+00:00"
+          emphasis: None
+  - Facts:
+      heading: Local Data Manager
+      facts:
+        - label: Observed
+          key: timestamp
+          also: []
+          value:
+            Timestamp: "2026-08-31T16:05:00+00:00"
+          emphasis: None
+        - label: Active
+          key: active
+          also: []
+          value:
+            YesNo: true
+          emphasis: None
+        - label: Latest Product
+          key: latestProduct
+          also: []
+          value:
+            Timestamp: "2026-08-31T16:04:00+00:00"
+          emphasis: None
+        - label: Oldest Product
+          key: oldestProduct
+          also: []
+          value:
+            Timestamp: "2026-08-31T15:04:00+00:00"
+          emphasis: None
+        - label: Storage
+          key: storageSize
+          also: []
+          value:
+            Bytes: 2048
+          emphasis: None
+        - label: Products
+          key: count
+          also: []
+          value:
+            Count: 42
+          emphasis: None
+  - Table:
+      heading: Network
+      columns:
+        - title: Interface
+          key: interface
+          also: []
+          align: Left
+        - title: Active
+          key: active
+          also: []
+          align: Left
+        - title: Sent
+          key: transNoError
+          also: []
+          align: Right
+        - title: Send Errors
+          key: transError
+          also: []
+          align: Right
+        - title: Received
+          key: recvNoError
+          also: []
+          align: Right
+        - title: Receive Errors
+          key: recvError
+          also: []
+          align: Right
+      rows:
+        - - value:
+              Identifier: eno1
+            emphasis: None
+          - value:
+              YesNo: true
+            emphasis: None
+          - value:
+              Count: 100
+            emphasis: None
+          - value:
+              Count: 2
+            emphasis: None
+          - value:
+              Count: 200
+            emphasis: None
+          - value:
+              Count: 5
+            emphasis: None
+        - - value:
+              Identifier: eno2
+            emphasis: None
+          - value:
+              YesNo: false
+            emphasis: None
+          - value:
+              Count: 0
+            emphasis: None
+          - value:
+              Count: 0
+            emphasis: None
+          - value:
+              Count: 0
+            emphasis: None
+          - value:
+              Count: 0
+            emphasis: None
+notes: []

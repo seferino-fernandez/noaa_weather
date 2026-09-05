@@ -1,0 +1,184 @@
+---
+source: noaa_weather_summary/tests/radar.rs
+expression: "decode::<RadarQueuesResponse>(QUEUE).summarize(&SummaryOptions::default())"
+---
+title: Radar data queue
+subtitle: 5 queued products
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: Host
+          key: host
+          also: []
+          align: Left
+        - title: Station
+          key: stationId
+          also: []
+          align: Left
+        - title: Arrival
+          key: arrivalTime
+          also: []
+          align: Left
+        - title: Created
+          key: creationTime
+          also: []
+          align: Left
+        - title: Type
+          key: type
+          also: []
+          align: Left
+        - title: Feed
+          key: feed
+          also: []
+          align: Left
+        - title: Resolution
+          key: resolutionVersion
+          also: []
+          align: Right
+        - title: Sequence
+          key: sequenceNumber
+          also: []
+          align: Left
+        - title: Size
+          key: size
+          also: []
+          align: Right
+      rows:
+        - - value:
+              Text: rds
+            emphasis: None
+          - value:
+              Identifier: KFSD
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:55:01+00:00"
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:55:01+00:00"
+            emphasis: None
+          - value:
+              Text: intermediate
+            emphasis: None
+          - value:
+              Text: NEXRAD2
+            emphasis: None
+          - value:
+              Count: 6
+            emphasis: None
+          - value:
+              Identifier: 977-013
+            emphasis: None
+          - value:
+              Bytes: 78628
+            emphasis: None
+        - - value:
+              Text: rds
+            emphasis: None
+          - value:
+              Identifier: KTWX
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:55:01+00:00"
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:55:01+00:00"
+            emphasis: None
+          - value:
+              Text: intermediate
+            emphasis: None
+          - value:
+              Text: NEXRAD2
+            emphasis: None
+          - value:
+              Count: 6
+            emphasis: None
+          - value:
+              Identifier: 863-024
+            emphasis: None
+          - value:
+              Bytes: 64632
+            emphasis: None
+        - - value:
+              Text: rds
+            emphasis: None
+          - value:
+              Identifier: KPUX
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:55:01+00:00"
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:55:01+00:00"
+            emphasis: None
+          - value:
+              Text: intermediate
+            emphasis: None
+          - value:
+              Text: NEXRAD2
+            emphasis: None
+          - value:
+              Count: 6
+            emphasis: None
+          - value:
+              Identifier: 459-049
+            emphasis: None
+          - value:
+              Bytes: 83684
+            emphasis: None
+        - - value:
+              Text: rds
+            emphasis: None
+          - value:
+              Identifier: KDMX
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:55:01+00:00"
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:55:01+00:00"
+            emphasis: None
+          - value:
+              Text: intermediate
+            emphasis: None
+          - value:
+              Text: NEXRAD2
+            emphasis: None
+          - value:
+              Count: 6
+            emphasis: None
+          - value:
+              Identifier: 932-061
+            emphasis: None
+          - value:
+              Bytes: 69209
+            emphasis: None
+        - - value:
+              Text: rds
+            emphasis: None
+          - value:
+              Identifier: TMSP
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:55:01+00:00"
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:55:01+00:00"
+            emphasis: None
+          - value:
+              Text: intermediate
+            emphasis: None
+          - value:
+              Text: NEXRAD2
+            emphasis: None
+          - value:
+              Count: 8
+            emphasis: None
+          - value:
+              Identifier: 962-066
+            emphasis: None
+          - value:
+              Bytes: 81017
+            emphasis: None
+notes: []

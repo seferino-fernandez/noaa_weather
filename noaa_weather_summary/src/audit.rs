@@ -72,7 +72,71 @@ fn property_keys(json: &Json) -> BTreeSet<String> {
             keys.extend(story.keys().cloned());
         }
     }
+    if is_radar_response(object) {
+        collect_radar_keys(json, &mut keys);
+    }
     keys
+}
+
+fn is_radar_response(object: &serde_json::Map<String, Json>) -> bool {
+    object
+        .get("properties")
+        .and_then(Json::as_object)
+        .is_some_and(|properties| properties.contains_key("stationType"))
+        || object.contains_key("ping")
+        || object
+            .get("@graph")
+            .and_then(Json::as_array)
+            .and_then(|items| items.first())
+            .and_then(Json::as_object)
+            .is_some_and(|item| item.contains_key("dataflow"))
+}
+
+fn collect_radar_keys(json: &Json, keys: &mut BTreeSet<String>) {
+    match json {
+        Json::Object(object) => {
+            for (key, value) in object {
+                keys.insert(key.clone());
+                if key == "geometry" || is_measurement(value) {
+                    continue;
+                }
+                if key == "targets" {
+                    if let Some(targets) = value.as_object() {
+                        keys.extend(targets.keys().cloned());
+                    }
+                    continue;
+                }
+                if key == "spg" {
+                    if let Some(gateways) = value.as_object() {
+                        for gateway in gateways.values() {
+                            collect_radar_keys(gateway, keys);
+                        }
+                    }
+                    continue;
+                }
+                collect_radar_keys(value, keys);
+            }
+        }
+        Json::Array(array) => {
+            for value in array {
+                collect_radar_keys(value, keys);
+            }
+        }
+        Json::Null | Json::Bool(_) | Json::Number(_) | Json::String(_) => {}
+    }
+}
+
+fn is_measurement(value: &Json) -> bool {
+    let Some(object) = value.as_object() else {
+        return false;
+    };
+    !object.is_empty()
+        && object.keys().all(|key| {
+            matches!(
+                key.as_str(),
+                "value" | "minValue" | "maxValue" | "unitCode" | "qualityControl"
+            )
+        })
 }
 
 #[cfg(test)]

@@ -1118,7 +1118,7 @@ pub const RADAR: &[Invocation] = &[
         body: RADAR_QUEUE,
         media: JSON_LD,
         binary: false,
-        renders: &["Host"],
+        renders: &["Radar data queue", "KFSD", "NEXRAD2", "977-013"],
         live: graph(false),
     },
     Invocation {
@@ -1132,7 +1132,7 @@ pub const RADAR: &[Invocation] = &[
         body: RADAR_SERVER,
         media: JSON_LD,
         binary: false,
-        renders: &["Radar Server Status: ldm1"],
+        renders: &["Radar server", "ldm1", "Client Targets", "eno2"],
         live: Live::Check(Expectation {
             payload: "/id",
             keys: &[],
@@ -1148,7 +1148,7 @@ pub const RADAR: &[Invocation] = &[
         body: RADAR_SERVERS,
         media: JSON_LD,
         binary: false,
-        renders: &["Server"],
+        renders: &["Radar servers", "rds", "ldm1", "199904"],
         live: graph(true),
     },
     Invocation {
@@ -1162,7 +1162,12 @@ pub const RADAR: &[Invocation] = &[
         body: RADAR_STATION,
         media: GEO_JSON,
         binary: false,
-        renders: &["Station Information"],
+        renders: &[
+            "Radar station",
+            "KXYZ",
+            "Example Radar",
+            "Adaptation highlights",
+        ],
         live: Live::Check(Expectation {
             payload: "/properties",
             keys: &["stationType"],
@@ -1179,7 +1184,7 @@ pub const RADAR: &[Invocation] = &[
         media: JSON_LD,
         binary: false,
         // A healthy radar has no alarms, and usually does not.
-        renders: &["Station ID", "Alarm Time"],
+        renders: &["Radar station alarms", "No active radar-station alarms"],
         live: graph(false),
     },
     Invocation {
@@ -1190,7 +1195,7 @@ pub const RADAR: &[Invocation] = &[
         body: RADAR_STATIONS,
         media: GEO_JSON,
         binary: false,
-        renders: &["Station ID (ICAO)"],
+        renders: &["Radar stations", "TEWR", "Newark", "KLNX"],
         live: features(true),
     },
     Invocation {
@@ -1201,7 +1206,7 @@ pub const RADAR: &[Invocation] = &[
         body: RADAR_STATIONS,
         media: GEO_JSON,
         binary: false,
-        renders: &["Station ID (ICAO)"],
+        renders: &["Radar stations", "TEWR", "Newark", "KLNX"],
         live: features(true),
     },
     Invocation {
@@ -1212,7 +1217,7 @@ pub const RADAR: &[Invocation] = &[
         body: RADAR_SPGDS,
         media: JSON_LD,
         binary: false,
-        renders: &["Timestamp"],
+        renders: &["Radar SPGDS telemetry", "spgds1", "7077517", "46"],
         live: graph(true),
     },
     Invocation {
@@ -1228,7 +1233,7 @@ pub const RADAR: &[Invocation] = &[
         media: JSON_LD,
         binary: false,
         // A one-hour window in the past legitimately matches nothing.
-        renders: &["Timestamp"],
+        renders: &["Radar SPGDS telemetry", "spgds1", "7077517", "46"],
         live: graph(false),
     },
     Invocation {

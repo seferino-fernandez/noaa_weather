@@ -1,0 +1,113 @@
+---
+source: noaa_weather_summary/tests/radar.rs
+expression: "decode::<RadarSpgdsResponse>(SPGDS).summarize(&SummaryOptions::default())"
+---
+title: Radar SPGDS telemetry
+subtitle: 2 hosts
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: Host
+          key: id
+          also: []
+          align: Left
+        - title: Timestamp
+          key: timestamp
+          also: []
+          align: Left
+        - title: Data Flow
+          key: dataflow
+          also: []
+          align: Left
+        - title: Connect Queue
+          key: connectQ
+          also: []
+          align: Left
+        - title: Application
+          key: appRunning
+          also: []
+          align: Left
+        - title: LDM Connections
+          key: conns
+          also: []
+          align: Right
+        - title: Disk Used
+          key: pctUsed
+          also: []
+          align: Right
+        - title: Inbound
+          key: in
+          also: []
+          align: Right
+        - title: Outbound
+          key: out
+          also: []
+          align: Right
+        - title: Gateways
+          key: spg
+          also: []
+          align: Right
+      rows:
+        - - value:
+              Identifier: spgds1
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:57:29+00:00"
+            emphasis: None
+          - value:
+              Text: "1"
+            emphasis: None
+          - value:
+              Text: "1"
+            emphasis: None
+          - value:
+              Text: "1"
+            emphasis: None
+          - value:
+              Text: "47"
+            emphasis: None
+          - value:
+              Percent: 72
+            emphasis: None
+          - value:
+              Text: "7077517.0"
+            emphasis: None
+          - value:
+              Text: "36991140.0"
+            emphasis: None
+          - value:
+              Count: 46
+            emphasis: None
+        - - value:
+              Identifier: spgds2
+            emphasis: None
+          - value:
+              Timestamp: "2026-09-03T18:56:57+00:00"
+            emphasis: None
+          - value:
+              Text: "1"
+            emphasis: None
+          - value:
+              Text: "1"
+            emphasis: None
+          - value:
+              Text: "1"
+            emphasis: None
+          - value:
+              Text: "47"
+            emphasis: None
+          - value:
+              Percent: 67
+            emphasis: None
+          - value:
+              Text: "6933216.0"
+            emphasis: None
+          - value:
+              Text: "36939204.0"
+            emphasis: None
+          - value:
+              Count: 46
+            emphasis: None
+notes: []

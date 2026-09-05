@@ -6,6 +6,8 @@
     "coordinates": [-112.1469, 33.2903, 999.0]
   },
   "properties": {
+    "@id": "https://api.weather.gov/radar/stations/KXYZ",
+    "@type": "wx:RadarStation",
     "id": "KXYZ",
     "name": "Example Radar",
     "stationType": "WSR-88D",
@@ -13,8 +15,7 @@
       "value": 420.0,
       "unitCode": "wmoUnit:m",
       "maxValue": 421.0,
-      "minValue": null,
-      "qualityControl": "checked"
+      "qualityControl": "Z"
     },
     "timeZone": "America/Phoenix",
     "latency": {
@@ -31,7 +32,14 @@
       "reportingHost": "rda.example",
       "properties": {
         "resolutionVersion": 4,
-        "nl2Path": "/data/level2"
+        "nl2Path": "/data/level2",
+        "volumeCoveragePattern": "R212",
+        "controlStatus": "RPG (Remote) Only",
+        "buildNumber": 24.1,
+        "alarmSummary": "No Alarms",
+        "mode": "Operational",
+        "operabilityStatus": "RDA - On-line",
+        "status": "Operate"
       }
     },
     "performance": {

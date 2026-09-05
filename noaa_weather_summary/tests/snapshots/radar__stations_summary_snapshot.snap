@@ -1,0 +1,87 @@
+---
+source: noaa_weather_summary/tests/radar.rs
+expression: "decode::<RadarStationsResponse>(STATIONS).summarize(&SummaryOptions::default())"
+---
+title: Radar stations
+subtitle: 3 stations
+emphasis: None
+sections:
+  - Table:
+      heading: ~
+      columns:
+        - title: Station ID
+          key: id
+          also: []
+          align: Left
+        - title: Name
+          key: name
+          also: []
+          align: Left
+        - title: Type
+          key: stationType
+          also: []
+          align: Left
+        - title: Elevation
+          key: elevation
+          also: []
+          align: Right
+        - title: Time Zone
+          key: timeZone
+          also: []
+          align: Left
+      rows:
+        - - value:
+              Identifier: TEWR
+            emphasis: None
+          - value:
+              Text: Newark
+            emphasis: None
+          - value:
+              Text: TDWR
+            emphasis: None
+          - value:
+              Quantity:
+                value: 135.9999343832021
+                unit: ft
+                precision: 0
+            emphasis: None
+          - value:
+              Text: GMT
+            emphasis: None
+        - - value:
+              Identifier: KLNX
+            emphasis: None
+          - value:
+              Text: North Platte
+            emphasis: None
+          - value:
+              Text: WSR-88D
+            emphasis: None
+          - value:
+              Quantity:
+                value: 3015.09186351706
+                unit: ft
+                precision: 0
+            emphasis: None
+          - value:
+              Text: GMT
+            emphasis: None
+        - - value:
+              Identifier: KGWX
+            emphasis: None
+          - value:
+              Text: Columbus AFB
+            emphasis: None
+          - value:
+              Text: WSR-88D
+            emphasis: None
+          - value:
+              Quantity:
+                value: 508.5301837270341
+                unit: ft
+                precision: 0
+            emphasis: None
+          - value:
+              Text: GMT
+            emphasis: None
+notes: []

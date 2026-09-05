@@ -1,9 +1,7 @@
 //! The one mapping from meaning to terminal appearance.
 //!
 //! Everything the CLI writes gets its color and weight here, so a reader can
-//! answer "what does yellow mean" by reading one file. The eleven un-ported
-//! presenters still name `comfy_table::{Attribute, Color}` inline; new code
-//! does not.
+//! answer "what does yellow mean" by reading one file.
 
 use comfy_table::{Attribute, Cell, Color};
 use crossterm::style::Stylize as _;

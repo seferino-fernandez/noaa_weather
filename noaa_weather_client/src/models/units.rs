@@ -272,38 +272,6 @@ impl Scale {
     }
 }
 
-/// A WMO or NWS unit code, without the open [`Unit::Other`] fallback.
-///
-/// Used by [`ValueUnit`], the older measurement shape retained by the
-/// not-yet-curated radar wire models.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum UnitCodeType {
-    /// Represents a World Meteorological Organization (WMO) unit code.
-    Wmo(WmoUnitCode),
-    /// Represents a National Weather Service (NWS) unit code.
-    Nws(NwsUnitCode),
-}
-
-/// Legacy radar-wire value with an associated unit code.
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct ValueUnit {
-    /// The unit code, which can be either a WMO unit code or an NWS unit code.
-    /// Examples: "wmoUnit:m", "nwsUnit:s".
-    #[serde(rename = "unitCode", skip_serializing_if = "Option::is_none")]
-    pub unit_code: Option<UnitCodeType>,
-    /// The numerical value. Using f64 to accommodate both integers and floating-point numbers.
-    pub value: Option<f64>,
-    /// The maximum value of a range of measured values
-    #[serde(rename = "maxValue", skip_serializing_if = "Option::is_none")]
-    pub max_value: Option<f64>,
-    /// The minimum value of a range of measured values
-    #[serde(rename = "minValue", skip_serializing_if = "Option::is_none")]
-    pub min_value: Option<Option<f64>>,
-    #[serde(rename = "qualityControl", skip_serializing_if = "Option::is_none")]
-    pub quality_control: Option<String>,
-}
-
 #[cfg(test)]
 mod tests {
     use serde_json::{Value, json};

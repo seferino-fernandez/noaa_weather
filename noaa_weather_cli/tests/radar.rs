@@ -194,8 +194,8 @@ fn test_radar_station_rejects_malformed_station_id() {
     assert!(stderr.contains("invalid radar station id"), "{stderr}");
 }
 
-/// `radar spgds` draws its own table, and the JSON form is what a machine
-/// reads; both come off the same response.
+/// `radar spgds` summarizes the response for people and preserves the typed
+/// wire shape for machines.
 #[tokio::test]
 async fn test_radar_spgds_supports_table_and_json() {
     let server = MockServer::start().await;
@@ -210,7 +210,10 @@ async fn test_radar_spgds_supports_table_and_json() {
 
     let table = run_against(&server, &["radar", "spgds"]).await;
     assert_eq!(table.status.code(), Some(0), "{}", stderr(&table));
-    assert!(String::from_utf8_lossy(&table.stdout).contains("Data Flow"));
+    let table_text = String::from_utf8_lossy(&table.stdout);
+    assert!(table_text.contains("Radar SPGDS telemetry"), "{table_text}");
+    assert!(table_text.contains("spgds1"), "{table_text}");
+    assert!(table_text.contains("7077517"), "{table_text}");
 
     let json = run_against(&server, &["radar", "spgds", "--json"]).await;
     assert_eq!(json.status.code(), Some(0), "{}", stderr(&json));
