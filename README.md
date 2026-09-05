@@ -40,7 +40,7 @@ brew install noaa-weather
 ```bash
 git clone https://github.com/seferino-fernandez/noaa_weather.git
 cd noaa_weather
-cargo install --path noaa_weather_cli
+cargo install --path crates/noaa-weather-cli
 ```
 
 #### As a Library
@@ -57,7 +57,7 @@ cargo add noaa_weather_client --features schemars
 
 ## Documentation
 
-See the [CLI guide](noaa_weather_cli/README.md) and [client guide](noaa_weather_client/README.md).
+See the [CLI guide](crates/noaa-weather-cli/README.md) and [client guide](crates/noaa-weather-client/README.md).
 
 ## Development
 

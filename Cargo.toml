@@ -1,22 +1,32 @@
 [workspace]
 resolver = "2"
-members = ["noaa_weather_client", "noaa_weather_cli", "noaa_weather_summary"]
+members = [
+    "crates/noaa-weather-client",
+    "crates/noaa-weather-cli",
+    "crates/noaa-weather-mcp",
+    "crates/noaa-weather-summary",
+]
 
 [workspace.dependencies]
 anyhow = "1.0.104"
 assert_cmd = "2.2.2"
 bytes = "1.12.1"
 clap = "4.6.6"
+clap_complete = { version = "4.6.9", features = ["unstable-dynamic"] }
+clap_complete_nushell = "4.6.2"
+clap_mangen = "0.3.3"
 comfy-table = "8.0.0"
 crossterm = { version = "0.29", default-features = false }
 insta = "1.48.0"
 jiff = { version = "0.2.35", features = ["serde"] }
 mime = "0.3.17"
-noaa_weather_client = { path = "noaa_weather_client", default-features = false }
-noaa_weather_summary = { path = "noaa_weather_summary" }
+noaa_weather_client = { path = "crates/noaa-weather-client", default-features = false }
+noaa_weather_summary = { path = "crates/noaa-weather-summary" }
 quick-xml = "0.42.0"
 regex = "1.13.1"
 reqwest = "0.13.4"
+rmcp = "3.1.4"
+predicates = "3.1.4"
 schemars = "1.2.2"
 serde = "1.0.229"
 serde_json = "1.0.151"

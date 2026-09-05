@@ -61,3 +61,9 @@ name = "noaa_weather_cli"
 publish = false
 # CLI inherits disabled git releases/tags from workspace
 version_group = "noaa_weather"
+
+[[package]]
+name = "noaa_weather_mcp"
+publish = false
+# MCP inherits disabled git releases/tags from workspace
+version_group = "noaa_weather"

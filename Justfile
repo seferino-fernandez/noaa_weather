@@ -28,12 +28,32 @@ format:
 build:
     cargo build
 
-# Install the noaa-weather CLI tool
-install: install-cli
+# Print a static CLI completion script; redirect it to your shell's completion directory
+completions shell="zsh":
+    cargo run --quiet -p noaa_weather_cli -- completions {{shell}}
+
+# Print a static MCP-server completion script; redirect it to your shell's completion directory
+completions-mcp shell="zsh":
+    cargo run --quiet -p noaa_weather_mcp -- completions {{shell}}
+
+# Generate CLI man pages into <dir> (created if missing; default ./man)
+man dir="man":
+    cargo run --quiet -p noaa_weather_cli -- man {{dir}}
+
+# Generate MCP-server man pages into <dir> (created if missing; default ./man)
+man-mcp dir="man":
+    cargo run --quiet -p noaa_weather_mcp -- man {{dir}}
+
+# Install both command-line binaries
+install: install-cli install-mcp
 
 # Install the noaa-weather CLI tool
 install-cli:
-    cargo install --path noaa_weather_cli
+    cargo install --path crates/noaa-weather-cli
+
+# Install the noaa-weather MCP server
+install-mcp:
+    cargo install --path crates/noaa-weather-mcp
 
 # Build the project in release mode for production
 release:
@@ -43,6 +63,7 @@ release:
 audit:
     cargo auditable build --release
     cargo audit bin target/release/noaa-weather
+    cargo audit bin target/release/noaa-weather-mcp
 
 # Remove the target directory and all build artifacts
 clean:
@@ -58,18 +79,18 @@ coverage:
 
 # Run the basic usage example
 example-basic:
-    cargo run --example basic_usage --manifest-path noaa_weather_client/Cargo.toml
+    cargo run --example basic_usage --manifest-path crates/noaa-weather-client/Cargo.toml
 
 # Run the weather alerts example
 example-alerts:
-    cargo run --example weather_alerts --manifest-path noaa_weather_client/Cargo.toml
+    cargo run --example weather_alerts --manifest-path crates/noaa-weather-client/Cargo.toml
 
 # Run all examples
 examples: example-basic example-alerts
 
 # Capture representative live NOAA responses for completeness tests
 fixtures:
-    noaa_weather_client/tests/fixtures/capture.sh
+    crates/noaa-weather-client/tests/fixtures/capture.sh
 
 # Regenerate the CLI guides' human-summary property tables
 shown-omitted-docs:
