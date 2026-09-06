@@ -3,6 +3,7 @@
 use std::num::NonZeroUsize;
 
 use noaa_weather_client::{Client, RetryPolicy};
+use rmcp::handler::server::router::tool::ToolRouter;
 use rmcp::model::{
     CallToolRequestParams, CallToolResponse, CallToolResult, ContentBlock, NumberOrString, Tool,
 };
@@ -32,6 +33,15 @@ pub(in crate::server) async fn server_with_limit(
 /// Starts a mock upstream with the production one-mebibyte result cap.
 pub(in crate::server) async fn server() -> (MockServer, NoaaWeatherServer) {
     server_with_limit(NonZeroUsize::new(1_048_576).expect("one MiB is nonzero")).await
+}
+
+/// Builds an injected-client server whose tool inventory is one caller-supplied router.
+pub(in crate::server) async fn server_with_router(
+    tool_router: ToolRouter<NoaaWeatherServer>,
+) -> (MockServer, NoaaWeatherServer) {
+    let (upstream, mut server) = server().await;
+    server.tool_router = tool_router;
+    (upstream, server)
 }
 
 /// Calls one tool through the server handler while hiding rmcp transport setup.
