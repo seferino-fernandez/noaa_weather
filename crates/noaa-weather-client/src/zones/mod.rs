@@ -132,8 +132,9 @@ pub struct ZoneStationsQuery {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "schemars", schemars(range(min = 1, max = 500)))]
     pub limit: Option<u16>,
-    /// Opaque pagination cursor from a previous page. The parameter is in
-    /// NOAA's specification, but see [`Zones::stations`] before using it.
+    /// Specification-defined pagination cursor. Do not copy the cursor from
+    /// this response's `pagination.next` URL: NOAA points that URL at
+    /// `/stations`, where it returns an empty page. Increase `limit` instead.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cursor: Option<Cursor>,
 }
