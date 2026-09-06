@@ -89,7 +89,7 @@ fn assert_failure(result: &CallToolResult, code: &str) -> Value {
 
 #[tokio::test]
 async fn router_inventory_has_flat_inputs_concrete_outputs_and_annotations() {
-    let (_upstream, server) = server().await;
+    let (_upstream, server) = server_with_router(NoaaWeatherServer::stations_router()).await;
     let tools = station_tools(&server);
     assert_eq!(
         tools

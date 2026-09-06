@@ -24,6 +24,16 @@ use super::NoaaWeatherServer;
 pub(super) fn router() -> ToolRouter<NoaaWeatherServer> {
     NoaaWeatherServer::points_router()
         + NoaaWeatherServer::alerts_router()
+        + NoaaWeatherServer::alerts_remaining_router()
+        + NoaaWeatherServer::aviation_router()
+        + NoaaWeatherServer::glossary_router()
         + NoaaWeatherServer::gridpoints_router()
+        + NoaaWeatherServer::gridpoints_remaining_router()
+        + NoaaWeatherServer::offices_router()
+        + NoaaWeatherServer::products_router()
+        + NoaaWeatherServer::radar_router()
+        + NoaaWeatherServer::radio_router()
         + NoaaWeatherServer::stations_router()
+        + NoaaWeatherServer::stations_remaining_router()
+        + NoaaWeatherServer::zones_router()
 }
