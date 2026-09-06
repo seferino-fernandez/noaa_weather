@@ -16,7 +16,7 @@ use rmcp::ServiceExt as _;
 use commands::completions::CompletionShell;
 use server::NoaaWeatherServer;
 
-const DEFAULT_MAX_RESPONSE_BYTES: &str = "1048576";
+const DEFAULT_MAX_RESPONSE_BYTES: &str = "10485760";
 
 static COMMAND_VERSION: LazyLock<String> = LazyLock::new(|| {
     format!(
@@ -113,14 +113,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn response_limit_defaults_to_one_mebibyte() {
+    fn response_limit_defaults_to_ten_mebibytes() {
         let cli = Cli::try_parse_from(["noaa-weather-mcp", "completions", "bash"])
             .expect("default CLI must parse");
         assert_eq!(
             cli.parsed_max_response_bytes()
                 .expect("default response limit must be valid")
                 .get(),
-            1_048_576
+            10_485_760
         );
     }
 
