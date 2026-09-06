@@ -62,7 +62,7 @@ impl ServerHandler for NoaaWeatherServer {
                 env!("CARGO_PKG_VERSION"),
             ))
             .with_instructions(
-                "Read NOAA weather.gov data through typed tools. Successful calls return authoritative structured JSON and an identical JSON text representation; tool failures return bounded JSON text with stable error codes."
+                "Read NOAA weather.gov data through typed tools. Successful data calls return authoritative structured JSON and an identical JSON text representation; binary office downloads return native MCP image or embedded-resource content; tool failures return bounded JSON text with stable error codes."
                     .to_owned(),
             )
     }
