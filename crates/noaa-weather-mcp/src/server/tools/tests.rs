@@ -9,19 +9,23 @@ use noaa_weather_client::stations::{Observation, TerminalAerodromeForecast};
 use noaa_weather_client::{
     CallSign, Client, Error as ClientError, InvalidValue, RetryPolicy, ValueKind,
 };
+use rmcp::ServerHandler as _;
 use rmcp::handler::server::tool::IntoCallToolResult as _;
-use rmcp::model::{
-    CallToolRequestParams, CallToolResponse, CallToolResult, ContentBlock, NumberOrString,
-};
-use rmcp::service::{RequestContext, serve_directly};
-use rmcp::{RoleServer, ServerHandler as _};
+use rmcp::model::{CallToolResponse, CallToolResult, ContentBlock};
 use serde_json::{Value, json};
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, ResponseTemplate};
 
 use super::super::NoaaWeatherServer;
 use super::super::result_limit;
-use super::test_support::{projected_failure, server, server_with_limit};
+use super::test_support::{
+    assert_json_success, call, projected_failure, result_text, server, server_with_limit,
+};
+
+mod alerts;
+mod gridpoints;
+mod points;
+mod stations;
 
 const POINT: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -54,44 +58,6 @@ fn successful(value: Value) -> CallToolResponse {
 fn complete(response: &CallToolResponse) -> &CallToolResult {
     let CallToolResponse::Complete(result) = response else {
         panic!("expected a complete tool response");
-    };
-    result
-}
-
-fn text(result: &CallToolResult) -> &str {
-    result
-        .content
-        .first()
-        .and_then(ContentBlock::as_text)
-        .map(|content| content.text.as_str())
-        .expect("tool result must contain text")
-}
-
-async fn call_tool(
-    server: &NoaaWeatherServer,
-    name: &'static str,
-    arguments: Value,
-) -> CallToolResult {
-    let (server_transport, _client_transport) = tokio::io::duplex(1_048_576);
-    let running = serve_directly::<RoleServer, _, _, _, _>(server.clone(), server_transport, None);
-    let request = CallToolRequestParams::new(name).with_arguments(
-        arguments
-            .as_object()
-            .expect("tool arguments must be an object")
-            .clone(),
-    );
-    let context = RequestContext::new(NumberOrString::Number(1), running.peer().clone());
-    let response = running
-        .service()
-        .call_tool(request, context)
-        .await
-        .unwrap_or_else(|error| panic!("{name} call must complete: {error}"));
-    running
-        .cancel()
-        .await
-        .expect("test server must cancel cleanly");
-    let CallToolResponse::Complete(result) = response else {
-        panic!("{name} must return a complete result");
     };
     result
 }
@@ -236,62 +202,30 @@ async fn representative_family_calls_return_exact_structured_and_text_json() {
         .mount(&upstream)
         .await;
 
-    let point = call_tool(
+    let point = call(
         &server,
         "points_get",
         json!({ "point": "39.7456,-97.0892" }),
     )
     .await;
-    let alert = call_tool(&server, "alerts_get", json!({ "alertId": alert_id })).await;
-    let forecast = call_tool(
+    let alert = call(&server, "alerts_get", json!({ "alertId": alert_id })).await;
+    let forecast = call(
         &server,
         "gridpoints_forecast",
         json!({ "gridpointId": "TOP/31,80" }),
     )
     .await;
-    let observation = call_tool(
+    let observation = call(
         &server,
         "stations_observation_latest",
         json!({ "stationId": "KSLC" }),
     )
     .await;
 
-    for (family, result, expected) in [
-        (
-            "points",
-            point,
-            serde_json::to_value(point_expected).expect("point must serialize"),
-        ),
-        (
-            "alerts",
-            alert,
-            serde_json::to_value(alert_expected).expect("alert must serialize"),
-        ),
-        (
-            "gridpoints",
-            forecast,
-            serde_json::to_value(forecast_expected).expect("forecast must serialize"),
-        ),
-        (
-            "stations",
-            observation,
-            serde_json::to_value(observation_expected).expect("observation must serialize"),
-        ),
-    ] {
-        assert_eq!(result.is_error, Some(false), "{family}");
-        assert_eq!(
-            result.structured_content.as_ref(),
-            Some(&expected),
-            "{family}"
-        );
-        assert_eq!(result.content.len(), 1, "{family}");
-        assert_eq!(text(&result), expected.to_string(), "{family}");
-        assert_eq!(
-            serde_json::from_str::<Value>(text(&result)).expect("fallback must be JSON"),
-            expected,
-            "{family}"
-        );
-    }
+    assert_json_success(&point, &point_expected);
+    assert_json_success(&alert, &alert_expected);
+    assert_json_success(&forecast, &forecast_expected);
+    assert_json_success(&observation, &observation_expected);
     upstream.verify().await;
 }
 
@@ -305,7 +239,7 @@ async fn tool_client_error_is_one_bounded_json_error_without_structured_content(
         .mount(&upstream)
         .await;
 
-    let result = call_tool(
+    let result = call(
         &server,
         "points_get",
         json!({ "point": "39.7456,-97.0892" }),
@@ -314,9 +248,9 @@ async fn tool_client_error_is_one_bounded_json_error_without_structured_content(
     assert_eq!(result.is_error, Some(true));
     assert!(result.structured_content.is_none());
     assert_eq!(result.content.len(), 1);
-    assert!(text(&result).len() <= 4_096);
-    assert!(!text(&result).contains("unexposed upstream body"));
-    let failure: Value = serde_json::from_str(text(&result)).expect("failure must be JSON");
+    assert!(result_text(&result).len() <= 4_096);
+    assert!(!result_text(&result).contains("unexposed upstream body"));
+    let failure: Value = serde_json::from_str(result_text(&result)).expect("failure must be JSON");
     assert_eq!(failure["code"], "upstream_http_error");
     assert_eq!(failure["status"], 503);
     upstream.verify().await;
@@ -325,13 +259,13 @@ async fn tool_client_error_is_one_bounded_json_error_without_structured_content(
 #[tokio::test]
 async fn invalid_typed_parameter_is_rmcp_native_and_makes_no_http_request() {
     let (upstream, server) = server().await;
-    let result = call_tool(&server, "points_get", json!({ "point": "91,0" })).await;
+    let result = call(&server, "points_get", json!({ "point": "91,0" })).await;
 
     assert_eq!(result.is_error, Some(true));
     assert!(result.structured_content.is_none());
     assert_eq!(result.content.len(), 1);
-    assert!(text(&result).starts_with("failed to deserialize parameters:"));
-    assert!(serde_json::from_str::<Value>(text(&result)).is_err());
+    assert!(result_text(&result).starts_with("failed to deserialize parameters:"));
+    assert!(serde_json::from_str::<Value>(result_text(&result)).is_err());
     assert!(
         upstream
             .received_requests()
@@ -357,7 +291,7 @@ async fn actual_tool_response_over_the_configured_limit_becomes_a_tool_error() {
         .mount(&upstream)
         .await;
 
-    let result = call_tool(
+    let result = call(
         &server,
         "points_get",
         json!({ "point": "39.7456,-97.0892" }),
@@ -366,7 +300,7 @@ async fn actual_tool_response_over_the_configured_limit_becomes_a_tool_error() {
     assert_eq!(result.is_error, Some(true));
     assert!(result.structured_content.is_none());
     assert_eq!(result.content.len(), 1);
-    let failure: Value = serde_json::from_str(text(&result)).expect("failure must be JSON");
+    let failure: Value = serde_json::from_str(result_text(&result)).expect("failure must be JSON");
     assert_eq!(failure["code"], "response_too_large");
     assert_eq!(failure["bytes"], measured);
     assert_eq!(failure["limit"], configured);
@@ -410,7 +344,7 @@ fn structured_result_over_the_limit_becomes_a_bounded_tool_error() {
         .len();
     let actual = result_limit::apply(successful(value), limit(measured - 1));
     let result = complete(&actual);
-    let error: Value = serde_json::from_str(text(result)).expect("limit error must be JSON");
+    let error: Value = serde_json::from_str(result_text(result)).expect("limit error must be JSON");
 
     assert_eq!(result.is_error, Some(true));
     assert!(result.structured_content.is_none());
@@ -431,7 +365,8 @@ fn structured_result_limit_counts_multibyte_utf8_bytes() {
     assert!(encoded.len() > value.to_string().chars().count());
 
     let actual = result_limit::apply(successful(value), limit(encoded.len() - 1));
-    let error: Value = serde_json::from_str(text(complete(&actual))).expect("error must be JSON");
+    let error: Value =
+        serde_json::from_str(result_text(complete(&actual))).expect("error must be JSON");
     assert_eq!(error["bytes"], encoded.len());
 }
 
@@ -472,7 +407,7 @@ fn tool_failure_converts_through_rmcp_to_one_json_text_error() {
     assert!(result.structured_content.is_none());
     assert_eq!(result.content.len(), 1);
     let parsed: Value =
-        serde_json::from_str(text(result)).expect("tool failure text must be valid JSON");
+        serde_json::from_str(result_text(result)).expect("tool failure text must be valid JSON");
     assert_eq!(parsed["code"], "invalid_input");
 }
 
