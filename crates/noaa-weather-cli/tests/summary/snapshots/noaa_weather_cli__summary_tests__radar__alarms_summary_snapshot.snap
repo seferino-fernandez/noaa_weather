@@ -1,0 +1,13 @@
+---
+source: crates/noaa-weather-cli/src/../tests/summary/radar.rs
+assertion_line: 69
+expression: "decode::<RadarStationAlarmsResponse>(ALARMS).summarize(&SummaryOptions::default())"
+---
+title: Radar station alarms
+subtitle: 0 alarms
+emphasis: None
+sections:
+  - Empty:
+      key: "@graph"
+      message: No active radar-station alarms
+notes: []

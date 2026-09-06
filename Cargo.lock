@@ -1398,7 +1398,6 @@ dependencies = [
  "insta",
  "jiff",
  "noaa_weather_client",
- "noaa_weather_summary",
  "predicates",
  "serde",
  "serde_json",
@@ -1448,17 +1447,6 @@ dependencies = [
  "tempfile",
  "tokio",
  "wiremock",
-]
-
-[[package]]
-name = "noaa_weather_summary"
-version = "0.1.0"
-dependencies = [
- "insta",
- "jiff",
- "noaa_weather_client",
- "serde",
- "serde_json",
 ]
 
 [[package]]

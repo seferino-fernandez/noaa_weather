@@ -18,6 +18,10 @@ mod client_args;
 mod commands;
 mod exit;
 mod output;
+mod summary;
+
+#[cfg(test)]
+mod summary_tests;
 
 pub use client_args::{ClientBuildError, Fault};
 pub use exit::ExitCode;

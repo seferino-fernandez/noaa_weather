@@ -22,7 +22,6 @@ path = "src/main.rs"
 
 [dependencies]
 noaa_weather_client.workspace = true
-noaa_weather_summary.workspace = true
 
 clap = { workspace = true, features = ["derive", "env"] }
 clap_complete.workspace = true
@@ -39,6 +38,6 @@ tempfile.workspace = true
 
 [dev-dependencies]
 assert_cmd.workspace = true
-insta.workspace = true
+insta = { workspace = true, features = ["yaml"] }
 predicates.workspace = true
 wiremock.workspace = true

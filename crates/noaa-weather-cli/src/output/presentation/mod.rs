@@ -3,6 +3,7 @@
 use std::error::Error as StdError;
 use std::fmt;
 
+use crate::summary::SummaryOptions;
 use noaa_weather_client::alerts::{ActiveAlertCounts, Alert, AlertEventTypes};
 use noaa_weather_client::aviation::{CenterWeatherAdvisory, CwsuOffice, Sigmet};
 use noaa_weather_client::glossary::GlossaryResponse;
@@ -25,7 +26,6 @@ use noaa_weather_client::stations::{
 };
 use noaa_weather_client::zones::{Zone, ZoneForecast};
 use noaa_weather_client::{Feature, FeatureCollection};
-use noaa_weather_summary::SummaryOptions;
 use serde::Serialize;
 
 use super::PresentationDocument;
@@ -62,14 +62,14 @@ pub(crate) trait DefaultPresentation: Serialize {
 }
 
 /// Declares that these types present themselves through their [`Summarize`]
-/// impls, so the summary crate decides meaning and `output::render` decides
+/// impls, so the summary module decides meaning and `output::render` decides
 /// appearance.
 ///
 /// A blanket impl is impossible because [`Summarize`] is foreign while
 /// [`DefaultPresentation`] is local. This list is therefore the explicit
 /// bridge between the two crates.
 ///
-/// [`Summarize`]: noaa_weather_summary::Summarize
+/// [`Summarize`]: crate::summary::Summarize
 macro_rules! summarized {
     ($($response:ty),+ $(,)?) => {
         $(
@@ -79,7 +79,7 @@ macro_rules! summarized {
                     presenter: &DefaultPresenter,
                 ) -> Result<PresentationDocument, PresentationError> {
                     Ok(PresentationDocument::Summary(Box::new(
-                        noaa_weather_summary::Summarize::summarize(
+                        crate::summary::Summarize::summarize(
                             self,
                             presenter.summary_options(),
                         ),
@@ -129,7 +129,7 @@ summarized!(
     FeatureCollection<Observation>,
     TerminalAerodromeForecastsResponse,
     TerminalAerodromeForecast,
-    noaa_weather_summary::stations::ZoneObservations,
+    crate::summary::stations::ZoneObservations,
     Feature<Zone>,
     FeatureCollection<Zone>,
     Feature<ZoneForecast>,
