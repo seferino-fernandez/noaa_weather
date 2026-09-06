@@ -1,6 +1,6 @@
 //! Terminal rendering: the one place that decides how output looks.
 //!
-//! [`noaa_weather_summary`] already renders a [`Summary`] as markdown and as
+//! [`crate::summary`] already renders a [`Summary`] as markdown and as
 //! plain text; neither can draw a box-drawing table or write a color escape,
 //! so this module implements exactly that and nothing else.
 //!
@@ -9,11 +9,11 @@
 
 use std::env;
 
+use crate::summary::Summary;
+use crate::summary::render::RenderOptions as ValueOptions;
 use clap::ValueEnum;
 use comfy_table::{ContentArrangement, Table};
 use jiff::tz::TimeZone;
-use noaa_weather_summary::Summary;
-use noaa_weather_summary::render::RenderOptions as ValueOptions;
 
 mod style;
 mod table;
@@ -135,7 +135,7 @@ impl RenderOptions {
         }
     }
 
-    /// The summary crate's own appearance options, so both renderers format a
+    /// The summary layer's own appearance options, so both renderers format a
     /// value the same way.
     fn value_options(&self) -> ValueOptions {
         ValueOptions {

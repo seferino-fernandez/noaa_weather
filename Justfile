@@ -98,7 +98,7 @@ fixtures:
 
 # Regenerate the CLI guides' human-summary property tables
 shown-omitted-docs:
-    UPDATE_SHOWN_OMITTED_DOCS=1 cargo test -p noaa_weather_summary --test shown_omitted_docs
+    UPDATE_SHOWN_OMITTED_DOCS=1 cargo test -p noaa_weather_cli --lib summary_tests::shown_omitted_docs::generated_shown_and_omitted_docs_are_current
 
 # Run the pull request validation acceptance gate
 verify:

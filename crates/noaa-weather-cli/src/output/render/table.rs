@@ -1,9 +1,9 @@
 //! Drawing a [`Summary`] with box-drawing characters.
 
+use crate::summary::render::{RangeStyle, format_value};
+use crate::summary::{Align, Cell, Column, Emphasis, Fact, Section, Summary, Value};
 use comfy_table::presets::{UTF8_FULL, UTF8_FULL_CONDENSED};
 use comfy_table::{CellAlignment, ColumnConstraint, Table};
-use noaa_weather_summary::render::{RangeStyle, format_value};
-use noaa_weather_summary::{Align, Cell, Column, Emphasis, Fact, Section, Summary, Value};
 
 use super::{RenderOptions, Width, style};
 
@@ -207,7 +207,7 @@ fn is_identifier(value: &Value) -> bool {
     }
 }
 
-/// The summary crate decides what a value says; comfy-table takes the
+/// The summary layer decides what a value says; comfy-table takes the
 /// newlines a [`Value::Lines`] produces as they stand, and a range spells its
 /// join out, because a terminal column is no place to parse a dash between a
 /// negative bound and a positive one.

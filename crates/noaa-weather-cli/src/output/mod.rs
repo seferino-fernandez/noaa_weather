@@ -4,10 +4,10 @@ use std::future::Future;
 use std::io;
 use std::path::{Path, PathBuf};
 
+use crate::summary::{SummaryOptions, UnitSystem};
 use anyhow::{Context as _, Result, anyhow, bail};
 use clap::{ArgMatches, Args, ValueEnum};
 use noaa_weather_client::BinaryPayload;
-use noaa_weather_summary::{SummaryOptions, UnitSystem};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -21,7 +21,7 @@ use sink::{DestinationAdapter, MediaKind, StdoutDestination};
 
 use presentation::{DefaultPresentation, DefaultPresenter};
 
-pub(crate) use noaa_weather_summary::stations::ZoneObservations;
+pub(crate) use crate::summary::stations::ZoneObservations;
 
 /// Global command-line arguments that select successful-output behavior.
 #[derive(Args, Debug)]
@@ -178,7 +178,7 @@ impl From<&str> for Operation {
 /// A successful default presentation before destination-specific rendering.
 pub(crate) enum PresentationDocument {
     /// Semantic content rendered by [`render`].
-    Summary(Box<noaa_weather_summary::Summary>),
+    Summary(Box<crate::summary::Summary>),
 }
 
 mod binary {

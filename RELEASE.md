@@ -33,7 +33,7 @@ Commits with other types (e.g., `chore`, `style`, `build`) will **not** trigger 
 3. **Merge the Release Pull Request**: The release pull request should be reviewed and merged.
 
 4. **Publish and Release**: Merging the release pull request triggers the `release` job, which performs the following actions:
-    - Publishes `noaa_weather_client`, `noaa_weather_summary`, `noaa_weather_cli`, and `noaa_weather_mcp` to [Crates.io](https://crates.io/) in dependency order.
+    - Publishes `noaa_weather_client`, `noaa_weather_cli`, and `noaa_weather_mcp` to [Crates.io](https://crates.io/) in dependency order.
     - Creates a new GitHub release with the changelog for the new version.
     - Creates and pushes a git tag for the new version (e.g., `v0.1.0`).
 

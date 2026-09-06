@@ -29,7 +29,7 @@ impl DefaultPresentation for Example {
         _presenter: &DefaultPresenter,
     ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::Summary(Box::new(
-            noaa_weather_summary::Summary::new(format!("value: {}", self.value)),
+            crate::summary::Summary::new(format!("value: {}", self.value)),
         )))
     }
 }
@@ -51,7 +51,7 @@ impl DefaultPresentation for InvalidJson {
         _presenter: &DefaultPresenter,
     ) -> Result<PresentationDocument, PresentationError> {
         Ok(PresentationDocument::Summary(Box::new(
-            noaa_weather_summary::Summary::new("unused"),
+            crate::summary::Summary::new("unused"),
         )))
     }
 }
@@ -591,7 +591,7 @@ async fn rendered_with_units<T: DefaultPresentation + 'static>(value: T, units: 
     std::fs::read_to_string(path).unwrap()
 }
 
-/// `--units` has exactly one wire into the summary crate: `OutputArgs.units`
+/// `--units` has exactly one wire into the summary layer: `OutputArgs.units`
 /// through `From<Units> for UnitSystem` into the `SummaryOptions` that
 /// `Output::configured` hands `DefaultPresenter`, which the `summarized!`
 /// macro reads back through `summary_options()`.

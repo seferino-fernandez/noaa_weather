@@ -6,14 +6,14 @@
 //! whole path — decode, [`Summarize`], render — because those three chosen
 //! output changes are what a reviewer needs to see.
 
+use crate::summary::{
+    Align, Cell, Column, Emphasis, Fact, Section, Summarize, Summary, SummaryOptions, UnitSystem,
+    Value,
+};
 use noaa_weather_client::alerts::{ActiveAlertCounts, Alert, AlertEventTypes};
 use noaa_weather_client::gridpoints::{Forecast, Gridpoint};
 use noaa_weather_client::points::Point;
 use noaa_weather_client::{Feature, FeatureCollection, OffsetDateTime};
-use noaa_weather_summary::{
-    Align, Cell, Column, Emphasis, Fact, Section, Summarize, Summary, SummaryOptions, UnitSystem,
-    Value,
-};
 
 use super::{ColorMode, RenderOptions, TimeZoneChoice};
 

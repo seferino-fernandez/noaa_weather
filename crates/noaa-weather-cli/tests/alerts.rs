@@ -7,8 +7,8 @@
 //! argument lists at real NOAA, which is the only way to notice that a route
 //! moved or a response stopped decoding.
 //!
-//! Rendered output is snapshotted once, for one command. `noaa_weather_summary`
-//! already snapshots `Summary` values and `output::render` already snapshots
+//! Rendered output is snapshotted once, for one command. The internal summary
+//! module already snapshots `Summary` values and `output::render` snapshots
 //! rendered bytes, so a third set here would only mean three snapshot files to
 //! review for every wording change.
 

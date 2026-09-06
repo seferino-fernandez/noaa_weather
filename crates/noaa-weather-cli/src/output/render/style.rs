@@ -3,9 +3,9 @@
 //! Everything the CLI writes gets its color and weight here, so a reader can
 //! answer "what does yellow mean" by reading one file.
 
+use crate::summary::Emphasis;
 use comfy_table::{Attribute, Cell, Color};
 use crossterm::style::Stylize as _;
-use noaa_weather_summary::Emphasis;
 
 /// The color an emphasis reads as, or `None` for ordinary content.
 fn color(emphasis: Emphasis) -> Option<Color> {

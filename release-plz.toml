@@ -38,7 +38,7 @@ features_always_increment_minor = true
 dependencies_update = true
 release_commits = "^(feat|fix|docs|perf|refactor|revert|test|update)[(:]"
 
-# Publish every crate, but create one tag and GitHub Release for the workspace.
+# Publish all three packages, but create one tag and GitHub Release for the workspace.
 publish = true
 changelog_update = true
 git_release_enable = false
@@ -53,17 +53,11 @@ publish = true
 version_group = "noaa_weather"
 
 [[package]]
-name = "noaa_weather_summary"
-publish = true
-version_group = "noaa_weather"
-
-[[package]]
 name = "noaa_weather_cli"
 publish = true
 # Anchor the workspace's single tag and GitHub Release on the CLI package.
 changelog_include = [
     "noaa_weather_client",
-    "noaa_weather_summary",
     "noaa_weather_mcp",
 ]
 git_release_enable = true
