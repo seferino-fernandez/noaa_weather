@@ -75,3 +75,8 @@ jobs:
 
             - name: Build
               run: cargo build --release
+
+            # Packaging validates the manifests that release-plz will publish,
+            # including crates.io version requirements for workspace dependencies.
+            - name: Package publishable crates
+              run: cargo package --workspace --locked --no-verify

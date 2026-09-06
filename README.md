@@ -35,6 +35,16 @@ brew tap seferino-fernandez/tools
 brew install noaa-weather
 ```
 
+#### From crates.io
+
+```bash
+cargo install noaa_weather_cli
+# Or download a matching GitHub Release binary:
+cargo binstall noaa_weather_cli
+```
+
+Install the stdio MCP server the same way with `noaa_weather_mcp`.
+
 #### From Source
 
 ```bash
