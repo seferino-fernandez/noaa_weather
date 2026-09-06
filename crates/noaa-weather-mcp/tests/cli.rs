@@ -43,7 +43,7 @@ fn help_describes_the_stdio_only_server_without_oauth() {
                 .and(predicates::str::contains(
                     "NOAA_WEATHER_MCP_MAX_RESPONSE_BYTES",
                 ))
-                .and(predicates::str::contains("[default: 1048576]")),
+                .and(predicates::str::contains("[default: 10485760]")),
         );
 }
 
