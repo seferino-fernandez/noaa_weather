@@ -20,9 +20,10 @@ clap = { workspace = true, features = ["derive", "env"] }
 clap_complete.workspace = true
 clap_complete_nushell.workspace = true
 clap_mangen.workspace = true
+jiff.workspace = true
 noaa_weather_client = { workspace = true, features = ["schemars"] }
 rmcp = { workspace = true, features = ["server", "transport-io"] }
-schemars.workspace = true
+schemars = { workspace = true, features = ["jiff02"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 tokio = { workspace = true, features = ["io-std", "macros", "rt"] }

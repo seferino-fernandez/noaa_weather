@@ -20,12 +20,20 @@ use super::super::NoaaWeatherServer;
 use super::super::result_limit;
 use super::test_support::{
     assert_json_success, call, projected_failure, result_text, server, server_with_limit,
+    server_with_router,
 };
 
 mod alerts;
+mod aviation;
+mod glossary;
 mod gridpoints;
+mod offices;
 mod points;
+mod products;
+mod radar;
+mod radio;
 mod stations;
+mod zones;
 
 const POINT: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -60,6 +68,21 @@ fn complete(response: &CallToolResponse) -> &CallToolResult {
         panic!("expected a complete tool response");
     };
     result
+}
+
+#[tokio::test]
+async fn family_tests_can_replace_the_composed_router() {
+    let (_upstream, server) = server_with_router(NoaaWeatherServer::points_router()).await;
+
+    assert_eq!(
+        server
+            .tool_router
+            .list_all()
+            .iter()
+            .map(|tool| tool.name.as_ref())
+            .collect::<Vec<_>>(),
+        ["points_forecast", "points_get"]
+    );
 }
 
 #[test]
