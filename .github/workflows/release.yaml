@@ -1,9 +1,6 @@
 name: Release
 
-permissions:
-    contents: write
-    issues: write
-    pull-requests: write
+permissions: {}
 
 on:
     push:
@@ -19,6 +16,9 @@ jobs:
     release-pr:
         name: Create Release Pull Request
         runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            pull-requests: write
         steps:
             - name: Checkout repository
               uses: actions/checkout@v7
@@ -41,6 +41,10 @@ jobs:
     release:
         name: Release Crates
         runs-on: ubuntu-latest
+        if: github.repository_owner == 'seferino-fernandez'
+        permissions:
+            contents: write
+            pull-requests: read
         # This job will only execute when `release-plz` detects that the commit
         # that triggered the workflow is the merge commit of one of its own release PRs.
         # This behavior is enabled by the `release_always = false` setting in `release-plz.toml`.
@@ -49,6 +53,7 @@ jobs:
               uses: actions/checkout@v7
               with:
                   fetch-depth: 0
+                  persist-credentials: false
 
             - name: Install Rust toolchain
               uses: dtolnay/rust-toolchain@stable

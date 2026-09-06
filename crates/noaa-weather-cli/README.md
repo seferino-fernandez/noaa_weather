@@ -4,6 +4,14 @@
 
 ## Installation
 
+From crates.io:
+
+```bash
+cargo install noaa_weather_cli
+# Or download a matching GitHub Release binary:
+cargo binstall noaa_weather_cli
+```
+
 With Homebrew:
 
 ```bash
@@ -11,7 +19,7 @@ brew tap seferino-fernandez/tools
 brew install noaa-weather
 ```
 
-From a repository checkout with Cargo:
+From a repository checkout:
 
 ```bash
 cargo install --path crates/noaa-weather-cli
