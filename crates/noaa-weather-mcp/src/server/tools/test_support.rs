@@ -92,7 +92,6 @@ pub(in crate::server) fn assert_metadata(tool: &Tool, expected_title: &str) {
             .is_some_and(|description| !description.trim().is_empty())
     );
     assert!(tool.input_schema.get("properties").is_some());
-    assert!(tool.output_schema.is_some());
     let annotations = tool.annotations.as_ref().expect("annotations must exist");
     assert_eq!(annotations.title.as_deref(), Some(expected_title));
     assert_eq!(annotations.read_only_hint, Some(true));

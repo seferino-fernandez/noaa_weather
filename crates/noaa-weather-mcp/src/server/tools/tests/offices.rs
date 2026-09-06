@@ -1,11 +1,14 @@
 use std::collections::BTreeSet;
+use std::num::NonZeroUsize;
 
+use base64::Engine as _;
+use base64::prelude::BASE64_STANDARD;
 use noaa_weather_client::offices::{
     Office, OfficeBriefingResponse, OfficeHeadline, OfficeHeadlineCollection,
     OfficeWeatherStoryCollection,
 };
 use rmcp::handler::server::tool::schema_for_output;
-use rmcp::model::{CallToolResult, Tool};
+use rmcp::model::{CallToolResult, ContentBlock, ResourceContents, Tool};
 use schemars::JsonSchema;
 use serde_json::{Value, json};
 use wiremock::matchers::{header, method, path};
@@ -13,7 +16,7 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 
 use super::super::super::NoaaWeatherServer;
 use super::super::test_support::{
-    assert_json_success, assert_metadata, call, result_text, server_with_router,
+    assert_json_success, assert_metadata, call, result_text, server_with_limit, server_with_router,
 };
 
 const OFFICE: &str = include_str!(concat!(
@@ -75,6 +78,22 @@ fn assert_contract<T: JsonSchema + 'static>(
     assert_eq!(tool.output_schema.as_ref(), Some(&schema_for_output::<T>()));
 }
 
+fn assert_binary_contract(tool: &Tool, title: &str, properties: &[&str], required: &[&str]) {
+    assert_metadata(tool, title);
+    let actual_properties = tool.input_schema["properties"]
+        .as_object()
+        .expect("input properties must be an object")
+        .keys()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>();
+    assert_eq!(actual_properties, properties.iter().copied().collect());
+    assert_eq!(
+        names(tool.input_schema.get("required")),
+        required.iter().copied().collect()
+    );
+    assert!(tool.output_schema.is_none());
+}
+
 fn assert_parameter_failure(result: &CallToolResult) {
     assert_eq!(result.is_error, Some(true));
     assert!(result.structured_content.is_none());
@@ -103,10 +122,13 @@ async fn router_inventory_has_exact_flat_schemas_outputs_and_annotations() {
             .collect::<Vec<_>>(),
         [
             "offices_briefing",
+            "offices_briefing_document",
             "offices_get",
             "offices_headline_get",
             "offices_headlines",
+            "offices_latest_briefing_document",
             "offices_weather_stories",
+            "offices_weather_story_image",
         ]
     );
 
@@ -140,6 +162,184 @@ async fn router_inventory_has_exact_flat_schemas_outputs_and_annotations() {
         &["officeId"],
         &["officeId"],
     );
+    assert_binary_contract(
+        tool(&tools, "offices_briefing_document"),
+        "Download NOAA Office Briefing",
+        &["briefingId", "officeId"],
+        &["briefingId", "officeId"],
+    );
+    assert_binary_contract(
+        tool(&tools, "offices_latest_briefing_document"),
+        "Download Latest NOAA Office Briefing",
+        &["officeId"],
+        &["officeId"],
+    );
+    assert_binary_contract(
+        tool(&tools, "offices_weather_story_image"),
+        "Download NOAA Office Weather Story Image",
+        &["imageId", "officeId"],
+        &["imageId", "officeId"],
+    );
+}
+
+#[tokio::test]
+async fn binary_tools_return_native_mcp_content_and_exact_http_contract() {
+    const PDF: &[u8] = b"%PDF-1.7\nbriefing";
+    const IMAGE: &[u8] = b"\x89PNG\r\n\x1a\nweather-story";
+    let (upstream, server) = server_with_router(NoaaWeatherServer::offices_router()).await;
+
+    for (expected_path, accept, content_type, body) in [
+        (
+            "/offices/PSR/briefing/download/latest",
+            "application/pdf",
+            "application/pdf; version=1.7",
+            PDF,
+        ),
+        (
+            "/offices/PSR/briefing/download/brief%20%2F%25%3F",
+            "application/pdf",
+            "application/pdf",
+            PDF,
+        ),
+        (
+            "/offices/PSR/weatherstories/download/story%20%2F%25%3F",
+            "image/*",
+            "image/png",
+            IMAGE,
+        ),
+    ] {
+        Mock::given(method("GET"))
+            .and(path(expected_path))
+            .and(header("Accept", accept))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_bytes(body)
+                    .insert_header("Content-Type", content_type),
+            )
+            .expect(1)
+            .mount(&upstream)
+            .await;
+    }
+
+    for (name, arguments, expected_mime_type) in [
+        (
+            "offices_latest_briefing_document",
+            json!({"officeId": "psr"}),
+            "application/pdf; version=1.7",
+        ),
+        (
+            "offices_briefing_document",
+            json!({"officeId": "psr", "briefingId": "brief /%?"}),
+            "application/pdf",
+        ),
+    ] {
+        let result = call(&server, name, arguments).await;
+        assert_eq!(result.is_error, Some(false));
+        assert!(result.structured_content.is_none());
+        assert_eq!(result.content.len(), 1);
+        let ContentBlock::Resource(resource) = &result.content[0] else {
+            panic!("{name} must return an embedded resource");
+        };
+        let ResourceContents::BlobResourceContents {
+            uri,
+            mime_type,
+            blob,
+            ..
+        } = &resource.resource
+        else {
+            panic!("{name} must return a blob resource");
+        };
+        assert!(uri.starts_with(&upstream.uri()));
+        assert!(uri.contains("/offices/PSR/briefing/download/"));
+        assert_eq!(mime_type.as_deref(), Some(expected_mime_type));
+        assert_eq!(BASE64_STANDARD.decode(blob).unwrap(), PDF);
+    }
+
+    let image = call(
+        &server,
+        "offices_weather_story_image",
+        json!({"officeId": "psr", "imageId": "story /%?"}),
+    )
+    .await;
+    assert_eq!(image.is_error, Some(false));
+    assert!(image.structured_content.is_none());
+    assert_eq!(image.content.len(), 1);
+    let ContentBlock::Image(image) = &image.content[0] else {
+        panic!("weather story must return image content");
+    };
+    assert_eq!(image.mime_type, "image/png");
+    assert_eq!(BASE64_STANDARD.decode(&image.data).unwrap(), IMAGE);
+
+    upstream.verify().await;
+    assert_eq!(
+        upstream
+            .received_requests()
+            .await
+            .expect("recorded requests must be readable")
+            .len(),
+        3,
+        "each binary tool must make exactly one request"
+    );
+}
+
+#[tokio::test]
+async fn binary_tool_rejects_raw_payload_over_the_configured_limit_before_encoding() {
+    const IMAGE: &[u8] = b"12345";
+    let (upstream, server) = server_with_limit(NonZeroUsize::new(IMAGE.len() - 1).unwrap()).await;
+    Mock::given(method("GET"))
+        .and(path("/offices/PSR/weatherstories/download/story-1"))
+        .and(header("Accept", "image/*"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(IMAGE, "image/jpeg"))
+        .expect(1)
+        .mount(&upstream)
+        .await;
+
+    let result = call(
+        &server,
+        "offices_weather_story_image",
+        json!({"officeId": "PSR", "imageId": "story-1"}),
+    )
+    .await;
+
+    assert_eq!(result.is_error, Some(true));
+    assert!(result.structured_content.is_none());
+    assert_eq!(result.content.len(), 1);
+    let failure: Value =
+        serde_json::from_str(result_text(&result)).expect("limit failure must be JSON");
+    assert_eq!(failure["code"], "response_too_large");
+    assert_eq!(failure["bytes"], IMAGE.len());
+    assert_eq!(failure["limit"], IMAGE.len() - 1);
+    assert!(failure["message"].as_str().unwrap().contains("binary"));
+    upstream.verify().await;
+}
+
+#[tokio::test]
+async fn binary_tool_media_failure_uses_the_bounded_client_error_contract() {
+    let (upstream, server) = server_with_router(NoaaWeatherServer::offices_router()).await;
+    Mock::given(method("GET"))
+        .and(path("/offices/PSR/weatherstories/download/story-1"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw("not an image", "text/plain"))
+        .expect(1)
+        .mount(&upstream)
+        .await;
+
+    let result = call(
+        &server,
+        "offices_weather_story_image",
+        json!({"officeId": "PSR", "imageId": "story-1"}),
+    )
+    .await;
+    assert_eq!(result.is_error, Some(true));
+    assert!(result.structured_content.is_none());
+    assert_eq!(result.content.len(), 1);
+    let failure: Value =
+        serde_json::from_str(result_text(&result)).expect("tool failure must be JSON");
+    assert_eq!(failure["code"], "protocol_error");
+    assert_eq!(
+        failure["details"]["protocolSubtype"],
+        "incompatible_content_type"
+    );
+    upstream.verify().await;
 }
 
 #[tokio::test]

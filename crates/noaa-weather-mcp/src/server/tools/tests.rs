@@ -127,10 +127,13 @@ fn server_advertises_the_exact_typed_tool_contract() {
             "gridpoints_get",
             "gridpoints_stations",
             "offices_briefing",
+            "offices_briefing_document",
             "offices_get",
             "offices_headline_get",
             "offices_headlines",
+            "offices_latest_briefing_document",
             "offices_weather_stories",
+            "offices_weather_story_image",
             "points_forecast",
             "points_get",
             "products_by_type",
@@ -299,12 +302,21 @@ fn server_advertises_the_exact_typed_tool_contract() {
             "offices_briefing"
             | "offices_get"
             | "offices_headlines"
+            | "offices_latest_briefing_document"
             | "offices_weather_stories" => {
                 (BTreeSet::from(["officeId"]), BTreeSet::from(["officeId"]))
             }
+            "offices_briefing_document" => (
+                BTreeSet::from(["briefingId", "officeId"]),
+                BTreeSet::from(["briefingId", "officeId"]),
+            ),
             "offices_headline_get" => (
                 BTreeSet::from(["headlineId", "officeId"]),
                 BTreeSet::from(["headlineId", "officeId"]),
+            ),
+            "offices_weather_story_image" => (
+                BTreeSet::from(["imageId", "officeId"]),
+                BTreeSet::from(["imageId", "officeId"]),
             ),
             "points_forecast" | "points_get" => {
                 (BTreeSet::from(["point"]), BTreeSet::from(["point"]))
@@ -450,11 +462,24 @@ fn server_advertises_the_exact_typed_tool_contract() {
         };
         assert_eq!(actual_properties, expected_properties, "{}", tool.name);
         assert_eq!(actual_required, expected_required, "{}", tool.name);
-        let output = tool
-            .output_schema
-            .as_ref()
-            .unwrap_or_else(|| panic!("{} must have an output schema", tool.name));
-        assert_eq!(output.get("type"), Some(&json!("object")), "{}", tool.name);
+        if matches!(
+            tool.name.as_ref(),
+            "offices_briefing_document"
+                | "offices_latest_briefing_document"
+                | "offices_weather_story_image"
+        ) {
+            assert!(
+                tool.output_schema.is_none(),
+                "{} returns native MCP content, not structured JSON",
+                tool.name
+            );
+        } else {
+            let output = tool
+                .output_schema
+                .as_ref()
+                .unwrap_or_else(|| panic!("{} must have an output schema", tool.name));
+            assert_eq!(output.get("type"), Some(&json!("object")), "{}", tool.name);
+        }
     }
     assert!(
         info.instructions

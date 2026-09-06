@@ -38,7 +38,7 @@ fn command_version() -> &'static str {
     about = "Serve the NOAA weather.gov API over MCP using stdio"
 )]
 struct Cli {
-    /// Maximum size in bytes of one structured JSON tool result.
+    /// Maximum size in bytes of one structured JSON or raw binary tool result.
     #[arg(
         long,
         global = true,

@@ -12,10 +12,12 @@ use noaa_weather_client::offices::{
 };
 use rmcp::Json;
 use rmcp::handler::server::wrapper::Parameters;
+use rmcp::model::CallToolResult;
 use schemars::JsonSchema;
 use serde::Deserialize;
 
 use super::super::NoaaWeatherServer;
+use super::super::result_limit::{self, BinaryContent};
 use super::error::ToolFailure;
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -32,6 +34,24 @@ struct OfficeHeadlineArguments {
     office_id: OfficeId,
     /// Opaque server-issued headline identifier.
     headline_id: String,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+struct OfficeBriefingDocumentArguments {
+    /// Forecast office or regional or national headquarters identifier.
+    office_id: OfficeId,
+    /// Opaque server-issued briefing document identifier.
+    briefing_id: String,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+struct OfficeWeatherStoryImageArguments {
+    /// Forecast office or regional or national headquarters identifier.
+    office_id: OfficeId,
+    /// Opaque server-issued weather-story image identifier.
+    image_id: String,
 }
 
 #[rmcp::tool_router(router = offices_router, vis = "pub(super)")]
@@ -121,6 +141,52 @@ impl NoaaWeatherServer {
     }
 
     #[rmcp::tool(
+        name = "offices_latest_briefing_document",
+        description = "Download the latest NOAA office briefing as a base64-encoded PDF resource.",
+        annotations(
+            title = "Download Latest NOAA Office Briefing",
+            read_only_hint = true,
+            open_world_hint = true
+        )
+    )]
+    async fn offices_latest_briefing_document(
+        &self,
+        Parameters(arguments): Parameters<OfficeArguments>,
+    ) -> Result<CallToolResult, ToolFailure> {
+        self.client
+            .offices()
+            .latest_briefing_document(&arguments.office_id)
+            .await
+            .map(|payload| {
+                result_limit::binary(payload, BinaryContent::Resource, self.max_response_bytes)
+            })
+            .map_err(ToolFailure::from)
+    }
+
+    #[rmcp::tool(
+        name = "offices_briefing_document",
+        description = "Download one NOAA office briefing by its server-issued identifier as a base64-encoded PDF resource.",
+        annotations(
+            title = "Download NOAA Office Briefing",
+            read_only_hint = true,
+            open_world_hint = true
+        )
+    )]
+    async fn offices_briefing_document(
+        &self,
+        Parameters(arguments): Parameters<OfficeBriefingDocumentArguments>,
+    ) -> Result<CallToolResult, ToolFailure> {
+        self.client
+            .offices()
+            .briefing_document(&arguments.office_id, &arguments.briefing_id)
+            .await
+            .map(|payload| {
+                result_limit::binary(payload, BinaryContent::Resource, self.max_response_bytes)
+            })
+            .map_err(ToolFailure::from)
+    }
+
+    #[rmcp::tool(
         name = "offices_weather_stories",
         description = "Return active weather-story metadata for one NOAA office.",
         annotations(
@@ -138,6 +204,29 @@ impl NoaaWeatherServer {
             .weather_stories(&arguments.office_id)
             .await
             .map(Json)
+            .map_err(ToolFailure::from)
+    }
+
+    #[rmcp::tool(
+        name = "offices_weather_story_image",
+        description = "Download one NOAA office weather-story image as base64-encoded MCP image content.",
+        annotations(
+            title = "Download NOAA Office Weather Story Image",
+            read_only_hint = true,
+            open_world_hint = true
+        )
+    )]
+    async fn offices_weather_story_image(
+        &self,
+        Parameters(arguments): Parameters<OfficeWeatherStoryImageArguments>,
+    ) -> Result<CallToolResult, ToolFailure> {
+        self.client
+            .offices()
+            .weather_story_image(&arguments.office_id, &arguments.image_id)
+            .await
+            .map(|payload| {
+                result_limit::binary(payload, BinaryContent::Image, self.max_response_bytes)
+            })
             .map_err(ToolFailure::from)
     }
 }
