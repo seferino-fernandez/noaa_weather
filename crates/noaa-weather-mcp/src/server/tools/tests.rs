@@ -3,6 +3,7 @@ use std::num::NonZeroUsize;
 
 use noaa_weather_client::alerts::Alert;
 use noaa_weather_client::geo::Feature;
+use noaa_weather_client::glossary::GlossaryResponse;
 use noaa_weather_client::gridpoints::Forecast;
 use noaa_weather_client::points::Point;
 use noaa_weather_client::stations::{Observation, TerminalAerodromeForecast};
@@ -13,7 +14,7 @@ use rmcp::ServerHandler as _;
 use rmcp::handler::server::tool::IntoCallToolResult as _;
 use rmcp::model::{CallToolResponse, CallToolResult, ContentBlock};
 use serde_json::{Value, json};
-use wiremock::matchers::{method, path};
+use wiremock::matchers::{header, method, path};
 use wiremock::{Mock, ResponseTemplate};
 
 use super::super::NoaaWeatherServer;
@@ -50,6 +51,10 @@ const FORECAST: &str = include_str!(concat!(
 const LATEST_OBSERVATION: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../noaa-weather-client/tests/fixtures/stations/latest.json"
+));
+const GLOSSARY: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../noaa-weather-client/tests/fixtures/glossary/terms.json"
 ));
 
 fn limit(bytes: usize) -> NonZeroUsize {
@@ -102,15 +107,66 @@ fn server_advertises_the_exact_typed_tool_contract() {
             .collect::<Vec<_>>(),
         [
             "alerts_active",
+            "alerts_active_count",
+            "alerts_active_for_area",
+            "alerts_active_for_marine_region",
+            "alerts_active_for_zone",
             "alerts_get",
+            "alerts_search",
+            "alerts_types",
+            "aviation_cwa_get",
+            "aviation_cwas",
+            "aviation_cwsu_get",
+            "aviation_sigmet_get",
+            "aviation_sigmets",
+            "aviation_sigmets_for_atsu",
+            "aviation_sigmets_for_atsu_on_date",
+            "glossary_terms",
             "gridpoints_forecast",
             "gridpoints_forecast_hourly",
+            "gridpoints_get",
+            "gridpoints_stations",
+            "offices_briefing",
+            "offices_get",
+            "offices_headline_get",
+            "offices_headlines",
+            "offices_weather_stories",
             "points_forecast",
             "points_get",
+            "products_by_type",
+            "products_by_type_and_location",
+            "products_get",
+            "products_latest",
+            "products_locations",
+            "products_locations_for_type",
+            "products_search",
+            "products_types",
+            "products_types_for_location",
+            "radar_queue",
+            "radar_server_get",
+            "radar_servers",
+            "radar_spgds",
+            "radar_station_alarms",
+            "radar_station_get",
+            "radar_stations",
+            "radio_broadcast",
+            "radio_broadcast_for_point",
+            "radio_transmitter_get",
+            "radio_transmitters",
+            "radio_transmitters_for_county",
+            "stations_get",
+            "stations_list",
+            "stations_observation_at",
             "stations_observation_latest",
             "stations_observations",
             "stations_taf_get",
             "stations_taf_list",
+            "zones_forecast",
+            "zones_get",
+            "zones_list",
+            "zones_list_of_type",
+            "zones_observations",
+            "zones_stations",
         ]
     );
     for tool in &tools {
@@ -142,39 +198,258 @@ fn server_advertises_the_exact_typed_tool_contract() {
             .as_object()
             .unwrap_or_else(|| panic!("{} input properties must be an object", tool.name));
         assert!(!properties.contains_key("query"), "{}", tool.name);
-        let actual = properties
+        let actual_properties = properties
             .keys()
             .map(String::as_str)
             .collect::<BTreeSet<_>>();
-        let expected = match tool.name.as_ref() {
-            "alerts_active" => BTreeSet::from([
-                "area",
-                "certainty",
-                "code",
-                "event",
-                "messageType",
-                "point",
-                "region",
-                "regionType",
-                "severity",
-                "status",
-                "urgency",
-                "zone",
-            ]),
-            "alerts_get" => BTreeSet::from(["alertId"]),
-            "gridpoints_forecast" | "gridpoints_forecast_hourly" => {
-                BTreeSet::from(["gridpointId", "units"])
+        let actual_required = tool
+            .input_schema
+            .get("required")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .map(|required| {
+                required
+                    .as_str()
+                    .unwrap_or_else(|| panic!("{} required entries must be strings", tool.name))
+            })
+            .collect::<BTreeSet<_>>();
+        let (expected_properties, expected_required) = match tool.name.as_ref() {
+            "alerts_active" => (
+                BTreeSet::from([
+                    "area",
+                    "certainty",
+                    "code",
+                    "event",
+                    "messageType",
+                    "point",
+                    "region",
+                    "regionType",
+                    "severity",
+                    "status",
+                    "urgency",
+                    "zone",
+                ]),
+                BTreeSet::new(),
+            ),
+            "alerts_active_count"
+            | "alerts_types"
+            | "glossary_terms"
+            | "products_locations"
+            | "products_types" => (BTreeSet::new(), BTreeSet::new()),
+            "alerts_active_for_area" => (BTreeSet::from(["area"]), BTreeSet::from(["area"])),
+            "alerts_active_for_marine_region" => {
+                (BTreeSet::from(["region"]), BTreeSet::from(["region"]))
             }
-            "points_forecast" | "points_get" => BTreeSet::from(["point"]),
-            "stations_observation_latest" => BTreeSet::from(["requireQc", "stationId"]),
-            "stations_observations" => {
-                BTreeSet::from(["cursor", "end", "limit", "start", "stationId"])
+            "alerts_active_for_zone" => (BTreeSet::from(["zoneId"]), BTreeSet::from(["zoneId"])),
+            "alerts_get" => (BTreeSet::from(["alertId"]), BTreeSet::from(["alertId"])),
+            "alerts_search" => (
+                BTreeSet::from([
+                    "area",
+                    "certainty",
+                    "code",
+                    "cursor",
+                    "end",
+                    "event",
+                    "limit",
+                    "messageType",
+                    "point",
+                    "region",
+                    "regionType",
+                    "severity",
+                    "start",
+                    "status",
+                    "urgency",
+                    "zone",
+                ]),
+                BTreeSet::new(),
+            ),
+            "aviation_cwa_get" => (
+                BTreeSet::from(["cwsuId", "date", "sequence"]),
+                BTreeSet::from(["cwsuId", "date", "sequence"]),
+            ),
+            "aviation_cwas" | "aviation_cwsu_get" => {
+                (BTreeSet::from(["cwsuId"]), BTreeSet::from(["cwsuId"]))
             }
-            "stations_taf_get" => BTreeSet::from(["issued", "stationId"]),
-            "stations_taf_list" => BTreeSet::from(["stationId"]),
+            "aviation_sigmet_get" => (
+                BTreeSet::from(["atsuId", "issued"]),
+                BTreeSet::from(["atsuId", "issued"]),
+            ),
+            "aviation_sigmets" => (
+                BTreeSet::from(["atsu", "date", "end", "sequence", "start"]),
+                BTreeSet::new(),
+            ),
+            "aviation_sigmets_for_atsu" => (BTreeSet::from(["atsuId"]), BTreeSet::from(["atsuId"])),
+            "aviation_sigmets_for_atsu_on_date" => (
+                BTreeSet::from(["atsuId", "date"]),
+                BTreeSet::from(["atsuId", "date"]),
+            ),
+            "gridpoints_forecast" | "gridpoints_forecast_hourly" => (
+                BTreeSet::from(["gridpointId", "units"]),
+                BTreeSet::from(["gridpointId"]),
+            ),
+            "gridpoints_get" => (
+                BTreeSet::from(["gridpointId"]),
+                BTreeSet::from(["gridpointId"]),
+            ),
+            "gridpoints_stations" => (
+                BTreeSet::from(["gridpointId", "limit"]),
+                BTreeSet::from(["gridpointId"]),
+            ),
+            "offices_briefing"
+            | "offices_get"
+            | "offices_headlines"
+            | "offices_weather_stories" => {
+                (BTreeSet::from(["officeId"]), BTreeSet::from(["officeId"]))
+            }
+            "offices_headline_get" => (
+                BTreeSet::from(["headlineId", "officeId"]),
+                BTreeSet::from(["headlineId", "officeId"]),
+            ),
+            "points_forecast" | "points_get" => {
+                (BTreeSet::from(["point"]), BTreeSet::from(["point"]))
+            }
+            "products_by_type" => (
+                BTreeSet::from(["productTypeCode"]),
+                BTreeSet::from(["productTypeCode"]),
+            ),
+            "products_by_type_and_location" => (
+                BTreeSet::from(["locationId", "productTypeCode"]),
+                BTreeSet::from(["locationId", "productTypeCode"]),
+            ),
+            "products_get" => (BTreeSet::from(["productId"]), BTreeSet::from(["productId"])),
+            "products_latest" => (
+                BTreeSet::from(["locationId", "productTypeCode"]),
+                BTreeSet::from(["locationId", "productTypeCode"]),
+            ),
+            "products_locations_for_type" => (
+                BTreeSet::from(["productTypeCode"]),
+                BTreeSet::from(["productTypeCode"]),
+            ),
+            "products_search" => (
+                BTreeSet::from([
+                    "end",
+                    "limit",
+                    "locationIds",
+                    "officeIds",
+                    "productTypeCodes",
+                    "start",
+                    "wmoIds",
+                ]),
+                BTreeSet::new(),
+            ),
+            "products_types_for_location" => (
+                BTreeSet::from(["locationId"]),
+                BTreeSet::from(["locationId"]),
+            ),
+            "radar_queue" => (
+                BTreeSet::from([
+                    "arrived",
+                    "created",
+                    "feed",
+                    "host",
+                    "limit",
+                    "published",
+                    "resolution",
+                    "station",
+                    "type",
+                ]),
+                BTreeSet::from(["host"]),
+            ),
+            "radar_server_get" => (
+                BTreeSet::from(["reportingHost", "serverId"]),
+                BTreeSet::from(["serverId"]),
+            ),
+            "radar_servers" => (BTreeSet::from(["reportingHost"]), BTreeSet::new()),
+            "radar_spgds" => (BTreeSet::from(["published"]), BTreeSet::new()),
+            "radar_station_alarms" => {
+                (BTreeSet::from(["stationId"]), BTreeSet::from(["stationId"]))
+            }
+            "radar_station_get" => (
+                BTreeSet::from(["host", "reportingHost", "stationId"]),
+                BTreeSet::from(["stationId"]),
+            ),
+            "radar_stations" => (
+                BTreeSet::from(["host", "reportingHost", "stationType"]),
+                BTreeSet::new(),
+            ),
+            "radio_broadcast" | "radio_transmitter_get" => {
+                (BTreeSet::from(["callSign"]), BTreeSet::from(["callSign"]))
+            }
+            "radio_broadcast_for_point" => (BTreeSet::from(["point"]), BTreeSet::from(["point"])),
+            "radio_transmitters" => (BTreeSet::from(["cursor"]), BTreeSet::new()),
+            "radio_transmitters_for_county" => {
+                (BTreeSet::from(["zoneId"]), BTreeSet::from(["zoneId"]))
+            }
+            "stations_get" => (BTreeSet::from(["stationId"]), BTreeSet::from(["stationId"])),
+            "stations_list" => (
+                BTreeSet::from(["cursor", "id", "limit", "state"]),
+                BTreeSet::new(),
+            ),
+            "stations_observation_at" => (
+                BTreeSet::from(["stationId", "time"]),
+                BTreeSet::from(["stationId", "time"]),
+            ),
+            "stations_observation_latest" => (
+                BTreeSet::from(["requireQc", "stationId"]),
+                BTreeSet::from(["stationId"]),
+            ),
+            "stations_observations" => (
+                BTreeSet::from(["cursor", "end", "limit", "start", "stationId"]),
+                BTreeSet::from(["stationId"]),
+            ),
+            "stations_taf_get" => (
+                BTreeSet::from(["issued", "stationId"]),
+                BTreeSet::from(["issued", "stationId"]),
+            ),
+            "stations_taf_list" => (BTreeSet::from(["stationId"]), BTreeSet::from(["stationId"])),
+            "zones_forecast" => (
+                BTreeSet::from(["zoneId", "zoneType"]),
+                BTreeSet::from(["zoneId", "zoneType"]),
+            ),
+            "zones_get" => (
+                BTreeSet::from(["effective", "zoneId", "zoneType"]),
+                BTreeSet::from(["zoneId", "zoneType"]),
+            ),
+            "zones_list" => (
+                BTreeSet::from([
+                    "area",
+                    "effective",
+                    "id",
+                    "includeGeometry",
+                    "limit",
+                    "point",
+                    "region",
+                    "type",
+                ]),
+                BTreeSet::new(),
+            ),
+            "zones_list_of_type" => (
+                BTreeSet::from([
+                    "area",
+                    "effective",
+                    "id",
+                    "includeGeometry",
+                    "limit",
+                    "point",
+                    "region",
+                    "type",
+                    "zoneType",
+                ]),
+                BTreeSet::from(["zoneType"]),
+            ),
+            "zones_observations" => (
+                BTreeSet::from(["end", "limit", "start", "zoneId"]),
+                BTreeSet::from(["zoneId"]),
+            ),
+            "zones_stations" => (
+                BTreeSet::from(["cursor", "limit", "zoneId"]),
+                BTreeSet::from(["zoneId"]),
+            ),
             name => panic!("unexpected tool {name}"),
         };
-        assert_eq!(actual, expected, "{}", tool.name);
+        assert_eq!(actual_properties, expected_properties, "{}", tool.name);
+        assert_eq!(actual_required, expected_required, "{}", tool.name);
         let output = tool
             .output_schema
             .as_ref()
@@ -249,6 +524,32 @@ async fn representative_family_calls_return_exact_structured_and_text_json() {
     assert_json_success(&alert, &alert_expected);
     assert_json_success(&forecast, &forecast_expected);
     assert_json_success(&observation, &observation_expected);
+    upstream.verify().await;
+}
+
+#[tokio::test]
+async fn production_router_calls_a_newly_composed_tool_with_typed_json_parity() {
+    let expected: GlossaryResponse =
+        serde_json::from_str(GLOSSARY).expect("glossary fixture must decode");
+    let (upstream, server) = server().await;
+    Mock::given(method("GET"))
+        .and(path("/glossary"))
+        .and(header("Accept", "application/ld+json"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(GLOSSARY, "application/ld+json"))
+        .expect(1)
+        .mount(&upstream)
+        .await;
+
+    let result = call(&server, "glossary_terms", json!({})).await;
+    assert_json_success(&result, &expected);
+
+    let requests = upstream
+        .received_requests()
+        .await
+        .expect("requests must be readable");
+    assert_eq!(requests.len(), 1);
+    assert_eq!(requests[0].url.path(), "/glossary");
+    assert_eq!(requests[0].url.query(), None);
     upstream.verify().await;
 }
 
