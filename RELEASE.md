@@ -27,7 +27,9 @@ Commits with other types (e.g., `chore`, `style`, `build`) will **not** trigger 
 
 2. **Create Release Pull Request**: The `release-pr` job runs `release-plz` to analyze the commit history. If a new release is warranted, `release-plz` will create a new pull request with the following changes:
     - The version numbers of the updated packages in their respective `Cargo.toml` files are bumped.
-    - `CHANGELOG.md` files are updated with the relevant commit messages.
+    - The single root `CHANGELOG.md` is updated with the relevant commit messages.
+      All three packages share one version and one changelog, aggregated onto
+      `noaa_weather_client` via `changelog_include`.
     - The pull request is labeled with "release".
 
 3. **Merge the Release Pull Request**: The release pull request should be reviewed and merged.

@@ -3,6 +3,18 @@ body = """
 
 ## [{{ version | trim_start_matches(pat="v") }}]{%- if release_link -%}({{ release_link }}){% endif %}
 _{{ timestamp | date(format="%d %B %Y") }}_
+{% set breaking_commits = commits | filter(attribute="breaking", value=true) -%}
+{%- if breaking_commits | length > 0 %}
+### Breaking changes
+
+{% for commit in breaking_commits -%}
+* {% if commit.scope and commit.scope != package %}*({{ commit.scope }})* {% endif %}{{ commit.message | upper_first }}
+{%- if commit.breaking_description and commit.breaking_description != commit.message %}
+
+{{ commit.breaking_description | trim }}
+{% endif %}
+{%- endfor %}
+{% endif -%}
 {% for group, commits in commits | group_by(attribute="group") -%}
 {%- if group != "chore" %}
 ### {{ group | upper_first }}
@@ -22,13 +34,23 @@ _{{ timestamp | date(format="%d %B %Y") }}_
 
 commit_parsers = [
     { message = "^feat", group = "added" },
+    { message = "^add", group = "added" },
     { message = "^changed", group = "changed" },
+    { message = "^refactor", group = "changed" },
+    { message = "^perf", group = "changed" },
     { message = "^deprecated", group = "deprecated" },
+    { message = "^remove", group = "removed" },
     { message = "^fix", group = "fixed" },
+    { message = "^revert", group = "fixed" },
     { message = "^security", group = "security" },
-    { message = "^chore", group = "chore" },
-    { message = "^update", group = "updated dependencies" },
     { message = "^doc", group = "documented" },
+    { message = "^update", group = "updated dependencies" },
+    # Hidden from the changelog: the template skips the "chore" group.
+    { message = "^test", group = "chore" },
+    { message = "^ci", group = "chore" },
+    { message = "^build", group = "chore" },
+    { message = "^style", group = "chore" },
+    { message = "^chore", group = "chore" },
     { message = "^.*", group = "other" },
 ]
 
@@ -52,6 +74,9 @@ pr_labels = ["release"]
 [[package]]
 name = "noaa_weather_client"
 publish = true
+# One changelog for the whole workspace, at the repository root.
+# Path is relative to the root Cargo.toml.
+changelog_path = "CHANGELOG.md"
 changelog_include = [
     "noaa_weather_cli",
     "noaa_weather_mcp",
