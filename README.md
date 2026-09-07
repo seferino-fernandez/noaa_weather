@@ -33,6 +33,7 @@ Install the `noaa-weather` CLI tool using Homebrew:
 ```bash
 brew tap seferino-fernandez/tools
 brew install noaa-weather
+brew install noaa-weather-mcp
 ```
 
 #### From crates.io

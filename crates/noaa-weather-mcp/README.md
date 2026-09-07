@@ -10,6 +10,13 @@ Build and install from crates.io:
 cargo install noaa_weather_mcp
 ```
 
+With Homebrew:
+
+```bash
+brew tap seferino-fernandez/tools
+brew install noaa-weather-mcp
+```
+
 Or download a matching binary from GitHub Releases:
 
 ```bash

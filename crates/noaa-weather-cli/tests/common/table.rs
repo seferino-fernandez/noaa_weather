@@ -1480,7 +1480,7 @@ pub const STATIONS: &[Invocation] = &[
         media: JSON_LD,
         binary: false,
         renders: &["Issue Time", "KPHX", "2026-08-30"],
-        live: graph(true),
+        live: graph(false),
     },
     Invocation {
         command: &["stations", "terminal-aerodrome-forecast"],

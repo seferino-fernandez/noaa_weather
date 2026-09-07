@@ -5,7 +5,8 @@ mod common;
 use std::process::Output;
 
 use common::noaa_weather;
-use common::runner::{family, hermetic, live};
+use common::runner::{check_payload, family, hermetic, live};
+use common::table::Live;
 use serde_json::Value;
 
 #[tokio::test]
@@ -16,6 +17,20 @@ async fn every_stations_invocation_asks_for_the_path_and_query_the_table_records
 #[test]
 fn test_stations_live_noaa_answers_every_tabled_invocation() {
     live(family("stations"));
+}
+
+#[test]
+fn an_empty_current_taf_listing_is_valid_live_data() {
+    let invocation = family("stations")
+        .invocations
+        .iter()
+        .find(|invocation| invocation.command == ["stations", "terminal-aerodrome-forecasts"])
+        .expect("the stations table must cover current TAF listings");
+    let Live::Check(expectation) = &invocation.live else {
+        panic!("the current TAF listing must remain covered by the live suite");
+    };
+
+    check_payload(invocation, expectation, br#"{"@graph":[]}"#);
 }
 
 fn succeeding(arguments: &[&str]) -> Output {
