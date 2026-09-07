@@ -36,7 +36,9 @@ commit_parsers = [
 release_always = false
 features_always_increment_minor = true
 dependencies_update = true
-release_commits = "^(feat|fix|docs|perf|refactor|revert|test|update)[(:]"
+# `!` must be in the class or scope-less breaking commits (`feat!:`) never match,
+# and the package is silently never marked releasable.
+release_commits = "^(feat|fix|docs|perf|refactor|revert|test|update)[(!:]"
 
 # Publish all three packages, but create one tag and GitHub Release for the workspace.
 publish = true
@@ -50,14 +52,8 @@ pr_labels = ["release"]
 [[package]]
 name = "noaa_weather_client"
 publish = true
-version_group = "noaa_weather"
-
-[[package]]
-name = "noaa_weather_cli"
-publish = true
-# Anchor the workspace's single tag and GitHub Release on the CLI package.
 changelog_include = [
-    "noaa_weather_client",
+    "noaa_weather_cli",
     "noaa_weather_mcp",
 ]
 git_release_enable = true
@@ -66,7 +62,17 @@ git_tag_name = "v{{ version }}"
 git_release_name = "v{{ version }}"
 version_group = "noaa_weather"
 
+# These two have no changelog of their own: `changelog_include` above folds their
+# commits into the client's changelog. Without this, release-plz would create a
+# duplicate CHANGELOG.md for each.
+[[package]]
+name = "noaa_weather_cli"
+publish = true
+changelog_update = false
+version_group = "noaa_weather"
+
 [[package]]
 name = "noaa_weather_mcp"
 publish = true
+changelog_update = false
 version_group = "noaa_weather"

@@ -34,23 +34,14 @@ jobs:
             - name: Install cargo hack
               uses: taiki-e/install-action@cargo-hack
 
-            - name: Detect stable API baseline
-              id: semver_baseline
-              run: |
-                  if git rev-parse --verify --quiet refs/tags/v2.0.0 >/dev/null; then
-                      echo "available=true" >> "$GITHUB_OUTPUT"
-                  else
-                      echo "available=false" >> "$GITHUB_OUTPUT"
-                      echo "Skipping semver checks until release-plz creates v2.0.0."
-                  fi
-
+            # `release-type` is deliberately omitted so the action derives it from
+            # the version in Cargo.toml against the crates.io baseline, instead of
+            # being gated on a hardcoded tag that may never exist.
             - name: Check public API compatibility
-              if: steps.semver_baseline.outputs.available == 'true'
               uses: obi1kenobi/cargo-semver-checks-action@v2
               with:
                   package: noaa_weather_client
                   feature-group: all-features
-                  release-type: minor
                   rust-toolchain: manual
 
             - name: Check formatting
