@@ -7,7 +7,7 @@ use std::process::Output;
 use common::noaa_weather;
 use common::runner::{check_payload, family, hermetic, live};
 use common::table::Live;
-use serde_json::Value;
+use serde_json::{Value, json};
 
 #[tokio::test]
 async fn every_stations_invocation_asks_for_the_path_and_query_the_table_records() {
@@ -55,6 +55,109 @@ fn json(output: &Output, what: &str) -> Value {
             String::from_utf8_lossy(&output.stdout)
         )
     })
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum TafFetchError {
+    NotFound,
+    Failed(String),
+}
+
+fn taf_issue_time(forecast: &Value) -> String {
+    let id = forecast["id"]
+        .as_str()
+        .expect("NOAA returned a current TAF without an identifier");
+    let mut segments = id.trim_end_matches('/').rsplit('/');
+    let time = segments.next().expect("TAF identifier time segment");
+    let date = segments.next().expect("TAF identifier date segment");
+    let (hours, minutes) = time.split_at(2);
+    format!("{date}T{hours}:{minutes}:00Z")
+}
+
+fn first_available_taf<T>(
+    forecasts: &[Value],
+    mut fetch: impl FnMut(&str) -> Result<T, TafFetchError>,
+) -> Result<Option<T>, TafFetchError> {
+    for forecast in forecasts {
+        match fetch(&taf_issue_time(forecast)) {
+            Ok(output) => return Ok(Some(output)),
+            Err(TafFetchError::NotFound) => {}
+            Err(error @ TafFetchError::Failed(_)) => return Err(error),
+        }
+    }
+    Ok(None)
+}
+
+fn fetch_taf(issued: &str) -> Result<Output, TafFetchError> {
+    let arguments = [
+        "stations",
+        "terminal-aerodrome-forecast",
+        "--station-id",
+        "KPHX",
+        "--issued",
+        issued,
+    ];
+    let output = noaa_weather()
+        .args(arguments)
+        .output()
+        .expect("the built binary must be runnable");
+    if output.status.success() {
+        return Ok(output);
+    }
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    if output.status.code() == Some(3) && stderr.contains("HTTP 404 Not Found") {
+        Err(TafFetchError::NotFound)
+    } else {
+        Err(TafFetchError::Failed(format!(
+            "`{}` failed: {stderr}",
+            arguments.join(" ")
+        )))
+    }
+}
+
+#[test]
+fn a_dangling_taf_identifier_does_not_hide_a_later_current_taf() {
+    let listing = json!({
+        "@graph": [
+            {"id": "https://api.weather.gov/stations/KPHX/tafs/2026-08-30/2254"},
+            {"id": "https://api.weather.gov/stations/KPHX/tafs/2026-09-06/2354"}
+        ]
+    });
+    let forecasts = listing["@graph"].as_array().unwrap();
+    let mut attempted = Vec::new();
+
+    let fetched = first_available_taf(forecasts, |issued| {
+        attempted.push(issued.to_owned());
+        if issued == "2026-08-30T22:54:00Z" {
+            Err(TafFetchError::NotFound)
+        } else {
+            Ok(issued.to_owned())
+        }
+    });
+
+    assert_eq!(fetched, Ok(Some("2026-09-06T23:54:00Z".to_owned())));
+    assert_eq!(attempted, ["2026-08-30T22:54:00Z", "2026-09-06T23:54:00Z"]);
+}
+
+#[test]
+fn an_entirely_dangling_taf_listing_has_no_available_forecast() {
+    let listing = json!({
+        "@graph": [
+            {"id": "https://api.weather.gov/stations/KPHX/tafs/2026-08-30/2254"},
+            {"id": "https://api.weather.gov/stations/KPHX/tafs/2026-08-30/2251"}
+        ]
+    });
+    let forecasts = listing["@graph"].as_array().unwrap();
+    let mut attempted = Vec::new();
+
+    let fetched: Result<Option<()>, TafFetchError> = first_available_taf(forecasts, |issued| {
+        attempted.push(issued.to_owned());
+        Err(TafFetchError::NotFound)
+    });
+
+    assert_eq!(fetched, Ok(None));
+    assert_eq!(attempted, ["2026-08-30T22:54:00Z", "2026-08-30T22:51:00Z"]);
 }
 
 #[test]
@@ -155,32 +258,28 @@ fn test_stations_taf_success() {
         .as_array()
         .unwrap_or_else(|| panic!("`{what}` returned no `@graph` array: {metadata}"));
 
-    let Some(first) = forecasts.first() else {
-        eprintln!(
-            "`{what}` returned a well-formed empty `@graph`, so KPHX has no \
-             current TAF and there was no issue time to fetch. The listing \
-             endpoint was checked; `terminal-aerodrome-forecast` was not."
-        );
-        return;
+    let output = match first_available_taf(forecasts, fetch_taf) {
+        Ok(Some(output)) => output,
+        Ok(None) => {
+            if forecasts.is_empty() {
+                eprintln!(
+                    "`{what}` returned a well-formed empty `@graph`, so KPHX has no \
+                     current TAF and there was no issue time to fetch. The listing \
+                     endpoint was checked; `terminal-aerodrome-forecast` was not."
+                );
+            } else {
+                eprintln!(
+                    "`{what}` advertised {} TAF entries, but every singleton \
+                     returned 404. The listing endpoint was checked; \
+                     `terminal-aerodrome-forecast` was unavailable.",
+                    forecasts.len()
+                );
+            }
+            return;
+        }
+        Err(TafFetchError::NotFound) => unreachable!("404s are exhausted as candidates"),
+        Err(TafFetchError::Failed(message)) => panic!("{message}"),
     };
-
-    let id = first["id"]
-        .as_str()
-        .expect("NOAA returned at least one current KPHX TAF identifier");
-    let mut segments = id.trim_end_matches('/').rsplit('/');
-    let time = segments.next().expect("TAF identifier time segment");
-    let date = segments.next().expect("TAF identifier date segment");
-    let (hours, minutes) = time.split_at(2);
-    let issued = format!("{date}T{hours}:{minutes}:00Z");
-
-    let output = succeeding(&[
-        "stations",
-        "terminal-aerodrome-forecast",
-        "--station-id",
-        "KPHX",
-        "--issued",
-        &issued,
-    ]);
 
     let table = String::from_utf8(output.stdout).unwrap();
     assert!(table.contains("KPHX"), "{table}");

@@ -7,7 +7,9 @@
 //! pty and reads the bytes it wrote.
 //!
 //! The responses come from a `wiremock` server rather than NOAA, so these run
-//! in the normal suite. They need util-linux `script` on the machine.
+//! in the normal suite. They need util-linux or BSD `script` on the machine.
+
+#![cfg(any(target_os = "linux", target_os = "macos"))]
 
 mod common;
 
@@ -22,19 +24,33 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 /// Runs the built binary under a pty and returns everything it wrote,
 /// escapes included.
 ///
-/// util-linux `script` is the portable-enough way to get a pty without a new
-/// dependency: `-q` drops its own banner, `-e` returns the command's exit
-/// status, and `/dev/null` throws away the typescript file.
+/// `script` is the portable-enough way to get a pty without a new dependency.
+/// util-linux accepts the command through `-c`; BSD `script` takes the
+/// typescript path first and the command as positional arguments.
 fn on_a_pty(base_url: &str, arguments: &str, no_color: bool) -> String {
     let binary = cargo_bin!("noaa-weather");
     let mut command = Command::new("script");
+
+    #[cfg(target_os = "linux")]
     command
         .arg("-qec")
         .arg(format!(
-            "{} {arguments} --base-url {base_url}",
-            binary.display()
+            "exec \"$NOAA_WEATHER_TEST_BIN\" {arguments} --base-url \
+             \"$NOAA_WEATHER_TEST_BASE_URL\""
         ))
-        .arg("/dev/null");
+        .arg("/dev/null")
+        .env("NOAA_WEATHER_TEST_BIN", binary)
+        .env("NOAA_WEATHER_TEST_BASE_URL", base_url);
+
+    #[cfg(target_os = "macos")]
+    command
+        .arg("-q")
+        .arg("/dev/null")
+        .arg(binary)
+        .args(arguments.split_ascii_whitespace())
+        .arg("--base-url")
+        .arg(base_url);
+
     strip_noaa_environment(&mut command);
     if no_color {
         command.env("NO_COLOR", "1");
@@ -44,7 +60,7 @@ fn on_a_pty(base_url: &str, arguments: &str, no_color: bool) -> String {
 
     let output = command
         .output()
-        .expect("util-linux `script` must be installed to check terminal color policy");
+        .expect("`script` must be installed to check terminal color policy");
     assert!(
         output.status.success(),
         "{arguments} failed on a pty: {}",
