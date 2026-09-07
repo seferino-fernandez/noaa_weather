@@ -1,6 +1,6 @@
 [package]
 name = "noaa_weather_mcp"
-version = "0.1.0"
+version = "2.0.0"
 edition.workspace = true
 description = "Model Context Protocol server for the NOAA weather.gov API"
 publish = true

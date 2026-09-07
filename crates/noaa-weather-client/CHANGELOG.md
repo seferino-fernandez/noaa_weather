@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0](https://github.com/seferino-fernandez/noaa_weather/compare/v1.3.0...v2.0.0)
+_07 September 2026_
+
+### Added
+
+* *(mcp)* Add zone and office tools
+* Report API spec in version output
+* Scaffold MCP server in crates workspace
+* *(release)* Publish all crates and binaries
+* *(mcp)* Return binary office content
+* *(mcp)* Compose complete tool surface
+* *(mcp)* Add aviation and radar tools
+* *(mcp)* Add remaining alert and station tools
+* *(mcp)* Add product radio and glossary tools
+* *(mcp)* Add station and TAF tools
+* *(mcp)* Add alert tools
+* *(mcp)* Add point and gridpoint tools
+* *(mcp)* Add structured tool foundation
+
+### Documented
+
+* Enforce client documentation coverage
+* Map endpoints to modules and cover handle accessors
+
+### Fixed
+
+* Fix tests
+* *(mcp)* Raise default response limit
+
+### Other
+
+* *(client)* [**breaking**] Inherit workspace metadata and drop redundant fields
+* Organize client modules by domain
+* *(cli)* Expand color and stations coverage
+* *(cli)* Fold summary into CLI
+* *(mcp)* Prepare remaining tool families
+* *(mcp)* Centralize tool contract harness
+* *(mcp)* Lock first ten tool contracts
+
 ## [1.3.0](https://github.com/seferino-fernandez/noaa_weather/compare/v1.2.0...v1.3.0)
 
 _22 August 2026_
