@@ -1,16 +1,13 @@
 [package]
 name = "noaa_weather_cli"
 version = "1.2.0"
-edition = "2024"
+edition.workspace = true
 description = "A CLI for the NOAA Weather API client."
 publish = true
-license = "MIT"
-repository = "https://github.com/seferino-fernandez/noaa_weather"
+license.workspace = true
+repository.workspace = true
 keywords = ["weather", "noaa", "nws", "cli"]
 categories = ["command-line-utilities"]
-homepage = "https://github.com/seferino-fernandez/noaa_weather"
-documentation = "https://github.com/seferino-fernandez/noaa_weather"
-readme = "README.md"
 
 [lib]
 name = "noaa_weather_cli"

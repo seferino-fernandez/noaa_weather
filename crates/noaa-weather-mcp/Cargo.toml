@@ -1,15 +1,13 @@
 [package]
 name = "noaa_weather_mcp"
 version = "0.1.0"
-edition = "2024"
+edition.workspace = true
 description = "Model Context Protocol server for the NOAA weather.gov API"
 publish = true
-license = "MIT"
-repository = "https://github.com/seferino-fernandez/noaa_weather"
+license.workspace = true
+repository.workspace = true
 keywords = ["weather", "noaa", "nws", "mcp"]
 categories = ["command-line-utilities"]
-homepage = "https://github.com/seferino-fernandez/noaa_weather"
-readme = "README.md"
 
 [[bin]]
 name = "noaa-weather-mcp"

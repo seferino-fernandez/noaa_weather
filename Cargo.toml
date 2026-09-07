@@ -6,6 +6,11 @@ members = [
     "crates/noaa-weather-mcp",
 ]
 
+[workspace.package]
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/seferino-fernandez/noaa_weather"
+
 [workspace.dependencies]
 anyhow = "1.0.104"
 assert_cmd = "2.2.2"
