@@ -10,6 +10,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.0](https://github.com/seferino-fernandez/noaa_weather/compare/v1.3.0...v2.0.0)
 _07 September 2026_
 
+### Breaking changes
+
+The client's public API was reorganised by domain. `noaa_weather_client::apis::*`
+and `noaa_weather_client::models::*` no longer exist, and every `use` path into
+them must be updated.
+
+* **Endpoint modules moved to the crate root.** What lived under `apis::` is now
+  a top-level module:
+
+  ```rust
+  // before (1.3.0)
+  use noaa_weather_client::apis::alerts;
+  use noaa_weather_client::apis::stations;
+
+  // after (2.0.0)
+  use noaa_weather_client::alerts;
+  use noaa_weather_client::stations;
+  ```
+
+  Affected: `alerts`, `aviation`, `gridpoints`, `offices`, `points`, `products`,
+  `radar`, `radio`, `stations`, `zones`.
+
+* **`models` was split across domain modules.** Types now sit next to the
+  endpoints that return them, or in one of the new shared modules: `geo`
+  (`Coordinates`, `Feature`, `FeatureCollection`, `Geometry`, `Pagination`,
+  region and area codes), `ids` (`AlertId`, `GridpointId`, `StationId`,
+  `ZoneId`, and the other typed identifiers), `units` (`Quantity`, `Unit`,
+  `NwsUnitCode`, `WmoUnitCode`) and `time` (`Interval`, `OffsetDateTime`).
+  Domain-specific types live in their own module, for example
+  `alerts::model`.
+
+* **`Configuration` was replaced by `Client` and `ClientBuilder`.** The old
+  `apis::configuration::Configuration` type is gone; construct a client through
+  the new `client` module instead:
+
+  ```rust
+  // before (1.3.0)
+  use noaa_weather_client::Configuration;
+
+  // after (2.0.0)
+  use noaa_weather_client::{Client, ClientBuilder};
+  ```
+
+  `client` also exports `BinaryPayload`, `BuildError`, `Error`, `ProtocolError`,
+  `RedirectReason`, `ResponseContent` and `RetryPolicy`.
+
+* **The `utils` module was removed.** Its contents were folded into the domain
+  modules that used them.
+
+* **New `prelude` module.** `use noaa_weather_client::prelude::*;` pulls in the
+  common query builders and re-exports, and is the quickest way to port code
+  that previously leaned on glob imports from `apis` or `models`.
+
 ### Added
 
 * *(mcp)* Add zone and office tools
@@ -26,6 +79,13 @@ _07 September 2026_
 * *(mcp)* Add point and gridpoint tools
 * *(mcp)* Add structured tool foundation
 
+### Changed
+
+* *(client)* [**breaking**] Inherit workspace metadata and drop redundant fields
+* Organize client modules by domain
+* *(cli)* Fold summary into CLI
+* *(mcp)* Prepare remaining tool families
+
 ### Documented
 
 * Enforce client documentation coverage
@@ -35,16 +95,6 @@ _07 September 2026_
 
 * Fix tests
 * *(mcp)* Raise default response limit
-
-### Other
-
-* *(client)* [**breaking**] Inherit workspace metadata and drop redundant fields
-* Organize client modules by domain
-* *(cli)* Expand color and stations coverage
-* *(cli)* Fold summary into CLI
-* *(mcp)* Prepare remaining tool families
-* *(mcp)* Centralize tool contract harness
-* *(mcp)* Lock first ten tool contracts
 
 ## [1.3.0](https://github.com/seferino-fernandez/noaa_weather/compare/v1.2.0...v1.3.0)
 
